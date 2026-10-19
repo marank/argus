@@ -52,6 +52,7 @@ class AssetFilter(FilterSchema):
     is_loanable: bool | None = None
     tracking: Annotated[str | None, FilterLookup("model__tracking")] = None
     warranty_before: Annotated[date | None, FilterLookup("warranty_until__lt")] = None
+    warranty_until: Annotated[date | None, FilterLookup("warranty_until")] = None
     category: UUID | None = None
 
     def filter_category(self, value: int | None) -> Q:

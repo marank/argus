@@ -83,6 +83,13 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/portal/MyDevicesView.vue'),
         meta: { title: 'nav.myDevices' },
       },
+      // IT: planning
+      {
+        path: 'calendar',
+        name: 'calendar',
+        component: () => import('@/views/calendar/CalendarView.vue'),
+        meta: { it: true, title: 'nav.calendar' },
+      },
       // IT: inventory
       {
         path: 'inventory/assets',

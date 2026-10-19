@@ -8,6 +8,7 @@ export default {
   assets: 'Devices',
   stock: 'Stock',
   eventLog: 'Service log',
+  calendar: 'Calendar',
   reservations: 'Reservations',
   procurement: 'Procurement',
   needs: 'Demand',

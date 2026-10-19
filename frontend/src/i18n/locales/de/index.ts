@@ -1,4 +1,5 @@
 import auth from './auth'
+import calendar from './calendar'
 import common from './common'
 import dashboard from './dashboard'
 import enums from './enums'
@@ -12,6 +13,7 @@ import terminal from './terminal'
 
 export default {
   auth,
+  calendar,
   common,
   dashboard,
   enums,

@@ -1,5 +1,6 @@
 import {
   Boxes,
+  CalendarDays,
   Building2,
   ClipboardList,
   Factory,
@@ -76,6 +77,7 @@ export const NAVIGATION: NavSection[] = [
         icon: ListChecks,
         to: { name: 'reservations' },
       },
+      { key: 'calendar', label: 'nav.calendar', icon: CalendarDays, to: { name: 'calendar' } },
       { key: 'assets', label: 'nav.assets', icon: MonitorSmartphone, to: { name: 'assets' } },
       { key: 'stock', label: 'nav.stock', icon: Boxes, to: { name: 'stock' } },
       { key: 'event-log', label: 'nav.eventLog', icon: Wrench, to: { name: 'event-log' } },

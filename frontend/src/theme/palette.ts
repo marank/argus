@@ -19,6 +19,7 @@ export interface Palette {
   warning: string
   error: string
   info: string
+  violet: string
   grid: string
 }
 
@@ -41,6 +42,7 @@ export const lightPalette: Palette = {
   warning: '#b45309',
   error: '#c2410c',
   info: '#1d4ed8',
+  violet: '#7c3aed',
   grid: 'rgba(15, 23, 32, 0.035)',
 }
 
@@ -63,5 +65,6 @@ export const darkPalette: Palette = {
   warning: '#f0a63a',
   error: '#f26b4d',
   info: '#6aa1ff',
+  violet: '#a78bfa',
   grid: 'rgba(223, 230, 238, 0.03)',
 }

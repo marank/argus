@@ -36,6 +36,7 @@ const list = useList(assetsApi.list, {
     location: null,
     assigned_to: null,
     is_loanable: null,
+    warranty_until: route.query.warranty_until ? String(route.query.warranty_until) : null,
   },
 })
 onMounted(list.load)
