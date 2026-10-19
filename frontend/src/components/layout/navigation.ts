@@ -13,6 +13,7 @@ import {
   PackagePlus,
   Shapes,
   ShoppingCart,
+  SlidersHorizontal,
   Truck,
   UserRound,
   Users,
@@ -32,6 +33,7 @@ export interface NavSection {
   key: string
   label?: string
   it?: boolean
+  superuser?: boolean
   items: NavItem[]
 }
 
@@ -147,6 +149,14 @@ export const NAVIGATION: NavSection[] = [
       },
     ],
   },
+  {
+    key: 'administration',
+    label: 'nav.administration',
+    superuser: true,
+    items: [
+      { key: 'settings', label: 'nav.settings', icon: SlidersHorizontal, to: { name: 'settings' } },
+    ],
+  },
 ]
 
 /** Which menu entry is active for a route (detail pages highlight their list). */
@@ -160,6 +170,8 @@ export function activeKey(name: string | undefined, params: Record<string, unkno
       return 'orders'
     case 'portal-request':
       return 'portal-requests'
+    case 'settings-ldap':
+      return 'settings'
     case 'masterdata':
       return `md-${params.resource}`
     default:

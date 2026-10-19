@@ -28,7 +28,9 @@ class UserAdmin(BaseUserAdmin):
             {"fields": ("department", "employee_number", "job_title", "phone", "language")},
         ),
         (_("Argus roles"), {"fields": ("is_terminal",)}),
+        (_("Directory"), {"fields": ("ldap_dn",)}),
     )
+    readonly_fields = ["ldap_dn"]
     add_fieldsets = (
         *BaseUserAdmin.add_fieldsets,
         (_("Organisation"), {"fields": ("first_name", "last_name", "email", "department")}),

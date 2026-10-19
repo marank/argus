@@ -62,10 +62,34 @@ start the container waits for the database and applies migrations.
 | `TIME_ZONE`, `LOG_LEVEL` | Defaults `Europe/Berlin`, `INFO`. |
 | `ADMIN_USERNAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` | First administrator. |
 | `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | Database (also used by the Postgres container). |
+| `LDAP_*` | Optional LDAP / AD login, see [LDAP login](#ldap-login). |
 
 The app container runs unprivileged with a read-only root filesystem; health
 checks use `/api/health`. Behind a TLS proxy, forward `X-Forwarded-Proto` and list
 the `https://` URL in `APP_URLS`.
+
+## LDAP login
+
+Employees can sign in with their directory account (LDAP or Active Directory).
+Configure it in the app under *Administration → LDAP login* (superusers only; also
+in the Django admin) or with environment variables, one per setting
+(`LDAP_SERVER_URI`, `LDAP_BIND_DN`, `LDAP_ATTR_EMPLOYEE_NUMBER`, … – see
+`.env.example`). A non-empty variable wins over the in-app value, which is then shown
+read-only.
+
+- Login: local accounts are checked first (administrator, pickup terminal), then the
+  directory: search with the service account (`LDAP_BIND_DN`, or anonymously), bind as
+  the found entry with the entered password.
+- Attribute mapping: first name, last name, employee number, email, job title and
+  phone each name an LDAP attribute (defaults: `givenName`, `sn`, `employeeID`,
+  `mail`, `title`, `telephoneNumber`). They are overwritten at every login; leave a
+  mapping empty to maintain that field in Argus instead.
+- Users are created on first login (unless disabled) or linked to an existing Argus
+  user of the same name. Local superusers are never taken over by a directory account.
+- *Test connection* on the settings page checks the unsaved configuration and shows
+  the values a given user would receive.
+- Several servers (comma separated) are tried in order. For an internal CA, mount the
+  PEM file into the container and set `LDAP_CA_CERT_FILE`.
 
 ## Features
 

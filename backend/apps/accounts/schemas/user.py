@@ -26,10 +26,12 @@ class UserOut(Schema):
     is_it_staff: bool
     is_terminal: bool
     is_active: bool
+    is_ldap_user: bool
 
 
 class CurrentUserOut(UserOut):
     language: str
+    is_superuser: bool
 
 
 class UserIn(Schema):

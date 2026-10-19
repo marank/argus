@@ -18,10 +18,13 @@ export interface User extends UserRef {
   is_it_staff: boolean
   is_terminal: boolean
   is_active: boolean
+  /** Directory account; synced fields are overwritten at every login. */
+  is_ldap_user: boolean
 }
 
 export interface CurrentUser extends User {
   language: 'en' | 'de'
+  is_superuser: boolean
 }
 
 export interface Department {

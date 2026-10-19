@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 01:15+0200\n"
+"POT-Creation-Date: 2026-10-19 01:47+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,13 +21,47 @@ msgstr ""
 msgid "members"
 msgstr "Mitglieder"
 
-#: apps/accounts/admin/user.py:27 apps/accounts/admin/user.py:34
+#: apps/accounts/admin/ldap_settings.py:11
+#: apps/accounts/models/ldap_settings.py:44
+msgid "bind password"
+msgstr "Bind-Passwort"
+
+#: apps/accounts/admin/ldap_settings.py:14
+msgid "Leave empty to keep the stored password."
+msgstr "Leer lassen, um das hinterlegte Passwort zu behalten."
+
+#: apps/accounts/admin/ldap_settings.py:16
+msgid "clear bind password"
+msgstr "Bind-Passwort entfernen"
+
+#: apps/accounts/admin/ldap_settings.py:38
+msgid "Server"
+msgstr "Server"
+
+#: apps/accounts/admin/ldap_settings.py:40
+msgid "Search"
+msgstr "Suche"
+
+#: apps/accounts/admin/ldap_settings.py:52
+msgid "Attribute mapping"
+msgstr "Attributzuordnung"
+
+#: apps/accounts/admin/ldap_settings.py:92
+#, python-format
+msgid "Set by environment variables (read-only here): %s"
+msgstr "Über Umgebungsvariablen gesetzt (hier schreibgeschützt): %s"
+
+#: apps/accounts/admin/user.py:27 apps/accounts/admin/user.py:36
 msgid "Organisation"
 msgstr "Organisation"
 
 #: apps/accounts/admin/user.py:30
 msgid "Argus roles"
 msgstr "Argus-Rollen"
+
+#: apps/accounts/admin/user.py:31
+msgid "Directory"
+msgstr "Verzeichnis"
 
 #: apps/accounts/apps.py:8
 msgid "Accounts"
@@ -58,11 +92,124 @@ msgstr "Abteilung"
 msgid "departments"
 msgstr "Abteilungen"
 
-#: apps/accounts/models/user.py:12 config/settings.py:122
+#: apps/accounts/models/ldap_settings.py:15
+msgid "enabled"
+msgstr "aktiviert"
+
+#: apps/accounts/models/ldap_settings.py:17
+msgid "server URI"
+msgstr "Server-URI"
+
+#: apps/accounts/models/ldap_settings.py:20
+msgid ""
+"e.g. ldaps://dc1.example.com; several servers comma separated (failover)."
+msgstr ""
+"z. B. ldaps://dc1.example.com; mehrere Server kommagetrennt (Failover)."
+
+#: apps/accounts/models/ldap_settings.py:23
+msgid "StartTLS"
+msgstr "StartTLS"
+
+#: apps/accounts/models/ldap_settings.py:23
+msgid "Upgrade ldap:// connections to TLS."
+msgstr "ldap://-Verbindungen auf TLS hochstufen."
+
+#: apps/accounts/models/ldap_settings.py:26
+msgid "verify certificate"
+msgstr "Zertifikat prüfen"
+
+#: apps/accounts/models/ldap_settings.py:28
+msgid "Check the server's TLS certificate against the trusted CAs."
+msgstr "TLS-Zertifikat des Servers gegen die vertrauenswürdigen CAs prüfen."
+
+#: apps/accounts/models/ldap_settings.py:31
+msgid "CA certificate file"
+msgstr "CA-Zertifikatsdatei"
+
+#: apps/accounts/models/ldap_settings.py:34
+msgid "Path to a PEM file inside the container; empty = system CAs."
+msgstr "Pfad zu einer PEM-Datei im Container; leer = System-CAs."
+
+#: apps/accounts/models/ldap_settings.py:36
+msgid "timeout (seconds)"
+msgstr "Timeout (Sekunden)"
+
+#: apps/accounts/models/ldap_settings.py:39
+msgid "bind DN"
+msgstr "Bind-DN"
+
+#: apps/accounts/models/ldap_settings.py:42
+msgid "Service account used to look up users; empty = anonymous search."
+msgstr "Dienstkonto für die Benutzersuche; leer = anonyme Suche."
+
+#: apps/accounts/models/ldap_settings.py:47
+msgid "user search base"
+msgstr "Suchbasis für Benutzer"
+
+#: apps/accounts/models/ldap_settings.py:47
+msgid "e.g. OU=Staff,DC=example,DC=com"
+msgstr "z. B. OU=Staff,DC=example,DC=com"
+
+#: apps/accounts/models/ldap_settings.py:50
+msgid "user filter"
+msgstr "Benutzerfilter"
+
+#: apps/accounts/models/ldap_settings.py:53
+#, python-brace-format
+msgid "LDAP filter; {username} is replaced by the (escaped) login name."
+msgstr ""
+"LDAP-Filter; {username} wird durch den (maskierten) Anmeldenamen ersetzt."
+
+#: apps/accounts/models/ldap_settings.py:56
+msgid "username attribute"
+msgstr "Attribut Benutzername"
+
+#: apps/accounts/models/ldap_settings.py:57
+msgid "first name attribute"
+msgstr "Attribut Vorname"
+
+#: apps/accounts/models/ldap_settings.py:58
+msgid "last name attribute"
+msgstr "Attribut Nachname"
+
+#: apps/accounts/models/ldap_settings.py:60
+msgid "employee number attribute"
+msgstr "Attribut Personalnummer"
+
+#: apps/accounts/models/ldap_settings.py:62
+msgid "email attribute"
+msgstr "Attribut E-Mail"
+
+#: apps/accounts/models/ldap_settings.py:63
+msgid "job title attribute"
+msgstr "Attribut Position"
+
+#: apps/accounts/models/ldap_settings.py:64
+msgid "phone attribute"
+msgstr "Attribut Telefon"
+
+#: apps/accounts/models/ldap_settings.py:67
+msgid "create users on first login"
+msgstr "Benutzer bei erster Anmeldung anlegen"
+
+#: apps/accounts/models/ldap_settings.py:69
+msgid ""
+"Otherwise only employees that already exist in Argus can sign in via LDAP."
+msgstr ""
+"Sonst können sich nur Mitarbeitende per LDAP anmelden, die in Argus bereits "
+"angelegt sind."
+
+#: apps/accounts/models/ldap_settings.py:73
+#: apps/accounts/models/ldap_settings.py:74
+#: apps/accounts/models/ldap_settings.py:77
+msgid "LDAP settings"
+msgstr "LDAP-Einstellungen"
+
+#: apps/accounts/models/user.py:12 config/settings.py:128
 msgid "English"
 msgstr "Englisch"
 
-#: apps/accounts/models/user.py:13 config/settings.py:122
+#: apps/accounts/models/user.py:13 config/settings.py:128
 msgid "German"
 msgstr "Deutsch"
 
@@ -87,20 +234,67 @@ msgid "handover terminal"
 msgstr "Abholterminal"
 
 #: apps/accounts/models/user.py:30
-msgid "Shared account for the pickup terminal; it only sees prepared hand-outs."
-msgstr "Gemeinsames Konto für das Abholterminal; es sieht nur vorbereitete Ausgaben."
+msgid ""
+"Shared account for the pickup terminal; it only sees prepared hand-outs."
+msgstr ""
+"Gemeinsames Konto für das Abholterminal; es sieht nur vorbereitete Ausgaben."
 
 #: apps/accounts/models/user.py:33
+msgid "LDAP DN"
+msgstr "LDAP-DN"
+
+#: apps/accounts/models/user.py:37
+msgid ""
+"Set for directory accounts; name and numbers are synced from LDAP at every "
+"login."
+msgstr ""
+"Bei Verzeichniskonten gesetzt; Name und Nummern werden bei jeder Anmeldung "
+"aus dem LDAP übernommen."
+
+#: apps/accounts/models/user.py:40
 msgid "language"
 msgstr "Sprache"
 
-#: apps/accounts/models/user.py:37
+#: apps/accounts/models/user.py:44
 msgid "user"
 msgstr "Benutzer"
 
-#: apps/accounts/models/user.py:38
+#: apps/accounts/models/user.py:45
 msgid "users"
 msgstr "Benutzer"
+
+#: apps/accounts/services/ldap.py:98
+#, python-format
+msgid "%(name)s must be a number."
+msgstr "%(name)s muss eine Zahl sein."
+
+#: apps/accounts/services/ldap.py:136 apps/accounts/services/ldap.py:288
+msgid "No LDAP server configured."
+msgstr "Kein LDAP-Server konfiguriert."
+
+#: apps/accounts/services/ldap.py:170
+#, python-format
+msgid "The service account could not sign in: %(error)s"
+msgstr "Das Dienstkonto konnte sich nicht anmelden: %(error)s"
+
+#: apps/accounts/services/ldap.py:172
+#, python-format
+msgid "LDAP server not reachable: %(error)s"
+msgstr "LDAP-Server nicht erreichbar: %(error)s"
+
+#: apps/accounts/services/ldap.py:203
+#, python-format
+msgid "LDAP search failed: %(error)s"
+msgstr "LDAP-Suche fehlgeschlagen: %(error)s"
+
+#: apps/accounts/services/ldap.py:290
+msgid "No user search base configured."
+msgstr "Keine Suchbasis für Benutzer konfiguriert."
+
+#: apps/accounts/services/ldap.py:297
+#, python-format
+msgid "Connected, but no unique entry found for “%(username)s”."
+msgstr "Verbunden, aber kein eindeutiger Eintrag für „%(username)s“ gefunden."
 
 #: apps/core/admin/__init__.py:6
 msgid "Argus administration"
@@ -146,6 +340,10 @@ msgstr "Das Abholterminal hat nur Zugriff auf Ausgaben."
 #: apps/core/api/security.py:45
 msgid "This page is reserved for the pickup terminal."
 msgstr "Diese Seite ist dem Abholterminal vorbehalten."
+
+#: apps/core/api/security.py:57
+msgid "This action is reserved for administrators."
+msgstr "Diese Aktion ist Administratoren vorbehalten."
 
 #: apps/core/api/session.py:25
 msgid "CSRF verification failed. Please reload the page."
@@ -203,7 +401,8 @@ msgstr "Neustart"
 msgid "current period"
 msgstr "aktueller Zeitraum"
 
-#: apps/core/models/number_sequence.py:36 apps/masterdata/models/category.py:30
+#: apps/core/models/number_sequence.py:36
+#: apps/masterdata/models/category.py:30
 msgid "number sequence"
 msgstr "Nummernserie"
 
@@ -220,6 +419,11 @@ msgstr "Das Muster muss den Platzhalter {seq} enthalten."
 #, python-format
 msgid "Invalid placeholder: %(error)s"
 msgstr "Ungültiger Platzhalter: %(error)s"
+
+#: apps/dashboard/api/calendar.py:21
+#, python-format
+msgid "Choose a range of at most %(days)s days."
+msgstr ""
 
 #: apps/dashboard/apps.py:8
 msgid "Dashboard"
@@ -365,14 +569,17 @@ msgstr "gehört zu"
 
 #: apps/inventory/models/asset.py:70
 msgid "E.g. a docking station or handle that belongs to another device."
-msgstr "Z. B. eine Dockingstation oder ein Handgriff, der zu einem anderen Gerät gehört."
+msgstr ""
+"Z. B. eine Dockingstation oder ein Handgriff, der zu einem anderen Gerät "
+"gehört."
 
 #: apps/inventory/models/asset.py:75 apps/masterdata/models/supplier.py:19
 #: apps/procurement/models/purchase_order.py:25
 msgid "supplier"
 msgstr "Lieferant"
 
-#: apps/inventory/models/asset.py:83 apps/inventory/models/stock_movement.py:51
+#: apps/inventory/models/asset.py:83
+#: apps/inventory/models/stock_movement.py:51
 msgid "purchase order line"
 msgstr "Bestellposition"
 
@@ -664,7 +871,8 @@ msgstr "kompatibel mit"
 
 #: apps/masterdata/models/asset_model.py:52
 msgid "Accessories, spare parts and consumables that fit this model."
-msgstr "Zubehör, Ersatzteile und Verbrauchsmaterial, die zu diesem Modell passen."
+msgstr ""
+"Zubehör, Ersatzteile und Verbrauchsmaterial, die zu diesem Modell passen."
 
 #: apps/masterdata/models/asset_model.py:54
 #: apps/masterdata/models/category.py:38
@@ -695,7 +903,9 @@ msgstr "Name des Symbols"
 
 #: apps/masterdata/models/category.py:35
 msgid "Inventory numbers for new assets. Falls back to the parent category."
-msgstr "Inventarnummern für neue Geräte. Ohne Angabe gilt die übergeordnete Gerätegruppe."
+msgstr ""
+"Inventarnummern für neue Geräte. Ohne Angabe gilt die übergeordnete "
+"Gerätegruppe."
 
 #: apps/masterdata/models/category.py:38
 msgid "Shown in the employee portal."
@@ -706,8 +916,13 @@ msgid "any model requestable"
 msgstr "beliebiges Modell anforderbar"
 
 #: apps/masterdata/models/category.py:44
-msgid "Employees may request “any device” of this group. Turn off where only a specific model makes sense, e.g. accessories or consumables."
-msgstr "Mitarbeiter dürfen ein „beliebiges Gerät“ dieser Gruppe anfordern. Abschalten, wo nur ein bestimmtes Modell sinnvoll ist, z. B. bei Zubehör oder Verbrauchsmaterial."
+msgid ""
+"Employees may request “any device” of this group. Turn off where only a "
+"specific model makes sense, e.g. accessories or consumables."
+msgstr ""
+"Mitarbeiter dürfen ein „beliebiges Gerät“ dieser Gruppe anfordern. "
+"Abschalten, wo nur ein bestimmtes Modell sinnvoll ist, z. B. bei Zubehör "
+"oder Verbrauchsmaterial."
 
 #: apps/masterdata/models/category.py:48
 msgid "sort order"
@@ -887,7 +1102,8 @@ msgstr "Eine Bestellung braucht mindestens eine Position."
 #: apps/procurement/services/orders.py:118
 #, python-format
 msgid "Assign a model to “%(line)s” before receiving it."
-msgstr "Weisen Sie „%(line)s“ ein Modell zu, bevor Sie den Wareneingang buchen."
+msgstr ""
+"Weisen Sie „%(line)s“ ein Modell zu, bevor Sie den Wareneingang buchen."
 
 #: apps/procurement/services/orders.py:126
 #, python-format
@@ -999,7 +1215,9 @@ msgstr "entgegengenommen von (Name)"
 
 #: apps/reservations/models/handover.py:39
 msgid "Kept as text so the record stays readable if the account is removed."
-msgstr "Als Text gespeichert, damit das Protokoll auch nach Löschung des Kontos lesbar bleibt."
+msgstr ""
+"Als Text gespeichert, damit das Protokoll auch nach Löschung des Kontos "
+"lesbar bleibt."
 
 #: apps/reservations/models/handover.py:41
 msgid "PNG image as data URL."
@@ -1124,7 +1342,9 @@ msgstr "Reservierungspositionen"
 
 #: apps/reservations/models/reservation_item.py:61
 msgid "Choose a category or a model, or describe what you need."
-msgstr "Wählen Sie eine Gerätegruppe oder ein Modell, oder beschreiben Sie, was Sie brauchen."
+msgstr ""
+"Wählen Sie eine Gerätegruppe oder ein Modell, oder beschreiben Sie, was Sie "
+"brauchen."
 
 #: apps/reservations/services/workflow.py:25
 #, python-format
@@ -1155,11 +1375,14 @@ msgstr "Es können nicht mehr Geräte bestätigt werden als angefordert."
 #: apps/reservations/services/workflow.py:101
 #, python-format
 msgid "Remove allocated devices of “%(item)s” before lowering the quantity."
-msgstr "Entfernen Sie zugewiesene Geräte von „%(item)s“, bevor Sie die Menge reduzieren."
+msgstr ""
+"Entfernen Sie zugewiesene Geräte von „%(item)s“, bevor Sie die Menge "
+"reduzieren."
 
 #: apps/reservations/services/workflow.py:108
 msgid "Approve at least one device or reject the request."
-msgstr "Bestätigen Sie mindestens ein Gerät oder lehnen Sie die Anforderung ab."
+msgstr ""
+"Bestätigen Sie mindestens ein Gerät oder lehnen Sie die Anforderung ab."
 
 #: apps/reservations/services/workflow.py:155
 msgid "Remove allocated devices before changing the model."
@@ -1168,7 +1391,9 @@ msgstr "Entfernen Sie zugewiesene Geräte, bevor Sie das Modell ändern."
 #: apps/reservations/services/workflow.py:168
 #, python-format
 msgid "“%(item)s” is free text. Create or assign a model first."
-msgstr "„%(item)s“ ist Freitext. Legen Sie zuerst ein Modell an oder ordnen Sie eines zu."
+msgstr ""
+"„%(item)s“ ist Freitext. Legen Sie zuerst ein Modell an oder ordnen Sie "
+"eines zu."
 
 #: apps/reservations/services/workflow.py:186
 #, python-format
@@ -1217,6 +1442,6 @@ msgstr "Geben Sie an, wer die Geräte abholt."
 msgid "Only pickups at the terminal are signed."
 msgstr "Nur Abholungen am Terminal werden unterschrieben."
 
-#: config/api.py:63
+#: config/api.py:65
 msgid "Not found."
 msgstr "Nicht gefunden."

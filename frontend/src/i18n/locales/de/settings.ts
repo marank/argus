@@ -1,0 +1,68 @@
+export default {
+  title: 'Einstellungen',
+  subtitle: 'Systemweite Konfiguration von Argus. Nur für Administratoren sichtbar und änderbar.',
+  unsaved: 'Es gibt ungespeicherte Änderungen.',
+  sections: {
+    ldap: 'LDAP-Anmeldung',
+    ldapDescription: 'Anmeldung mit Verzeichniskonten, Feldzuordnung',
+  },
+  ldap: {
+    subtitle:
+      'Mitarbeitende melden sich mit ihrem Verzeichniskonto an. Name, Personalnummer und weitere Felder werden bei jeder Anmeldung aus dem LDAP übernommen.',
+    active: 'Aktiv',
+    inactive: 'Inaktiv',
+    groupStatus: 'Status',
+    groupStatusHelp:
+      'Lokale Konten (Administrator, Abholterminal) können sich immer anmelden – mit oder ohne LDAP.',
+    enabled: 'LDAP-Anmeldung',
+    createUsers: 'Benutzer bei erster Anmeldung anlegen',
+    createUsersHelp:
+      'Sonst können sich nur Mitarbeitende per LDAP anmelden, die in Argus bereits angelegt sind.',
+    server: 'Server',
+    groupServerHelp:
+      'Adresse des Verzeichnisservers. Mehrere Server werden der Reihe nach versucht (Failover).',
+    serverUri: 'Server-URI',
+    serverUriHelp: 'z. B. ldaps://dc1.example.com:636 – mehrere Server kommagetrennt.',
+    startTls: 'StartTLS',
+    startTlsHelp: 'ldap://-Verbindungen auf TLS hochstufen.',
+    verifyCert: 'Zertifikat prüfen',
+    showAdvanced: 'Erweiterte Optionen anzeigen',
+    hideAdvanced: 'Erweiterte Optionen ausblenden',
+    caCertFile: 'CA-Zertifikatsdatei',
+    caCertFileHelp: 'Pfad zu einer PEM-Datei im Container; leer = System-CAs.',
+    timeout: 'Timeout (s)',
+    search: 'Benutzersuche',
+    groupSearchHelp:
+      'Argus sucht die Person mit einem Dienstkonto und prüft das Passwort dann per Anmeldung als diese Person.',
+    bindDn: 'Bind-DN',
+    bindDnHelp: 'Dienstkonto für die Benutzersuche; leer = anonyme Suche.',
+    bindPassword: 'Bind-Passwort',
+    bindPasswordKeep: 'Hinterlegt – leer lassen zum Beibehalten',
+    clearPassword: 'Hinterlegtes Passwort entfernen',
+    searchBase: 'Suchbasis',
+    userFilter: 'Benutzerfilter',
+    userFilterHelp: "{'{username}'} wird durch den (maskierten) Anmeldenamen ersetzt.",
+    mapping: 'Feldzuordnung',
+    mappingHelp:
+      'Welches LDAP-Attribut welches Argus-Feld füllt. Zugeordnete Felder werden bei jeder Anmeldung überschrieben; leer lassen, um das Feld in Argus zu pflegen.',
+    argusField: 'Argus-Feld',
+    ldapAttribute: 'LDAP-Attribut',
+    notSynced: 'nicht synchronisiert',
+    attrUsername: 'Benutzername',
+    attrFirstName: 'Vorname',
+    attrLastName: 'Nachname',
+    attrEmployeeNumber: 'Personalnummer',
+    attrEmail: 'E-Mail',
+    attrJobTitle: 'Position',
+    attrPhone: 'Telefon',
+    envLocked: 'Über Umgebungsvariable {name} gesetzt',
+    envNotice:
+      'Einige Werte kommen aus Umgebungsvariablen ({count}) und können nur dort geändert werden. Sie sind mit einem Schloss markiert.',
+    test: 'Verbindung testen',
+    testHelp:
+      'Prüft die aktuellen, auch ungespeicherten Werte. Mit Benutzername wird angezeigt, was Argus für diese Person übernehmen würde.',
+    testUser: 'Benutzername (optional)',
+    testOk: 'Verbunden mit {server}',
+    testUserFound: 'Eintrag gefunden – diese Werte würden übernommen:',
+  },
+}

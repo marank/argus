@@ -6,6 +6,8 @@ declare module 'vue-router' {
     public?: boolean
     /** Restricted to the IT department. */
     it?: boolean
+    /** Restricted to administrators (superusers). */
+    superuser?: boolean
     /** Pickup terminal pages (terminal account and IT staff). */
     terminal?: boolean
     /** i18n key of the page title. */
@@ -157,6 +159,21 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/masterdata/MasterDataView.vue'),
         props: true,
         meta: { it: true, title: 'nav.masterdata' },
+      },
+      // Administration
+      {
+        path: 'settings',
+        component: () => import('@/views/settings/SettingsView.vue'),
+        meta: { superuser: true },
+        children: [
+          { path: '', name: 'settings', redirect: { name: 'settings-ldap' } },
+          {
+            path: 'ldap',
+            name: 'settings-ldap',
+            component: () => import('@/views/settings/LdapSettingsView.vue'),
+            meta: { superuser: true, title: 'settings.sections.ldap' },
+          },
+        ],
       },
       {
         path: ':pathMatch(.*)*',

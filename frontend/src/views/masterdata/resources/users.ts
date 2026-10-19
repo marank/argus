@@ -48,6 +48,12 @@ export default defineResource<User>({
       width: 100,
       render: (u) => bool(u.is_terminal),
     },
+    {
+      key: 'is_ldap_user',
+      label: 'masterdata.fields.ldap',
+      width: 80,
+      render: (u) => bool(u.is_ldap_user),
+    },
     { key: 'is_active', label: 'common.active', width: 80, render: (u) => bool(u.is_active) },
   ],
   filters: [

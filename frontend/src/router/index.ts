@@ -32,6 +32,9 @@ router.beforeEach(async (to) => {
   if ((to.meta.it || to.meta.terminal) && !auth.isItStaff) {
     return { name: 'dashboard' }
   }
+  if (to.meta.superuser && !auth.isSuperuser) {
+    return { name: 'dashboard' }
+  }
   return true
 })
 

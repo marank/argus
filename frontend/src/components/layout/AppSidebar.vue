@@ -15,7 +15,9 @@ const route = useRoute()
 const auth = useAuthStore()
 
 const options = computed<MenuOption[]>(() =>
-  NAVIGATION.filter((section) => !section.it || auth.isItStaff).map((section) => {
+  NAVIGATION.filter(
+    (section) => (!section.it || auth.isItStaff) && (!section.superuser || auth.isSuperuser),
+  ).map((section) => {
     const children: MenuOption[] = section.items.map((item) => ({
       key: item.key,
       label: () => h(RouterLink, { to: item.to }, () => t(item.label)),

@@ -14,6 +14,8 @@ export default {
   needs: 'Demand',
   orders: 'Purchase orders',
   masterdata: 'Master data',
+  administration: 'Administration',
+  settings: 'Settings',
   admin: 'Django admin',
   logout: 'Sign out',
   theme: 'Theme',

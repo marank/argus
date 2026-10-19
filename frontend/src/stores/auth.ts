@@ -12,6 +12,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => user.value !== null)
   const isItStaff = computed(() => user.value?.is_it_staff ?? false)
+  const isSuperuser = computed(() => user.value?.is_superuser ?? false)
   const isTerminal = computed(() => user.value?.is_terminal ?? false)
 
   function apply(current: CurrentUser | null) {
@@ -50,6 +51,7 @@ export const useAuthStore = defineStore('auth', () => {
     checked,
     isAuthenticated,
     isItStaff,
+    isSuperuser,
     isTerminal,
     fetchCurrentUser,
     login,

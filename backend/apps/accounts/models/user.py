@@ -29,6 +29,13 @@ class User(AbstractUser):
         default=False,
         help_text=_("Shared account for the pickup terminal; it only sees prepared hand-outs."),
     )
+    ldap_dn = models.CharField(
+        _("LDAP DN"),
+        max_length=500,
+        blank=True,
+        editable=False,
+        help_text=_("Set for directory accounts; name and numbers are synced from LDAP at every login."),
+    )
     language = models.CharField(
         _("language"), max_length=5, choices=Language.choices, default=Language.GERMAN
     )
@@ -44,6 +51,10 @@ class User(AbstractUser):
     @property
     def display_name(self) -> str:
         return self.get_full_name() or self.username
+
+    @property
+    def is_ldap_user(self) -> bool:
+        return bool(self.ldap_dn)
 
     @property
     def is_it_staff(self) -> bool:

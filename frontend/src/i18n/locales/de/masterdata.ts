@@ -73,6 +73,7 @@ export default {
     firstName: 'Vorname',
     lastName: 'Nachname',
     employeeNumber: 'Personalnummer',
+    ldap: 'LDAP',
     jobTitle: 'Position',
     department: 'Abteilung',
     numberSequenceHelp:

@@ -6,7 +6,7 @@ from django.http import Http404
 from django.utils.translation import gettext as _
 from ninja import NinjaAPI, Status
 
-from apps.accounts.api import departments, users
+from apps.accounts.api import departments, ldap, users
 from apps.core.api import number_sequences, session
 from apps.core.api.security import employee_auth
 from apps.core.exceptions import BusinessError
@@ -23,6 +23,7 @@ api.add_router("/dashboard", overview.router)
 api.add_router("/calendar", calendar.router)
 api.add_router("/accounts/users", users.router)
 api.add_router("/accounts/departments", departments.router)
+api.add_router("/settings/ldap", ldap.router)
 api.add_router("/masterdata/manufacturers", manufacturers.router)
 api.add_router("/masterdata/suppliers", suppliers.router)
 api.add_router("/masterdata/categories", categories.router)

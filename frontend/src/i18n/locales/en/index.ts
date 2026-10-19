@@ -9,6 +9,7 @@ import masterdata from './masterdata'
 import nav from './nav'
 import procurement from './procurement'
 import reservations from './reservations'
+import settings from './settings'
 import terminal from './terminal'
 
 export default {
@@ -23,5 +24,6 @@ export default {
   nav,
   procurement,
   reservations,
+  settings,
   terminal,
 }
