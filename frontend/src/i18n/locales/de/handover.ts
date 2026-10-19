@@ -1,0 +1,21 @@
+export default {
+  title: 'Übergabe',
+  protocol: 'Übergabeprotokoll',
+  print: 'Drucken',
+  method: 'Übergabe',
+  mode: { pickup: 'Abholung am Terminal', delivery: 'Lieferung durch IT' },
+  modeHint: {
+    pickup: 'Mitarbeiter unterschreibt am Abholterminal',
+    delivery: 'IT bringt die Geräte, ohne Unterschrift',
+  },
+  readyHint: 'Wie kommen die Geräte zum Mitarbeiter?',
+  waitingAtTerminal: 'Wartet am Abholterminal auf die Unterschrift des Mitarbeiters.',
+  receivedBy: 'Entgegengenommen von',
+  deliveredTo: 'Geliefert an',
+  deliveredToPlaceholder: 'z. B. Büro 2.14',
+  deviceNotes: 'Hinweise pro Gerät',
+  deviceNotePlaceholder: 'z. B. Kratzer am Deckel, Netzteil fehlt',
+  handedOutAt: 'Ausgegeben',
+  handedOutBy: 'Ausgegeben von',
+  signature: 'Unterschrift',
+}

@@ -1,0 +1,21 @@
+export default {
+  title: 'Handover',
+  protocol: 'Handover record',
+  print: 'Print',
+  method: 'Handover',
+  mode: { pickup: 'Pickup at terminal', delivery: 'Delivered by IT' },
+  modeHint: {
+    pickup: 'Employee signs at the pickup terminal',
+    delivery: 'IT brings the devices, no signature',
+  },
+  readyHint: 'How will the devices reach the employee?',
+  waitingAtTerminal: 'Waiting at the pickup terminal for the employee’s signature.',
+  receivedBy: 'Received by',
+  deliveredTo: 'Delivered to',
+  deliveredToPlaceholder: 'e.g. office 2.14',
+  deviceNotes: 'Notes per device',
+  deviceNotePlaceholder: 'e.g. scratch on the lid, charger missing',
+  handedOutAt: 'Handed out',
+  handedOutBy: 'Handed out by',
+  signature: 'Signature',
+}

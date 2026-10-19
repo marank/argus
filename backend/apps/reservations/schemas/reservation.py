@@ -1,0 +1,211 @@
+from datetime import date, datetime
+from typing import Literal
+from uuid import UUID
+
+from ninja import Field, Schema
+
+from apps.accounts.schemas import UserRefOut
+from apps.core.schemas import RefOut
+from apps.inventory.schemas.refs import AssetRefOut
+from apps.masterdata.schemas.refs import AssetModelRefOut, CategoryRefOut, LocationRefOut
+from apps.reservations.models import Reservation
+
+
+class StockItemRefOut(Schema):
+    id: UUID
+    model: AssetModelRefOut
+    location: LocationRefOut
+
+
+class AllocationOut(Schema):
+    id: UUID
+    asset: AssetRefOut | None
+    stock_item: StockItemRefOut | None
+    quantity: int
+    allocated_by: UserRefOut | None
+    allocated_at: datetime
+    handout_note: str
+    handed_out_at: datetime | None
+    returned_at: datetime | None
+
+
+class ReservationItemOut(Schema):
+    id: UUID
+    label: str
+    category: CategoryRefOut | None
+    asset_model: AssetModelRefOut | None
+    description: str
+    is_free_text: bool
+    quantity_requested: int
+    quantity_approved: int | None
+    quantity_allocated: int
+    quantity_missing: int
+    note: str
+    allocations: list[AllocationOut]
+
+    @staticmethod
+    def resolve_allocations(obj):
+        return list(obj.allocations.all())
+
+
+class ReservationListOut(Schema):
+    id: UUID
+    number: str
+    title: str
+    requester: UserRefOut
+    department: RefOut | None = Field(None, alias="requester.department")
+    duration: str
+    start_date: date
+    end_date: date | None
+    status: str
+    handover_mode: str
+    is_overdue: bool
+    pickup_at: datetime | None
+    item_count: int = 0
+    unit_count: int = 0
+    summary: str = ""
+    created_at: datetime
+
+    @staticmethod
+    def resolve_summary(obj) -> str:
+        return ", ".join(f"{i.quantity_requested}× {i.label}" for i in obj.items.all())
+
+    @staticmethod
+    def resolve_item_count(obj) -> int:
+        return len(obj.items.all())
+
+    @staticmethod
+    def resolve_unit_count(obj) -> int:
+        return sum(i.quantity_target for i in obj.items.all())
+
+
+class HandoverOut(Schema):
+    method: str
+    received_by: UserRefOut | None
+    received_by_name: str
+    signature: str
+    notes: str
+    location: str
+    handed_out_by: UserRefOut | None
+    handed_out_at: datetime
+
+
+class ReservationOut(ReservationListOut):
+    notes: str
+    pickup_location: LocationRefOut | None
+    it_comment: str
+    created_by: UserRefOut | None
+    handled_by: UserRefOut | None
+    approved_at: datetime | None
+    handed_out_at: datetime | None
+    completed_at: datetime | None
+    items: list[ReservationItemOut]
+    handover: HandoverOut | None = None
+
+    @staticmethod
+    def resolve_items(obj):
+        return list(obj.items.all())
+
+    @staticmethod
+    def resolve_handover(obj):
+        return getattr(obj, "handover", None) if hasattr(obj, "handover") else None
+
+
+class ReservationItemIn(Schema):
+    category: UUID | None = None
+    asset_model: UUID | None = None
+    description: str = Field("", max_length=255)
+    quantity: int = Field(1, ge=1, le=500)
+    note: str = ""
+
+
+class ReservationIn(Schema):
+    title: str = Field(..., min_length=1, max_length=200)
+    notes: str = ""
+    duration: Reservation.Duration = Reservation.Duration.TEMPORARY
+    start_date: date
+    end_date: date | None = None
+    items: list[ReservationItemIn] = Field(..., min_length=1)
+    requester: UUID | None = Field(None, description="IT only: create on behalf of an employee")
+
+
+class ApprovalItemIn(Schema):
+    id: UUID
+    quantity_approved: int = Field(..., ge=0)
+
+
+class ApproveIn(Schema):
+    items: list[ApprovalItemIn] = []
+    pickup_at: datetime | None = None
+    pickup_location: UUID | None = None
+    comment: str = ""
+
+
+class RejectIn(Schema):
+    comment: str = Field(..., min_length=1)
+
+
+class ScheduleIn(Schema):
+    pickup_at: datetime | None = None
+    pickup_location: UUID | None = None
+    handover_mode: Reservation.HandoverMode | None = None
+
+
+class ReadyIn(Schema):
+    handover_mode: Reservation.HandoverMode | None = None
+
+
+class AllocationNoteIn(Schema):
+    allocation: UUID
+    note: str = Field("", max_length=255)
+
+
+class HandOutIn(Schema):
+    """Hand-out documented by IT (no signature): directly or delivered to the employee."""
+
+    method: Literal["direct", "delivered"] = "direct"
+    received_by: UUID | None = None
+    received_by_name: str = Field("", max_length=150)
+    location: str = Field("", max_length=150)
+    notes: str = ""
+    allocation_notes: list[AllocationNoteIn] = []
+
+
+class AllocateIn(Schema):
+    item: UUID
+    asset: UUID | None = None
+    stock_item: UUID | None = None
+    quantity: int = Field(1, ge=1)
+    code: str | None = Field(None, description="Scanned inventory or serial number")
+
+
+class ResolveItemIn(Schema):
+    asset_model: UUID
+
+
+class ReturnIn(Schema):
+    allocations: list[UUID] | None = None
+
+
+class CandidatesOut(Schema):
+    assets: list[AssetCandidateOut]
+    stock: list[StockCandidateOut]
+
+
+class AssetCandidateOut(Schema):
+    id: UUID
+    inventory_number: str
+    serial_number: str
+    condition: str
+    model: AssetModelRefOut
+    location: LocationRefOut | None
+
+
+class StockCandidateOut(Schema):
+    id: UUID
+    model: AssetModelRefOut
+    location: LocationRefOut
+    available_quantity: int
+
+
+CandidatesOut.model_rebuild()

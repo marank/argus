@@ -1,0 +1,1123 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-19 00:40+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: apps/accounts/admin/user.py:15
+msgid "Organisation"
+msgstr "Organisation"
+
+#: apps/accounts/apps.py:8
+msgid "Accounts"
+msgstr "Benutzerkonten"
+
+#: apps/accounts/models/department.py:8 apps/core/models/number_sequence.py:25
+#: apps/masterdata/models/asset_model.py:18
+#: apps/masterdata/models/category.py:16 apps/masterdata/models/location.py:14
+#: apps/masterdata/models/manufacturer.py:8
+#: apps/masterdata/models/supplier.py:8
+msgid "name"
+msgstr "Name"
+
+#: apps/accounts/models/department.py:9 apps/core/models/number_sequence.py:24
+#: apps/masterdata/models/category.py:17 apps/masterdata/models/location.py:15
+msgid "code"
+msgstr "Kürzel"
+
+#: apps/accounts/models/department.py:10
+msgid "cost center"
+msgstr "Kostenstelle"
+
+#: apps/accounts/models/department.py:13 apps/accounts/models/user.py:18
+msgid "department"
+msgstr "Abteilung"
+
+#: apps/accounts/models/department.py:14
+msgid "departments"
+msgstr "Abteilungen"
+
+#: apps/accounts/models/user.py:12 config/settings.py:99
+msgid "English"
+msgstr "Englisch"
+
+#: apps/accounts/models/user.py:13 config/settings.py:99
+msgid "German"
+msgstr "Deutsch"
+
+#: apps/accounts/models/user.py:15 apps/core/models/base.py:10
+msgid "ID"
+msgstr "ID"
+
+#: apps/accounts/models/user.py:24
+msgid "employee number"
+msgstr "Personalnummer"
+
+#: apps/accounts/models/user.py:25
+msgid "job title"
+msgstr "Position"
+
+#: apps/accounts/models/user.py:26 apps/masterdata/models/supplier.py:12
+msgid "phone"
+msgstr "Telefon"
+
+#: apps/accounts/models/user.py:28
+msgid "handover terminal"
+msgstr "Abholterminal"
+
+#: apps/accounts/models/user.py:30
+msgid "Shared account for the pickup terminal; it only sees prepared hand-outs."
+msgstr "Gemeinsames Konto für das Abholterminal; es sieht nur vorbereitete Ausgaben."
+
+#: apps/accounts/models/user.py:33
+msgid "language"
+msgstr "Sprache"
+
+#: apps/accounts/models/user.py:37
+msgid "user"
+msgstr "Benutzer"
+
+#: apps/accounts/models/user.py:38
+msgid "users"
+msgstr "Benutzer"
+
+#: apps/core/api/crud.py:100
+msgid "This record is still in use and cannot be deleted."
+msgstr "Dieser Eintrag wird noch verwendet und kann nicht gelöscht werden."
+
+#: apps/core/api/security.py:23
+msgid "This action is reserved for the IT department."
+msgstr "Diese Aktion ist der IT-Abteilung vorbehalten."
+
+#: apps/core/api/security.py:33
+msgid "The pickup terminal can only access hand-outs."
+msgstr "Das Abholterminal hat nur Zugriff auf Ausgaben."
+
+#: apps/core/api/security.py:45
+msgid "This page is reserved for the pickup terminal."
+msgstr "Diese Seite ist dem Abholterminal vorbehalten."
+
+#: apps/core/api/session.py:25
+msgid "CSRF verification failed. Please reload the page."
+msgstr "CSRF-Prüfung fehlgeschlagen. Bitte laden Sie die Seite neu."
+
+#: apps/core/api/session.py:40
+msgid "Invalid username or password."
+msgstr "Benutzername oder Passwort ist falsch."
+
+#: apps/core/apps.py:8
+msgid "Core"
+msgstr "Basis"
+
+#: apps/core/models/base.py:19
+msgid "created at"
+msgstr "angelegt am"
+
+#: apps/core/models/base.py:20
+msgid "updated at"
+msgstr "geändert am"
+
+#: apps/core/models/number_sequence.py:20
+msgid "Never"
+msgstr "Nie"
+
+#: apps/core/models/number_sequence.py:21
+msgid "Yearly"
+msgstr "Jährlich"
+
+#: apps/core/models/number_sequence.py:22
+msgid "Monthly"
+msgstr "Monatlich"
+
+#: apps/core/models/number_sequence.py:26
+msgid "prefix"
+msgstr "Präfix"
+
+#: apps/core/models/number_sequence.py:27
+msgid "pattern"
+msgstr "Muster"
+
+#: apps/core/models/number_sequence.py:28
+msgid "padding"
+msgstr "Stellen"
+
+#: apps/core/models/number_sequence.py:29
+msgid "next value"
+msgstr "nächster Wert"
+
+#: apps/core/models/number_sequence.py:31
+msgid "reset period"
+msgstr "Neustart"
+
+#: apps/core/models/number_sequence.py:33
+msgid "current period"
+msgstr "aktueller Zeitraum"
+
+#: apps/core/models/number_sequence.py:36 apps/masterdata/models/category.py:30
+msgid "number sequence"
+msgstr "Nummernserie"
+
+#: apps/core/models/number_sequence.py:37
+msgid "number sequences"
+msgstr "Nummernserien"
+
+#: apps/core/models/number_sequence.py:45
+#, python-brace-format
+msgid "The pattern must contain the {seq} placeholder."
+msgstr "Das Muster muss den Platzhalter {seq} enthalten."
+
+#: apps/core/models/number_sequence.py:49
+#, python-format
+msgid "Invalid placeholder: %(error)s"
+msgstr "Ungültiger Platzhalter: %(error)s"
+
+#: apps/dashboard/apps.py:8
+msgid "Dashboard"
+msgstr "Dashboard"
+
+#: apps/inventory/apps.py:8
+msgid "Inventory"
+msgstr "Inventar"
+
+#: apps/inventory/models/asset.py:12
+msgid "In stock"
+msgstr "Im Lager"
+
+#: apps/inventory/models/asset.py:13 apps/inventory/models/asset_event.py:17
+msgid "Reserved"
+msgstr "Reserviert"
+
+#: apps/inventory/models/asset.py:14
+msgid "In use"
+msgstr "In Benutzung"
+
+#: apps/inventory/models/asset.py:15
+msgid "In repair"
+msgstr "In Reparatur"
+
+#: apps/inventory/models/asset.py:16
+msgid "Lost"
+msgstr "Verloren"
+
+#: apps/inventory/models/asset.py:17
+msgid "Retired"
+msgstr "Ausgemustert"
+
+#: apps/inventory/models/asset.py:20
+msgid "New"
+msgstr "Neu"
+
+#: apps/inventory/models/asset.py:21
+msgid "Good"
+msgstr "Gut"
+
+#: apps/inventory/models/asset.py:22
+msgid "Worn"
+msgstr "Gebraucht"
+
+#: apps/inventory/models/asset.py:23
+msgid "Defective"
+msgstr "Defekt"
+
+#: apps/inventory/models/asset.py:25
+msgid "inventory number"
+msgstr "Inventarnummer"
+
+#: apps/inventory/models/asset.py:28 apps/inventory/models/stock_item.py:12
+#: apps/masterdata/models/asset_model.py:58
+#: apps/procurement/models/purchase_order_line.py:19
+#: apps/reservations/models/reservation_item.py:33
+msgid "model"
+msgstr "Modell"
+
+#: apps/inventory/models/asset.py:32
+msgid "serial number"
+msgstr "Seriennummer"
+
+#: apps/inventory/models/asset.py:33
+msgid "IMEI"
+msgstr "IMEI"
+
+#: apps/inventory/models/asset.py:34
+msgid "MAC address"
+msgstr "MAC-Adresse"
+
+#: apps/inventory/models/asset.py:35
+msgid "hostname"
+msgstr "Hostname"
+
+#: apps/inventory/models/asset.py:38
+#: apps/procurement/models/purchase_order.py:32
+#: apps/reservations/models/reservation.py:61
+msgid "status"
+msgstr "Status"
+
+#: apps/inventory/models/asset.py:41
+msgid "condition"
+msgstr "Zustand"
+
+#: apps/inventory/models/asset.py:44
+msgid "loanable"
+msgstr "verleihbar"
+
+#: apps/inventory/models/asset.py:44
+msgid "Part of the pool employees can reserve from."
+msgstr "Teil des Pools, aus dem Mitarbeiter reservieren können."
+
+#: apps/inventory/models/asset.py:48 apps/inventory/models/stock_item.py:18
+#: apps/masterdata/models/location.py:31
+msgid "location"
+msgstr "Standort"
+
+#: apps/inventory/models/asset.py:56
+msgid "assigned to"
+msgstr "zugewiesen an"
+
+#: apps/inventory/models/asset.py:62
+msgid "assigned since"
+msgstr "zugewiesen seit"
+
+#: apps/inventory/models/asset.py:65
+msgid "belongs to"
+msgstr "gehört zu"
+
+#: apps/inventory/models/asset.py:70
+msgid "E.g. a docking station or handle that belongs to another device."
+msgstr "Z. B. eine Dockingstation oder ein Handgriff, der zu einem anderen Gerät gehört."
+
+#: apps/inventory/models/asset.py:75 apps/masterdata/models/supplier.py:19
+#: apps/procurement/models/purchase_order.py:25
+msgid "supplier"
+msgstr "Lieferant"
+
+#: apps/inventory/models/asset.py:83 apps/inventory/models/stock_movement.py:51
+msgid "purchase order line"
+msgstr "Bestellposition"
+
+#: apps/inventory/models/asset.py:89
+msgid "purchase date"
+msgstr "Kaufdatum"
+
+#: apps/inventory/models/asset.py:91
+msgid "purchase price"
+msgstr "Kaufpreis"
+
+#: apps/inventory/models/asset.py:93
+msgid "warranty until"
+msgstr "Garantie bis"
+
+#: apps/inventory/models/asset.py:94 apps/masterdata/models/manufacturer.py:12
+#: apps/masterdata/models/supplier.py:15
+#: apps/procurement/models/purchase_order.py:45
+#: apps/reservations/models/handover.py:42
+#: apps/reservations/models/reservation.py:54
+msgid "notes"
+msgstr "Notizen"
+
+#: apps/inventory/models/asset.py:97 apps/inventory/models/asset_event.py:36
+#: apps/reservations/models/allocation.py:20
+msgid "asset"
+msgstr "Gerät"
+
+#: apps/inventory/models/asset.py:98
+msgid "assets"
+msgstr "Geräte"
+
+#: apps/inventory/models/asset_event.py:13
+msgid "Created"
+msgstr "Angelegt"
+
+#: apps/inventory/models/asset_event.py:14
+msgid "Status changed"
+msgstr "Status geändert"
+
+#: apps/inventory/models/asset_event.py:15
+#: apps/reservations/models/reservation.py:23
+msgid "Handed out"
+msgstr "Ausgegeben"
+
+#: apps/inventory/models/asset_event.py:16
+msgid "Returned"
+msgstr "Zurückgegeben"
+
+#: apps/inventory/models/asset_event.py:18
+msgid "Battery replaced"
+msgstr "Akku getauscht"
+
+#: apps/inventory/models/asset_event.py:19
+msgid "Component replaced"
+msgstr "Komponente getauscht"
+
+#: apps/inventory/models/asset_event.py:20
+msgid "Repair"
+msgstr "Reparatur"
+
+#: apps/inventory/models/asset_event.py:21
+msgid "Maintenance"
+msgstr "Wartung"
+
+#: apps/inventory/models/asset_event.py:22
+msgid "Inspection"
+msgstr "Prüfung"
+
+#: apps/inventory/models/asset_event.py:23
+msgid "Note"
+msgstr "Notiz"
+
+#: apps/inventory/models/asset_event.py:38
+#: apps/masterdata/models/location.py:16
+msgid "kind"
+msgstr "Art"
+
+#: apps/inventory/models/asset_event.py:39
+msgid "occurred at"
+msgstr "Zeitpunkt"
+
+#: apps/inventory/models/asset_event.py:40
+#: apps/masterdata/models/asset_model.py:36
+#: apps/masterdata/models/category.py:26 apps/masterdata/models/location.py:25
+#: apps/procurement/models/purchase_order_line.py:25
+#: apps/reservations/models/reservation_item.py:40
+msgid "description"
+msgstr "Beschreibung"
+
+#: apps/inventory/models/asset_event.py:41
+msgid "component"
+msgstr "Komponente"
+
+#: apps/inventory/models/asset_event.py:42
+msgid "component serial number"
+msgstr "Seriennummer der Komponente"
+
+#: apps/inventory/models/asset_event.py:43
+msgid "cost"
+msgstr "Kosten"
+
+#: apps/inventory/models/asset_event.py:46
+#: apps/inventory/models/stock_movement.py:27
+msgid "performed by"
+msgstr "durchgeführt von"
+
+#: apps/inventory/models/asset_event.py:54
+msgid "employee"
+msgstr "Mitarbeiter"
+
+#: apps/inventory/models/asset_event.py:62
+#: apps/inventory/models/stock_movement.py:43
+#: apps/reservations/models/handover.py:23
+#: apps/reservations/models/reservation.py:94
+#: apps/reservations/models/reservation_item.py:19
+msgid "reservation"
+msgstr "Reservierung"
+
+#: apps/inventory/models/asset_event.py:70
+msgid "asset event"
+msgstr "Geräteereignis"
+
+#: apps/inventory/models/asset_event.py:71
+msgid "asset events"
+msgstr "Geräteereignisse"
+
+#: apps/inventory/models/stock_item.py:22
+#: apps/procurement/models/purchase_order_line.py:26
+#: apps/reservations/models/allocation.py:34
+msgid "quantity"
+msgstr "Menge"
+
+#: apps/inventory/models/stock_item.py:23
+msgid "reserved quantity"
+msgstr "reservierte Menge"
+
+#: apps/inventory/models/stock_item.py:25
+msgid "minimum quantity"
+msgstr "Mindestbestand"
+
+#: apps/inventory/models/stock_item.py:25
+msgid "Reorder when the stock falls below."
+msgstr "Nachbestellen, wenn der Bestand darunter fällt."
+
+#: apps/inventory/models/stock_item.py:29
+#: apps/inventory/models/stock_movement.py:18
+#: apps/reservations/models/allocation.py:28
+msgid "stock item"
+msgstr "Lagerartikel"
+
+#: apps/inventory/models/stock_item.py:30
+msgid "stock items"
+msgstr "Lagerartikel"
+
+#: apps/inventory/models/stock_movement.py:10
+msgid "Goods receipt"
+msgstr "Wareneingang"
+
+#: apps/inventory/models/stock_movement.py:11
+msgid "Issue"
+msgstr "Ausgabe"
+
+#: apps/inventory/models/stock_movement.py:12
+msgid "Return"
+msgstr "Rückgabe"
+
+#: apps/inventory/models/stock_movement.py:13
+msgid "Adjustment"
+msgstr "Korrektur"
+
+#: apps/inventory/models/stock_movement.py:14
+msgid "Used for repair"
+msgstr "Für Reparatur verbraucht"
+
+#: apps/inventory/models/stock_movement.py:22
+msgid "change"
+msgstr "Änderung"
+
+#: apps/inventory/models/stock_movement.py:23
+msgid "reason"
+msgstr "Grund"
+
+#: apps/inventory/models/stock_movement.py:24
+#: apps/reservations/models/reservation_item.py:47
+msgid "note"
+msgstr "Notiz"
+
+#: apps/inventory/models/stock_movement.py:35
+msgid "recipient"
+msgstr "Empfänger"
+
+#: apps/inventory/models/stock_movement.py:59
+msgid "stock movement"
+msgstr "Lagerbewegung"
+
+#: apps/inventory/models/stock_movement.py:60
+msgid "stock movements"
+msgstr "Lagerbewegungen"
+
+#: apps/inventory/services/assets.py:68
+msgid "The list contains duplicate serial numbers."
+msgstr "Die Liste enthält doppelte Seriennummern."
+
+#: apps/inventory/services/assets.py:76
+msgid "This kind of event is recorded automatically."
+msgstr "Diese Art von Ereignis wird automatisch erfasst."
+
+#: apps/inventory/services/stock.py:33
+#, python-format
+msgid "Not enough stock for %(model)s (available: %(quantity)s)."
+msgstr "Nicht genug Bestand für %(model)s (verfügbar: %(quantity)s)."
+
+#: apps/inventory/services/stock.py:49
+#, python-format
+msgid "Only %(available)s units of %(model)s are available at %(location)s."
+msgstr "Nur %(available)s Stück von %(model)s sind in %(location)s verfügbar."
+
+#: apps/masterdata/apps.py:8
+msgid "Master data"
+msgstr "Stammdaten"
+
+#: apps/masterdata/models/asset_model.py:15
+msgid "Individual devices"
+msgstr "Einzelgeräte"
+
+#: apps/masterdata/models/asset_model.py:16
+msgid "Stock quantity"
+msgstr "Lagermenge"
+
+#: apps/masterdata/models/asset_model.py:21
+#: apps/masterdata/models/manufacturer.py:16
+msgid "manufacturer"
+msgstr "Hersteller"
+
+#: apps/masterdata/models/asset_model.py:27
+#: apps/masterdata/models/category.py:51
+#: apps/reservations/models/reservation_item.py:25
+msgid "category"
+msgstr "Gerätegruppe"
+
+#: apps/masterdata/models/asset_model.py:31
+msgid "part number"
+msgstr "Artikelnummer"
+
+#: apps/masterdata/models/asset_model.py:32
+msgid "EAN / GTIN"
+msgstr "EAN / GTIN"
+
+#: apps/masterdata/models/asset_model.py:34
+msgid "tracking"
+msgstr "Führung"
+
+#: apps/masterdata/models/asset_model.py:37
+msgid "specifications"
+msgstr "Technische Daten"
+
+#: apps/masterdata/models/asset_model.py:40
+msgid "default supplier"
+msgstr "Standardlieferant"
+
+#: apps/masterdata/models/asset_model.py:46
+msgid "list price"
+msgstr "Listenpreis"
+
+#: apps/masterdata/models/asset_model.py:47
+msgid "warranty (months)"
+msgstr "Garantie (Monate)"
+
+#: apps/masterdata/models/asset_model.py:50
+msgid "compatible with"
+msgstr "kompatibel mit"
+
+#: apps/masterdata/models/asset_model.py:52
+msgid "Accessories, spare parts and consumables that fit this model."
+msgstr "Zubehör, Ersatzteile und Verbrauchsmaterial, die zu diesem Modell passen."
+
+#: apps/masterdata/models/asset_model.py:54
+#: apps/masterdata/models/category.py:38
+msgid "requestable"
+msgstr "anforderbar"
+
+#: apps/masterdata/models/asset_model.py:55
+#: apps/masterdata/models/manufacturer.py:13
+#: apps/masterdata/models/supplier.py:16
+msgid "active"
+msgstr "aktiv"
+
+#: apps/masterdata/models/asset_model.py:59
+msgid "models"
+msgstr "Modelle"
+
+#: apps/masterdata/models/category.py:20
+msgid "parent category"
+msgstr "übergeordnete Gerätegruppe"
+
+#: apps/masterdata/models/category.py:27
+msgid "icon"
+msgstr "Symbol"
+
+#: apps/masterdata/models/category.py:27
+msgid "Icon name"
+msgstr "Name des Symbols"
+
+#: apps/masterdata/models/category.py:35
+msgid "Inventory numbers for new assets. Falls back to the parent category."
+msgstr "Inventarnummern für neue Geräte. Ohne Angabe gilt die übergeordnete Gerätegruppe."
+
+#: apps/masterdata/models/category.py:38
+msgid "Shown in the employee portal."
+msgstr "Wird im Mitarbeiterportal angezeigt."
+
+#: apps/masterdata/models/category.py:41
+msgid "any model requestable"
+msgstr "beliebiges Modell anforderbar"
+
+#: apps/masterdata/models/category.py:44
+msgid "Employees may request “any device” of this group. Turn off where only a specific model makes sense, e.g. accessories or consumables."
+msgstr "Mitarbeiter dürfen ein „beliebiges Gerät“ dieser Gruppe anfordern. Abschalten, wo nur ein bestimmtes Modell sinnvoll ist, z. B. bei Zubehör oder Verbrauchsmaterial."
+
+#: apps/masterdata/models/category.py:48
+msgid "sort order"
+msgstr "Sortierung"
+
+#: apps/masterdata/models/category.py:52
+msgid "categories"
+msgstr "Gerätegruppen"
+
+#: apps/masterdata/models/location.py:9
+msgid "Site"
+msgstr "Standort"
+
+#: apps/masterdata/models/location.py:10
+msgid "Building"
+msgstr "Gebäude"
+
+#: apps/masterdata/models/location.py:11
+msgid "Room"
+msgstr "Raum"
+
+#: apps/masterdata/models/location.py:12
+msgid "Storage"
+msgstr "Lager"
+
+#: apps/masterdata/models/location.py:19
+msgid "parent location"
+msgstr "übergeordneter Standort"
+
+#: apps/masterdata/models/location.py:27
+msgid "pickup point"
+msgstr "Abholort"
+
+#: apps/masterdata/models/location.py:27
+msgid "Employees can collect devices here."
+msgstr "Mitarbeiter können hier Geräte abholen."
+
+#: apps/masterdata/models/location.py:32
+msgid "locations"
+msgstr "Standorte"
+
+#: apps/masterdata/models/manufacturer.py:9
+#: apps/masterdata/models/supplier.py:13
+msgid "website"
+msgstr "Website"
+
+#: apps/masterdata/models/manufacturer.py:10
+msgid "support URL"
+msgstr "Support-URL"
+
+#: apps/masterdata/models/manufacturer.py:11
+msgid "support phone"
+msgstr "Support-Telefon"
+
+#: apps/masterdata/models/manufacturer.py:17
+msgid "manufacturers"
+msgstr "Hersteller"
+
+#: apps/masterdata/models/supplier.py:9
+msgid "customer number"
+msgstr "Kundennummer"
+
+#: apps/masterdata/models/supplier.py:10
+msgid "contact person"
+msgstr "Ansprechpartner"
+
+#: apps/masterdata/models/supplier.py:11
+msgid "email"
+msgstr "E-Mail"
+
+#: apps/masterdata/models/supplier.py:14
+msgid "address"
+msgstr "Adresse"
+
+#: apps/masterdata/models/supplier.py:20
+msgid "suppliers"
+msgstr "Lieferanten"
+
+#: apps/procurement/apps.py:8
+msgid "Procurement"
+msgstr "Beschaffung"
+
+#: apps/procurement/models/purchase_order.py:14
+msgid "To order"
+msgstr "Zu bestellen"
+
+#: apps/procurement/models/purchase_order.py:15
+msgid "Ordered"
+msgstr "Bestellt"
+
+#: apps/procurement/models/purchase_order.py:16
+msgid "Partially received"
+msgstr "Teilweise geliefert"
+
+#: apps/procurement/models/purchase_order.py:17
+msgid "Received"
+msgstr "Geliefert"
+
+#: apps/procurement/models/purchase_order.py:18
+#: apps/reservations/models/reservation.py:26
+msgid "Cancelled"
+msgstr "Storniert"
+
+#: apps/procurement/models/purchase_order.py:22
+#: apps/reservations/models/reservation.py:39
+msgid "number"
+msgstr "Nummer"
+
+#: apps/procurement/models/purchase_order.py:34
+msgid "order date"
+msgstr "Bestelldatum"
+
+#: apps/procurement/models/purchase_order.py:35
+msgid "expected delivery"
+msgstr "erwartete Lieferung"
+
+#: apps/procurement/models/purchase_order.py:36
+msgid "supplier reference"
+msgstr "Referenz des Lieferanten"
+
+#: apps/procurement/models/purchase_order.py:39
+msgid "delivery location"
+msgstr "Lieferort"
+
+#: apps/procurement/models/purchase_order.py:48
+#: apps/reservations/models/reservation.py:48
+msgid "created by"
+msgstr "angelegt von"
+
+#: apps/procurement/models/purchase_order.py:55
+#: apps/procurement/models/purchase_order_line.py:13
+msgid "purchase order"
+msgstr "Bestellung"
+
+#: apps/procurement/models/purchase_order.py:56
+msgid "purchase orders"
+msgstr "Bestellungen"
+
+#: apps/procurement/models/purchase_order_line.py:27
+msgid "unit price"
+msgstr "Einzelpreis"
+
+#: apps/procurement/models/purchase_order_line.py:28
+msgid "received quantity"
+msgstr "gelieferte Menge"
+
+#: apps/procurement/models/purchase_order_line.py:29
+#: apps/reservations/models/reservation_item.py:49
+msgid "position"
+msgstr "Position"
+
+#: apps/procurement/models/purchase_order_line.py:32
+msgid "for reservation item"
+msgstr "für Reservierungsposition"
+
+#: apps/procurement/models/purchase_order_line.py:40
+msgid "order line"
+msgstr "Bestellposition"
+
+#: apps/procurement/models/purchase_order_line.py:41
+msgid "order lines"
+msgstr "Bestellpositionen"
+
+#: apps/procurement/models/purchase_order_line.py:49
+msgid "Choose a model or enter a description."
+msgstr "Wählen Sie ein Modell oder geben Sie eine Beschreibung ein."
+
+#: apps/procurement/services/orders.py:24
+#, python-format
+msgid "This is not possible while the order is “%(status)s”."
+msgstr "Das ist nicht möglich, solange die Bestellung „%(status)s“ ist."
+
+#: apps/procurement/services/orders.py:31
+msgid "An order needs at least one line."
+msgstr "Eine Bestellung braucht mindestens eine Position."
+
+#: apps/procurement/services/orders.py:118
+#, python-format
+msgid "Assign a model to “%(line)s” before receiving it."
+msgstr "Weisen Sie „%(line)s“ ein Modell zu, bevor Sie den Wareneingang buchen."
+
+#: apps/procurement/services/orders.py:126
+#, python-format
+msgid "Only %(open)s units of “%(line)s” are still open."
+msgstr "Von „%(line)s“ sind nur noch %(open)s Stück offen."
+
+#: apps/procurement/services/orders.py:135
+msgid "Choose a storage location for stock items."
+msgstr "Wählen Sie einen Lagerort für die Lagerartikel."
+
+#: apps/reservations/api/allocations.py:61
+#, python-format
+msgid "No device found for “%(code)s”."
+msgstr "Kein Gerät gefunden für „%(code)s“."
+
+#: apps/reservations/api/allocations.py:69
+msgid "Choose a device or stock item."
+msgstr "Wählen Sie ein Gerät oder einen Lagerartikel."
+
+#: apps/reservations/apps.py:8
+msgid "Reservations"
+msgstr "Reservierungen"
+
+#: apps/reservations/models/allocation.py:14
+#: apps/reservations/models/reservation_item.py:52
+msgid "reservation item"
+msgstr "Reservierungsposition"
+
+#: apps/reservations/models/allocation.py:37
+msgid "allocated by"
+msgstr "zugewiesen von"
+
+#: apps/reservations/models/allocation.py:42
+msgid "allocated at"
+msgstr "zugewiesen am"
+
+#: apps/reservations/models/allocation.py:44
+msgid "hand-out note"
+msgstr "Hinweis bei Ausgabe"
+
+#: apps/reservations/models/allocation.py:44
+msgid "E.g. a scratch on the lid."
+msgstr "Z. B. ein Kratzer am Deckel."
+
+#: apps/reservations/models/allocation.py:46
+#: apps/reservations/models/handover.py:51
+#: apps/reservations/models/reservation.py:90
+msgid "handed out at"
+msgstr "ausgegeben am"
+
+#: apps/reservations/models/allocation.py:47
+msgid "returned at"
+msgstr "zurückgegeben am"
+
+#: apps/reservations/models/allocation.py:50
+msgid "allocation"
+msgstr "Zuweisung"
+
+#: apps/reservations/models/allocation.py:51
+msgid "allocations"
+msgstr "Zuweisungen"
+
+#: apps/reservations/models/allocation.py:60
+msgid "Allocate either a device or a stock quantity."
+msgstr "Weisen Sie entweder ein Gerät oder eine Lagermenge zu."
+
+#: apps/reservations/models/handover.py:17
+msgid "Signed at pickup terminal"
+msgstr "Am Abholterminal unterschrieben"
+
+#: apps/reservations/models/handover.py:18
+#: apps/reservations/models/reservation.py:34
+msgid "Delivered by IT"
+msgstr "Durch IT geliefert"
+
+#: apps/reservations/models/handover.py:19
+msgid "Handed out by IT"
+msgstr "Durch IT ausgegeben"
+
+#: apps/reservations/models/handover.py:27
+msgid "method"
+msgstr "Art der Übergabe"
+
+#: apps/reservations/models/handover.py:30
+msgid "received by"
+msgstr "entgegengenommen von"
+
+#: apps/reservations/models/handover.py:37
+msgid "received by (name)"
+msgstr "entgegengenommen von (Name)"
+
+#: apps/reservations/models/handover.py:39
+msgid "Kept as text so the record stays readable if the account is removed."
+msgstr "Als Text gespeichert, damit das Protokoll auch nach Löschung des Kontos lesbar bleibt."
+
+#: apps/reservations/models/handover.py:41
+msgid "signature"
+msgstr "Unterschrift"
+
+#: apps/reservations/models/handover.py:41
+msgid "PNG image as data URL."
+msgstr "PNG-Bild als Data-URL."
+
+#: apps/reservations/models/handover.py:43
+msgid "delivered to"
+msgstr "geliefert an"
+
+#: apps/reservations/models/handover.py:46
+msgid "handed out by"
+msgstr "ausgegeben von"
+
+#: apps/reservations/models/handover.py:54
+#: apps/reservations/models/reservation.py:74
+msgid "handover"
+msgstr "Übergabe"
+
+#: apps/reservations/models/handover.py:55
+msgid "handovers"
+msgstr "Übergaben"
+
+#: apps/reservations/models/reservation.py:20
+msgid "Submitted"
+msgstr "Eingereicht"
+
+#: apps/reservations/models/reservation.py:21
+msgid "Approved"
+msgstr "Bestätigt"
+
+#: apps/reservations/models/reservation.py:22
+msgid "Ready for pickup"
+msgstr "Abholbereit"
+
+#: apps/reservations/models/reservation.py:24
+msgid "Completed"
+msgstr "Abgeschlossen"
+
+#: apps/reservations/models/reservation.py:25
+msgid "Rejected"
+msgstr "Abgelehnt"
+
+#: apps/reservations/models/reservation.py:29
+msgid "Temporary"
+msgstr "Befristet"
+
+#: apps/reservations/models/reservation.py:30
+msgid "Permanent"
+msgstr "Dauerhaft"
+
+#: apps/reservations/models/reservation.py:33
+msgid "Pickup with signature"
+msgstr "Abholung mit Unterschrift"
+
+#: apps/reservations/models/reservation.py:42
+msgid "requester"
+msgstr "Anforderer"
+
+#: apps/reservations/models/reservation.py:53
+msgid "purpose"
+msgstr "Zweck"
+
+#: apps/reservations/models/reservation.py:56
+msgid "duration"
+msgstr "Dauer"
+
+#: apps/reservations/models/reservation.py:58
+msgid "needed from"
+msgstr "benötigt ab"
+
+#: apps/reservations/models/reservation.py:59
+msgid "needed until"
+msgstr "benötigt bis"
+
+#: apps/reservations/models/reservation.py:64
+msgid "pickup at"
+msgstr "Abholung am"
+
+#: apps/reservations/models/reservation.py:67
+msgid "pickup location"
+msgstr "Abholort"
+
+#: apps/reservations/models/reservation.py:78
+msgid "Pickup requests appear on the pickup terminal once they are ready."
+msgstr "Abholungen erscheinen am Abholterminal, sobald sie abholbereit sind."
+
+#: apps/reservations/models/reservation.py:80
+msgid "IT comment"
+msgstr "Kommentar der IT"
+
+#: apps/reservations/models/reservation.py:83
+msgid "handled by"
+msgstr "bearbeitet von"
+
+#: apps/reservations/models/reservation.py:89
+msgid "approved at"
+msgstr "bestätigt am"
+
+#: apps/reservations/models/reservation.py:91
+msgid "completed at"
+msgstr "abgeschlossen am"
+
+#: apps/reservations/models/reservation.py:95
+msgid "reservations"
+msgstr "Reservierungen"
+
+#: apps/reservations/models/reservation_item.py:43
+msgid "Free text for something that is not in the catalog."
+msgstr "Freitext für etwas, das nicht im Katalog ist."
+
+#: apps/reservations/models/reservation_item.py:45
+msgid "requested quantity"
+msgstr "angeforderte Menge"
+
+#: apps/reservations/models/reservation_item.py:46
+msgid "approved quantity"
+msgstr "bestätigte Menge"
+
+#: apps/reservations/models/reservation_item.py:53
+msgid "reservation items"
+msgstr "Reservierungspositionen"
+
+#: apps/reservations/models/reservation_item.py:61
+msgid "Choose a category or a model, or describe what you need."
+msgstr "Wählen Sie eine Gerätegruppe oder ein Modell, oder beschreiben Sie, was Sie brauchen."
+
+#: apps/reservations/services/workflow.py:25
+#, python-format
+msgid "This is not possible while the reservation is “%(status)s”."
+msgstr "Das ist nicht möglich, solange die Reservierung „%(status)s“ ist."
+
+#: apps/reservations/services/workflow.py:33
+msgid "Temporary reservations need an end date."
+msgstr "Befristete Reservierungen brauchen ein Enddatum."
+
+#: apps/reservations/services/workflow.py:35
+msgid "The end date must not be before the start date."
+msgstr "Das Enddatum darf nicht vor dem Startdatum liegen."
+
+#: apps/reservations/services/workflow.py:44
+msgid "Add at least one device to the request."
+msgstr "Fügen Sie der Anforderung mindestens ein Gerät hinzu."
+
+#: apps/reservations/services/workflow.py:65
+#, python-format
+msgid "Please choose a specific model for “%(category)s”."
+msgstr "Bitte wählen Sie für „%(category)s“ ein bestimmtes Modell."
+
+#: apps/reservations/services/workflow.py:98
+msgid "You cannot approve more devices than were requested."
+msgstr "Es können nicht mehr Geräte bestätigt werden als angefordert."
+
+#: apps/reservations/services/workflow.py:101
+#, python-format
+msgid "Remove allocated devices of “%(item)s” before lowering the quantity."
+msgstr "Entfernen Sie zugewiesene Geräte von „%(item)s“, bevor Sie die Menge reduzieren."
+
+#: apps/reservations/services/workflow.py:108
+msgid "Approve at least one device or reject the request."
+msgstr "Bestätigen Sie mindestens ein Gerät oder lehnen Sie die Anforderung ab."
+
+#: apps/reservations/services/workflow.py:155
+msgid "Remove allocated devices before changing the model."
+msgstr "Entfernen Sie zugewiesene Geräte, bevor Sie das Modell ändern."
+
+#: apps/reservations/services/workflow.py:168
+#, python-format
+msgid "“%(item)s” is free text. Create or assign a model first."
+msgstr "„%(item)s“ ist Freitext. Legen Sie zuerst ein Modell an oder ordnen Sie eines zu."
+
+#: apps/reservations/services/workflow.py:186
+#, python-format
+msgid "%(asset)s does not match “%(item)s”."
+msgstr "%(asset)s passt nicht zu „%(item)s“."
+
+#: apps/reservations/services/workflow.py:190
+#, python-format
+msgid "%(asset)s is not in stock (%(status)s)."
+msgstr "%(asset)s ist nicht im Lager (%(status)s)."
+
+#: apps/reservations/services/workflow.py:195
+#, python-format
+msgid "All approved devices for “%(item)s” are already allocated."
+msgstr "Alle bestätigten Geräte für „%(item)s“ sind bereits zugewiesen."
+
+#: apps/reservations/services/workflow.py:217
+#, python-format
+msgid "%(model)s does not match “%(item)s”."
+msgstr "%(model)s passt nicht zu „%(item)s“."
+
+#: apps/reservations/services/workflow.py:221
+#, python-format
+msgid "Only %(missing)s more units are needed for “%(item)s”."
+msgstr "Für „%(item)s“ werden nur noch %(missing)s Stück benötigt."
+
+#: apps/reservations/services/workflow.py:274
+#, python-format
+msgid "Released from %(number)s"
+msgstr "Freigegeben aus %(number)s"
+
+#: apps/reservations/services/workflow.py:294
+#, python-format
+msgid "Devices are still missing for: %(items)s"
+msgstr "Es fehlen noch Geräte für: %(items)s"
+
+#: apps/reservations/services/workflow.py:312
+msgid "Please sign in the signature field."
+msgstr "Bitte unterschreiben Sie im Unterschriftsfeld."
+
+#: apps/reservations/services/workflow.py:314
+msgid "Enter who is collecting the devices."
+msgstr "Geben Sie an, wer die Geräte abholt."
+
+#: apps/reservations/services/workflow.py:316
+msgid "Only pickups at the terminal are signed."
+msgstr "Nur Abholungen am Terminal werden unterschrieben."
+
+#: config/api.py:52
+msgid "Not found."
+msgstr "Nicht gefunden."

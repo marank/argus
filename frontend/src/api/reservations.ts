@@ -1,0 +1,71 @@
+import type { Id, ListParams, Page } from '@/types/common'
+import type {
+  Candidates,
+  CatalogCategory,
+  MyAsset,
+  Reservation,
+  ReservationInput,
+  ReservationListItem,
+  HandOutInput,
+  HandoverMode,
+  SignInput,
+  TerminalPerson,
+  TerminalPickup,
+} from '@/types/reservations'
+
+import { http } from './client'
+
+const base = '/reservations'
+
+export interface ApproveInput {
+  items: { id: Id; quantity_approved: number }[]
+  pickup_at: string | null
+  pickup_location: Id | null
+  comment: string
+}
+
+export const reservationsApi = {
+  list: (params: ListParams = {}) => http.get<Page<ReservationListItem>>(base, params),
+  get: (id: Id) => http.get<Reservation>(`${base}/${id}`),
+  create: (data: ReservationInput) => http.post<Reservation>(base, data),
+  cancel: (id: Id) => http.post<Reservation>(`${base}/${id}/cancel`),
+  approve: (id: Id, data: ApproveInput) => http.post<Reservation>(`${base}/${id}/approve`, data),
+  reject: (id: Id, comment: string) => http.post<Reservation>(`${base}/${id}/reject`, { comment }),
+  schedule: (
+    id: Id,
+    data: {
+      pickup_at: string | null
+      pickup_location: Id | null
+      handover_mode?: HandoverMode
+    },
+  ) => http.post<Reservation>(`${base}/${id}/schedule`, data),
+  candidates: (itemId: Id, q?: string) =>
+    http.get<Candidates>(`${base}/items/${itemId}/candidates`, { q }),
+  allocate: (
+    id: Id,
+    data: { item: Id; asset?: Id; stock_item?: Id; quantity?: number; code?: string },
+  ) => http.post<Reservation>(`${base}/${id}/allocations`, data),
+  resolveItem: (id: Id, itemId: Id, assetModel: Id) =>
+    http.post<Reservation>(`${base}/${id}/items/${itemId}/resolve`, { asset_model: assetModel }),
+  autoAllocate: (id: Id) =>
+    http.post<{ allocated: number; reservation: Reservation }>(`${base}/${id}/auto-allocate`),
+  removeAllocation: (id: Id, allocationId: Id) =>
+    http.delete<Reservation>(`${base}/${id}/allocations/${allocationId}`),
+  markReady: (id: Id, handover_mode: HandoverMode) =>
+    http.post<Reservation>(`${base}/${id}/ready`, { handover_mode }),
+  handOut: (id: Id, data: HandOutInput) => http.post<Reservation>(`${base}/${id}/hand-out`, data),
+  returnDevices: (id: Id, allocations?: Id[]) =>
+    http.post<Reservation>(`${base}/${id}/return`, { allocations: allocations ?? null }),
+}
+
+export const portalApi = {
+  catalog: () => http.get<CatalogCategory[]>('/portal/catalog'),
+  myAssets: () => http.get<MyAsset[]>('/portal/my-assets'),
+}
+
+export const terminalApi = {
+  pickups: (q?: string) => http.get<TerminalPickup[]>('/terminal/pickups', { q }),
+  get: (id: Id) => http.get<Reservation>(`/terminal/pickups/${id}`),
+  sign: (id: Id, data: SignInput) => http.post<Reservation>(`/terminal/pickups/${id}/sign`, data),
+  people: (q: string) => http.get<TerminalPerson[]>('/terminal/people', { q }),
+}

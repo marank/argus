@@ -1,0 +1,98 @@
+<script setup lang="ts">
+import { Trash2 } from '@lucide/vue'
+import { NButton, NTimeline, NTimelineItem } from 'naive-ui'
+import { useI18n } from 'vue-i18n'
+
+import { useFormat } from '@/composables/useFormat'
+import { MANUAL_EVENT_KINDS, type AssetEvent, type AssetEventKind } from '@/types/inventory'
+
+defineProps<{ events: AssetEvent[] }>()
+const emit = defineEmits<{ remove: [event: AssetEvent] }>()
+const { t } = useI18n()
+const { dateTime, enumLabel, money } = useFormat()
+
+const TYPES: Partial<Record<AssetEventKind, 'success' | 'info' | 'warning' | 'error' | 'default'>> =
+  {
+    created: 'success',
+    assigned: 'info',
+    returned: 'default',
+    reserved: 'info',
+    battery_replaced: 'warning',
+    component_replaced: 'warning',
+    repair: 'error',
+    maintenance: 'warning',
+  }
+</script>
+
+<template>
+  <NTimeline size="medium">
+    <NTimelineItem
+      v-for="event in events"
+      :key="event.id"
+      :type="TYPES[event.kind] ?? 'default'"
+      :time="dateTime(event.occurred_at)"
+    >
+      <template #header>
+        <div class="head">
+          <strong>{{ enumLabel('eventKind', event.kind) }}</strong>
+          <span v-if="event.component" class="muted">· {{ event.component }}</span>
+          <span v-if="event.component_serial" class="mono muted">{{ event.component_serial }}</span>
+          <NButton
+            v-if="MANUAL_EVENT_KINDS.includes(event.kind)"
+            quaternary
+            size="tiny"
+            class="remove"
+            :title="t('common.delete')"
+            @click="emit('remove', event)"
+          >
+            <template #icon><Trash2 :size="13" /></template>
+          </NButton>
+        </div>
+      </template>
+      <div class="body">
+        <div v-if="event.description" class="desc">{{ event.description }}</div>
+        <div class="meta muted">
+          <span v-if="event.related_user"
+            >{{ t('inventory.event.employee') }}: {{ event.related_user.display_name }}</span
+          >
+          <RouterLink
+            v-if="event.reservation"
+            :to="{ name: 'reservation', params: { id: event.reservation.id } }"
+            class="mono"
+          >
+            {{ event.reservation.number }}
+          </RouterLink>
+          <span v-if="event.cost">{{ money(event.cost) }}</span>
+          <span v-if="event.performed_by"
+            >{{ t('inventory.event.performedBy') }} {{ event.performed_by.display_name }}</span
+          >
+        </div>
+      </div>
+    </NTimelineItem>
+  </NTimeline>
+</template>
+
+<style scoped>
+.head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.remove {
+  margin-left: auto;
+  opacity: 0.5;
+}
+.remove:hover {
+  opacity: 1;
+}
+.desc {
+  white-space: pre-line;
+}
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 12px;
+  margin-top: 2px;
+}
+</style>

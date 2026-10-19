@@ -1,0 +1,200 @@
+@import '@fontsource-variable/ibm-plex-sans';
+@import '@fontsource-variable/jetbrains-mono';
+
+:root {
+  --ar-font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+  --ar-sidebar-width: 232px;
+  --ar-header-height: 52px;
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--ar-bg);
+  color: var(--ar-text);
+  font-family: 'IBM Plex Sans Variable', system-ui, sans-serif;
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  height: 100%;
+}
+
+a {
+  color: var(--ar-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Identifiers (inventory numbers, serials, EANs) are always monospaced. */
+.mono {
+  font-family: var(--ar-font-mono);
+  font-size: 12px;
+  letter-spacing: -0.01em;
+}
+
+.muted {
+  color: var(--ar-text-muted);
+}
+
+.eyebrow {
+  font-family: var(--ar-font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ar-text-subtle);
+}
+
+.page {
+  position: relative;
+  padding: 20px 24px 40px;
+  max-width: 1480px;
+  margin: 0 auto;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar .grow {
+  flex: 1 1 220px;
+}
+
+.clickable-rows tbody tr {
+  cursor: pointer;
+}
+
+@media (max-width: 720px) {
+  .page {
+    padding: 14px 16px 32px;
+  }
+}
+
+/* Forms: labels span the full width (help icon right-aligned, see FieldLabel) and,
+   without reserved validation space, fields get one consistent vertical rhythm. */
+.n-form-item-label__text {
+  flex: 1;
+  min-width: 0;
+}
+.ar-form .n-form-item {
+  margin-bottom: 14px;
+}
+
+/* Row actions (edit, delete, book in/out …) appear on hover or keyboard focus.
+   Devices without hover (touch) always show them. */
+@media (hover: hover) {
+  .row-actions {
+    opacity: 0;
+    transition: opacity 0.12s ease;
+  }
+  tr:hover .row-actions,
+  tr:focus-within .row-actions,
+  .row-actions.is-open {
+    opacity: 1;
+  }
+}
+
+/* Column headers never break mid-word; tables scroll horizontally instead. */
+.n-data-table-th__title {
+  white-space: nowrap;
+}
+
+/* Date ranges: a single month is enough and keeps the popup compact. The first
+   calendar has its own month/year arrows, so ranges across months still work. */
+.n-date-panel--daterange {
+  grid-template-areas: 'left-calendar' 'footer' 'action' !important;
+  grid-template-columns: auto !important;
+}
+.n-date-panel--daterange .n-date-panel-calendar--end,
+.n-date-panel--daterange .n-date-panel__vertical-divider {
+  display: none !important;
+}
+
+/* Let DateField's icon actions span the footer so they can sit on the left. */
+.n-date-panel-actions__suffix:has(.date-actions) {
+  display: flex;
+  flex: 1;
+  align-items: center;
+}
+
+/* With only one month visible, days of the neighbouring month must still show the
+   range (Naive hides it there because it normally renders the second month). */
+.n-date-panel--daterange
+  .n-date-panel-date--excluded:is(
+    .n-date-panel-date--covered,
+    .n-date-panel-date--start,
+    .n-date-panel-date--end
+  )::before {
+  content: '';
+  position: absolute;
+  z-index: -2;
+  top: 0;
+  bottom: 0;
+  left: calc((var(--n-item-size) - var(--n-item-cell-width)) / 2);
+  right: calc((var(--n-item-size) - var(--n-item-cell-width)) / 2);
+  background-color: var(--n-item-color-included);
+  opacity: 0.6;
+}
+.n-date-panel--daterange .n-date-panel-date--excluded.n-date-panel-date--start::before {
+  left: 50%;
+}
+.n-date-panel--daterange .n-date-panel-date--excluded.n-date-panel-date--end::before {
+  right: 50%;
+}
+.n-date-panel--daterange .n-date-panel-date--excluded:nth-child(7n + 1)::before {
+  border-top-left-radius: var(--n-item-border-radius);
+  border-bottom-left-radius: var(--n-item-border-radius);
+}
+.n-date-panel--daterange .n-date-panel-date--excluded:nth-child(7n + 7)::before {
+  border-top-right-radius: var(--n-item-border-radius);
+  border-bottom-right-radius: var(--n-item-border-radius);
+}
+.n-date-panel.n-date-panel--daterange
+  .n-date-panel-dates
+  .n-date-panel-date.n-date-panel-date--excluded.n-date-panel-date--selected {
+  color: var(--n-item-text-color-active);
+}
+.n-date-panel.n-date-panel--daterange
+  .n-date-panel-dates
+  .n-date-panel-date.n-date-panel-date--excluded.n-date-panel-date--selected::after {
+  background-color: var(--n-item-color-active);
+  opacity: 0.6;
+}

@@ -1,0 +1,60 @@
+import { defineStore } from 'pinia'
+import { computed, ref } from 'vue'
+
+import { authApi } from '@/api/auth'
+import { ApiError } from '@/api/client'
+import { setLocale } from '@/i18n'
+import type { CurrentUser } from '@/types/accounts'
+
+export const useAuthStore = defineStore('auth', () => {
+  const user = ref<CurrentUser | null>(null)
+  const checked = ref(false)
+
+  const isAuthenticated = computed(() => user.value !== null)
+  const isItStaff = computed(() => user.value?.is_it_staff ?? false)
+  const isTerminal = computed(() => user.value?.is_terminal ?? false)
+
+  function apply(current: CurrentUser | null) {
+    user.value = current
+    if (current) setLocale(current.language)
+  }
+
+  async function fetchCurrentUser() {
+    try {
+      apply(await authApi.me())
+    } catch (error) {
+      // Anything but "not logged in" is unexpected; show the login page either way.
+      if (!(error instanceof ApiError) || error.status !== 401) console.error(error)
+      user.value = null
+    } finally {
+      checked.value = true
+    }
+  }
+
+  async function login(username: string, password: string) {
+    apply(await authApi.login(username, password))
+  }
+
+  async function logout() {
+    await authApi.logout()
+    user.value = null
+  }
+
+  async function changeLanguage(language: 'en' | 'de') {
+    setLocale(language)
+    if (user.value) user.value = await authApi.updatePreferences({ language })
+  }
+
+  return {
+    user,
+    checked,
+    isAuthenticated,
+    isItStaff,
+    isTerminal,
+    fetchCurrentUser,
+    login,
+    logout,
+    changeLanguage,
+    clear: () => (user.value = null),
+  }
+})
