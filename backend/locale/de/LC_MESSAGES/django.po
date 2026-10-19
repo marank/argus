@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 22:55+0200\n"
+"POT-Creation-Date: 2026-10-19 23:10+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -223,9 +223,11 @@ msgstr "LDAP-Gruppe"
 
 #: apps/accounts/models/team.py:25
 msgid "DN of a directory group; its members join the team when they sign in."
-msgstr "DN einer Verzeichnisgruppe; ihre Mitglieder kommen beim Anmelden ins Team."
+msgstr ""
+"DN einer Verzeichnisgruppe; ihre Mitglieder kommen beim Anmelden ins Team."
 
-#: apps/accounts/models/team.py:32 apps/reservations/models/reservation.py:108
+#: apps/accounts/models/team.py:32 apps/inventory/models/asset_issue.py:48
+#: apps/reservations/models/reservation.py:108
 msgid "team"
 msgstr "Team"
 
@@ -310,6 +312,14 @@ msgstr "Benutzer"
 #: apps/accounts/models/user.py:77
 msgid "A user with this username already exists."
 msgstr "Ein Benutzer mit diesem Benutzernamen existiert bereits."
+
+#: apps/accounts/services/assignment.py:22
+msgid "Unknown team."
+msgstr "Unbekanntes Team."
+
+#: apps/accounts/services/assignment.py:25
+msgid "Only active IT staff can be assigned."
+msgstr "Zuweisen lässt sich nur an aktive IT-Mitarbeiter."
 
 #: apps/accounts/services/ldap.py:99
 #, python-format
@@ -629,7 +639,7 @@ msgstr "Mitarbeiter werden so viele Tage vor der Rückgabe erinnert."
 msgid "site settings"
 msgstr "Website-Einstellungen"
 
-#: apps/dashboard/api/calendar.py:29
+#: apps/dashboard/api/calendar.py:39
 #, python-format
 msgid "Choose a range of at most %(days)s days."
 msgstr "Wählen Sie einen Zeitraum von höchstens %(days)s Tagen."
@@ -1007,19 +1017,24 @@ msgstr "gemeldet von"
 msgid "handled by"
 msgstr "bearbeitet von"
 
-#: apps/inventory/models/asset_issue.py:45
+#: apps/inventory/models/asset_issue.py:56
+#: apps/reservations/models/reservation.py:116
+msgid "assignee"
+msgstr "Bearbeiter"
+
+#: apps/inventory/models/asset_issue.py:62
 msgid "resolution"
 msgstr "Lösung"
 
-#: apps/inventory/models/asset_issue.py:46
+#: apps/inventory/models/asset_issue.py:63
 msgid "resolved at"
 msgstr "erledigt am"
 
-#: apps/inventory/models/asset_issue.py:49
+#: apps/inventory/models/asset_issue.py:66
 msgid "problem report"
 msgstr "Problemmeldung"
 
-#: apps/inventory/models/asset_issue.py:50
+#: apps/inventory/models/asset_issue.py:67
 msgid "problem reports"
 msgstr "Problemmeldungen"
 
@@ -1881,10 +1896,6 @@ msgstr "Das Abholterminal beginnt mit „Wer holt ab?“, ohne Geräteprüfung."
 msgid "IT comment"
 msgstr "Kommentar der IT"
 
-#: apps/reservations/models/reservation.py:116
-msgid "assignee"
-msgstr "Bearbeiter"
-
 #: apps/reservations/models/reservation.py:124
 msgid "prepared by"
 msgstr "bereitgestellt von"
@@ -2120,40 +2131,32 @@ msgstr "Freigegeben aus %(number)s"
 msgid "Devices are still missing for: %(items)s"
 msgstr "Es fehlen noch Geräte für: %(items)s"
 
-#: apps/reservations/services/workflow.py:416
-msgid "Unknown team."
-msgstr "Unbekanntes Team."
-
-#: apps/reservations/services/workflow.py:419
-msgid "Requests can only be assigned to active IT staff."
-msgstr "Anfragen können nur aktiven IT-Mitarbeitern zugewiesen werden."
-
-#: apps/reservations/services/workflow.py:435
+#: apps/reservations/services/workflow.py:418
 msgid "Please sign in the signature field."
 msgstr "Bitte unterschreiben Sie im Unterschriftsfeld."
 
-#: apps/reservations/services/workflow.py:437
+#: apps/reservations/services/workflow.py:420
 msgid "Enter who is collecting the devices."
 msgstr "Geben Sie an, wer die Geräte abholt."
 
-#: apps/reservations/services/workflow.py:439
+#: apps/reservations/services/workflow.py:422
 msgid "Only pickups at the terminal are signed."
 msgstr "Nur Abholungen am Terminal werden unterschrieben."
 
-#: apps/reservations/services/workflow.py:468
+#: apps/reservations/services/workflow.py:451
 msgid "Choose a member of the IT department."
 msgstr "Wählen Sie jemanden aus der IT-Abteilung."
 
-#: apps/reservations/services/workflow.py:574
+#: apps/reservations/services/workflow.py:557
 msgid "Nothing is left to take back."
 msgstr "Es ist nichts mehr zurückzunehmen."
 
-#: apps/reservations/services/workflow.py:599
+#: apps/reservations/services/workflow.py:582
 #, python-format
 msgid "Returned damaged from %(number)s"
 msgstr "Defekt zurück aus %(number)s"
 
-#: apps/reservations/services/workflow.py:637
+#: apps/reservations/services/workflow.py:620
 #, python-format
 msgid "This is set aside for %(number)s. Remove it there first."
 msgstr "Das ist für %(number)s zurückgelegt. Entfernen Sie es zuerst dort."

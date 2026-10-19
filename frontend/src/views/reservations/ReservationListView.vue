@@ -7,7 +7,6 @@ import {
   NRadioButton,
   NRadioGroup,
   NSelect,
-  NTag,
   type DataTableColumns,
 } from 'naive-ui'
 import { computed, h, onMounted, ref, watch } from 'vue'
@@ -16,10 +15,13 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { departmentsApi, teamsApi, usersApi } from '@/api/accounts'
 import { reservationsApi } from '@/api/reservations'
+import AssignedTabs from '@/components/common/AssignedTabs.vue'
+import { assignmentCell } from '@/components/common/assignmentCell'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { useFormat } from '@/composables/useFormat'
+import { useAssigned } from '@/composables/useAssigned'
 import { useList } from '@/composables/useList'
 import type { Team, User } from '@/types/accounts'
 import { RESERVATION_STATUSES, type ReservationListItem } from '@/types/reservations'
@@ -32,18 +34,7 @@ const { date, weekday, enumLabel } = useFormat()
 type Scope = 'open' | 'overdue' | 'all'
 const scope = ref<Scope>(route.query.overdue ? 'overdue' : route.query.status ? 'all' : 'open')
 
-/** Whose requests: remembered per browser, since each IT member mostly wants the same view. */
-type Assigned = 'me' | 'my_teams' | 'nobody' | 'all'
-const ASSIGNED_KEY = 'argus.reservations.assigned'
-function storedAssigned(): Assigned {
-  try {
-    const value = localStorage.getItem(ASSIGNED_KEY)
-    return value === 'me' || value === 'my_teams' || value === 'nobody' ? value : 'all'
-  } catch {
-    return 'all'
-  }
-}
-const assigned = ref<Assigned>(storedAssigned())
+const { assigned, param: assignedParam } = useAssigned('reservations')
 
 const list = useList(reservationsApi.list, {
   ordering: 'start_date',
@@ -53,7 +44,7 @@ const list = useList(reservationsApi.list, {
     duration: null,
     open: scope.value === 'open' ? true : null,
     overdue: scope.value === 'overdue' ? true : null,
-    assigned: assigned.value === 'all' ? null : assigned.value,
+    assigned: assignedParam(assigned.value),
     team: [],
     assignee: null,
   },
@@ -65,14 +56,7 @@ watch(scope, (value) => {
   list.filters.overdue = value === 'overdue' ? true : null
 })
 
-watch(assigned, (value) => {
-  list.filters.assigned = value === 'all' ? null : value
-  try {
-    localStorage.setItem(ASSIGNED_KEY, value)
-  } catch {
-    // Private mode or blocked storage: the choice just is not remembered.
-  }
-})
+watch(assigned, (value) => (list.filters.assigned = assignedParam(value)))
 
 const statusOptions = computed(() =>
   RESERVATION_STATUSES.map((s) => ({ value: s, label: enumLabel('reservationStatus', s) })),
@@ -104,17 +88,9 @@ const columns = computed<DataTableColumns<ReservationListItem>>(() => [
   },
   {
     key: 'assignment',
-    title: t('reservations.assignment.title'),
+    title: t('common.assignment.title'),
     width: 170,
-    render: (r) =>
-      r.assigned_team || r.assignee
-        ? h('div', [
-            r.assigned_team
-              ? h(NTag, { size: 'small', bordered: false }, () => r.assigned_team!.name)
-              : null,
-            r.assignee ? h('small', { class: 'assignee' }, r.assignee.display_name) : null,
-          ])
-        : h('span', { class: 'muted' }, '—'),
+    render: assignmentCell,
   },
   {
     key: 'start_date',
@@ -177,12 +153,7 @@ const columns = computed<DataTableColumns<ReservationListItem>>(() => [
           <NRadioButton value="overdue">{{ t('reservations.onlyOverdue') }}</NRadioButton>
           <NRadioButton value="all">{{ t('common.all') }}</NRadioButton>
         </NRadioGroup>
-        <NRadioGroup v-model:value="assigned" size="small">
-          <NRadioButton value="me">{{ t('reservations.assignment.me') }}</NRadioButton>
-          <NRadioButton value="my_teams">{{ t('reservations.assignment.myTeams') }}</NRadioButton>
-          <NRadioButton value="nobody">{{ t('reservations.assignment.unassigned') }}</NRadioButton>
-          <NRadioButton value="all">{{ t('reservations.assignment.allAssignments') }}</NRadioButton>
-        </NRadioGroup>
+        <AssignedTabs v-model="assigned" />
         <NInput
           v-model:value="list.search.value"
           class="grow"
@@ -221,7 +192,7 @@ const columns = computed<DataTableColumns<ReservationListItem>>(() => [
           :label="(team: Team) => team.name"
           multiple
           max-tag-count="responsive"
-          :placeholder="t('reservations.assignment.team')"
+          :placeholder="t('common.assignment.team')"
           style="width: 180px"
         />
         <EntitySelect
@@ -229,7 +200,7 @@ const columns = computed<DataTableColumns<ReservationListItem>>(() => [
           :fetcher="usersApi.list"
           :params="{ is_staff: true }"
           :label="(user: User) => user.display_name"
-          :placeholder="t('reservations.assignment.assignee')"
+          :placeholder="t('common.assignment.assignee')"
           style="width: 180px"
         />
       </div>
@@ -257,10 +228,6 @@ const columns = computed<DataTableColumns<ReservationListItem>>(() => [
 <style scoped>
 :deep(.strong) {
   font-weight: 600;
-}
-:deep(.assignee) {
-  display: block;
-  margin-top: 2px;
 }
 :deep(.overdue) {
   color: var(--ar-error);

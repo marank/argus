@@ -9,7 +9,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.utils import timezone
 
 from apps.inventory.models import Asset, License
@@ -38,14 +38,22 @@ def _requester(reservation: Reservation) -> str:
     return reservation.requester.display_name
 
 
-def calendar_entries(start: date, end: date, kinds: set[str] | None = None) -> list[Entry]:
-    """Entries overlapping [start, end] (inclusive)."""
+def calendar_entries(
+    start: date, end: date, kinds: set[str] | None = None, reservation_filter: Q | None = None
+) -> list[Entry]:
+    """Entries overlapping [start, end] (inclusive).
+
+    ``reservation_filter`` narrows the request entries (loans, pickups, returns),
+    e.g. to the user's own; deliveries and warranty or license ends stay.
+    """
     kinds = kinds or set(KINDS)
     today = timezone.localdate()
     entries: list[Entry] = []
 
-    reservations = Reservation.objects.select_related("requester").prefetch_related(
-        "items__category", "items__asset_model__manufacturer"
+    reservations = (
+        Reservation.objects.filter(reservation_filter or Q())
+        .select_related("requester")
+        .prefetch_related("items__category", "items__asset_model__manufacturer")
     )
     temporary = reservations.filter(
         duration=Reservation.Duration.TEMPORARY, status__in=Reservation.OPEN_STATUSES

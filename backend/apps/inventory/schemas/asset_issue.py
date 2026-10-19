@@ -3,7 +3,7 @@ from uuid import UUID
 
 from ninja import Field, Schema
 
-from apps.accounts.schemas import UserRefOut
+from apps.accounts.schemas import TeamRefOut, UserRefOut
 from apps.inventory.models import AssetIssue
 from apps.masterdata.schemas.refs import AssetModelRefOut
 
@@ -23,6 +23,8 @@ class AssetIssueOut(Schema):
     status: str
     reported_by: UserRefOut | None
     handled_by: UserRefOut | None
+    assigned_team: TeamRefOut | None
+    assignee: UserRefOut | None
     resolution: str
     resolved_at: datetime | None
     created_at: datetime
@@ -57,6 +59,11 @@ class OwnIssueWithDeviceOut(OwnIssueOut):
 class AssetIssueIn(Schema):
     kind: AssetIssue.Kind = AssetIssue.Kind.DEFECT
     description: str = Field(..., max_length=2000)
+
+
+class AssignIn(Schema):
+    team: UUID | None = None
+    assignee: UUID | None = None
 
 
 class AssetIssueUpdateIn(Schema):

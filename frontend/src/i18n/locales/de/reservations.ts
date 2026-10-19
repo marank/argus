@@ -198,18 +198,6 @@ export default {
     assign: 'Zuordnen',
     requested: 'Gewünscht: {text}',
   },
-  assignment: {
-    title: 'Zuständig',
-    team: 'Team',
-    assignee: 'Bearbeiter',
-    noTeam: 'Kein Team',
-    nobody: 'Niemand',
-    assignToMe: 'Mir zuweisen',
-    me: 'Mir zugewiesen',
-    myTeams: 'Meine Teams',
-    unassigned: 'Nicht zugewiesen',
-    allAssignments: 'Alle',
-  },
   history: 'Verlauf',
   handledBy: 'Bearbeitet von',
 }

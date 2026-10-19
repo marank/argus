@@ -70,6 +70,8 @@ export const issuesApi = {
   list: (params: ListParams = {}) => http.get<Page<AssetIssue>>('/inventory/issues', params),
   update: (id: Id, data: { status: IssueStatus; resolution?: string }) =>
     http.put<AssetIssue>(`/inventory/issues/${id}`, data),
+  assign: (id: Id, data: { team: Id | null; assignee: Id | null }) =>
+    http.post<AssetIssue>(`/inventory/issues/${id}/assign`, data),
 }
 
 export const lookupApi = {

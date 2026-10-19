@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Annotated, Literal
+from typing import Annotated
 from uuid import UUID
 
 from django.db import transaction
@@ -10,6 +10,8 @@ from ninja import FilterLookup, FilterSchema, Query, Router, Status
 from ninja.pagination import paginate
 
 from apps.accounts.models import User
+from apps.accounts.services import assignment
+from apps.accounts.services.assignment import Assigned, assigned_q
 from apps.core.api.pagination import Pagination
 from apps.core.api.querying import order, search
 from apps.core.api.security import is_it_staff, it_staff_auth
@@ -61,7 +63,7 @@ def list_reservations(
     q: str | None = None,
     ordering: str | None = None,
     mine: bool = False,
-    assigned: Literal["me", "my_teams", "nobody"] | None = None,
+    assigned: Assigned | None = None,
 ):
     """IT staff see every reservation, employees only their own.
 
@@ -71,12 +73,7 @@ def list_reservations(
     queryset = filters.filter(visible_reservations(request))
     if mine:
         queryset = queryset.filter(requester=request.user)
-    if assigned == "me":
-        queryset = queryset.filter(assignee=request.user)
-    elif assigned == "my_teams":
-        queryset = queryset.filter(Q(assigned_team__in=request.user.teams.all()) | Q(assignee=request.user))
-    elif assigned == "nobody":
-        queryset = queryset.filter(assigned_team__isnull=True, assignee__isnull=True)
+    queryset = queryset.filter(assigned_q(request.user, assigned))
     queryset = search(
         queryset,
         q,
@@ -166,7 +163,7 @@ def reopen(request: HttpRequest, pk: UUID):
 
 @router.post("/{uuid:pk}/assign", response=ReservationOut, auth=it_staff_auth)
 def assign(request: HttpRequest, pk: UUID, payload: AssignIn):
-    workflow.assign(get_for_update(pk), payload.team, payload.assignee)
+    assignment.assign(get_for_update(pk), payload.team, payload.assignee)
     return get_reservation(request, pk)
 
 

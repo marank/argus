@@ -13,6 +13,9 @@ import {
   ShieldAlert,
   ShoppingCart,
   Truck,
+  UserRound,
+  UserRoundX,
+  UsersRound,
 } from '@lucide/vue'
 import { NCard, NSkeleton } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
@@ -53,6 +56,7 @@ const requestCount = 4
 const stockCount = computed(
   () => (features.isOn('procurement') ? 2 : 0) + (features.isOn('consumables') ? 1 : 0),
 )
+const mineCount = computed(() => 3 + (features.isOn('issues') ? 1 : 0))
 const attentionCount = computed(
   () => 1 + (features.isOn('issues') ? 1 : 0) + (features.isOn('licenses') ? 1 : 0),
 )
@@ -63,8 +67,40 @@ const attentionCount = computed(
     <NSkeleton height="90px" :repeat="2" />
   </div>
   <div v-else class="stack">
-    <!-- Key figures: procurement/stock and deadlines side by side, requests below in a row of their own. -->
+    <!-- Key figures: the own queue on top, procurement/stock and deadlines side by side, requests in a row of their own. -->
     <section class="stat-groups">
+      <!-- The viewer's own queue: open requests and reports by who is responsible. -->
+      <StatGroup wide :title="t('dashboard.groups.mine')" :icon="UserRound" :count="mineCount">
+        <StatCard
+          :label="t('dashboard.assignedToMe')"
+          :value="data.requests_mine"
+          :icon="UserRound"
+          tone="primary"
+          :to="{ name: 'reservations', query: { assigned: 'me' } }"
+        />
+        <StatCard
+          :label="t('dashboard.myTeams')"
+          :value="data.requests_my_teams"
+          :icon="UsersRound"
+          tone="info"
+          :to="{ name: 'reservations', query: { assigned: 'my_teams' } }"
+        />
+        <StatCard
+          :label="t('dashboard.unassigned')"
+          :value="data.requests_unassigned"
+          :icon="UserRoundX"
+          :tone="data.requests_unassigned ? 'warning' : 'default'"
+          :to="{ name: 'reservations', query: { assigned: 'nobody' } }"
+        />
+        <StatCard
+          v-if="features.isOn('issues')"
+          :label="t('dashboard.issuesMine')"
+          :value="data.issues_mine"
+          :icon="MessageSquareWarning"
+          :tone="data.issues_mine ? 'warning' : 'default'"
+          :to="{ name: 'issues', query: { assigned: 'me' } }"
+        />
+      </StatGroup>
       <StatGroup
         v-if="stockCount"
         :title="t('dashboard.groups.stock')"

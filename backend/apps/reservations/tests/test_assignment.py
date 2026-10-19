@@ -1,6 +1,10 @@
+from datetime import timedelta
+
 import pytest
+from django.utils import timezone
 
 from apps.accounts.models import Team, User
+from apps.inventory.models import Asset, AssetIssue
 from apps.reservations.models import Reservation
 
 
@@ -91,3 +95,62 @@ def test_team_crud_with_members(it_client, demo):
     assert [m["username"] for m in response.json()["members"]] == ["it"]
     listed = it_client.get("/api/accounts/teams", {"member": str(it.pk)}).json()["items"]
     assert [t["name"] for t in listed] == ["Ledgerline"]
+
+
+def test_issues_can_be_assigned_and_filtered(it_client, support):
+    it = User.objects.get(username="it")
+    asset = Asset.objects.first()
+    mine = AssetIssue.objects.create(asset=asset, description="Screen broken")
+    other = AssetIssue.objects.create(asset=asset, description="Battery dead")
+
+    response = it_client.post(
+        f"/api/inventory/issues/{mine.pk}/assign",
+        {"team": str(support.pk), "assignee": str(it.pk)},
+        content_type="application/json",
+    )
+    assert response.status_code == 200, response.content
+    assert response.json()["assigned_team"]["name"] == "IT-Support"
+    assert response.json()["assignee"]["username"] == "it"
+
+    def ids(**params):
+        return {i["id"] for i in it_client.get("/api/inventory/issues", params).json()["items"]}
+
+    assert ids(assigned="me") == {str(mine.pk)}
+    assert ids(team=[str(support.pk)]) == {str(mine.pk)}
+    assert str(other.pk) in ids(assigned="nobody")
+
+
+def test_dashboard_counts_the_users_queue(it_client, support):
+    it = User.objects.get(username="it")
+    open_requests = Reservation.objects.filter(status__in=Reservation.OPEN_STATUSES)
+    first, second = open_requests[:2]
+    first.assignee = it
+    first.save()
+    second.assigned_team = support
+    second.save()
+    AssetIssue.objects.create(asset=Asset.objects.first(), description="Broken", assignee=it)
+
+    data = it_client.get("/api/dashboard/it").json()
+    assert data["requests_mine"] == 1
+    assert data["requests_my_teams"] == 2
+    assert data["requests_unassigned"] == open_requests.count() - 2
+    assert data["issues_mine"] == 1
+
+
+def test_calendar_narrows_requests_to_the_users_queue(it_client, support):
+    workshop = Reservation.objects.get(title="Training workshop")
+    today = timezone.localdate()
+    query = {
+        "start": (today - timedelta(days=10)).isoformat(),
+        "end": (today + timedelta(days=40)).isoformat(),
+    }
+
+    def request_ids(**params):
+        entries = it_client.get("/api/calendar", {**query, **params}).json()
+        return {e["link"]["id"] for e in entries if e["kind"] in ("loan", "pickup", "return")}
+
+    assert str(workshop.pk) in request_ids()
+    assert request_ids(assigned="me") == set()
+    workshop.assigned_team = support
+    workshop.save()
+    assert request_ids(assigned="my_teams") == {str(workshop.pk)}

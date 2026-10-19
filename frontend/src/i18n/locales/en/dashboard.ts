@@ -21,7 +21,12 @@ export default {
   pickupAt: 'Pickup {date}',
   noUpcoming: 'Nothing scheduled.',
   requestCta: 'Need something? Create a request',
+  assignedToMe: 'Assigned to me',
+  myTeams: 'My teams',
+  unassigned: 'Unassigned',
+  issuesMine: 'Reports with me',
   groups: {
+    mine: 'My work',
     requests: 'Requests',
     stock: 'Procurement & stock',
     attention: 'Deadlines & reports',

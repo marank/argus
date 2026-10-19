@@ -16,8 +16,10 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import { calendarApi } from '@/api/calendar'
+import AssignedTabs from '@/components/common/AssignedTabs.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import { entryColor, isTentative, KIND_ICONS, kindColor } from '@/components/calendar/kinds'
+import { useAssigned } from '@/composables/useAssigned'
 import { toIsoDate, useFormat } from '@/composables/useFormat'
 import { useTheme } from '@/theme/useTheme'
 import type { FeatureKey } from '@/types/settings'
@@ -53,6 +55,8 @@ const available = computed(() =>
 /** Kinds hidden with the filter chips; remembering the hidden ones lets new kinds show up. */
 const hidden = useStorage<CalendarKind[]>('argus.calendar-hidden-kinds', [])
 const enabled = computed(() => available.value.filter((kind) => !hidden.value.includes(kind)))
+/** Requests (loans, pickups, returns) by who is responsible; other entries always show. */
+const { assigned, param: assignedParam } = useAssigned('calendar')
 const title = ref('')
 const loading = ref(false)
 
@@ -83,6 +87,7 @@ async function fetchEvents(info: EventSourceFuncInfo): Promise<EventInput[]> {
       toIsoDate(info.start)!,
       toIsoDate(info.end)!,
       enabled.value,
+      assignedParam(assigned.value),
     )
     return entries.map((entry) => ({
       id: entry.id,
@@ -128,6 +133,7 @@ const options = computed<CalendarOptions>(() => ({
 
 watch(view, (name) => api()?.changeView(name))
 watch(enabled, () => api()?.refetchEvents(), { deep: true })
+watch(assigned, () => api()?.refetchEvents())
 
 function toggle(kind: CalendarKind) {
   hidden.value = hidden.value.includes(kind)
@@ -157,6 +163,7 @@ const legend = computed(() =>
       <h2 class="title">{{ title }}</h2>
       <span v-if="loading" class="mono muted small">…</span>
       <div class="grow" />
+      <AssignedTabs v-model="assigned" />
       <NRadioGroup v-model:value="view" size="small">
         <NRadioButton value="dayGridMonth">{{ t('calendar.views.month') }}</NRadioButton>
         <NRadioButton value="timeGridWeek">{{ t('calendar.views.week') }}</NRadioButton>

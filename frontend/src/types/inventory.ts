@@ -1,5 +1,5 @@
 import type { Id } from '@/types/common'
-import type { UserRef } from './accounts'
+import type { TeamRef, UserRef } from './accounts'
 import type { Ref } from './common'
 import type { AssetModel, AssetModelRef, CategoryRef, LocationRef } from './masterdata'
 
@@ -252,5 +252,8 @@ export interface AssetIssue extends OwnIssue {
   asset: { id: Id; inventory_number: string; model: AssetModelRef; assigned_to: UserRef | null }
   reported_by: UserRef | null
   handled_by: UserRef | null
+  /** Responsible IT team and person; independent of each other, both optional. */
+  assigned_team: TeamRef | null
+  assignee: UserRef | null
   resolved_at: string | null
 }

@@ -49,4 +49,16 @@ export default {
   forbidden: 'Sie haben keine Berechtigung für diese Seite.',
   notFound: 'Seite nicht gefunden',
   goHome: 'Zum Dashboard',
+  assignment: {
+    title: 'Zuständig',
+    team: 'Team',
+    assignee: 'Bearbeiter',
+    noTeam: 'Kein Team',
+    nobody: 'Niemand',
+    assignToMe: 'Mir zuweisen',
+    me: 'Mir zugewiesen',
+    myTeams: 'Meine Teams',
+    unassigned: 'Nicht zugewiesen',
+    allAssignments: 'Alle',
+  },
 }

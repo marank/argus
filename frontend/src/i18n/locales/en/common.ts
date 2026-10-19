@@ -49,4 +49,16 @@ export default {
   forbidden: 'You do not have permission for this page.',
   notFound: 'Page not found',
   goHome: 'Go to dashboard',
+  assignment: {
+    title: 'Responsible',
+    team: 'Team',
+    assignee: 'Assignee',
+    noTeam: 'No team',
+    nobody: 'Nobody',
+    assignToMe: 'Assign to me',
+    me: 'Assigned to me',
+    myTeams: 'My teams',
+    unassigned: 'Unassigned',
+    allAssignments: 'All',
+  },
 }

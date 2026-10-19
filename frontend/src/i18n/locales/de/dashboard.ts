@@ -21,7 +21,12 @@ export default {
   pickupAt: 'Abholung {date}',
   noUpcoming: 'Nichts geplant.',
   requestCta: 'Etwas benötigt? Neue Anforderung stellen',
+  assignedToMe: 'Mir zugewiesen',
+  myTeams: 'Meine Teams',
+  unassigned: 'Nicht zugewiesen',
+  issuesMine: 'Meldungen bei mir',
   groups: {
+    mine: 'Meine Arbeit',
     requests: 'Anforderungen',
     stock: 'Beschaffung & Bestand',
     attention: 'Fristen & Meldungen',

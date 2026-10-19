@@ -32,6 +32,10 @@ class ITOverviewOut(Schema):
     orders_in_transit: int
     low_consumables: int
     open_issues: int
+    requests_mine: int
+    requests_my_teams: int
+    requests_unassigned: int
+    issues_mine: int
     warranty_expiring: int
     licenses_expiring: int
     upcoming: list[UpcomingOut]
@@ -53,7 +57,7 @@ class EmployeeOverviewOut(Schema):
 
 @router.get("/it", response=ITOverviewOut, auth=it_staff_auth)
 def it(request: HttpRequest):
-    return it_overview()
+    return it_overview(request.user)
 
 
 @router.get("/me", response=EmployeeOverviewOut)

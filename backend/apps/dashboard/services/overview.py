@@ -3,16 +3,19 @@ from datetime import timedelta
 from django.db.models import Count, F
 from django.utils import timezone
 
+from apps.accounts.services.assignment import assigned_q
 from apps.core.models import SiteSettings
 from apps.inventory.models import Asset, AssetEvent, AssetIssue, Consumable, License
 from apps.procurement.models import PurchaseOrder
 from apps.reservations.models import Reservation
 
 
-def it_overview() -> dict:
+def it_overview(user) -> dict:
     today = timezone.localdate()
     rules = SiteSettings.load()
     reservations = Reservation.objects.all()
+    open_requests = reservations.filter(status__in=Reservation.OPEN_STATUSES)
+    open_issues = AssetIssue.objects.exclude(status=AssetIssue.Status.RESOLVED)
     upcoming = (
         reservations.filter(
             status__in=(Reservation.Status.APPROVED, Reservation.Status.READY),
@@ -36,7 +39,12 @@ def it_overview() -> dict:
             status__in=(PurchaseOrder.Status.ORDERED, PurchaseOrder.Status.PARTIALLY_RECEIVED)
         ).count(),
         "low_consumables": Consumable.objects.filter(quantity__lt=F("min_quantity")).count(),
-        "open_issues": AssetIssue.objects.exclude(status=AssetIssue.Status.RESOLVED).count(),
+        "open_issues": open_issues.count(),
+        # Open requests and reports by who is responsible, for the user's own queue.
+        "requests_mine": open_requests.filter(assigned_q(user, "me")).count(),
+        "requests_my_teams": open_requests.filter(assigned_q(user, "my_teams")).count(),
+        "requests_unassigned": open_requests.filter(assigned_q(user, "nobody")).count(),
+        "issues_mine": open_issues.filter(assigned_q(user, "me")).count(),
         "warranty_expiring": Asset.objects.filter(
             warranty_until__range=(today, today + timedelta(days=rules.warranty_warning_days))
         )

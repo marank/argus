@@ -42,6 +42,23 @@ class AssetIssue(TimeStampedModel):
         blank=True,
         related_name="+",
     )
+    # Who is responsible, set on purpose by IT (``handled_by`` is just the last one acting).
+    assigned_team = models.ForeignKey(
+        "accounts.Team",
+        verbose_name=_("team"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="issues",
+    )
+    assignee = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("assignee"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="assigned_issues",
+    )
     resolution = models.TextField(_("resolution"), blank=True)
     resolved_at = models.DateTimeField(_("resolved at"), null=True, blank=True)
 

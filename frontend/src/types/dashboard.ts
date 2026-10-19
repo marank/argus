@@ -12,6 +12,11 @@ export interface ITOverview {
   orders_in_transit: number
   low_consumables: number
   open_issues: number
+  /** Open requests and reports by who is responsible, from the viewer's side. */
+  requests_mine: number
+  requests_my_teams: number
+  requests_unassigned: number
+  issues_mine: number
   warranty_expiring: number
   licenses_expiring: number
   upcoming: {

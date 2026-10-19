@@ -1,17 +1,25 @@
 <script setup lang="ts">
 import { NButton, NDataTable, NInput, NModal, NSelect, type DataTableColumns } from 'naive-ui'
-import { computed, h, onMounted, ref } from 'vue'
+import { computed, h, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 
+import { teamsApi, usersApi } from '@/api/accounts'
 import { issuesApi } from '@/api/inventory'
+import AssignedTabs from '@/components/common/AssignedTabs.vue'
+import AssignmentFields from '@/components/common/AssignmentFields.vue'
+import { assignmentCell } from '@/components/common/assignmentCell'
 import CheckField from '@/components/common/CheckField.vue'
+import EntitySelect from '@/components/common/EntitySelect.vue'
 import FieldLabel from '@/components/common/FieldLabel.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { useAction } from '@/composables/useAction'
+import { useAssigned } from '@/composables/useAssigned'
 import { useFormat } from '@/composables/useFormat'
 import { useList } from '@/composables/useList'
+import type { Team, User } from '@/types/accounts'
+import type { Id } from '@/types/common'
 import { ISSUE_KINDS, type AssetIssue, type IssueStatus } from '@/types/inventory'
 
 /** Problems employees reported for their devices; IT takes them into work and resolves them. */
@@ -20,11 +28,19 @@ const { date, dateTime, enumLabel } = useFormat()
 const { busy, run } = useAction()
 
 const OPEN: IssueStatus[] = ['open', 'in_progress']
+const { assigned, param: assignedParam } = useAssigned('issues')
 const list = useList(issuesApi.list, {
   ordering: '-created_at',
-  filters: { status: [...OPEN], kind: null },
+  filters: {
+    status: [...OPEN],
+    kind: null,
+    assigned: assignedParam(assigned.value),
+    team: [],
+    assignee: null,
+  },
 })
 onMounted(list.load)
+watch(assigned, (value) => (list.filters.assigned = assignedParam(value)))
 
 const onlyOpen = computed({
   get: () => (list.filters.status as string[]).length > 0,
@@ -42,6 +58,14 @@ function open(issue: AssetIssue) {
   selected.value = issue
   resolution.value = issue.resolution
   showHandle.value = true
+}
+
+const assignSelected = (data: { team: Id | null; assignee: Id | null }) =>
+  issuesApi.assign(selected.value!.id, data)
+
+function onAssigned(issue: AssetIssue) {
+  selected.value = issue
+  list.load()
 }
 
 async function setStatus(status: IssueStatus) {
@@ -98,6 +122,12 @@ const columns = computed<DataTableColumns<AssetIssue>>(() => [
     ellipsis: { tooltip: true },
   },
   {
+    key: 'assignment',
+    title: t('common.assignment.title'),
+    width: 160,
+    render: assignmentCell,
+  },
+  {
     key: 'reported_by',
     title: t('inventory.issues.reportedBy'),
     width: 160,
@@ -118,6 +148,7 @@ const columns = computed<DataTableColumns<AssetIssue>>(() => [
     <PageHeader :title="t('inventory.issues.title')" :subtitle="t('inventory.issues.subtitle')" />
     <div class="stack">
       <div class="toolbar">
+        <AssignedTabs v-model="assigned" />
         <NInput
           v-model:value="list.search.value"
           class="grow"
@@ -131,6 +162,23 @@ const columns = computed<DataTableColumns<AssetIssue>>(() => [
           clearable
           style="width: 200px"
         />
+        <EntitySelect
+          v-model="list.filters.team as string[]"
+          :fetcher="teamsApi.list"
+          :label="(team: Team) => team.name"
+          multiple
+          max-tag-count="responsive"
+          :placeholder="t('common.assignment.team')"
+          style="width: 180px"
+        />
+        <EntitySelect
+          v-model="list.filters.assignee as string | null"
+          :fetcher="usersApi.list"
+          :params="{ is_staff: true }"
+          :label="(user: User) => user.display_name"
+          :placeholder="t('common.assignment.assignee')"
+          style="width: 180px"
+        />
         <CheckField v-model="onlyOpen" :label="t('inventory.issues.onlyOpen')" />
       </div>
       <NDataTable
@@ -143,7 +191,7 @@ const columns = computed<DataTableColumns<AssetIssue>>(() => [
         :pagination="list.pagination.value"
         :row-key="(i: AssetIssue) => i.id"
         :row-props="(i: AssetIssue) => ({ onClick: () => open(i) })"
-        :scroll-x="1000"
+        :scroll-x="1160"
         @update:sorter="list.onSort"
       />
     </div>
@@ -169,6 +217,16 @@ const columns = computed<DataTableColumns<AssetIssue>>(() => [
             · {{ t('inventory.issues.handledBy', { name: selected.handled_by.display_name }) }}
           </template>
         </p>
+        <div class="field">
+          <span class="eyebrow">{{ t('common.assignment.title') }}</span>
+          <AssignmentFields
+            :key="selected.id"
+            :team="selected.assigned_team"
+            :assignee="selected.assignee"
+            :assign="assignSelected"
+            @updated="onAssigned"
+          />
+        </div>
         <div class="field">
           <FieldLabel
             :label="t('inventory.issues.resolution')"
