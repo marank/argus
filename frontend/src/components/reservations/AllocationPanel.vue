@@ -212,7 +212,9 @@ async function remove(allocationId: Id) {
       }}</NButton>
       <span v-if="candidates && !licenseOptions.length" class="muted small">
         {{ t('reservations.allocation.noSeats') }}
-        <RouterLink :to="{ name: 'licenses' }">{{ t('reservations.allocation.toLicenses') }}</RouterLink>
+        <RouterLink :to="{ name: 'licenses' }">{{
+          t('reservations.allocation.toLicenses')
+        }}</RouterLink>
       </span>
     </div>
 

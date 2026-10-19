@@ -100,7 +100,8 @@ export default {
     terminal: 'Pickup terminal',
     terminalHelp: 'Shared account for the touch terminal; only sees prepared pickups.',
     terminalLocation: 'Terminal site',
-    terminalLocationHelp: 'Pickup terminal accounts only: lists pickups at this location and below. Empty: all.',
+    terminalLocationHelp:
+      'Pickup terminal accounts only: lists pickups at this location and below. Empty: all.',
     itStaff: 'IT staff',
   },
 }

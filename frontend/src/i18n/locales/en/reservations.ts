@@ -145,7 +145,8 @@ export default {
       'Take the request back into preparation? It disappears from the pickup terminal; allocated devices stay.',
     markReady: 'Ready for pickup',
     completeSeats: 'Release licenses',
-    confirmSeatsOnly: 'There is nothing to collect. Release the licenses now and record the hand-out?',
+    confirmSeatsOnly:
+      'There is nothing to collect. Release the licenses now and record the hand-out?',
     handOut: 'Hand out',
     confirmHandOut: 'Hand out all allocated devices to {name}?',
     return: 'Take back',

@@ -100,7 +100,8 @@ export default {
     terminal: 'Abholterminal',
     terminalHelp: 'Gemeinsames Konto für das Touch-Terminal; sieht nur vorbereitete Abholungen.',
     terminalLocation: 'Standort des Terminals',
-    terminalLocationHelp: 'Nur für Terminal-Konten: zeigt nur Abholungen an diesem Standort und darunter. Leer: alle.',
+    terminalLocationHelp:
+      'Nur für Terminal-Konten: zeigt nur Abholungen an diesem Standort und darunter. Leer: alle.',
     itStaff: 'IT-Mitarbeiter',
   },
 }

@@ -41,7 +41,10 @@ function setPickup(value: number | [number, number] | null) {
     </header>
     <div class="fields">
       <div class="field">
-        <FieldLabel :label="t('reservations.duration')" :help="t('reservations.new.durationHelp')" />
+        <FieldLabel
+          :label="t('reservations.duration')"
+          :help="t('reservations.new.durationHelp')"
+        />
         <NRadioGroup v-model:value="period.duration" size="small" class="duration">
           <NRadioButton value="temporary">{{ t('enums.duration.temporary') }}</NRadioButton>
           <NRadioButton value="permanent">{{ t('enums.duration.permanent') }}</NRadioButton>

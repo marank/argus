@@ -65,7 +65,9 @@ const signed = ref(false)
 const handedOutBy = ref<Id | null>(null)
 const staff = ref<TerminalStaff[]>([])
 const changingStaff = ref(false)
-const staffOptions = computed(() => staff.value.map((s) => ({ value: s.id, label: s.display_name })))
+const staffOptions = computed(() =>
+  staff.value.map((s) => ({ value: s.id, label: s.display_name })),
+)
 const handedOutByName = computed(() => {
   const chosen = staff.value.find((s) => s.id === handedOutBy.value)
   const preparer = reservation.value?.prepared_by ?? reservation.value?.handled_by
@@ -80,7 +82,8 @@ async function changeStaff() {
 onMounted(async () => {
   try {
     reservation.value = await terminalApi.get(props.id)
-    handedOutBy.value = reservation.value.prepared_by?.id ?? reservation.value.handled_by?.id ?? null
+    handedOutBy.value =
+      reservation.value.prepared_by?.id ?? reservation.value.handled_by?.id ?? null
     // IT can skip the check, e.g. for sealed devices: start with who collects.
     if (reservation.value.skip_device_check) step.value = 'person'
   } catch {
@@ -229,7 +232,11 @@ async function cancelPickup() {
           :class="{ noted: notes[allocation.id]?.trim() }"
         >
           <span class="device-icon">
-            <component :is="categoryIcon(allocation.category_icon)" :size="26" :stroke-width="1.5" />
+            <component
+              :is="categoryIcon(allocation.category_icon)"
+              :size="26"
+              :stroke-width="1.5"
+            />
           </span>
           <strong class="device-name">{{ deviceLabel(allocation) }}</strong>
           <template v-if="allocation.asset">

@@ -146,7 +146,8 @@ export default {
       'Anforderung zurück in die Vorbereitung nehmen? Sie verschwindet vom Abholterminal, die zugewiesenen Geräte bleiben.',
     markReady: 'Abholbereit melden',
     completeSeats: 'Lizenzen freigeben',
-    confirmSeatsOnly: 'Es gibt nichts abzuholen. Die Lizenzen jetzt freigeben und die Ausgabe erfassen?',
+    confirmSeatsOnly:
+      'Es gibt nichts abzuholen. Die Lizenzen jetzt freigeben und die Ausgabe erfassen?',
     handOut: 'Ausgeben',
     confirmHandOut: 'Alle zugewiesenen Geräte an {name} ausgeben?',
     return: 'Zurücknehmen',

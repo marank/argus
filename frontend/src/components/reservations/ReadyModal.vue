@@ -76,8 +76,8 @@ async function save() {
             style="width: 100%"
           />
           <small v-if="reservation.requested_pickup_date" class="muted wish">{{
-              t('reservations.wishHint', { date: weekday(reservation.requested_pickup_date) })
-            }}</small>
+            t('reservations.wishHint', { date: weekday(reservation.requested_pickup_date) })
+          }}</small>
         </div>
       </NFormItem>
       <NFormItem
@@ -109,7 +109,6 @@ async function save() {
         }}</NButton>
       </div>
     </template>
-
   </NModal>
 </template>
 
