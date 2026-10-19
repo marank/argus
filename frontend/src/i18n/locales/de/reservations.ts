@@ -44,7 +44,7 @@ export default {
     submit: 'Anforderung absenden',
     submitted: 'Anforderung {number} wurde eingereicht',
     temporaryHint: 'Für einen Zeitraum ausleihen, z. B. eine Schulung',
-    searchPlaceholder: 'Was brauchen Sie? z. B. Headset, Laptop, MDE',
+    searchPlaceholder: 'Suchen, z. B. Headset',
     results: 'Suchergebnisse',
     searchEmpty: 'Nichts gefunden für „{q}“.',
     specificModel: 'Oder ein bestimmtes Modell',

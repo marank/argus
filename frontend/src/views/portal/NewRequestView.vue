@@ -135,20 +135,20 @@ async function submit(data: ReservationInput) {
     <PageHeader :title="t('reservations.new.title')" :subtitle="t('reservations.new.subtitle')" />
     <div class="layout">
       <NSkeleton v-if="!catalog" height="320px" />
-      <div v-else class="choose">
+      <CatalogBrowser
+        v-else
+        :catalog="catalog"
+        :cart-counts="cartCounts"
+        @add="add"
+        @add-free-text="addFreeText"
+      >
         <ConsumableQuickPick
           :groups="myConsumables"
           :catalog="catalog"
           :cart-counts="cartCounts"
           @add="add"
         />
-        <CatalogBrowser
-          :catalog="catalog"
-          :cart-counts="cartCounts"
-          @add="add"
-          @add-free-text="addFreeText"
-        />
-      </div>
+      </CatalogBrowser>
       <div class="side">
         <RequestPeriodCard v-model="period" :shows-availability="auth.isItStaff" />
         <RequestCart
@@ -165,11 +165,6 @@ async function submit(data: ReservationInput) {
 </template>
 
 <style scoped>
-.choose {
-  display: grid;
-  gap: 14px;
-  min-width: 0;
-}
 .side {
   position: sticky;
   top: 16px;
@@ -178,8 +173,8 @@ async function submit(data: ReservationInput) {
 }
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(400px, 34%, 500px);
-  gap: 20px;
+  grid-template-columns: minmax(0, 1fr) clamp(340px, 28%, 440px);
+  gap: 14px;
   align-items: start;
 }
 @media (max-width: 1080px) {

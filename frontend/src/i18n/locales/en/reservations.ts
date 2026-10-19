@@ -43,7 +43,7 @@ export default {
     submit: 'Submit request',
     submitted: 'Request {number} submitted',
     temporaryHint: 'Borrow for a period, e.g. a workshop',
-    searchPlaceholder: 'What do you need? e.g. headset, laptop, MDE',
+    searchPlaceholder: 'Search, e.g. headset',
     results: 'Search results',
     searchEmpty: 'Nothing found for “{q}”.',
     specificModel: 'Or a specific model',
