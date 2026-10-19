@@ -4,20 +4,20 @@ from django.utils.translation import gettext_lazy as _
 from apps.core.models import TimeStampedModel
 
 
-class StockItem(TimeStampedModel):
+class Consumable(TimeStampedModel):
     """Quantity of a bulk model (ink cartridges, cables, ...) at one location."""
 
     model = models.ForeignKey(
         "masterdata.AssetModel",
         verbose_name=_("model"),
         on_delete=models.PROTECT,
-        related_name="stock_items",
+        related_name="consumables",
     )
     location = models.ForeignKey(
         "masterdata.Location",
         verbose_name=_("location"),
         on_delete=models.PROTECT,
-        related_name="stock_items",
+        related_name="consumables",
     )
     quantity = models.IntegerField(_("quantity"), default=0)
     reserved_quantity = models.PositiveIntegerField(_("reserved quantity"), default=0)
@@ -26,11 +26,11 @@ class StockItem(TimeStampedModel):
     )
 
     class Meta:
-        verbose_name = _("stock item")
-        verbose_name_plural = _("stock items")
+        verbose_name = _("consumable")
+        verbose_name_plural = _("consumables")
         ordering = ["model__name"]
         constraints = [
-            models.UniqueConstraint(fields=["model", "location"], name="unique_stock_location"),
+            models.UniqueConstraint(fields=["model", "location"], name="unique_consumable_location"),
         ]
 
     def __str__(self) -> str:

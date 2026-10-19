@@ -39,7 +39,7 @@ class ReservationNeedOut(Schema):
     to_order: int
 
 
-class StockNeedItemOut(Schema):
+class ConsumableNeedItemOut(Schema):
     id: UUID
     model: AssetModelRefOut
     location: LocationRefOut
@@ -52,8 +52,8 @@ class StockNeedItemOut(Schema):
         return obj.model.default_supplier
 
 
-class StockNeedOut(Schema):
-    stock_item: StockNeedItemOut
+class ConsumableNeedOut(Schema):
+    consumable: ConsumableNeedItemOut
     missing: int
     on_order: int
     to_order: int
@@ -61,4 +61,4 @@ class StockNeedOut(Schema):
 
 class NeedsOut(Schema):
     reservations: list[ReservationNeedOut]
-    stock: list[StockNeedOut]
+    consumables: list[ConsumableNeedOut]

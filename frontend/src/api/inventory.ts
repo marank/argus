@@ -6,9 +6,9 @@ import type {
   AssetEventWithAsset,
   AssetInput,
   LookupResult,
-  StockItem,
-  StockMovement,
-  StockReason,
+  Consumable,
+  ConsumableMovement,
+  ConsumableReason,
 } from '@/types/inventory'
 
 import { http } from './client'
@@ -34,18 +34,18 @@ export const eventsApi = {
   remove: (id: Id) => http.delete(`/inventory/events/${id}`),
 }
 
-export const stockApi = {
-  list: (params: ListParams = {}) => http.get<Page<StockItem>>('/inventory/stock', params),
-  get: (id: Id) => http.get<StockItem>(`/inventory/stock/${id}`),
+export const consumablesApi = {
+  list: (params: ListParams = {}) => http.get<Page<Consumable>>('/inventory/consumables', params),
+  get: (id: Id) => http.get<Consumable>(`/inventory/consumables/${id}`),
   create: (data: { model: Id; location: Id; min_quantity: number }) =>
-    http.post<StockItem>('/inventory/stock', data),
+    http.post<Consumable>('/inventory/consumables', data),
   update: (id: Id, data: { min_quantity: number }) =>
-    http.put<StockItem>(`/inventory/stock/${id}`, data),
-  movements: (id: Id) => http.get<StockMovement[]>(`/inventory/stock/${id}/movements`),
+    http.put<Consumable>(`/inventory/consumables/${id}`, data),
+  movements: (id: Id) => http.get<ConsumableMovement[]>(`/inventory/consumables/${id}/movements`),
   move: (
     id: Id,
-    data: { delta: number; reason: StockReason; note?: string; recipient?: Id | null },
-  ) => http.post<StockItem>(`/inventory/stock/${id}/move`, data),
+    data: { delta: number; reason: ConsumableReason; note?: string; recipient?: Id | null },
+  ) => http.post<Consumable>(`/inventory/consumables/${id}/move`, data),
 }
 
 export const lookupApi = {

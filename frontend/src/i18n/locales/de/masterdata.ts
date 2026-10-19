@@ -79,7 +79,7 @@ export default {
     numberSequenceHelp:
       'Neue Geräte dieser Gruppe erhalten ihre Inventarnummer aus dieser Serie. Leer: Es gilt die Serie der übergeordneten Gruppe.',
     trackingHelp:
-      'Einzelgeräte haben Seriennummer und Historie. Lagermenge passt für Verbrauchsmaterial wie Tinte oder Kabel.',
+      'Einzelgeräte haben Seriennummer und Historie. Verbrauchsmaterial wie Tinte oder Kabel wird über Mengen geführt.',
     compatibleWithHelp: 'Zubehör, Ersatzteile und Verbrauchsmaterial, die zu diesem Modell passen.',
     pickupPointHelp: 'Mitarbeiter können hier Geräte abholen; wird bei der Abholplanung angeboten.',
     itStaffHelp: 'Zugriff auf Inventar, Reservierungen, Beschaffung und Stammdaten.',

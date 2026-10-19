@@ -91,7 +91,24 @@ class Asset(TimeStampedModel):
         _("purchase price"), max_digits=10, decimal_places=2, null=True, blank=True
     )
     warranty_until = models.DateField(_("warranty until"), null=True, blank=True)
+    consumables = models.ManyToManyField(
+        "masterdata.AssetModel",
+        verbose_name=_("consumables"),
+        blank=True,
+        limit_choices_to={"tracking": "bulk"},
+        related_name="consuming_assets",
+        help_text=_("Consumables for this device in addition to those compatible with its model."),
+    )
     notes = models.TextField(_("notes"), blank=True)
+
+    def consumable_models(self):
+        """Consumables for this device: its own plus those compatible with its model."""
+        from apps.masterdata.models import AssetModel
+
+        return AssetModel.objects.filter(
+            models.Q(consuming_assets=self) | models.Q(compatible_with=self.model_id),
+            tracking=AssetModel.Tracking.BULK,
+        ).distinct()
 
     class Meta:
         verbose_name = _("asset")

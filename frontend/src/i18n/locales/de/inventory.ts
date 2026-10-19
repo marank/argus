@@ -26,6 +26,9 @@ export default {
     warrantyUntil: 'Garantie bis',
     loanable: 'Verleihbar (Pool)',
     loanableHelp: 'Teil des Pools, aus dem Mitarbeiter reservieren können.',
+    consumables: 'Verbrauchsmaterial',
+    consumablesHelp:
+      'Passendes Verbrauchsmaterial für genau dieses Gerät. Was zum Modell passt (Modell → kompatibel mit), gilt automatisch. Mitarbeiter bekommen beides beim Anfordern als Schnellwahl angeboten.',
     condition: 'Zustand',
   },
   sections: {
@@ -38,6 +41,8 @@ export default {
   assignTo: 'An Mitarbeiter ausgeben',
   activeReservation: 'Reserviert für {number} ({name})',
   history: 'Historie',
+  viaModel: 'über Modell',
+  noConsumables: 'Kein Verbrauchsmaterial zugeordnet.',
   recordEvent: 'Service erfassen',
   bulk: {
     title: 'Mehrere Geräte einscannen',
@@ -54,15 +59,15 @@ export default {
     cost: 'Kosten',
     performedBy: 'Durch',
     employee: 'Mitarbeiter',
-    consume: 'Ersatzteil aus Lager entnehmen',
-    consumeItem: 'Lagerartikel',
+    consume: 'Verbrauchsmaterial entnehmen',
+    consumeItem: 'Verbrauchsmaterial',
     asset: 'Gerät',
   },
   eventLog: 'Servicebuch',
   eventLogSubtitle: 'Akkutausch, Reparaturen und alle weiteren Ereignisse über alle Geräte hinweg.',
-  stock: {
-    title: 'Lagerbestand',
-    subtitle: 'Verbrauchsmaterial und Zubehör, das über Mengen geführt wird.',
+  consumables: {
+    title: 'Verbrauchsmaterial',
+    subtitle: 'Tinte, Akkus, Kabel und Zubehör, das über Mengen je Lagerort geführt wird.',
     item: 'Artikel',
     available: 'Verfügbar',
     reserved: 'Reserviert',
@@ -77,6 +82,6 @@ export default {
     delta: 'Änderung',
     recipient: 'Empfänger',
     reason: 'Grund',
-    newItem: 'Neuer Lagerartikel',
+    newItem: 'Neues Verbrauchsmaterial',
   },
 }

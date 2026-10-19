@@ -9,10 +9,10 @@ from django.utils.translation import gettext as _
 
 from apps.accounts.models import User
 from apps.core.exceptions import BusinessError
-from apps.inventory.models import Asset, AssetEvent, StockItem, StockMovement
-from apps.inventory.services.availability import pool_assets, pool_stock
+from apps.inventory.models import Asset, AssetEvent, Consumable, ConsumableMovement
+from apps.inventory.services.availability import pool_assets, pool_consumables
+from apps.inventory.services.consumables import move_consumable, release_consumable, reserve_consumable
 from apps.inventory.services.events import log_event
-from apps.inventory.services.stock import move_stock, release_stock, reserve_stock
 from apps.masterdata.models import Category
 from apps.reservations.models import Handover, Reservation, ReservationAllocation, ReservationItem
 
@@ -208,22 +208,22 @@ def allocate_asset(item: ReservationItem, asset: Asset, user) -> ReservationAllo
 
 
 @transaction.atomic
-def allocate_stock(
-    item: ReservationItem, stock_item: StockItem, quantity: int, user
+def allocate_consumable(
+    item: ReservationItem, consumable: Consumable, quantity: int, user
 ) -> ReservationAllocation:
     _require_status(item.reservation, Status.APPROVED)
-    if not _matches(item, stock_item.model):
+    if not _matches(item, consumable.model):
         raise BusinessError(
-            _("%(model)s does not match “%(item)s”.") % {"model": stock_item.model, "item": item.label}
+            _("%(model)s does not match “%(item)s”.") % {"model": consumable.model, "item": item.label}
         )
     if quantity > item.quantity_missing:
         raise BusinessError(
             _("Only %(missing)s more units are needed for “%(item)s”.")
             % {"missing": item.quantity_missing, "item": item.label}
         )
-    reserve_stock(stock_item, quantity)
+    reserve_consumable(consumable, quantity)
     return ReservationAllocation.objects.create(
-        item=item, stock_item=stock_item, quantity=quantity, allocated_by=user
+        item=item, consumable=consumable, quantity=quantity, allocated_by=user
     )
 
 
@@ -241,11 +241,11 @@ def auto_allocate(reservation: Reservation, user) -> int:
                 break
             allocate_asset(item, asset, user)
             allocated += 1
-        for stock_item in pool_stock(**filters):
+        for consumable in pool_consumables(**filters):
             missing = item.quantity_missing
-            take = min(missing, stock_item.available_quantity)
+            take = min(missing, consumable.available_quantity)
             if take > 0:
-                allocate_stock(item, stock_item, take, user)
+                allocate_consumable(item, consumable, take, user)
                 allocated += take
     return allocated
 
@@ -274,13 +274,13 @@ def _release(allocation: ReservationAllocation, user) -> None:
                 description=_("Released from %(number)s") % {"number": allocation.item.reservation.number},
             )
     else:
-        release_stock(allocation.stock_item, allocation.quantity)
+        release_consumable(allocation.consumable, allocation.quantity)
 
 
 def _release_all(reservation: Reservation, user=None) -> None:
     for allocation in ReservationAllocation.objects.filter(
         item__reservation=reservation, handed_out_at__isnull=True
-    ).select_related("asset", "stock_item", "item__reservation"):
+    ).select_related("asset", "consumable", "item__reservation"):
         _release(allocation, user)
         allocation.delete()
 
@@ -345,7 +345,7 @@ def hand_out(
     now = timezone.now()
     allocation_notes = allocation_notes or {}
     allocations = ReservationAllocation.objects.filter(item__reservation=reservation).select_related(
-        "asset", "stock_item"
+        "asset", "consumable"
     )
     for allocation in allocations:
         note = allocation_notes.get(allocation.pk, "").strip()
@@ -364,10 +364,10 @@ def hand_out(
                 description=note,
             )
         else:
-            move_stock(
-                allocation.stock_item,
+            move_consumable(
+                allocation.consumable,
                 -allocation.quantity,
-                StockMovement.Reason.ISSUE,
+                ConsumableMovement.Reason.ISSUE,
                 user,
                 release_reserved=allocation.quantity,
                 recipient=requester,

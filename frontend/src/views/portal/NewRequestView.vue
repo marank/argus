@@ -7,11 +7,17 @@ import { useRouter } from 'vue-router'
 import { portalApi, reservationsApi } from '@/api/reservations'
 import PageHeader from '@/components/common/PageHeader.vue'
 import CatalogBrowser from '@/components/reservations/request/CatalogBrowser.vue'
+import ConsumableQuickPick from '@/components/reservations/request/ConsumableQuickPick.vue'
 import RequestCart from '@/components/reservations/request/RequestCart.vue'
 import { optionKey, ownAvailable, type CartLine } from '@/components/reservations/request/types'
 import { useAction } from '@/composables/useAction'
 import { useAuthStore } from '@/stores/auth'
-import type { CatalogCategory, CatalogModel, ReservationInput } from '@/types/reservations'
+import type {
+  CatalogCategory,
+  CatalogModel,
+  MyConsumables,
+  ReservationInput,
+} from '@/types/reservations'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -20,8 +26,13 @@ const { busy, run } = useAction()
 
 const catalog = ref<CatalogCategory[] | null>(null)
 const cart = ref<CartLine[]>([])
+const myConsumables = ref<MyConsumables[]>([])
 
-onMounted(async () => (catalog.value = await portalApi.catalog()))
+onMounted(async () => {
+  const [entries, consumables] = await Promise.all([portalApi.catalog(), portalApi.myConsumables()])
+  catalog.value = entries
+  myConsumables.value = consumables
+})
 
 const cartCounts = computed(() =>
   Object.fromEntries(cart.value.map((line) => [line.key, line.quantity])),
@@ -72,13 +83,20 @@ async function submit(data: ReservationInput) {
     <PageHeader :title="t('reservations.new.title')" :subtitle="t('reservations.new.subtitle')" />
     <div class="layout">
       <NSkeleton v-if="!catalog" height="320px" />
-      <CatalogBrowser
-        v-else
-        :catalog="catalog"
-        :cart-counts="cartCounts"
-        @add="add"
-        @add-free-text="addFreeText"
-      />
+      <div v-else class="choose">
+        <ConsumableQuickPick
+          :groups="myConsumables"
+          :catalog="catalog"
+          :cart-counts="cartCounts"
+          @add="add"
+        />
+        <CatalogBrowser
+          :catalog="catalog"
+          :cart-counts="cartCounts"
+          @add="add"
+          @add-free-text="addFreeText"
+        />
+      </div>
       <RequestCart
         v-model:lines="cart"
         :busy="busy"
@@ -91,6 +109,11 @@ async function submit(data: ReservationInput) {
 </template>
 
 <style scoped>
+.choose {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) clamp(400px, 34%, 500px);

@@ -30,7 +30,7 @@ class ITOverviewOut(Schema):
     reservations_overdue: int
     orders_to_place: int
     orders_in_transit: int
-    low_stock: int
+    low_consumables: int
     warranty_expiring: int
     upcoming: list[UpcomingOut]
     recent_events: list[AssetEventWithAssetOut]

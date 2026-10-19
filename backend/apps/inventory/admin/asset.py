@@ -52,7 +52,15 @@ class AssetAdmin(admin.ModelAdmin):
         "assigned_to__last_name",
     ]
     list_select_related = ["model__manufacturer", "assigned_to", "location"]
-    autocomplete_fields = ["model", "location", "assigned_to", "parent", "supplier", "purchase_order_line"]
+    autocomplete_fields = [
+        "model",
+        "location",
+        "assigned_to",
+        "parent",
+        "supplier",
+        "purchase_order_line",
+        "consumables",
+    ]
     readonly_fields = ["created_at", "updated_at"]
     date_hierarchy = "purchase_date"
     fieldsets = [
@@ -83,6 +91,7 @@ class AssetAdmin(admin.ModelAdmin):
                 ]
             },
         ),
+        (_("Consumables"), {"fields": ["consumables"]}),
         (_("Notes"), {"fields": ["notes"]}),
         (_("History"), {"fields": ["created_at", "updated_at"], "classes": ["collapse"]}),
     ]

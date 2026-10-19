@@ -6,7 +6,7 @@ export default {
   myDevices: 'My devices',
   it: 'IT operations',
   assets: 'Devices',
-  stock: 'Stock',
+  consumables: 'Consumables',
   eventLog: 'Service log',
   calendar: 'Calendar',
   reservations: 'Reservations',

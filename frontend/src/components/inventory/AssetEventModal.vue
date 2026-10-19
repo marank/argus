@@ -13,7 +13,7 @@ import {
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { assetsApi, stockApi } from '@/api/inventory'
+import { assetsApi, consumablesApi } from '@/api/inventory'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import DateField from '@/components/common/DateField.vue'
 import { useAction } from '@/composables/useAction'
@@ -36,7 +36,7 @@ const form = reactive({
   cost: null as number | null,
 })
 const consume = ref(false)
-const stockItem = ref<Id | null>(null)
+const consumable = ref<Id | null>(null)
 const quantity = ref(1)
 
 watch(show, (visible) => {
@@ -65,8 +65,8 @@ async function save() {
         occurred_at: new Date(form.occurred_at).toISOString(),
         cost: form.cost === null ? null : form.cost.toFixed(2),
         consume:
-          consume.value && stockItem.value
-            ? { stock_item_id: stockItem.value, quantity: quantity.value }
+          consume.value && consumable.value
+            ? { consumable_id: consumable.value, quantity: quantity.value }
             : null,
       }),
     t('common.saved'),
@@ -118,8 +118,8 @@ async function save() {
       <div v-if="consume" class="cols consume">
         <NFormItem :label="t('inventory.event.consumeItem')">
           <EntitySelect
-            v-model="stockItem"
-            :fetcher="stockApi.list"
+            v-model="consumable"
+            :fetcher="consumablesApi.list"
             :label="(s) => `${s.model.full_name} · ${s.location.name} (${s.available_quantity})`"
           />
         </NFormItem>

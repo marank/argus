@@ -1,9 +1,9 @@
 export default {
   needs: {
     title: 'Demand',
-    subtitle: 'What the pool cannot cover: open reservation items and stock below minimum.',
+    subtitle: 'What the pool cannot cover: open reservation items and consumables below minimum.',
     fromReservations: 'From requests',
-    lowStock: 'Below minimum stock',
+    belowMinimum: 'Consumables below minimum',
     missing: 'Missing',
     available: 'In pool',
     onOrder: 'On order',
@@ -32,7 +32,7 @@ export default {
     forReservation: 'for {number}',
     markOrdered: 'Mark as ordered',
     receive: 'Goods receipt',
-    receiveHint: 'Scan serial numbers for devices; enter quantities for stock items.',
+    receiveHint: 'Scan serial numbers for devices; enter quantities for consumables.',
     serials: 'Serial numbers (one per line)',
     cancelOrder: 'Cancel order',
     confirmCancel: 'Cancel this order?',

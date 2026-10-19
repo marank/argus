@@ -79,7 +79,7 @@ export default {
     numberSequenceHelp:
       'New devices of this group draw their inventory number from this sequence. Empty: the parent group’s sequence applies.',
     trackingHelp:
-      'Individual devices have serial numbers and a history. Stock quantity suits consumables such as ink or cables.',
+      'Individual devices have serial numbers and a history. Consumables such as ink or cables are tracked by quantity.',
     compatibleWithHelp: 'Accessories, spare parts and consumables that fit this model.',
     pickupPointHelp: 'Employees can collect devices here; offered when scheduling a pickup.',
     itStaffHelp: 'Access to inventory, reservations, procurement and master data.',

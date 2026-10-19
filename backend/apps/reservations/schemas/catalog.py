@@ -27,6 +27,17 @@ class CatalogCategoryOut(Schema):
     models: list[CatalogModelOut]
 
 
+class ConsumableDeviceOut(Schema):
+    id: UUID
+    inventory_number: str
+    model: AssetModelRefOut
+
+
+class MyConsumablesOut(Schema):
+    asset: ConsumableDeviceOut
+    consumables: list[AssetModelRefOut]
+
+
 class MyAssetOut(Schema):
     id: UUID
     inventory_number: str

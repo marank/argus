@@ -95,8 +95,9 @@ read-only.
 
 - **Inventory** – individually tracked devices (laptops, phones, headsets, MDEs, …)
   with serial number, IMEI, MAC, location, assignment and a full life cycle log
-  (battery replacements, repairs, hand-outs, …). Bulk items such as ink cartridges
-  are tracked as stock with minimum quantities and movements.
+  (battery replacements, repairs, hand-outs, …). Consumables such as ink cartridges
+  are tracked by quantity per location with minimum quantities and movements, and
+  can be assigned to device models (compatible with) or to individual devices.
 - **Scanning** – keyboard-wedge barcode scanners work anywhere in the IT views:
   inventory number, serial, IMEI or EAN jump straight to the device or model.
   Several devices can be scanned in at once.
@@ -105,7 +106,7 @@ read-only.
   order numbers.
 - **Self-service portal** – employees request devices by group ("any headset") or
   model, for a period or permanently, and follow status, pickup time and their
-  assigned devices.
+  assigned devices. Consumables that fit their own devices are offered as a quick pick.
 - **Reservation workflow** – IT approves (optionally with reduced quantities),
   sets pickup date and place, allocates concrete devices (scan, pick or automatic),
   marks the request ready, hands out and takes back.
@@ -115,9 +116,9 @@ read-only.
   person checks the devices, adds notes (e.g. damage), is recorded (requester or
   a colleague) and signs on screen. Direct and delivered hand-outs are recorded
   by IT without a signature. Every handover has a printable record.
-- **Procurement** – demand from requests the pool cannot cover and stock below
+- **Procurement** – demand from requests the pool cannot cover and consumables below
   minimum turns into purchase orders; goods receipt creates devices (with scanned
-  serials) or books stock, and directly allocates them to the waiting request.
+  serials) or books consumables, and directly allocates them to the waiting request.
 - **Master data** – manufacturers, suppliers, device groups, models, locations,
   departments, employees and number sequences.
 
@@ -130,7 +131,7 @@ backend/
     core/            base models, number sequences, auth/session API, CRUD helpers
     accounts/        users and departments
     masterdata/      manufacturers, suppliers, categories, models, locations
-    inventory/       assets, asset events, stock items and movements
+    inventory/       assets, asset events, consumables and their movements
     reservations/    reservations, items, allocations, workflow, employee portal
     procurement/     purchase orders, demand calculation, goods receipt
     dashboard/       overview figures

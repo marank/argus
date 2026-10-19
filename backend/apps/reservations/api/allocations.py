@@ -8,8 +8,8 @@ from ninja import Router, Schema
 
 from apps.core.api.security import it_staff_auth
 from apps.core.exceptions import BusinessError
-from apps.inventory.models import Asset, StockItem
-from apps.inventory.services.availability import pool_assets, pool_stock
+from apps.inventory.models import Asset, Consumable
+from apps.inventory.services.availability import pool_assets, pool_consumables
 from apps.masterdata.models import AssetModel
 from apps.reservations.models import ReservationAllocation, ReservationItem
 from apps.reservations.schemas.reservation import (
@@ -36,17 +36,17 @@ def candidates(request: HttpRequest, item_id: UUID, q: str | None = None):
     """Devices from the pool that could be allocated to an item."""
     item = get_object_or_404(ReservationItem, pk=item_id)
     if item.is_free_text:
-        return {"assets": [], "stock": []}
+        return {"assets": [], "consumables": []}
     filters = {"model_id": item.asset_model_id, "category_id": item.category_id}
     assets = pool_assets(**filters).select_related("model__manufacturer", "location__parent")
     if q:
         assets = assets.filter(Q(inventory_number__icontains=q) | Q(serial_number__icontains=q))
-    stock = [
+    consumables = [
         s
-        for s in pool_stock(**filters).select_related("model__manufacturer", "location__parent")
+        for s in pool_consumables(**filters).select_related("model__manufacturer", "location__parent")
         if s.available_quantity > 0
     ]
-    return {"assets": list(assets.order_by("inventory_number")[:100]), "stock": stock}
+    return {"assets": list(assets.order_by("inventory_number")[:100]), "consumables": consumables}
 
 
 @router.post("/{uuid:pk}/allocations", response=ReservationOut)
@@ -62,11 +62,11 @@ def allocate(request: HttpRequest, pk: UUID, payload: AllocateIn):
         workflow.allocate_asset(item, asset, request.user)
     elif payload.asset:
         workflow.allocate_asset(item, get_object_or_404(Asset, pk=payload.asset), request.user)
-    elif payload.stock_item:
-        stock_item = get_object_or_404(StockItem, pk=payload.stock_item)
-        workflow.allocate_stock(item, stock_item, payload.quantity, request.user)
+    elif payload.consumable:
+        consumable = get_object_or_404(Consumable, pk=payload.consumable)
+        workflow.allocate_consumable(item, consumable, payload.quantity, request.user)
     else:
-        raise BusinessError(_("Choose a device or stock item."))
+        raise BusinessError(_("Choose a device or consumable."))
     return get_reservation(request, pk)
 
 
@@ -87,7 +87,7 @@ def auto_allocate(request: HttpRequest, pk: UUID):
 @router.delete("/{uuid:pk}/allocations/{uuid:allocation_id}", response=ReservationOut)
 def remove_allocation(request: HttpRequest, pk: UUID, allocation_id: UUID):
     allocation = get_object_or_404(
-        ReservationAllocation.objects.select_related("item__reservation", "asset", "stock_item"),
+        ReservationAllocation.objects.select_related("item__reservation", "asset", "consumable"),
         pk=allocation_id,
         item__reservation_id=pk,
     )

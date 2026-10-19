@@ -34,7 +34,7 @@ class AssetEventWithAssetOut(AssetEventOut):
 
 
 class ConsumeIn(Schema):
-    stock_item_id: UUID
+    consumable_id: UUID
     quantity: int = Field(1, ge=1)
 
 

@@ -8,12 +8,12 @@ class AssetModel(TimeStampedModel):
     """A concrete product, e.g. *Lenovo ThinkPad T14 Gen 5* or *HP 305 black*.
 
     ``SERIALIZED`` models are tracked as individual assets with serial numbers;
-    ``BULK`` models (ink cartridges, cables, ...) are tracked as stock quantities.
+    ``BULK`` models (ink cartridges, cables, ...) are tracked as consumables with quantities.
     """
 
     class Tracking(models.TextChoices):
         SERIALIZED = "serialized", _("Individual devices")
-        BULK = "bulk", _("Stock quantity")
+        BULK = "bulk", _("Consumable (quantity)")
 
     name = models.CharField(_("name"), max_length=150)
     manufacturer = models.ForeignKey(

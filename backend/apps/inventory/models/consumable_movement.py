@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from apps.core.models import TimeStampedModel
 
 
-class StockMovement(TimeStampedModel):
+class ConsumableMovement(TimeStampedModel):
     class Reason(models.TextChoices):
         RECEIPT = "receipt", _("Goods receipt")
         ISSUE = "issue", _("Issue")
@@ -13,9 +13,9 @@ class StockMovement(TimeStampedModel):
         ADJUSTMENT = "adjustment", _("Adjustment")
         CONSUMPTION = "consumption", _("Used for repair")
 
-    stock_item = models.ForeignKey(
-        "inventory.StockItem",
-        verbose_name=_("stock item"),
+    consumable = models.ForeignKey(
+        "inventory.Consumable",
+        verbose_name=_("consumable"),
         on_delete=models.CASCADE,
         related_name="movements",
     )
@@ -36,7 +36,7 @@ class StockMovement(TimeStampedModel):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="stock_movements",
+        related_name="consumable_movements",
     )
     reservation = models.ForeignKey(
         "reservations.Reservation",
@@ -44,7 +44,7 @@ class StockMovement(TimeStampedModel):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="stock_movements",
+        related_name="consumable_movements",
     )
     purchase_order_line = models.ForeignKey(
         "procurement.PurchaseOrderLine",
@@ -52,13 +52,13 @@ class StockMovement(TimeStampedModel):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="stock_movements",
+        related_name="consumable_movements",
     )
 
     class Meta:
-        verbose_name = _("stock movement")
-        verbose_name_plural = _("stock movements")
+        verbose_name = _("consumable movement")
+        verbose_name_plural = _("consumable movements")
         ordering = ["-created_at"]
 
     def __str__(self) -> str:
-        return f"{self.stock_item.model}: {self.delta:+d}"
+        return f"{self.consumable.model}: {self.delta:+d}"

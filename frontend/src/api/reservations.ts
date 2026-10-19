@@ -3,6 +3,7 @@ import type {
   Candidates,
   CatalogCategory,
   MyAsset,
+  MyConsumables,
   Reservation,
   ReservationInput,
   ReservationListItem,
@@ -43,7 +44,7 @@ export const reservationsApi = {
     http.get<Candidates>(`${base}/items/${itemId}/candidates`, { q }),
   allocate: (
     id: Id,
-    data: { item: Id; asset?: Id; stock_item?: Id; quantity?: number; code?: string },
+    data: { item: Id; asset?: Id; consumable?: Id; quantity?: number; code?: string },
   ) => http.post<Reservation>(`${base}/${id}/allocations`, data),
   resolveItem: (id: Id, itemId: Id, assetModel: Id) =>
     http.post<Reservation>(`${base}/${id}/items/${itemId}/resolve`, { asset_model: assetModel }),
@@ -61,6 +62,7 @@ export const reservationsApi = {
 export const portalApi = {
   catalog: () => http.get<CatalogCategory[]>('/portal/catalog'),
   myAssets: () => http.get<MyAsset[]>('/portal/my-assets'),
+  myConsumables: () => http.get<MyConsumables[]>('/portal/my-consumables'),
 }
 
 export const terminalApi = {

@@ -75,11 +75,11 @@ def test_employee_sees_only_own_reservations(employee_client, demo):
 
 def test_order_from_need_and_receive(it_client):
     needs = it_client.get("/api/procurement/needs").json()
-    stock_need = next(n for n in needs["stock"] if n["to_order"] > 0)
-    model_id = stock_need["stock_item"]["model"]["id"]
+    consumable_need = next(n for n in needs["consumables"] if n["to_order"] > 0)
+    model_id = consumable_need["consumable"]["model"]["id"]
     response = it_client.post(
         "/api/procurement/orders",
-        {"lines": [{"asset_model": model_id, "quantity": stock_need["to_order"]}]},
+        {"lines": [{"asset_model": model_id, "quantity": consumable_need["to_order"]}]},
         content_type="application/json",
     )
     assert response.status_code == 201, response.content
@@ -96,8 +96,8 @@ def test_order_from_need_and_receive(it_client):
             "receipts": [
                 {
                     "line": order["lines"][0]["id"],
-                    "quantity": stock_need["to_order"],
-                    "location": stock_need["stock_item"]["location"]["id"],
+                    "quantity": consumable_need["to_order"],
+                    "location": consumable_need["consumable"]["location"]["id"],
                 }
             ]
         },

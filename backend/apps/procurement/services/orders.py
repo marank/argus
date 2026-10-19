@@ -8,9 +8,9 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from apps.core.exceptions import BusinessError
-from apps.inventory.models import Asset, StockMovement
+from apps.inventory.models import Asset, ConsumableMovement
 from apps.inventory.services import assets as asset_service
-from apps.inventory.services.stock import get_stock_item, move_stock
+from apps.inventory.services.consumables import get_consumable, move_consumable
 from apps.procurement.models import PurchaseOrder, PurchaseOrderLine
 from apps.reservations.models import Reservation
 from apps.reservations.services import workflow
@@ -101,7 +101,7 @@ def _add_months(day: date, months: int) -> date:
 
 @transaction.atomic
 def receive(order: PurchaseOrder, receipts: list[dict], user) -> PurchaseOrder:
-    """Book a delivery: creates devices or increases stock.
+    """Book a delivery: creates devices or increases consumable quantities.
 
     Devices that were ordered for a reservation are allocated to it right away
     while the reservation is still being prepared.
@@ -132,12 +132,12 @@ def receive(order: PurchaseOrder, receipts: list[dict], user) -> PurchaseOrder:
 
         if model.is_bulk:
             if not location_id:
-                raise BusinessError(_("Choose a storage location for stock items."))
-            stock_item = get_stock_item(model.pk, location_id)
-            move_stock(
-                stock_item,
+                raise BusinessError(_("Choose a storage location for consumables."))
+            consumable = get_consumable(model.pk, location_id)
+            move_consumable(
+                consumable,
                 quantity,
-                StockMovement.Reason.RECEIPT,
+                ConsumableMovement.Reason.RECEIPT,
                 user,
                 purchase_order_line=line,
                 note=order.number,
@@ -145,7 +145,7 @@ def receive(order: PurchaseOrder, receipts: list[dict], user) -> PurchaseOrder:
             if allocate:
                 take = min(quantity, item.quantity_missing)
                 if take:
-                    workflow.allocate_stock(item, stock_item, take, user)
+                    workflow.allocate_consumable(item, consumable, take, user)
         else:
             serials = serials or [""] * quantity
             for serial in serials:

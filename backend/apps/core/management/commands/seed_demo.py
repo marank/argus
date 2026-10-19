@@ -18,9 +18,9 @@ from django.utils import timezone
 from apps.accounts.models import Department, User
 from apps.core.models import NumberSequence
 from apps.core.services.numbering import get_sequence
-from apps.inventory.models import Asset, AssetEvent, StockItem, StockMovement
+from apps.inventory.models import Asset, AssetEvent, Consumable, ConsumableMovement
 from apps.inventory.services import assets as asset_service
-from apps.inventory.services.stock import move_stock
+from apps.inventory.services.consumables import move_consumable
 from apps.masterdata.models import AssetModel, Category, Location, Manufacturer, Supplier
 from apps.reservations.services import workflow
 
@@ -35,6 +35,7 @@ CATEGORIES = [
     ("input", "Mouse & keyboard", "keyboard", "IN-", None),
     ("mde", "Mobile data terminals", "barcode", "MDE-", None),
     ("mde-accessories", "MDE accessories", "plug", "MDA-", "mde"),
+    ("printers", "Printers", "printer", "PR-", None),
     ("consumables", "Consumables", "box", None, None),
 ]
 
@@ -59,6 +60,7 @@ MODELS = [
         "399.00",
     ),
     ("Scanova", "SX5x Battery 4680 mAh", "mde-accessories", "bulk", "5711045123457", "69.00"),
+    ("HP", "DeskJet 2820e", "printers", "serialized", "0196786123450", "79.00"),
     ("HP", "305 black ink cartridge", "consumables", "bulk", "0190780123458", "14.90"),
     ("HP", "305 tri-colour ink cartridge", "consumables", "bulk", "0190780123459", "16.90"),
 ]
@@ -159,6 +161,10 @@ class Command(BaseCommand):
             ]
         )
 
+        models["DeskJet 2820e"].compatible_with.set(
+            [models["305 black ink cartridge"], models["305 tri-colour ink cartridge"]]
+        )
+
         today = timezone.localdate()
         serial_counts = {
             "ThinkPad T14 Gen 5": 8,
@@ -172,6 +178,7 @@ class Command(BaseCommand):
             "SX58": 6,
             "SX5x Trigger Handle": 6,
             "SX5x 5-Slot Charging Cradle": 2,
+            "DeskJet 2820e": 2,
         }
         created: dict[str, list[Asset]] = {}
         for model_index, (name, count) in enumerate(serial_counts.items(), start=1):
@@ -196,6 +203,7 @@ class Command(BaseCommand):
         # A few devices permanently in use and some history.
         asset_service.update_asset(created["ThinkPad T14 Gen 5"][0], {"assigned_to": employee.pk}, it)
         asset_service.update_asset(created["iPhone 16"][0], {"assigned_to": employee.pk}, it)
+        asset_service.update_asset(created["DeskJet 2820e"][0], {"assigned_to": employee.pk}, it)
         for mde in created["SX58"][:3]:
             asset_service.record_event(
                 mde,
@@ -214,12 +222,14 @@ class Command(BaseCommand):
             ("SX5x Battery 4680 mAh", 8, 4),
         ]:
             model = AssetModel.objects.get(name=name.removeprefix("HP "))
-            stock = StockItem.objects.create(
+            consumable = Consumable.objects.create(
                 model=model,
                 location=warehouse if "SX5x" in name else storage,
                 min_quantity=minimum,
             )
-            move_stock(stock, quantity, StockMovement.Reason.RECEIPT, admin, note="Initial stock")
+            move_consumable(
+                consumable, quantity, ConsumableMovement.Reason.RECEIPT, admin, note="Initial stock"
+            )
 
         workflow.submit(
             employee,

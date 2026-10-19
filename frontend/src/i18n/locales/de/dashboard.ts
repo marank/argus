@@ -8,7 +8,7 @@ export default {
   overdue: 'Überfällige Rückgaben',
   ordersToPlace: 'Zu bestellen',
   ordersInTransit: 'Bestellt, unterwegs',
-  lowStock: 'Unter Mindestbestand',
+  belowMinimum: 'Unter Mindestbestand',
   warrantyExpiring: 'Garantie endet ≤ 60 Tage',
   devicesByStatus: 'Geräte nach Status',
   upcoming: 'Anstehende Ausgaben (7 Tage)',

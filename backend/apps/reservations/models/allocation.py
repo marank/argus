@@ -7,7 +7,7 @@ from apps.core.models import UUIDModel
 
 
 class ReservationAllocation(UUIDModel):
-    """A concrete device (or stock quantity) set aside for a reservation item."""
+    """A concrete device (or consumable quantity) set aside for a reservation item."""
 
     item = models.ForeignKey(
         "reservations.ReservationItem",
@@ -23,9 +23,9 @@ class ReservationAllocation(UUIDModel):
         blank=True,
         related_name="reservation_allocations",
     )
-    stock_item = models.ForeignKey(
-        "inventory.StockItem",
-        verbose_name=_("stock item"),
+    consumable = models.ForeignKey(
+        "inventory.Consumable",
+        verbose_name=_("consumable"),
         on_delete=models.PROTECT,
         null=True,
         blank=True,
@@ -52,9 +52,9 @@ class ReservationAllocation(UUIDModel):
         ordering = ["allocated_at", "asset__inventory_number"]
 
     def __str__(self) -> str:
-        target = self.asset or self.stock_item
+        target = self.asset or self.consumable
         return f"{self.item.reservation.number}: {target}"
 
     def clean(self) -> None:
-        if bool(self.asset_id) == bool(self.stock_item_id):
-            raise ValidationError(_("Allocate either a device or a stock quantity."))
+        if bool(self.asset_id) == bool(self.consumable_id):
+            raise ValidationError(_("Allocate either a device or a consumable quantity."))

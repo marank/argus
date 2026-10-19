@@ -1,11 +1,11 @@
-"""What still has to be ordered: open reservation demand and low stock."""
+"""What still has to be ordered: open reservation demand and consumables below minimum."""
 
 from uuid import UUID
 
 from django.db.models import F, Sum
 from django.db.models.functions import Coalesce
 
-from apps.inventory.models import StockItem
+from apps.inventory.models import Consumable
 from apps.inventory.services.availability import available_count
 from apps.procurement.models import PurchaseOrder, PurchaseOrderLine
 from apps.reservations.models import Reservation, ReservationItem
@@ -71,19 +71,19 @@ def reservation_needs() -> list[dict]:
     return needs
 
 
-def stock_needs() -> list[dict]:
+def consumable_needs() -> list[dict]:
     on_order = _on_order_by_model()
     needs = []
-    for stock in StockItem.objects.filter(quantity__lt=F("min_quantity")).select_related(
+    for consumable in Consumable.objects.filter(quantity__lt=F("min_quantity")).select_related(
         "model__manufacturer", "model__default_supplier", "location__parent"
     ):
-        ordered = on_order.get(stock.model_id, 0)
+        ordered = on_order.get(consumable.model_id, 0)
         needs.append(
             {
-                "stock_item": stock,
-                "missing": stock.min_quantity - stock.quantity,
+                "consumable": consumable,
+                "missing": consumable.min_quantity - consumable.quantity,
                 "on_order": ordered,
-                "to_order": max(stock.min_quantity - stock.quantity - ordered, 0),
+                "to_order": max(consumable.min_quantity - consumable.quantity - ordered, 0),
             }
         )
     return needs

@@ -89,11 +89,11 @@ const statusBars = computed(() =>
         :to="{ name: 'orders', query: { status: 'ordered' } }"
       />
       <StatCard
-        :label="t('dashboard.lowStock')"
-        :value="data.low_stock"
+        :label="t('dashboard.belowMinimum')"
+        :value="data.low_consumables"
         :icon="CircleAlert"
-        :tone="data.low_stock ? 'warning' : 'default'"
-        :to="{ name: 'stock', query: { below_minimum: '1' } }"
+        :tone="data.low_consumables ? 'warning' : 'default'"
+        :to="{ name: 'consumables', query: { below_minimum: '1' } }"
       />
       <StatCard
         :label="t('dashboard.warrantyExpiring')"

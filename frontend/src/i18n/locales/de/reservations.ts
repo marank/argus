@@ -30,6 +30,8 @@ export default {
     subtitle:
       'Wählen Sie aus, was Sie brauchen. Die IT bestätigt und teilt Ihnen den Abholtermin mit.',
     catalog: 'Katalog',
+    quickPick: 'Passend zu Ihren Geräten',
+    quickPickAdd: '{name} hinzufügen',
     any: 'Beliebig: {category}',
     anyHint: 'Modell egal',
     available: '{count} verfügbar',
@@ -105,7 +107,7 @@ export default {
     scan: 'Gerät zum Zuweisen scannen',
     candidates: 'Im Pool verfügbar',
     noCandidates: 'Im Pool ist nichts verfügbar.',
-    stockFrom: 'aus {location}',
+    consumableFrom: 'aus {location}',
     handedOut: 'ausgegeben',
     returned: 'zurück',
   },

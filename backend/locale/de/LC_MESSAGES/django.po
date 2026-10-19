@@ -401,8 +401,7 @@ msgstr "Neustart"
 msgid "current period"
 msgstr "aktueller Zeitraum"
 
-#: apps/core/models/number_sequence.py:36
-#: apps/masterdata/models/category.py:30
+#: apps/core/models/number_sequence.py:36 apps/masterdata/models/category.py:30
 msgid "number sequence"
 msgstr "Nummernserie"
 
@@ -449,15 +448,15 @@ msgstr "Kauf & Garantie"
 msgid "Notes"
 msgstr "Notizen"
 
-#: apps/inventory/admin/stock_item.py:22
+#: apps/inventory/admin/consumable.py:22
 msgid "stock level"
 msgstr "Bestand"
 
-#: apps/inventory/admin/stock_item.py:26
+#: apps/inventory/admin/consumable.py:26
 msgid "Below minimum"
 msgstr "Unter Mindestbestand"
 
-#: apps/inventory/admin/stock_item.py:42
+#: apps/inventory/admin/consumable.py:42
 msgid "below minimum"
 msgstr "unter Mindestbestand"
 
@@ -509,7 +508,7 @@ msgstr "Defekt"
 msgid "inventory number"
 msgstr "Inventarnummer"
 
-#: apps/inventory/models/asset.py:28 apps/inventory/models/stock_item.py:12
+#: apps/inventory/models/asset.py:28 apps/inventory/models/consumable.py:12
 #: apps/masterdata/models/asset_model.py:58
 #: apps/procurement/models/purchase_order_line.py:19
 #: apps/reservations/models/reservation_item.py:33
@@ -550,7 +549,7 @@ msgstr "verleihbar"
 msgid "Part of the pool employees can reserve from."
 msgstr "Teil des Pools, aus dem Mitarbeiter reservieren können."
 
-#: apps/inventory/models/asset.py:48 apps/inventory/models/stock_item.py:18
+#: apps/inventory/models/asset.py:48 apps/inventory/models/consumable.py:18
 #: apps/masterdata/models/location.py:31
 msgid "location"
 msgstr "Standort"
@@ -579,7 +578,7 @@ msgid "supplier"
 msgstr "Lieferant"
 
 #: apps/inventory/models/asset.py:83
-#: apps/inventory/models/stock_movement.py:51
+#: apps/inventory/models/consumable_movement.py:51
 msgid "purchase order line"
 msgstr "Bestellposition"
 
@@ -683,7 +682,7 @@ msgid "cost"
 msgstr "Kosten"
 
 #: apps/inventory/models/asset_event.py:46
-#: apps/inventory/models/stock_movement.py:27
+#: apps/inventory/models/consumable_movement.py:27
 msgid "performed by"
 msgstr "durchgeführt von"
 
@@ -692,7 +691,7 @@ msgid "employee"
 msgstr "Mitarbeiter"
 
 #: apps/inventory/models/asset_event.py:62
-#: apps/inventory/models/stock_movement.py:43
+#: apps/inventory/models/consumable_movement.py:43
 #: apps/reservations/models/handover.py:23
 #: apps/reservations/models/reservation.py:94
 #: apps/reservations/models/reservation_item.py:19
@@ -707,78 +706,78 @@ msgstr "Geräteereignis"
 msgid "asset events"
 msgstr "Geräteereignisse"
 
-#: apps/inventory/models/stock_item.py:22
+#: apps/inventory/models/consumable.py:22
 #: apps/procurement/models/purchase_order_line.py:26
 #: apps/reservations/models/allocation.py:34
 msgid "quantity"
 msgstr "Menge"
 
-#: apps/inventory/models/stock_item.py:23
+#: apps/inventory/models/consumable.py:23
 msgid "reserved quantity"
 msgstr "reservierte Menge"
 
-#: apps/inventory/models/stock_item.py:25
+#: apps/inventory/models/consumable.py:25
 msgid "minimum quantity"
 msgstr "Mindestbestand"
 
-#: apps/inventory/models/stock_item.py:25
+#: apps/inventory/models/consumable.py:25
 msgid "Reorder when the stock falls below."
 msgstr "Nachbestellen, wenn der Bestand darunter fällt."
 
-#: apps/inventory/models/stock_item.py:29
-#: apps/inventory/models/stock_movement.py:18
+#: apps/inventory/models/consumable.py:29
+#: apps/inventory/models/consumable_movement.py:18
 #: apps/reservations/models/allocation.py:28
-msgid "stock item"
-msgstr "Lagerartikel"
+msgid "consumable"
+msgstr "Verbrauchsmaterial"
 
-#: apps/inventory/models/stock_item.py:30
-msgid "stock items"
-msgstr "Lagerartikel"
+#: apps/inventory/models/consumable.py:30
+msgid "consumables"
+msgstr "Verbrauchsmaterial"
 
-#: apps/inventory/models/stock_movement.py:10
+#: apps/inventory/models/consumable_movement.py:10
 msgid "Goods receipt"
 msgstr "Wareneingang"
 
-#: apps/inventory/models/stock_movement.py:11
+#: apps/inventory/models/consumable_movement.py:11
 msgid "Issue"
 msgstr "Ausgabe"
 
-#: apps/inventory/models/stock_movement.py:12
+#: apps/inventory/models/consumable_movement.py:12
 msgid "Return"
 msgstr "Rückgabe"
 
-#: apps/inventory/models/stock_movement.py:13
+#: apps/inventory/models/consumable_movement.py:13
 msgid "Adjustment"
 msgstr "Korrektur"
 
-#: apps/inventory/models/stock_movement.py:14
+#: apps/inventory/models/consumable_movement.py:14
 msgid "Used for repair"
 msgstr "Für Reparatur verbraucht"
 
-#: apps/inventory/models/stock_movement.py:22
+#: apps/inventory/models/consumable_movement.py:22
 msgid "change"
 msgstr "Änderung"
 
-#: apps/inventory/models/stock_movement.py:23
+#: apps/inventory/models/consumable_movement.py:23
 msgid "reason"
 msgstr "Grund"
 
-#: apps/inventory/models/stock_movement.py:24
+#: apps/inventory/models/consumable_movement.py:24
 #: apps/reservations/models/reservation_item.py:47
 msgid "note"
 msgstr "Notiz"
 
-#: apps/inventory/models/stock_movement.py:35
+#: apps/inventory/models/consumable_movement.py:35
 msgid "recipient"
 msgstr "Empfänger"
 
-#: apps/inventory/models/stock_movement.py:59
-msgid "stock movement"
-msgstr "Lagerbewegung"
+#: apps/inventory/models/consumable_movement.py:59
+msgid "consumable movement"
+msgstr "Materialbewegung"
 
-#: apps/inventory/models/stock_movement.py:60
-msgid "stock movements"
-msgstr "Lagerbewegungen"
+#: apps/inventory/models/consumable_movement.py:60
+msgid "consumable movements"
+msgstr "Materialbewegungen"
 
 #: apps/inventory/services/assets.py:68
 msgid "The list contains duplicate serial numbers."
@@ -788,12 +787,12 @@ msgstr "Die Liste enthält doppelte Seriennummern."
 msgid "This kind of event is recorded automatically."
 msgstr "Diese Art von Ereignis wird automatisch erfasst."
 
-#: apps/inventory/services/stock.py:33
+#: apps/inventory/services/consumables.py:33
 #, python-format
 msgid "Not enough stock for %(model)s (available: %(quantity)s)."
 msgstr "Nicht genug Bestand für %(model)s (verfügbar: %(quantity)s)."
 
-#: apps/inventory/services/stock.py:49
+#: apps/inventory/services/consumables.py:49
 #, python-format
 msgid "Only %(available)s units of %(model)s are available at %(location)s."
 msgstr "Nur %(available)s Stück von %(model)s sind in %(location)s verfügbar."
@@ -823,8 +822,8 @@ msgid "Individual devices"
 msgstr "Einzelgeräte"
 
 #: apps/masterdata/models/asset_model.py:16
-msgid "Stock quantity"
-msgstr "Lagermenge"
+msgid "Consumable (quantity)"
+msgstr "Verbrauchsmaterial (Menge)"
 
 #: apps/masterdata/models/asset_model.py:21
 #: apps/masterdata/models/manufacturer.py:16
@@ -921,8 +920,8 @@ msgid ""
 "specific model makes sense, e.g. accessories or consumables."
 msgstr ""
 "Mitarbeiter dürfen ein „beliebiges Gerät“ dieser Gruppe anfordern. "
-"Abschalten, wo nur ein bestimmtes Modell sinnvoll ist, z. B. bei Zubehör "
-"oder Verbrauchsmaterial."
+"Abschalten, wo nur ein bestimmtes Modell sinnvoll ist, z. B. bei Zubehör oder"
+" Verbrauchsmaterial."
 
 #: apps/masterdata/models/category.py:48
 msgid "sort order"
@@ -1111,8 +1110,8 @@ msgid "Only %(open)s units of “%(line)s” are still open."
 msgstr "Von „%(line)s“ sind nur noch %(open)s Stück offen."
 
 #: apps/procurement/services/orders.py:135
-msgid "Choose a storage location for stock items."
-msgstr "Wählen Sie einen Lagerort für die Lagerartikel."
+msgid "Choose a storage location for consumables."
+msgstr "Wählen Sie einen Lagerort für das Verbrauchsmaterial."
 
 #: apps/reservations/admin/handover.py:45
 #: apps/reservations/admin/reservation.py:42
@@ -1138,8 +1137,8 @@ msgid "No device found for “%(code)s”."
 msgstr "Kein Gerät gefunden für „%(code)s“."
 
 #: apps/reservations/api/allocations.py:69
-msgid "Choose a device or stock item."
-msgstr "Wählen Sie ein Gerät oder einen Lagerartikel."
+msgid "Choose a device or consumable."
+msgstr "Wählen Sie ein Gerät oder Verbrauchsmaterial."
 
 #: apps/reservations/apps.py:8
 msgid "Reservations"
@@ -1185,8 +1184,8 @@ msgid "allocations"
 msgstr "Zuweisungen"
 
 #: apps/reservations/models/allocation.py:60
-msgid "Allocate either a device or a stock quantity."
-msgstr "Weisen Sie entweder ein Gerät oder eine Lagermenge zu."
+msgid "Allocate either a device or a consumable quantity."
+msgstr "Weisen Sie entweder ein Gerät oder eine Menge Verbrauchsmaterial zu."
 
 #: apps/reservations/models/handover.py:17
 msgid "Signed at pickup terminal"
@@ -1392,8 +1391,8 @@ msgstr "Entfernen Sie zugewiesene Geräte, bevor Sie das Modell ändern."
 #, python-format
 msgid "“%(item)s” is free text. Create or assign a model first."
 msgstr ""
-"„%(item)s“ ist Freitext. Legen Sie zuerst ein Modell an oder ordnen Sie "
-"eines zu."
+"„%(item)s“ ist Freitext. Legen Sie zuerst ein Modell an oder ordnen Sie eines"
+" zu."
 
 #: apps/reservations/services/workflow.py:186
 #, python-format
@@ -1445,3 +1444,14 @@ msgstr "Nur Abholungen am Terminal werden unterschrieben."
 #: config/api.py:65
 msgid "Not found."
 msgstr "Nicht gefunden."
+
+msgid "Consumables"
+msgstr "Verbrauchsmaterial"
+
+msgid "Only consumables can be assigned to a device."
+msgstr "Einem Gerät kann nur Verbrauchsmaterial zugeordnet werden."
+
+msgid ""
+"Consumables for this device in addition to those compatible with its model."
+msgstr ""
+"Verbrauchsmaterial für dieses Gerät, zusätzlich zu dem, was zum Modell passt."

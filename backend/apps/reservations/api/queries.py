@@ -12,8 +12,8 @@ from apps.reservations.models import Reservation, ReservationAllocation, Reserva
 def reservation_queryset() -> QuerySet[Reservation]:
     allocations = ReservationAllocation.objects.select_related(
         "asset__model__manufacturer",
-        "stock_item__model__manufacturer",
-        "stock_item__location__parent",
+        "consumable__model__manufacturer",
+        "consumable__location__parent",
         "allocated_by",
     )
     items = (

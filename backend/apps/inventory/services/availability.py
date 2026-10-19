@@ -4,7 +4,7 @@ from uuid import UUID
 
 from django.db.models import F, QuerySet, Sum
 
-from apps.inventory.models import Asset, StockItem
+from apps.inventory.models import Asset, Consumable
 from apps.masterdata.models import Category
 
 
@@ -24,14 +24,14 @@ def pool_assets(category_id: UUID | None = None, model_id: UUID | None = None) -
     )
 
 
-def pool_stock(category_id: UUID | None = None, model_id: UUID | None = None) -> QuerySet[StockItem]:
-    return StockItem.objects.filter(**_model_filter(category_id, model_id))
+def pool_consumables(category_id: UUID | None = None, model_id: UUID | None = None) -> QuerySet[Consumable]:
+    return Consumable.objects.filter(**_model_filter(category_id, model_id))
 
 
 def available_count(category_id: UUID | None = None, model_id: UUID | None = None) -> int:
     assets = pool_assets(category_id, model_id).count()
     bulk = (
-        pool_stock(category_id, model_id)
+        pool_consumables(category_id, model_id)
         .aggregate(total=Sum(F("quantity") - F("reserved_quantity")))
         .get("total")
         or 0

@@ -4,11 +4,11 @@ from uuid import UUID
 from ninja import Field, Schema
 
 from apps.accounts.schemas import UserRefOut
-from apps.inventory.models import StockMovement
+from apps.inventory.models import ConsumableMovement
 from apps.masterdata.schemas.refs import AssetModelRefOut, CategoryRefOut, LocationRefOut
 
 
-class StockItemOut(Schema):
+class ConsumableOut(Schema):
     id: UUID
     model: AssetModelRefOut
     category: CategoryRefOut = Field(..., alias="model.category")
@@ -20,17 +20,17 @@ class StockItemOut(Schema):
     is_below_minimum: bool
 
 
-class StockItemIn(Schema):
+class ConsumableIn(Schema):
     model: UUID
     location: UUID
     min_quantity: int = Field(0, ge=0)
 
 
-class StockItemUpdateIn(Schema):
+class ConsumableUpdateIn(Schema):
     min_quantity: int = Field(0, ge=0)
 
 
-class StockMovementOut(Schema):
+class ConsumableMovementOut(Schema):
     id: UUID
     delta: int
     reason: str
@@ -40,8 +40,8 @@ class StockMovementOut(Schema):
     created_at: datetime
 
 
-class StockMoveIn(Schema):
+class ConsumableMoveIn(Schema):
     delta: int
-    reason: StockMovement.Reason
+    reason: ConsumableMovement.Reason
     note: str = ""
     recipient: UUID | None = None

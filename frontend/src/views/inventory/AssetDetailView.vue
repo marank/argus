@@ -87,6 +87,17 @@ const purchase = computed<DetailEntry[]>(() => {
   ]
 })
 
+/** Consumables of this device: assigned directly, then those compatible with its model. */
+const consumables = computed(() => {
+  const a = asset.value!
+  const own = a.consumables.map((model) => ({ model, fromModel: false }))
+  const ids = new Set(a.consumables.map((m) => m.id))
+  const viaModel = a.model_consumables
+    .filter((m) => !ids.has(m.id))
+    .map((model) => ({ model, fromModel: true }))
+  return [...own, ...viaModel]
+})
+
 async function assign(user: Id | null) {
   const updated = await run(() => assetsApi.assign(props.id, user), t('common.saved'))
   if (updated) {
@@ -187,6 +198,15 @@ async function removeEvent(event: AssetEvent) {
           <NCard :title="t('inventory.sections.usage')" size="small"
             ><DetailGrid :entries="usage"
           /></NCard>
+          <NCard :title="t('inventory.fields.consumables')" size="small">
+            <div v-if="consumables.length" class="consumables">
+              <span v-for="c in consumables" :key="c.model.id" class="consumable">
+                {{ c.model.full_name }}
+                <span v-if="c.fromModel" class="muted small">{{ t('inventory.viaModel') }}</span>
+              </span>
+            </div>
+            <span v-else class="muted">{{ t('inventory.noConsumables') }}</span>
+          </NCard>
           <NCard :title="t('inventory.sections.purchase')" size="small"
             ><DetailGrid :entries="purchase"
           /></NCard>
@@ -255,6 +275,23 @@ async function removeEvent(event: AssetEvent) {
 }
 .comp {
   margin-right: 8px;
+}
+.consumables {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.consumable {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 10px;
+  border: 1px solid var(--ar-border);
+  border-radius: 3px;
+  font-size: 12.5px;
+}
+.small {
+  font-size: 11px;
 }
 @media (max-width: 1100px) {
   .layout {

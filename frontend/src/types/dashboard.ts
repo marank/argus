@@ -10,7 +10,7 @@ export interface ITOverview {
   reservations_overdue: number
   orders_to_place: number
   orders_in_transit: number
-  low_stock: number
+  low_consumables: number
   warranty_expiring: number
   upcoming: {
     id: Id

@@ -21,7 +21,7 @@ const { busy, run } = useAction()
 
 const code = ref('')
 const candidates = ref<Candidates | null>(null)
-const stockQuantity = ref(1)
+const consumableQuantity = ref(1)
 
 const target = computed(() => props.item.quantity_approved ?? props.item.quantity_requested)
 const percent = computed(() =>
@@ -39,7 +39,7 @@ async function loadCandidates() {
   candidates.value = await reservationsApi.candidates(props.item.id)
 }
 
-async function allocate(data: { asset?: Id; stock_item?: Id; quantity?: number; code?: string }) {
+async function allocate(data: { asset?: Id; consumable?: Id; quantity?: number; code?: string }) {
   const updated = await run(() =>
     reservationsApi.allocate(props.reservation.id, { item: props.item.id, ...data }),
   )
@@ -107,12 +107,12 @@ async function remove(allocationId: Id) {
           <span>{{ allocation.asset.model.full_name }}</span>
           <span class="mono muted">{{ allocation.asset.serial_number }}</span>
         </template>
-        <template v-else-if="allocation.stock_item">
+        <template v-else-if="allocation.consumable">
           <span class="mono">{{ allocation.quantity }}×</span>
-          <span>{{ allocation.stock_item.model.full_name }}</span>
+          <span>{{ allocation.consumable.model.full_name }}</span>
           <span class="muted">{{
-            t('reservations.allocation.stockFrom', {
-              location: allocation.stock_item.location.name,
+            t('reservations.allocation.consumableFrom', {
+              location: allocation.consumable.location.name,
             })
           }}</span>
         </template>
@@ -161,23 +161,23 @@ async function remove(allocationId: Id) {
           ><span class="muted">{{ t('reservations.allocation.noCandidates') }}</span></template
         >
       </NPopselect>
-      <template v-for="stock in candidates?.stock ?? []" :key="stock.id">
-        <div class="row stock">
+      <template v-for="consumable in candidates?.consumables ?? []" :key="consumable.id">
+        <div class="row consumable">
           <span class="small"
-            >{{ stock.model.full_name }} · {{ stock.location.name }} ({{
-              stock.available_quantity
+            >{{ consumable.model.full_name }} · {{ consumable.location.name }} ({{
+              consumable.available_quantity
             }})</span
           >
           <NInputNumber
-            v-model:value="stockQuantity"
+            v-model:value="consumableQuantity"
             size="small"
             :min="1"
-            :max="Math.min(stock.available_quantity, item.quantity_missing)"
+            :max="Math.min(consumable.available_quantity, item.quantity_missing)"
             style="width: 90px"
           />
           <NButton
             size="small"
-            @click="allocate({ stock_item: stock.id, quantity: stockQuantity })"
+            @click="allocate({ consumable: consumable.id, quantity: consumableQuantity })"
             >{{ t('reservations.actions.allocate') }}</NButton
           >
         </div>
@@ -267,7 +267,7 @@ async function remove(allocationId: Id) {
 .scan :deep(input) {
   font-family: var(--ar-font-mono);
 }
-.stock {
+.consumable {
   width: 100%;
 }
 </style>

@@ -81,7 +81,7 @@ export const NAVIGATION: NavSection[] = [
       },
       { key: 'calendar', label: 'nav.calendar', icon: CalendarDays, to: { name: 'calendar' } },
       { key: 'assets', label: 'nav.assets', icon: MonitorSmartphone, to: { name: 'assets' } },
-      { key: 'stock', label: 'nav.stock', icon: Boxes, to: { name: 'stock' } },
+      { key: 'consumables', label: 'nav.consumables', icon: Boxes, to: { name: 'consumables' } },
       { key: 'event-log', label: 'nav.eventLog', icon: Wrench, to: { name: 'event-log' } },
     ],
   },

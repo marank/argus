@@ -107,11 +107,13 @@ export const routes: RouteRecordRaw[] = [
         meta: { it: true, title: 'nav.assets' },
       },
       {
-        path: 'inventory/stock',
-        name: 'stock',
-        component: () => import('@/views/inventory/StockListView.vue'),
-        meta: { it: true, title: 'nav.stock' },
+        path: 'inventory/consumables',
+        name: 'consumables',
+        component: () => import('@/views/inventory/ConsumableListView.vue'),
+        meta: { it: true, title: 'nav.consumables' },
       },
+      // Former name of the consumables page; keeps old bookmarks working.
+      { path: 'inventory/stock', redirect: (to) => ({ name: 'consumables', query: to.query }) },
       {
         path: 'inventory/log',
         name: 'event-log',

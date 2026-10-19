@@ -81,7 +81,7 @@ const searchPeople = useDebounceFn(async (q: string) => {
 watch(personQuery, searchPeople)
 
 function deviceLabel(allocation: Allocation) {
-  return allocation.asset?.model.full_name ?? allocation.stock_item?.model.full_name ?? ''
+  return allocation.asset?.model.full_name ?? allocation.consumable?.model.full_name ?? ''
 }
 
 async function confirm() {

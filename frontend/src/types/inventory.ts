@@ -53,6 +53,10 @@ export interface Asset {
 export interface AssetDetail extends Asset {
   components: { id: Id; inventory_number: string }[]
   reservation: { id: Id; number: string; status: string; requester: UserRef } | null
+  /** Assigned to this device directly. */
+  consumables: AssetModelRef[]
+  /** Compatible with the device's model. */
+  model_consumables: AssetModelRef[]
 }
 
 export interface AssetInput {
@@ -72,6 +76,7 @@ export interface AssetInput {
   purchase_date: string | null
   purchase_price: string | null
   warranty_until: string | null
+  consumables: Id[]
   notes: string
 }
 
@@ -114,7 +119,7 @@ export interface AssetEventWithAsset extends AssetEvent {
   asset: AssetRef
 }
 
-export interface StockItem {
+export interface Consumable {
   id: Id
   model: AssetModelRef
   category: CategoryRef
@@ -126,12 +131,12 @@ export interface StockItem {
   is_below_minimum: boolean
 }
 
-export type StockReason = 'receipt' | 'issue' | 'return' | 'adjustment' | 'consumption'
+export type ConsumableReason = 'receipt' | 'issue' | 'return' | 'adjustment' | 'consumption'
 
-export interface StockMovement {
+export interface ConsumableMovement {
   id: Id
   delta: number
-  reason: StockReason
+  reason: ConsumableReason
   note: string
   performed_by: UserRef | null
   recipient: UserRef | null

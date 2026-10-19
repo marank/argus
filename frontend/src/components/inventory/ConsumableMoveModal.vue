@@ -14,15 +14,15 @@ import { computed, reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { usersApi } from '@/api/accounts'
-import { stockApi } from '@/api/inventory'
+import { consumablesApi } from '@/api/inventory'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import FieldLabel from '@/components/common/FieldLabel.vue'
 import { useAction } from '@/composables/useAction'
-import type { StockItem, StockReason } from '@/types/inventory'
+import type { Consumable, ConsumableReason } from '@/types/inventory'
 
 type Direction = 'in' | 'out' | 'adjust'
 
-const props = defineProps<{ item: StockItem | null; direction: Direction }>()
+const props = defineProps<{ item: Consumable | null; direction: Direction }>()
 const show = defineModel<boolean>('show', { required: true })
 const emit = defineEmits<{ saved: [] }>()
 const { t } = useI18n()
@@ -54,7 +54,7 @@ watch(
   (direction) => (form.quantity = defaultQuantity(direction)),
 )
 
-const REASONS: Record<Direction, StockReason> = {
+const REASONS: Record<Direction, ConsumableReason> = {
   in: 'receipt',
   out: 'issue',
   adjust: 'adjustment',
@@ -68,7 +68,7 @@ async function save() {
   if (!props.item) return
   const ok = await run(
     () =>
-      stockApi.move(props.item!.id, {
+      consumablesApi.move(props.item!.id, {
         delta: delta.value,
         reason: REASONS[form.direction],
         note: form.note,
@@ -86,25 +86,25 @@ async function save() {
 <template>
   <NModal v-model:show="show" preset="card" :title="item?.model.full_name" style="max-width: 460px">
     <p class="muted mono">
-      {{ item?.location.full_name }} · {{ t('inventory.stock.onHand') }}: {{ item?.quantity }}
+      {{ item?.location.full_name }} · {{ t('inventory.consumables.onHand') }}: {{ item?.quantity }}
     </p>
     <NForm class="ar-form" label-placement="top" size="small" :show-feedback="false">
       <NFormItem>
         <NRadioGroup v-model:value="form.direction">
-          <NRadioButton value="in">{{ t('inventory.stock.bookIn') }}</NRadioButton>
-          <NRadioButton value="out">{{ t('inventory.stock.bookOut') }}</NRadioButton>
-          <NRadioButton value="adjust">{{ t('inventory.stock.adjust') }}</NRadioButton>
+          <NRadioButton value="in">{{ t('inventory.consumables.bookIn') }}</NRadioButton>
+          <NRadioButton value="out">{{ t('inventory.consumables.bookOut') }}</NRadioButton>
+          <NRadioButton value="adjust">{{ t('inventory.consumables.adjust') }}</NRadioButton>
         </NRadioGroup>
       </NFormItem>
       <NFormItem>
         <template #label>
           <FieldLabel
             :label="
-              form.direction === 'adjust' ? t('inventory.stock.onHand') : t('common.quantity')
+              form.direction === 'adjust' ? t('inventory.consumables.onHand') : t('common.quantity')
             "
           >
             <template #extra>{{
-              `${t('inventory.stock.delta')}: ${delta > 0 ? '+' : ''}${delta}`
+              `${t('inventory.consumables.delta')}: ${delta > 0 ? '+' : ''}${delta}`
             }}</template>
           </FieldLabel>
         </template>
@@ -114,7 +114,7 @@ async function save() {
           style="width: 100%"
         />
       </NFormItem>
-      <NFormItem v-if="form.direction === 'out'" :label="t('inventory.stock.recipient')">
+      <NFormItem v-if="form.direction === 'out'" :label="t('inventory.consumables.recipient')">
         <EntitySelect
           v-model="form.recipient"
           :fetcher="usersApi.list"

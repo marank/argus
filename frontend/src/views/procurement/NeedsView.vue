@@ -11,7 +11,7 @@ import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import CreateOrderModal, { type DraftLine } from '@/components/procurement/CreateOrderModal.vue'
 import { useFormat } from '@/composables/useFormat'
-import type { Needs, ReservationNeed, StockNeed } from '@/types/procurement'
+import type { Needs, ReservationNeed, ConsumableNeed } from '@/types/procurement'
 
 const { t } = useI18n()
 const { date } = useFormat()
@@ -19,7 +19,7 @@ const { date } = useFormat()
 const needs = ref<Needs | null>(null)
 const loading = ref(false)
 const selectedReservations = ref<DataTableRowKey[]>([])
-const selectedStock = ref<DataTableRowKey[]>([])
+const selectedConsumables = ref<DataTableRowKey[]>([])
 const showOrder = ref(false)
 
 async function load() {
@@ -27,7 +27,7 @@ async function load() {
   try {
     needs.value = await needsApi.list()
     selectedReservations.value = []
-    selectedStock.value = []
+    selectedConsumables.value = []
   } finally {
     loading.value = false
   }
@@ -111,33 +111,33 @@ const reservationColumns = computed<DataTableColumns<ReservationNeed>>(() => [
   },
 ])
 
-const stockColumns = computed<DataTableColumns<StockNeed>>(() => [
+const consumableColumns = computed<DataTableColumns<ConsumableNeed>>(() => [
   { type: 'selection', disabled: (n) => n.to_order === 0 },
   {
     key: 'item',
     title: t('procurement.orders.item'),
     minWidth: 220,
-    render: (n) => n.stock_item.model.full_name,
+    render: (n) => n.consumable.model.full_name,
   },
   {
     key: 'location',
     title: t('inventory.fields.location'),
     width: 200,
-    render: (n) => n.stock_item.location.full_name,
+    render: (n) => n.consumable.location.full_name,
   },
   {
     key: 'qty',
-    title: t('inventory.stock.onHand'),
+    title: t('inventory.consumables.onHand'),
     width: 100,
     align: 'right',
-    render: (n) => num(n.stock_item.quantity),
+    render: (n) => num(n.consumable.quantity),
   },
   {
     key: 'min',
-    title: t('inventory.stock.minimum'),
+    title: t('inventory.consumables.minimum'),
     width: 100,
     align: 'right',
-    render: (n) => num(n.stock_item.min_quantity, 'muted'),
+    render: (n) => num(n.consumable.min_quantity, 'muted'),
   },
   {
     key: 'on_order',
@@ -167,11 +167,11 @@ const draftLines = computed<DraftLine[]>(() => {
       reservation_item: n.reservation_item.id,
     })
   }
-  for (const n of needs.value?.stock ?? []) {
-    if (!selectedStock.value.includes(n.stock_item.id)) continue
+  for (const n of needs.value?.consumables ?? []) {
+    if (!selectedConsumables.value.includes(n.consumable.id)) continue
     lines.push({
-      label: n.stock_item.model.full_name,
-      asset_model: n.stock_item.model.id,
+      label: n.consumable.model.full_name,
+      asset_model: n.consumable.model.id,
       quantity: n.to_order,
     })
   }
@@ -184,8 +184,8 @@ const defaultSupplier = computed(() => {
   )
   return (
     first?.reservation_item.default_supplier?.id ??
-    needs.value?.stock.find((n) => selectedStock.value.includes(n.stock_item.id))?.stock_item
-      .default_supplier?.id ??
+    needs.value?.consumables.find((n) => selectedConsumables.value.includes(n.consumable.id))
+      ?.consumable.default_supplier?.id ??
     null
   )
 })
@@ -223,16 +223,19 @@ const defaultSupplier = computed(() => {
           :scroll-x="1100"
         />
       </NCard>
-      <NCard :title="t('procurement.needs.lowStock')" size="small">
-        <EmptyState v-if="needs && !needs.stock.length" :text="t('procurement.needs.empty')" />
+      <NCard :title="t('procurement.needs.belowMinimum')" size="small">
+        <EmptyState
+          v-if="needs && !needs.consumables.length"
+          :text="t('procurement.needs.empty')"
+        />
         <NDataTable
           v-else
-          v-model:checked-row-keys="selectedStock"
+          v-model:checked-row-keys="selectedConsumables"
           size="small"
-          :columns="stockColumns"
-          :data="needs?.stock ?? []"
+          :columns="consumableColumns"
+          :data="needs?.consumables ?? []"
           :loading="loading"
-          :row-key="(n: StockNeed) => n.stock_item.id"
+          :row-key="(n: ConsumableNeed) => n.consumable.id"
           :scroll-x="900"
         />
       </NCard>

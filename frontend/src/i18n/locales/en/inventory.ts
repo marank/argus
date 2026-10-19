@@ -25,6 +25,9 @@ export default {
     warrantyUntil: 'Warranty until',
     loanable: 'Loanable (pool)',
     loanableHelp: 'Part of the pool employees can reserve from.',
+    consumables: 'Consumables',
+    consumablesHelp:
+      'Consumables for exactly this device. Those compatible with its model (model → compatible with) apply automatically. Employees get both as a quick pick when requesting.',
     condition: 'Condition',
   },
   sections: {
@@ -37,6 +40,8 @@ export default {
   assignTo: 'Hand out to employee',
   activeReservation: 'Reserved for {number} ({name})',
   history: 'History',
+  viaModel: 'via model',
+  noConsumables: 'No consumables assigned.',
   recordEvent: 'Record service',
   bulk: {
     title: 'Scan in multiple devices',
@@ -53,14 +58,14 @@ export default {
     cost: 'Cost',
     performedBy: 'By',
     employee: 'Employee',
-    consume: 'Take spare part from stock',
-    consumeItem: 'Stock item',
+    consume: 'Use consumable',
+    consumeItem: 'Consumable',
     asset: 'Device',
   },
   eventLog: 'Service log',
   eventLogSubtitle: 'Battery replacements, repairs and all other life cycle events across devices.',
-  stock: {
-    title: 'Stock',
+  consumables: {
+    title: 'Consumables',
     subtitle: 'Consumables and accessories tracked by quantity.',
     item: 'Item',
     available: 'Available',
@@ -76,6 +81,6 @@ export default {
     delta: 'Change',
     recipient: 'Recipient',
     reason: 'Reason',
-    newItem: 'New stock item',
+    newItem: 'New consumable',
   },
 }

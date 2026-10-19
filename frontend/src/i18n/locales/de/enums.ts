@@ -43,8 +43,8 @@ export default {
     received: 'Geliefert',
     cancelled: 'Storniert',
   },
-  tracking: { serialized: 'Einzelgeräte', bulk: 'Lagermenge' },
-  stockReason: {
+  tracking: { serialized: 'Einzelgeräte', bulk: 'Verbrauchsmaterial (Menge)' },
+  consumableReason: {
     receipt: 'Wareneingang',
     issue: 'Ausgabe',
     return: 'Rückgabe',

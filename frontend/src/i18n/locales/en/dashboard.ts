@@ -8,7 +8,7 @@ export default {
   overdue: 'Overdue returns',
   ordersToPlace: 'Orders to place',
   ordersInTransit: 'Orders in transit',
-  lowStock: 'Below minimum stock',
+  belowMinimum: 'Consumables below minimum',
   warrantyExpiring: 'Warranty ends ≤ 60 days',
   devicesByStatus: 'Devices by status',
   upcoming: 'Upcoming hand-outs (7 days)',

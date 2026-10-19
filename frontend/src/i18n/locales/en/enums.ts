@@ -43,8 +43,8 @@ export default {
     received: 'Received',
     cancelled: 'Cancelled',
   },
-  tracking: { serialized: 'Individual devices', bulk: 'Stock quantity' },
-  stockReason: {
+  tracking: { serialized: 'Individual devices', bulk: 'Consumable (quantity)' },
+  consumableReason: {
     receipt: 'Goods receipt',
     issue: 'Issue',
     return: 'Return',

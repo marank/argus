@@ -24,7 +24,7 @@ export const RESERVATION_STATUSES: ReservationStatus[] = [
 export interface Allocation {
   id: Id
   asset: AssetRef | null
-  stock_item: { id: Id; model: AssetModelRef; location: LocationRef } | null
+  consumable: { id: Id; model: AssetModelRef; location: LocationRef } | null
   quantity: number
   allocated_by: UserRef | null
   allocated_at: string
@@ -118,7 +118,7 @@ export interface Candidates {
     model: AssetModelRef
     location: LocationRef | null
   }[]
-  stock: { id: Id; model: AssetModelRef; location: LocationRef; available_quantity: number }[]
+  consumables: { id: Id; model: AssetModelRef; location: LocationRef; available_quantity: number }[]
 }
 
 export interface CatalogModel {
@@ -151,6 +151,12 @@ export interface MyAsset {
   assigned_since: string | null
   reservation_number: string | null
   return_due: string | null
+}
+
+/** Consumables that fit one of the employee's devices (quick pick when requesting). */
+export interface MyConsumables {
+  asset: { id: Id; inventory_number: string; model: AssetModelRef }
+  consumables: AssetModelRef[]
 }
 
 export interface TerminalPerson {

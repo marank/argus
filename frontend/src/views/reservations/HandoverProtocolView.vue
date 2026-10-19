@@ -24,7 +24,7 @@ const rows = computed(() =>
     item.allocations.map((a) => ({
       id: a.id,
       number: a.asset?.inventory_number ?? '',
-      model: a.asset?.model.full_name ?? a.stock_item?.model.full_name ?? item.label,
+      model: a.asset?.model.full_name ?? a.consumable?.model.full_name ?? item.label,
       serial: a.asset?.serial_number ?? '',
       quantity: a.quantity,
       note: a.handout_note,

@@ -98,7 +98,7 @@ async function save() {
           allocation.asset?.inventory_number ?? `${allocation.quantity}×`
         }}</span>
         <span class="name">{{
-          allocation.asset?.model.full_name ?? allocation.stock_item?.model.full_name
+          allocation.asset?.model.full_name ?? allocation.consumable?.model.full_name
         }}</span>
         <NInput
           v-model:value="form.allocationNotes[allocation.id]"

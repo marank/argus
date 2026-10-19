@@ -92,8 +92,8 @@ export interface ReservationNeed {
   to_order: number
 }
 
-export interface StockNeed {
-  stock_item: {
+export interface ConsumableNeed {
+  consumable: {
     id: Id
     model: AssetModelRef
     location: LocationRef
@@ -108,5 +108,5 @@ export interface StockNeed {
 
 export interface Needs {
   reservations: ReservationNeed[]
-  stock: StockNeed[]
+  consumables: ConsumableNeed[]
 }

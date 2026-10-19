@@ -10,7 +10,7 @@ from apps.inventory.models import Asset
 from apps.inventory.services.availability import available_count
 from apps.masterdata.models import AssetModel, Category
 from apps.reservations.models import ReservationAllocation
-from apps.reservations.schemas.catalog import CatalogCategoryOut, MyAssetOut
+from apps.reservations.schemas.catalog import CatalogCategoryOut, MyAssetOut, MyConsumablesOut
 
 router = Router(tags=["portal"])
 
@@ -35,6 +35,27 @@ def catalog(request: HttpRequest):
         category.available = available_count(category_id=category.pk) if show_availability else None
         category.models = models_by_category.get(category.pk, [])
         result.append(category)
+    return result
+
+
+@router.get("/my-consumables", response=list[MyConsumablesOut])
+def my_consumables(request: HttpRequest):
+    """Requestable consumables that fit the employee's devices, grouped by device.
+
+    A consumable fits when it is assigned to the device itself or marked as
+    compatible with the device's model.
+    """
+    result = []
+    assets = Asset.objects.filter(assigned_to=request.user).select_related("model__manufacturer")
+    for asset in assets.order_by("inventory_number"):
+        consumables = list(
+            asset.consumable_models()
+            .filter(is_requestable=True, is_active=True)
+            .select_related("manufacturer")
+            .order_by("manufacturer__name", "name")
+        )
+        if consumables:
+            result.append({"asset": asset, "consumables": consumables})
     return result
 
 

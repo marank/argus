@@ -9,7 +9,7 @@ class AllocationInline(admin.TabularInline):
     extra = 0
     fields = [
         "asset",
-        "stock_item",
+        "consumable",
         "quantity",
         "allocated_by",
         "allocated_at",
@@ -18,7 +18,7 @@ class AllocationInline(admin.TabularInline):
         "returned_at",
     ]
     readonly_fields = ["allocated_at"]
-    autocomplete_fields = ["asset", "stock_item", "allocated_by"]
+    autocomplete_fields = ["asset", "consumable", "allocated_by"]
 
 
 @admin.register(ReservationItem)

@@ -13,23 +13,23 @@ import { computed, h, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
-import { stockApi } from '@/api/inventory'
+import { consumablesApi } from '@/api/inventory'
 import { categoriesApi, locationsApi } from '@/api/masterdata'
 import CheckField from '@/components/common/CheckField.vue'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import RowMenu from '@/components/common/RowMenu.vue'
-import StockItemModal from '@/components/inventory/StockItemModal.vue'
-import StockMoveModal from '@/components/inventory/StockMoveModal.vue'
+import ConsumableModal from '@/components/inventory/ConsumableModal.vue'
+import ConsumableMoveModal from '@/components/inventory/ConsumableMoveModal.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useList } from '@/composables/useList'
-import type { StockItem, StockMovement } from '@/types/inventory'
+import type { Consumable, ConsumableMovement } from '@/types/inventory'
 
 const { t } = useI18n()
 const route = useRoute()
 const { dateTime, enumLabel } = useFormat()
 
-const list = useList(stockApi.list, {
+const list = useList(consumablesApi.list, {
   ordering: 'model__name',
   filters: {
     below_minimum: route.query.below_minimum ? true : null,
@@ -44,40 +44,40 @@ const belowOnly = computed({
   set: (value: boolean) => (list.filters.below_minimum = value ? true : null),
 })
 
-const selected = ref<StockItem | null>(null)
+const selected = ref<Consumable | null>(null)
 const moveDirection = ref<'in' | 'out' | 'adjust'>('in')
 const showMove = ref(false)
 const showItem = ref(false)
 const showMovements = ref(false)
-const movements = ref<StockMovement[]>([])
+const movements = ref<ConsumableMovement[]>([])
 
-function openMove(item: StockItem, direction: 'in' | 'out' | 'adjust') {
+function openMove(item: Consumable, direction: 'in' | 'out' | 'adjust') {
   selected.value = item
   moveDirection.value = direction
   showMove.value = true
 }
 
-function openItem(item: StockItem | null) {
+function openItem(item: Consumable | null) {
   selected.value = item
   showItem.value = true
 }
 
-async function openMovements(item: StockItem) {
+async function openMovements(item: Consumable) {
   selected.value = item
-  movements.value = await stockApi.movements(item.id)
+  movements.value = await consumablesApi.movements(item.id)
   showMovements.value = true
 }
 
-function onRowAction(item: StockItem, key: string) {
+function onRowAction(item: Consumable, key: string) {
   if (key === 'in' || key === 'out' || key === 'adjust') openMove(item, key)
   else if (key === 'movements') openMovements(item)
   else if (key === 'edit') openItem(item)
 }
 
-const columns = computed<DataTableColumns<StockItem>>(() => [
+const columns = computed<DataTableColumns<Consumable>>(() => [
   {
     key: 'model__name',
-    title: t('inventory.stock.item'),
+    title: t('inventory.consumables.item'),
     sorter: true,
     minWidth: 240,
     render: (s) =>
@@ -92,7 +92,7 @@ const columns = computed<DataTableColumns<StockItem>>(() => [
   },
   {
     key: 'quantity',
-    title: t('inventory.stock.onHand'),
+    title: t('inventory.consumables.onHand'),
     sorter: true,
     width: 190,
     render: (s) =>
@@ -113,21 +113,21 @@ const columns = computed<DataTableColumns<StockItem>>(() => [
   },
   {
     key: 'reserved',
-    title: t('inventory.stock.reserved'),
+    title: t('inventory.consumables.reserved'),
     width: 100,
     align: 'right',
     render: (s) => h('span', { class: 'mono muted' }, s.reserved_quantity),
   },
   {
     key: 'available',
-    title: t('inventory.stock.available'),
+    title: t('inventory.consumables.available'),
     width: 100,
     align: 'right',
     render: (s) => h('span', { class: 'mono' }, s.available_quantity),
   },
   {
     key: 'min',
-    title: t('inventory.stock.minimum'),
+    title: t('inventory.consumables.minimum'),
     width: 100,
     align: 'right',
     render: (s) => h('span', { class: 'mono muted' }, s.min_quantity),
@@ -141,10 +141,15 @@ const columns = computed<DataTableColumns<StockItem>>(() => [
       h(RowMenu, {
         title: t('common.actions'),
         items: [
-          { key: 'in', label: t('inventory.stock.bookIn'), icon: ArrowDownToLine },
-          { key: 'out', label: t('inventory.stock.bookOut'), icon: ArrowUpFromLine },
-          { key: 'adjust', label: t('inventory.stock.adjust'), icon: Scale },
-          { key: 'movements', label: t('inventory.stock.movements'), icon: History, divided: true },
+          { key: 'in', label: t('inventory.consumables.bookIn'), icon: ArrowDownToLine },
+          { key: 'out', label: t('inventory.consumables.bookOut'), icon: ArrowUpFromLine },
+          { key: 'adjust', label: t('inventory.consumables.adjust'), icon: Scale },
+          {
+            key: 'movements',
+            label: t('inventory.consumables.movements'),
+            icon: History,
+            divided: true,
+          },
           { key: 'edit', label: t('common.edit'), icon: Settings2 },
         ],
         onSelect: (key: string) => onRowAction(s, key),
@@ -152,7 +157,7 @@ const columns = computed<DataTableColumns<StockItem>>(() => [
   },
 ])
 
-const movementColumns = computed<DataTableColumns<StockMovement>>(() => [
+const movementColumns = computed<DataTableColumns<ConsumableMovement>>(() => [
   {
     key: 'created_at',
     title: t('inventory.event.occurredAt'),
@@ -161,7 +166,7 @@ const movementColumns = computed<DataTableColumns<StockMovement>>(() => [
   },
   {
     key: 'delta',
-    title: t('inventory.stock.delta'),
+    title: t('inventory.consumables.delta'),
     width: 80,
     align: 'right',
     render: (m) =>
@@ -173,12 +178,12 @@ const movementColumns = computed<DataTableColumns<StockMovement>>(() => [
   },
   {
     key: 'reason',
-    title: t('inventory.stock.reason'),
-    render: (m) => enumLabel('stockReason', m.reason),
+    title: t('inventory.consumables.reason'),
+    render: (m) => enumLabel('consumableReason', m.reason),
   },
   {
     key: 'who',
-    title: t('inventory.stock.recipient'),
+    title: t('inventory.consumables.recipient'),
     render: (m) => m.recipient?.display_name ?? m.note ?? '—',
   },
 ])
@@ -186,11 +191,14 @@ const movementColumns = computed<DataTableColumns<StockMovement>>(() => [
 
 <template>
   <div class="page">
-    <PageHeader :title="t('inventory.stock.title')" :subtitle="t('inventory.stock.subtitle')">
+    <PageHeader
+      :title="t('inventory.consumables.title')"
+      :subtitle="t('inventory.consumables.subtitle')"
+    >
       <template #actions>
         <NButton type="primary" @click="openItem(null)">
           <template #icon><Plus :size="16" /></template>
-          {{ t('inventory.stock.newItem') }}
+          {{ t('inventory.consumables.newItem') }}
         </NButton>
       </template>
     </PageHeader>
@@ -216,7 +224,7 @@ const movementColumns = computed<DataTableColumns<StockMovement>>(() => [
           :placeholder="t('inventory.fields.location')"
           style="width: 200px"
         />
-        <CheckField v-model="belowOnly" :label="t('inventory.stock.onlyBelowMinimum')" />
+        <CheckField v-model="belowOnly" :label="t('inventory.consumables.onlyBelowMinimum')" />
       </div>
       <NDataTable
         remote
@@ -225,22 +233,22 @@ const movementColumns = computed<DataTableColumns<StockMovement>>(() => [
         :data="list.rows.value"
         :loading="list.loading.value"
         :pagination="list.pagination.value"
-        :row-key="(s: StockItem) => s.id"
+        :row-key="(s: Consumable) => s.id"
         :scroll-x="1100"
         @update:sorter="list.onSort"
       />
     </div>
 
-    <StockMoveModal
+    <ConsumableMoveModal
       v-model:show="showMove"
       :item="selected"
       :direction="moveDirection"
       @saved="list.load"
     />
-    <StockItemModal v-model:show="showItem" :item="selected" @saved="list.load" />
+    <ConsumableModal v-model:show="showItem" :item="selected" @saved="list.load" />
     <NDrawer v-model:show="showMovements" :width="560">
       <NDrawerContent
-        :title="`${t('inventory.stock.movements')} · ${selected?.model.full_name}`"
+        :title="`${t('inventory.consumables.movements')} · ${selected?.model.full_name}`"
         closable
       >
         <NDataTable size="small" :columns="movementColumns" :data="movements" />

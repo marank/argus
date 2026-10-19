@@ -11,7 +11,7 @@ from apps.masterdata.schemas.refs import AssetModelRefOut, CategoryRefOut, Locat
 from apps.reservations.models import Reservation
 
 
-class StockItemRefOut(Schema):
+class ConsumableRefOut(Schema):
     id: UUID
     model: AssetModelRefOut
     location: LocationRefOut
@@ -20,7 +20,7 @@ class StockItemRefOut(Schema):
 class AllocationOut(Schema):
     id: UUID
     asset: AssetRefOut | None
-    stock_item: StockItemRefOut | None
+    consumable: ConsumableRefOut | None
     quantity: int
     allocated_by: UserRefOut | None
     allocated_at: datetime
@@ -174,7 +174,7 @@ class HandOutIn(Schema):
 class AllocateIn(Schema):
     item: UUID
     asset: UUID | None = None
-    stock_item: UUID | None = None
+    consumable: UUID | None = None
     quantity: int = Field(1, ge=1)
     code: str | None = Field(None, description="Scanned inventory or serial number")
 
@@ -189,7 +189,7 @@ class ReturnIn(Schema):
 
 class CandidatesOut(Schema):
     assets: list[AssetCandidateOut]
-    stock: list[StockCandidateOut]
+    consumables: list[ConsumableCandidateOut]
 
 
 class AssetCandidateOut(Schema):
@@ -201,7 +201,7 @@ class AssetCandidateOut(Schema):
     location: LocationRefOut | None
 
 
-class StockCandidateOut(Schema):
+class ConsumableCandidateOut(Schema):
     id: UUID
     model: AssetModelRefOut
     location: LocationRefOut

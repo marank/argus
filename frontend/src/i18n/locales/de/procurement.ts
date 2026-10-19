@@ -4,7 +4,7 @@ export default {
     subtitle:
       'Was der Pool nicht abdeckt: offene Anforderungspositionen und Bestände unter Minimum.',
     fromReservations: 'Aus Anforderungen',
-    lowStock: 'Unter Mindestbestand',
+    belowMinimum: 'Unter Mindestbestand',
     missing: 'Fehlt',
     available: 'Im Pool',
     onOrder: 'Bestellt',
@@ -33,7 +33,7 @@ export default {
     forReservation: 'für {number}',
     markOrdered: 'Als bestellt markieren',
     receive: 'Wareneingang',
-    receiveHint: 'Für Geräte Seriennummern scannen, für Lagerartikel Mengen eingeben.',
+    receiveHint: 'Für Geräte Seriennummern scannen, für Verbrauchsmaterial Mengen eingeben.',
     serials: 'Seriennummern (eine pro Zeile)',
     cancelOrder: 'Bestellung stornieren',
     confirmCancel: 'Diese Bestellung stornieren?',

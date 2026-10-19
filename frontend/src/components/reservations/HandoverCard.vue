@@ -19,7 +19,7 @@ const deviceNotes = computed(() =>
     .filter((a) => a.handout_note)
     .map((a) => ({
       id: a.id,
-      label: a.asset?.inventory_number ?? a.stock_item?.model.full_name,
+      label: a.asset?.inventory_number ?? a.consumable?.model.full_name,
       note: a.handout_note,
     })),
 )

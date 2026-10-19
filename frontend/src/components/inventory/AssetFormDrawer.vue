@@ -56,6 +56,7 @@ function empty(): AssetInput {
     purchase_date: null,
     purchase_price: null,
     warranty_until: null,
+    consumables: [],
     notes: '',
   }
 }
@@ -85,6 +86,7 @@ watch(show, (visible) => {
           purchase_date: a.purchase_date,
           purchase_price: a.purchase_price,
           warranty_until: a.warranty_until,
+          consumables: a.consumables.map((c) => c.id),
           notes: a.notes,
         }
       : empty(),
@@ -215,6 +217,21 @@ async function save() {
               v-model="form.is_loanable"
               :label="t('inventory.fields.loanable')"
               :help="t('inventory.fields.loanableHelp')"
+            />
+          </NFormItemGi>
+          <NFormItemGi :span="2">
+            <template #label
+              ><FieldLabel
+                :label="t('inventory.fields.consumables')"
+                :help="t('inventory.fields.consumablesHelp')"
+            /></template>
+            <EntitySelect
+              v-model="form.consumables"
+              multiple
+              :fetcher="assetModelsApi.list"
+              :params="{ tracking: 'bulk', is_active: true }"
+              :label="(m) => m.full_name"
+              :initial="asset?.consumables as never"
             />
           </NFormItemGi>
         </NGrid>

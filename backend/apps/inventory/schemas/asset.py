@@ -7,6 +7,7 @@ from ninja import Field, Schema
 from apps.accounts.schemas import UserRefOut
 from apps.core.schemas import RefOut
 from apps.inventory.models import Asset
+from apps.masterdata.models import AssetModel
 from apps.masterdata.schemas.refs import AssetModelRefOut, CategoryRefOut, LocationRefOut
 
 
@@ -44,6 +45,19 @@ class AssetParentOut(Schema):
 class AssetDetailOut(AssetOut):
     components: list[AssetParentOut]
     reservation: ActiveReservationOut | None = None
+    # Assigned to this device directly; ``model_consumables`` come from its model.
+    consumables: list[AssetModelRefOut]
+    model_consumables: list[AssetModelRefOut]
+
+    @staticmethod
+    def resolve_consumables(obj: Asset):
+        return list(obj.consumables.select_related("manufacturer"))
+
+    @staticmethod
+    def resolve_model_consumables(obj: Asset):
+        return list(
+            obj.model.compatible_with.filter(tracking=AssetModel.Tracking.BULK).select_related("manufacturer")
+        )
 
     @staticmethod
     def resolve_components(obj: Asset):
@@ -83,6 +97,7 @@ class AssetIn(Schema):
     purchase_date: date | None = None
     purchase_price: Decimal | None = None
     warranty_until: date | None = None
+    consumables: list[UUID] = []
     notes: str = ""
 
 
