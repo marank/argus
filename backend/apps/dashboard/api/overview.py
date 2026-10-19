@@ -31,6 +31,7 @@ class ITOverviewOut(Schema):
     orders_to_place: int
     orders_in_transit: int
     low_consumables: int
+    open_issues: int
     warranty_expiring: int
     upcoming: list[UpcomingOut]
     recent_events: list[AssetEventWithAssetOut]

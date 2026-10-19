@@ -1,13 +1,19 @@
 """Endpoints for the employee self-service portal."""
 
+from datetime import timedelta
 from uuid import UUID
 
-from django.http import HttpRequest
-from ninja import Router
+from django.db.models import Prefetch, Q
+from django.http import Http404, HttpRequest
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from ninja import Router, Status
 
 from apps.core.api.security import is_it_staff
-from apps.inventory.models import Asset
+from apps.inventory.models import Asset, AssetIssue
+from apps.inventory.schemas.asset_issue import AssetIssueIn, OwnIssueOut
 from apps.inventory.services.availability import available_count
+from apps.inventory.services.issues import report_issue
 from apps.masterdata.models import AssetModel, Category
 from apps.reservations.models import ReservationAllocation
 from apps.reservations.schemas.catalog import CatalogCategoryOut, MyAssetOut, MyConsumablesOut
@@ -59,12 +65,10 @@ def my_consumables(request: HttpRequest):
     return result
 
 
-@router.get("/my-assets", response=list[MyAssetOut])
-def my_assets(request: HttpRequest):
-    """Devices currently handed out to the logged-in employee."""
-    assets = Asset.objects.filter(assigned_to=request.user).select_related(
-        "model__manufacturer", "model__category"
-    )
+def _own_assets(user, assets, issues) -> list[dict]:
+    """Devices of the employee with their open reservation and the given reports."""
+    assets = assets.filter(assigned_to=user).select_related("model__manufacturer", "model__category")
+    assets = assets.prefetch_related(Prefetch("issues", queryset=issues, to_attr="visible_issues"))
     allocations = {
         a.asset_id: a.item.reservation
         for a in ReservationAllocation.objects.filter(
@@ -81,11 +85,38 @@ def my_assets(request: HttpRequest):
                 "serial_number": asset.serial_number,
                 "model": asset.model,
                 "category": asset.model.category.name,
+                "category_icon": asset.model.category.icon,
                 "assigned_since": asset.assigned_since.isoformat() if asset.assigned_since else None,
                 "reservation_number": reservation.number if reservation else None,
                 "return_due": (
                     reservation.end_date.isoformat() if reservation and reservation.end_date else None
                 ),
+                "issues": asset.visible_issues,
             }
         )
     return result
+
+
+@router.get("/my-assets", response=list[MyAssetOut])
+def my_assets(request: HttpRequest):
+    """Devices currently handed out to the logged-in employee."""
+    # Open reports, plus resolved ones of the last 14 days so the answer stays visible.
+    recent = timezone.now() - timedelta(days=14)
+    issues = AssetIssue.objects.filter(Q(resolved_at__isnull=True) | Q(resolved_at__gte=recent))
+    return _own_assets(request.user, Asset.objects.all(), issues)
+
+
+@router.get("/my-assets/{uuid:pk}", response=MyAssetOut)
+def my_asset(request: HttpRequest, pk: UUID):
+    """One of the employee's devices with all its problem reports."""
+    devices = _own_assets(request.user, Asset.objects.filter(pk=pk), AssetIssue.objects.all())
+    if not devices:
+        raise Http404
+    return devices[0]
+
+
+@router.post("/my-assets/{uuid:pk}/issues", response={201: OwnIssueOut})
+def report(request: HttpRequest, pk: UUID, payload: AssetIssueIn):
+    """Report a problem with one of the employee's own devices; IT sees it under problem reports."""
+    asset = get_object_or_404(Asset, pk=pk, assigned_to=request.user)
+    return Status(201, report_issue(asset, request.user, payload.kind, payload.description))

@@ -8,6 +8,7 @@ export default {
   assets: 'Geräte',
   consumables: 'Verbrauchsmaterial',
   licenses: 'Lizenzen',
+  issues: 'Meldungen',
   eventLog: 'Servicebuch',
   calendar: 'Kalender',
   reservations: 'Reservierungen',

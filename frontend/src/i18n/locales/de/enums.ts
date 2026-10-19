@@ -20,7 +20,16 @@ export default {
     maintenance: 'Wartung',
     inspection: 'Prüfung',
     note: 'Notiz',
+    issue_reported: 'Problem gemeldet',
+    issue_resolved: 'Problem behoben',
   },
+  issueKind: {
+    defect: 'Funktioniert nicht',
+    damage: 'Beschädigt',
+    lost: 'Verloren oder gestohlen',
+    other: 'Sonstiges',
+  },
+  issueStatus: { open: 'Offen', in_progress: 'In Bearbeitung', resolved: 'Erledigt' },
   reservationStatus: {
     submitted: 'Eingereicht',
     approved: 'Bestätigt',

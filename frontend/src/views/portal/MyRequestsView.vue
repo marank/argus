@@ -1,62 +1,72 @@
 <script setup lang="ts">
-import { PackagePlus } from '@lucide/vue'
-import { NButton, NDataTable, type DataTableColumns } from 'naive-ui'
-import { h, onMounted } from 'vue'
+import { ChevronRight, PackagePlus } from '@lucide/vue'
+import { useStorage } from '@vueuse/core'
+import { NButton, NRadioButton, NRadioGroup, NSkeleton } from 'naive-ui'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
 
 import { reservationsApi } from '@/api/reservations'
 import EmptyState from '@/components/common/EmptyState.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { useFormat } from '@/composables/useFormat'
-import { useList } from '@/composables/useList'
 import type { ReservationListItem } from '@/types/reservations'
 
+/**
+ * The employee's requests: running ones as cards with progress and what happens
+ * next (one row per status, or newest first), closed ones as a compact list below.
+ */
 const { t } = useI18n()
-const router = useRouter()
-const { date, weekday } = useFormat()
-const list = useList((params) => reservationsApi.list({ ...params, mine: true }), {
-  ordering: '-created_at',
+const { date, weekday, enumLabel } = useFormat()
+const sortBy = useStorage<'status' | 'date'>('argus.my-requests-sort', 'status')
+
+const requests = ref<ReservationListItem[] | null>(null)
+onMounted(async () => {
+  const page = await reservationsApi.list({ mine: true, page_size: 100, ordering: '-created_at' })
+  requests.value = page.items
 })
 
-onMounted(list.load)
+const STEPS = ['submitted', 'approved', 'ready', 'handed_out'] as const
+const ACTIVE = new Set<string>(STEPS)
 
-const columns: DataTableColumns<ReservationListItem> = [
-  {
-    key: 'number',
-    title: () => t('reservations.number'),
-    width: 140,
-    render: (r) => h('span', { class: 'mono' }, r.number),
-  },
-  { key: 'title', title: () => t('reservations.purpose'), ellipsis: { tooltip: true } },
-  { key: 'summary', title: () => t('reservations.items'), ellipsis: { tooltip: true } },
-  {
-    key: 'period',
-    title: () => t('reservations.period'),
-    width: 210,
-    render: (r) =>
-      h(
-        'span',
-        { class: 'mono' },
-        `${date(r.start_date)} → ${r.end_date ? date(r.end_date) : t('common.permanent')}`,
-      ),
-  },
-  {
-    key: 'pickup_at',
-    title: () => t('reservations.pickupAt'),
-    width: 170,
-    render: (r) => h('span', { class: 'mono' }, r.pickup_at ? weekday(r.pickup_at) : '—'),
-  },
-  {
-    key: 'status',
-    title: () => t('common.status'),
-    width: 150,
-    // Pulse: ready for pickup, the employee has to act.
-    render: (r) =>
-      h(StatusTag, { group: 'reservationStatus', value: r.status, pulse: r.status === 'ready' }),
-  },
-]
+const active = computed(() => (requests.value ?? []).filter((r) => ACTIVE.has(r.status)))
+const closed = computed(() => (requests.value ?? []).filter((r) => !ACTIVE.has(r.status)))
+
+/** Rows of cards: per status with the most urgent first, or one row by date. */
+const STATUS_ROWS = ['ready', 'handed_out', 'approved', 'submitted'] as const
+const rows = computed(() => {
+  if (sortBy.value === 'date') return [{ key: 'all', label: '', items: active.value }]
+  return STATUS_ROWS.map((status) => ({
+    key: status,
+    label: enumLabel('reservationStatus', status),
+    items: active.value.filter((r) => r.status === status),
+  })).filter((row) => row.items.length)
+})
+
+const stepIndex = (r: ReservationListItem) => STEPS.indexOf(r.status as (typeof STEPS)[number])
+
+function period(r: ReservationListItem): string {
+  return `${date(r.start_date)} → ${r.end_date ? date(r.end_date) : t('common.permanent')}`
+}
+
+/** One sentence on where the request stands and what the employee can expect. */
+function nextStep(r: ReservationListItem): string {
+  switch (r.status) {
+    case 'submitted':
+      return t('reservations.mine.next.submitted')
+    case 'approved':
+      return t('reservations.mine.next.approved')
+    case 'ready':
+      return r.pickup_at
+        ? t('reservations.mine.next.readyAt', { date: weekday(r.pickup_at) })
+        : t('reservations.mine.next.ready')
+    default:
+      if (r.is_overdue) return t('reservations.mine.next.overdue', { date: date(r.end_date) })
+      return r.end_date
+        ? t('reservations.mine.next.handedOut', { date: date(r.end_date) })
+        : t('reservations.mine.next.handedOutPermanent')
+  }
+}
 </script>
 
 <template>
@@ -72,26 +82,212 @@ const columns: DataTableColumns<ReservationListItem> = [
       </template>
     </PageHeader>
 
-    <EmptyState
-      v-if="!list.loading.value && !list.count.value"
-      :text="t('reservations.mine.empty')"
-    />
-    <NDataTable
-      v-else
-      class="clickable-rows"
-      remote
-      size="small"
-      :columns="columns"
-      :data="list.rows.value"
-      :loading="list.loading.value"
-      :pagination="list.pagination.value"
-      :row-key="(r: ReservationListItem) => r.id"
-      :row-props="
-        (r: ReservationListItem) => ({
-          onClick: () => router.push({ name: 'portal-request', params: { id: r.id } }),
-        })
-      "
-      :scroll-x="900"
-    />
+    <NSkeleton v-if="!requests" height="120px" :repeat="2" />
+    <EmptyState v-else-if="!requests.length" :text="t('reservations.mine.empty')" />
+    <div v-else class="stack">
+      <section>
+        <div class="section-head">
+          <h2 class="eyebrow section">{{ t('reservations.mine.active') }}</h2>
+          <NRadioGroup
+            v-model:value="sortBy"
+            size="small"
+            :aria-label="t('reservations.mine.sortBy')"
+          >
+            <NRadioButton value="status">{{ t('reservations.mine.byStatus') }}</NRadioButton>
+            <NRadioButton value="date">{{ t('reservations.mine.byDate') }}</NRadioButton>
+          </NRadioGroup>
+        </div>
+        <p v-if="!active.length" class="muted">{{ t('reservations.mine.noActive') }}</p>
+        <div v-for="row in rows" :key="row.key" class="row-block">
+          <div v-if="row.label" class="row-label">
+            {{ row.label }} <span class="mono muted">{{ row.items.length }}</span>
+          </div>
+          <div class="cards">
+            <RouterLink
+              v-for="r in row.items"
+              :key="r.id"
+              :to="{ name: 'portal-request', params: { id: r.id } }"
+              class="card"
+              :class="{ attention: r.status === 'ready', overdue: r.is_overdue }"
+            >
+              <div class="card-head">
+                <div class="titles">
+                  <strong>{{ r.title }}</strong>
+                  <span class="mono muted small">{{ r.number }}</span>
+                </div>
+                <StatusTag
+                  group="reservationStatus"
+                  :value="r.status"
+                  :pulse="r.status === 'ready'"
+                />
+              </div>
+              <p class="summary small">{{ r.summary }}</p>
+              <div class="progress" :aria-label="t('common.status')">
+                <span
+                  v-for="(step, index) in STEPS"
+                  :key="step"
+                  :class="{ done: index <= stepIndex(r) }"
+                />
+              </div>
+              <div class="card-foot small">
+                <span class="next">{{ nextStep(r) }}</span>
+                <span class="mono muted">{{ period(r) }}</span>
+              </div>
+            </RouterLink>
+          </div>
+        </div>
+      </section>
+
+      <section v-if="closed.length">
+        <h2 class="eyebrow section">{{ t('reservations.mine.closed') }}</h2>
+        <div class="closed">
+          <RouterLink
+            v-for="r in closed"
+            :key="r.id"
+            :to="{ name: 'portal-request', params: { id: r.id } }"
+            class="closed-line"
+          >
+            <span class="mono muted">{{ r.number }}</span>
+            <span class="title">{{ r.title }}</span>
+            <span class="mono muted small">{{ period(r) }}</span>
+            <StatusTag group="reservationStatus" :value="r.status" />
+            <ChevronRight :size="14" class="muted" />
+          </RouterLink>
+        </div>
+      </section>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.section {
+  margin: 0 0 10px;
+}
+.section-head .section {
+  margin: 0;
+}
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.row-block + .row-block {
+  margin-top: 16px;
+}
+.row-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.small {
+  font-size: 12px;
+}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 12px;
+}
+.card {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--ar-border);
+  border-radius: 3px;
+  background: var(--ar-surface);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+.card:hover {
+  border-color: var(--ar-border-strong);
+  text-decoration: none;
+}
+.card.attention {
+  border-color: color-mix(in srgb, var(--ar-success) 45%, transparent);
+}
+.card.overdue {
+  border-color: color-mix(in srgb, var(--ar-error) 45%, transparent);
+}
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.titles {
+  display: grid;
+  min-width: 0;
+}
+.summary {
+  margin: 0;
+  color: var(--ar-text-muted);
+}
+/* Four segments: submitted, approved, ready, handed out. */
+.progress {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+.progress span {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--ar-border);
+  transition: background-color 0.3s ease;
+}
+.progress span.done {
+  background: var(--ar-primary);
+}
+.attention .progress span.done {
+  background: var(--ar-success);
+}
+.overdue .progress span.done {
+  background: var(--ar-error);
+}
+.card-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+.next {
+  font-weight: 500;
+}
+.overdue .next {
+  color: var(--ar-error);
+}
+.closed {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+  column-gap: 14px;
+  border: 1px solid var(--ar-border);
+  border-radius: 3px;
+  background: var(--ar-surface);
+}
+.closed-line {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--ar-border);
+  color: inherit;
+  text-decoration: none;
+}
+.closed-line:last-child {
+  border-bottom: none;
+}
+.closed-line:hover {
+  background: var(--ar-surface-sunken);
+  text-decoration: none;
+}
+.title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+</style>

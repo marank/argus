@@ -5,6 +5,8 @@ import type {
   AssetEvent,
   AssetEventWithAsset,
   AssetInput,
+  AssetIssue,
+  IssueStatus,
   LicenseDetail,
   LicenseInput,
   License,
@@ -62,6 +64,12 @@ export const licensesApi = {
     http.post<LicenseDetail>(`/inventory/licenses/${id}/assignments`, data),
   unassign: (id: Id, assignmentId: Id) =>
     http.delete<LicenseDetail>(`/inventory/licenses/${id}/assignments/${assignmentId}`),
+}
+
+export const issuesApi = {
+  list: (params: ListParams = {}) => http.get<Page<AssetIssue>>('/inventory/issues', params),
+  update: (id: Id, data: { status: IssueStatus; resolution?: string }) =>
+    http.put<AssetIssue>(`/inventory/issues/${id}`, data),
 }
 
 export const lookupApi = {

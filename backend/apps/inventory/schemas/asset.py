@@ -7,6 +7,7 @@ from ninja import Field, Schema
 from apps.accounts.schemas import UserRefOut
 from apps.core.schemas import RefOut
 from apps.inventory.models import Asset
+from apps.inventory.schemas.asset_issue import OwnIssueOut
 from apps.inventory.schemas.license import AssetLicenseOut
 from apps.masterdata.models import AssetModel
 from apps.masterdata.schemas.refs import AssetModelRefOut, CategoryRefOut, LocationRefOut
@@ -50,6 +51,11 @@ class AssetDetailOut(AssetOut):
     consumables: list[AssetModelRefOut]
     model_consumables: list[AssetModelRefOut]
     licenses: list[AssetLicenseOut]
+    open_issues: list[OwnIssueOut]
+
+    @staticmethod
+    def resolve_open_issues(obj: Asset):
+        return list(obj.issues.exclude(status="resolved"))
 
     @staticmethod
     def resolve_licenses(obj: Asset):

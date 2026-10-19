@@ -9,6 +9,7 @@ export default {
   ordersToPlace: 'Orders to place',
   ordersInTransit: 'Orders in transit',
   belowMinimum: 'Consumables below minimum',
+  openIssues: 'Open problem reports',
   warrantyExpiring: 'Warranty ends ≤ 60 days',
   devicesByStatus: 'Devices by status',
   upcoming: 'Upcoming hand-outs (7 days)',

@@ -1,4 +1,5 @@
 import type { Id, ListParams, Page } from '@/types/common'
+import type { IssueKind, OwnIssue } from '@/types/inventory'
 import type {
   Candidates,
   CatalogCategory,
@@ -62,7 +63,10 @@ export const reservationsApi = {
 export const portalApi = {
   catalog: () => http.get<CatalogCategory[]>('/portal/catalog'),
   myAssets: () => http.get<MyAsset[]>('/portal/my-assets'),
+  myAsset: (id: Id) => http.get<MyAsset>(`/portal/my-assets/${id}`),
   myConsumables: () => http.get<MyConsumables[]>('/portal/my-consumables'),
+  reportIssue: (assetId: Id, data: { kind: IssueKind; description: string }) =>
+    http.post<OwnIssue>(`/portal/my-assets/${assetId}/issues`, data),
 }
 
 export const terminalApi = {

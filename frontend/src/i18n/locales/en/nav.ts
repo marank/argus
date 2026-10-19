@@ -8,6 +8,7 @@ export default {
   assets: 'Devices',
   consumables: 'Consumables',
   licenses: 'Licenses',
+  issues: 'Problem reports',
   eventLog: 'Service log',
   calendar: 'Calendar',
   reservations: 'Reservations',

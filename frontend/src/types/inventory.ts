@@ -58,6 +58,7 @@ export interface AssetDetail extends Asset {
   /** Compatible with the device's model. */
   model_consumables: AssetModelRef[]
   licenses: AssetLicense[]
+  open_issues: OwnIssue[]
 }
 
 export interface AssetInput {
@@ -211,4 +212,27 @@ export interface AssetLicense {
   model: AssetModelRef
   reference: string
   valid_until: string | null
+}
+
+export type IssueKind = 'defect' | 'damage' | 'lost' | 'other'
+export const ISSUE_KINDS: IssueKind[] = ['defect', 'damage', 'lost', 'other']
+export type IssueStatus = 'open' | 'in_progress' | 'resolved'
+export const ISSUE_STATUSES: IssueStatus[] = ['open', 'in_progress', 'resolved']
+
+/** A problem report as the reporting employee sees it. */
+export interface OwnIssue {
+  id: Id
+  kind: IssueKind
+  description: string
+  status: IssueStatus
+  resolution: string
+  created_at: string
+}
+
+/** A problem report in the IT list. */
+export interface AssetIssue extends OwnIssue {
+  asset: { id: Id; inventory_number: string; model: AssetModelRef; assigned_to: UserRef | null }
+  reported_by: UserRef | null
+  handled_by: UserRef | null
+  resolved_at: string | null
 }

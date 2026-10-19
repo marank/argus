@@ -20,7 +20,16 @@ export default {
     maintenance: 'Maintenance',
     inspection: 'Inspection',
     note: 'Note',
+    issue_reported: 'Problem reported',
+    issue_resolved: 'Problem resolved',
   },
+  issueKind: {
+    defect: 'Not working',
+    damage: 'Damaged',
+    lost: 'Lost or stolen',
+    other: 'Other',
+  },
+  issueStatus: { open: 'Open', in_progress: 'In progress', resolved: 'Resolved' },
   reservationStatus: {
     submitted: 'Submitted',
     approved: 'Approved',

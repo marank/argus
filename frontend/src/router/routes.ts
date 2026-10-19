@@ -85,6 +85,13 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/portal/MyDevicesView.vue'),
         meta: { title: 'nav.myDevices' },
       },
+      {
+        path: 'portal/devices/:id([0-9a-f-]{36})',
+        name: 'portal-device',
+        component: () => import('@/views/portal/MyDeviceDetailView.vue'),
+        props: (route) => ({ id: String(route.params.id) }),
+        meta: { title: 'nav.myDevices' },
+      },
       // IT: planning
       {
         path: 'calendar',
@@ -124,6 +131,12 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/inventory/LicenseDetailView.vue'),
         props: (route) => ({ id: String(route.params.id) }),
         meta: { it: true, title: 'nav.licenses' },
+      },
+      {
+        path: 'inventory/issues',
+        name: 'issues',
+        component: () => import('@/views/inventory/IssueListView.vue'),
+        meta: { it: true, title: 'nav.issues' },
       },
       // Former name of the consumables page; keeps old bookmarks working.
       { path: 'inventory/stock', redirect: (to) => ({ name: 'consumables', query: to.query }) },

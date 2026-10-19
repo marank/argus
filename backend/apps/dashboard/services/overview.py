@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.db.models import Count, F
 from django.utils import timezone
 
-from apps.inventory.models import Asset, AssetEvent, Consumable
+from apps.inventory.models import Asset, AssetEvent, AssetIssue, Consumable
 from apps.procurement.models import PurchaseOrder
 from apps.reservations.models import Reservation
 
@@ -34,6 +34,7 @@ def it_overview() -> dict:
             status__in=(PurchaseOrder.Status.ORDERED, PurchaseOrder.Status.PARTIALLY_RECEIVED)
         ).count(),
         "low_consumables": Consumable.objects.filter(quantity__lt=F("min_quantity")).count(),
+        "open_issues": AssetIssue.objects.exclude(status=AssetIssue.Status.RESOLVED).count(),
         "warranty_expiring": Asset.objects.filter(warranty_until__range=(today, today + timedelta(days=60)))
         .exclude(status=Asset.Status.RETIRED)
         .count(),

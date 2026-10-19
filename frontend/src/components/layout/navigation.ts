@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   ListChecks,
   MapPin,
+  MessageSquareWarning,
   MonitorSmartphone,
   PackagePlus,
   Shapes,
@@ -84,6 +85,7 @@ export const NAVIGATION: NavSection[] = [
       { key: 'assets', label: 'nav.assets', icon: MonitorSmartphone, to: { name: 'assets' } },
       { key: 'consumables', label: 'nav.consumables', icon: Boxes, to: { name: 'consumables' } },
       { key: 'licenses', label: 'nav.licenses', icon: KeyRound, to: { name: 'licenses' } },
+      { key: 'issues', label: 'nav.issues', icon: MessageSquareWarning, to: { name: 'issues' } },
       { key: 'event-log', label: 'nav.eventLog', icon: Wrench, to: { name: 'event-log' } },
     ],
   },
@@ -174,6 +176,8 @@ export function activeKey(name: string | undefined, params: Record<string, unkno
       return 'orders'
     case 'portal-request':
       return 'portal-requests'
+    case 'portal-device':
+      return 'portal-devices'
     case 'settings-ldap':
       return 'settings'
     case 'masterdata':

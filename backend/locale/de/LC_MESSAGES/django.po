@@ -1594,3 +1594,51 @@ msgid "Name of a single item, e.g. “Laptop”. Shown for “any model” reque
 msgstr ""
 "Bezeichnung für ein einzelnes Stück, z. B. „Laptop“. Wird bei „beliebiges "
 "Modell“ angezeigt."
+
+msgid "Not working"
+msgstr "Funktioniert nicht"
+
+msgid "Damaged"
+msgstr "Beschädigt"
+
+msgid "Lost or stolen"
+msgstr "Verloren oder gestohlen"
+
+msgid "Other"
+msgstr "Sonstiges"
+
+msgid "Open"
+msgstr "Offen"
+
+msgid "In progress"
+msgstr "In Bearbeitung"
+
+msgid "Resolved"
+msgstr "Erledigt"
+
+msgid "reported by"
+msgstr "gemeldet von"
+
+msgid "resolution"
+msgstr "Lösung"
+
+msgid "resolved at"
+msgstr "erledigt am"
+
+msgid "problem report"
+msgstr "Problemmeldung"
+
+msgid "problem reports"
+msgstr "Problemmeldungen"
+
+msgid "Problem reported"
+msgstr "Problem gemeldet"
+
+msgid "Problem resolved"
+msgstr "Problem behoben"
+
+msgid "Describe the problem."
+msgstr "Beschreiben Sie das Problem."
+
+msgid "Describe how the problem was solved."
+msgstr "Beschreiben Sie, wie das Problem gelöst wurde."

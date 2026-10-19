@@ -2,6 +2,7 @@
 import {
   AlarmClock,
   CircleAlert,
+  MessageSquareWarning,
   ClipboardCheck,
   PackageCheck,
   PackageOpen,
@@ -97,6 +98,14 @@ const statusBars = computed(() =>
         :tone="data.low_consumables ? 'warning' : 'default'"
         :alert="!!data.low_consumables"
         :to="{ name: 'consumables', query: { below_minimum: '1' } }"
+      />
+      <StatCard
+        :label="t('dashboard.openIssues')"
+        :value="data.open_issues"
+        :icon="MessageSquareWarning"
+        :tone="data.open_issues ? 'warning' : 'default'"
+        :alert="!!data.open_issues"
+        :to="{ name: 'issues' }"
       />
       <StatCard
         :label="t('dashboard.warrantyExpiring')"

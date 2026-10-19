@@ -21,6 +21,8 @@ class AssetEvent(TimeStampedModel):
         MAINTENANCE = "maintenance", _("Maintenance")
         INSPECTION = "inspection", _("Inspection")
         NOTE = "note", _("Note")
+        ISSUE_REPORTED = "issue_reported", _("Problem reported")
+        ISSUE_RESOLVED = "issue_resolved", _("Problem resolved")
 
     # Kinds a technician records manually; the others are written by workflows.
     MANUAL_KINDS = (

@@ -2,6 +2,7 @@ from uuid import UUID
 
 from ninja import Schema
 
+from apps.inventory.schemas.asset_issue import OwnIssueOut
 from apps.masterdata.schemas.refs import AssetModelRefOut
 
 
@@ -46,6 +47,8 @@ class MyAssetOut(Schema):
     serial_number: str
     model: AssetModelRefOut
     category: str
+    category_icon: str
     assigned_since: str | None
     reservation_number: str | None
     return_due: str | None
+    issues: list[OwnIssueOut]

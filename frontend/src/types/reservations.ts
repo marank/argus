@@ -1,7 +1,7 @@
 import type { Id } from '@/types/common'
 import type { UserRef } from './accounts'
 import type { Ref } from './common'
-import type { AssetRef } from './inventory'
+import type { AssetRef, OwnIssue } from './inventory'
 import type { AssetModelRef, CategoryKind, CategoryRef, LocationRef } from './masterdata'
 
 export type ReservationStatus =
@@ -152,9 +152,11 @@ export interface MyAsset {
   serial_number: string
   model: AssetModelRef
   category: string
+  category_icon: string
   assigned_since: string | null
   reservation_number: string | null
   return_due: string | null
+  issues: OwnIssue[]
 }
 
 /** Consumables that fit one of the employee's devices (quick pick when requesting). */

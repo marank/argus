@@ -11,6 +11,7 @@ export interface ITOverview {
   orders_to_place: number
   orders_in_transit: number
   low_consumables: number
+  open_issues: number
   warranty_expiring: number
   upcoming: {
     id: Id

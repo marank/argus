@@ -167,6 +167,22 @@ async function removeEvent(event: AssetEvent) {
               }}
             </RouterLink>
           </NAlert>
+          <NAlert v-if="asset.open_issues.length" type="warning" :bordered="false">
+            <RouterLink :to="{ name: 'issues' }">
+              {{
+                t(
+                  'inventory.issues.openOnDevice',
+                  { count: asset.open_issues.length },
+                  asset.open_issues.length,
+                )
+              }}:
+            </RouterLink>
+            {{
+              asset.open_issues
+                .map((i) => `${enumLabel('issueKind', i.kind)} – ${i.description}`)
+                .join(' · ')
+            }}
+          </NAlert>
           <NCard size="small">
             <div class="hero">
               <span class="icon"
