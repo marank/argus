@@ -46,12 +46,16 @@ async function remove(row: any) {
     list.load()
 }
 
+const FLEX_MIN_WIDTH = 180
+
 const baseColumns = computed<DataTableColumns<any>>(() => [
   ...props.resource.columns.map((column) => ({
     key: column.sorter ?? column.key,
     title: t(column.label),
     sorter: column.sorter ? true : undefined,
     width: column.width,
+    // Columns without a fixed width share the rest but never collapse.
+    minWidth: column.width ? undefined : FLEX_MIN_WIDTH,
     ellipsis: { tooltip: true },
     render: column.render ?? ((row: any) => row[column.key] ?? '—'),
   })),
@@ -86,6 +90,14 @@ const baseColumns = computed<DataTableColumns<any>>(() => [
       ]),
   },
 ])
+
+/** Wide enough for every column; narrower screens scroll the table sideways. */
+const scrollX = computed(() =>
+  baseColumns.value.reduce(
+    (sum, column) => sum + Number(('width' in column && column.width) || FLEX_MIN_WIDTH),
+    0,
+  ),
+)
 
 const columns = computed(() =>
   props.resource.groupBy ? withGroupHeaders(baseColumns.value) : baseColumns.value,
@@ -162,7 +174,7 @@ const boolOptions = computed(() => [
         :row-key="(row: any) => row.id"
         :row-props="(row: any) => grouping.rowProps(row, edit)"
         :row-class-name="grouping.rowClass"
-        :scroll-x="900"
+        :scroll-x="scrollX"
         @update:sorter="list.onSort"
       />
     </div>

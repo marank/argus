@@ -40,3 +40,10 @@ const stepStatus = computed(() => {
     <NStep v-for="step in steps" :key="step" :title="t(`reservations.steps.${step}`)" />
   </NSteps>
 </template>
+
+<style scoped>
+/* The last step has no line after it: let it take only its label, so the bar reaches the end. */
+.n-steps :deep(.n-step:last-child) {
+  flex: none;
+}
+</style>

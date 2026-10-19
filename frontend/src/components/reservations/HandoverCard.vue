@@ -86,8 +86,8 @@ const entries = computed<DetailEntry[]>(() => {
 }
 .signature img {
   display: block;
-  max-width: 100%;
-  height: 110px;
+  width: 100%;
+  height: 200px;
   object-fit: contain;
   padding: 6px;
   border: 1px solid var(--ar-border);
