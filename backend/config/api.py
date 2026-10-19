@@ -1,9 +1,10 @@
 """Assembles the REST API from the routers of the individual apps."""
 
 from django.core.exceptions import ValidationError
+from django.db import connection
 from django.http import Http404
 from django.utils.translation import gettext as _
-from ninja import NinjaAPI
+from ninja import NinjaAPI, Status
 
 from apps.accounts.api import departments, users
 from apps.core.api import number_sequences, session
@@ -30,6 +31,16 @@ api.add_router("/masterdata/number-sequences", number_sequences.router)
 api.add_router("/inventory", inventory_router)
 api.add_router("", reservations_router)
 api.add_router("/procurement", procurement_router)
+
+
+@api.get("/health", auth=None, response={200: dict, 503: dict}, tags=["health"])
+def health(request):
+    """Liveness/readiness for container health checks: the app answers and the DB is reachable."""
+    try:
+        connection.ensure_connection()
+    except Exception:  # noqa: BLE001 - any DB error means "not ready"
+        return Status(503, {"status": "database unavailable"})
+    return Status(200, {"status": "ok"})
 
 
 @api.exception_handler(BusinessError)

@@ -10,7 +10,7 @@
     {
       "name": "frontend",
       "runtimeExecutable": "env",
-      "runtimeArgs": ["ARGUS_BACKEND_URL=http://127.0.0.1:8010", "pnpm", "--dir", "frontend", "dev", "--port", "5174", "--strictPort"],
+      "runtimeArgs": ["BACKEND_URL=http://127.0.0.1:8010", "pnpm", "--dir", "frontend", "dev", "--port", "5174", "--strictPort"],
       "port": 5174
     }
   ]

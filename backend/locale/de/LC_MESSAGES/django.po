@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 00:40+0200\n"
+"POT-Creation-Date: 2026-10-19 01:15+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,9 +17,17 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: apps/accounts/admin/user.py:15
+#: apps/accounts/admin/department.py:16
+msgid "members"
+msgstr "Mitglieder"
+
+#: apps/accounts/admin/user.py:27 apps/accounts/admin/user.py:34
 msgid "Organisation"
 msgstr "Organisation"
+
+#: apps/accounts/admin/user.py:30
+msgid "Argus roles"
+msgstr "Argus-Rollen"
 
 #: apps/accounts/apps.py:8
 msgid "Accounts"
@@ -50,11 +58,11 @@ msgstr "Abteilung"
 msgid "departments"
 msgstr "Abteilungen"
 
-#: apps/accounts/models/user.py:12 config/settings.py:99
+#: apps/accounts/models/user.py:12 config/settings.py:122
 msgid "English"
 msgstr "Englisch"
 
-#: apps/accounts/models/user.py:13 config/settings.py:99
+#: apps/accounts/models/user.py:13 config/settings.py:122
 msgid "German"
 msgstr "Deutsch"
 
@@ -93,6 +101,35 @@ msgstr "Benutzer"
 #: apps/accounts/models/user.py:38
 msgid "users"
 msgstr "Benutzer"
+
+#: apps/core/admin/__init__.py:6
+msgid "Argus administration"
+msgstr "Argus-Verwaltung"
+
+#: apps/core/admin/__init__.py:7
+msgid "Argus admin"
+msgstr "Argus-Admin"
+
+#: apps/core/admin/__init__.py:8
+msgid "IT asset management"
+msgstr "IT-Asset-Management"
+
+#: apps/core/admin/number_sequence.py:15
+msgid "Format"
+msgstr "Format"
+
+#: apps/core/admin/number_sequence.py:16
+msgid "State"
+msgstr "Stand"
+
+#: apps/core/admin/number_sequence.py:17 apps/inventory/admin/asset.py:87
+#: apps/reservations/admin/reservation.py:74
+msgid "History"
+msgstr "Verlauf"
+
+#: apps/core/admin/number_sequence.py:20
+msgid "next number"
+msgstr "nächste Nummer"
 
 #: apps/core/api/crud.py:100
 msgid "This record is still in use and cannot be deleted."
@@ -187,6 +224,38 @@ msgstr "Ungültiger Platzhalter: %(error)s"
 #: apps/dashboard/apps.py:8
 msgid "Dashboard"
 msgstr "Dashboard"
+
+#: apps/inventory/admin/asset.py:24
+msgid "attached device"
+msgstr "zugehöriges Gerät"
+
+#: apps/inventory/admin/asset.py:25
+msgid "attached devices"
+msgstr "zugehörige Geräte"
+
+#: apps/inventory/admin/asset.py:61
+msgid "Status & usage"
+msgstr "Status & Nutzung"
+
+#: apps/inventory/admin/asset.py:75
+msgid "Purchase & warranty"
+msgstr "Kauf & Garantie"
+
+#: apps/inventory/admin/asset.py:86 apps/reservations/admin/reservation.py:72
+msgid "Notes"
+msgstr "Notizen"
+
+#: apps/inventory/admin/stock_item.py:22
+msgid "stock level"
+msgstr "Bestand"
+
+#: apps/inventory/admin/stock_item.py:26
+msgid "Below minimum"
+msgstr "Unter Mindestbestand"
+
+#: apps/inventory/admin/stock_item.py:42
+msgid "below minimum"
+msgstr "unter Mindestbestand"
 
 #: apps/inventory/apps.py:8
 msgid "Inventory"
@@ -522,6 +591,22 @@ msgstr "Nicht genug Bestand für %(model)s (verfügbar: %(quantity)s)."
 msgid "Only %(available)s units of %(model)s are available at %(location)s."
 msgstr "Nur %(available)s Stück von %(model)s sind in %(location)s verfügbar."
 
+#: apps/masterdata/admin/asset_model.py:25
+msgid "Identification"
+msgstr "Identifikation"
+
+#: apps/masterdata/admin/asset_model.py:26 apps/procurement/apps.py:8
+msgid "Procurement"
+msgstr "Beschaffung"
+
+#: apps/masterdata/admin/asset_model.py:27
+msgid "Employee portal"
+msgstr "Mitarbeiterportal"
+
+#: apps/masterdata/admin/asset_model.py:28
+msgid "Details"
+msgstr "Details"
+
 #: apps/masterdata/apps.py:8
 msgid "Master data"
 msgstr "Stammdaten"
@@ -701,9 +786,9 @@ msgstr "Adresse"
 msgid "suppliers"
 msgstr "Lieferanten"
 
-#: apps/procurement/apps.py:8
-msgid "Procurement"
-msgstr "Beschaffung"
+#: apps/procurement/admin/purchase_order.py:41
+msgid "total"
+msgstr "Summe"
 
 #: apps/procurement/models/purchase_order.py:14
 msgid "To order"
@@ -813,6 +898,24 @@ msgstr "Von „%(line)s“ sind nur noch %(open)s Stück offen."
 msgid "Choose a storage location for stock items."
 msgstr "Wählen Sie einen Lagerort für die Lagerartikel."
 
+#: apps/reservations/admin/handover.py:45
+#: apps/reservations/admin/reservation.py:42
+#: apps/reservations/models/handover.py:41
+msgid "signature"
+msgstr "Unterschrift"
+
+#: apps/reservations/admin/reservation.py:70
+msgid "Period"
+msgstr "Zeitraum"
+
+#: apps/reservations/admin/reservation.py:71
+msgid "Pickup"
+msgstr "Abholung"
+
+#: apps/reservations/admin/reservation_item.py:33
+msgid "custom request"
+msgstr "Sonderwunsch"
+
 #: apps/reservations/api/allocations.py:61
 #, python-format
 msgid "No device found for “%(code)s”."
@@ -897,10 +1000,6 @@ msgstr "entgegengenommen von (Name)"
 #: apps/reservations/models/handover.py:39
 msgid "Kept as text so the record stays readable if the account is removed."
 msgstr "Als Text gespeichert, damit das Protokoll auch nach Löschung des Kontos lesbar bleibt."
-
-#: apps/reservations/models/handover.py:41
-msgid "signature"
-msgstr "Unterschrift"
 
 #: apps/reservations/models/handover.py:41
 msgid "PNG image as data URL."
@@ -1118,6 +1217,6 @@ msgstr "Geben Sie an, wer die Geräte abholt."
 msgid "Only pickups at the terminal are signed."
 msgstr "Nur Abholungen am Terminal werden unterschrieben."
 
-#: config/api.py:52
+#: config/api.py:63
 msgid "Not found."
 msgstr "Nicht gefunden."

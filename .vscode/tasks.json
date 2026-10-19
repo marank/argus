@@ -1,0 +1,193 @@
+{
+  // Argus development tasks. Run via "Terminal → Run Task…" (Ctrl+Shift+P → Tasks: Run Task).
+  "version": "2.0.0",
+  "tasks": [
+    // --- Development servers -------------------------------------------------
+    {
+      "label": "Dev: start all",
+      "detail": "Backend and frontend dev servers side by side",
+      "dependsOn": ["Dev: backend", "Dev: frontend"],
+      "dependsOrder": "parallel",
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev: backend",
+      "detail": "Django runserver on :8000",
+      "type": "shell",
+      "command": "uv run python manage.py runserver 127.0.0.1:8000",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "isBackground": true,
+      "presentation": { "group": "dev", "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev: frontend",
+      "detail": "Vite dev server on :5173 (proxies /api and /admin to :8000)",
+      "type": "shell",
+      "command": "pnpm dev",
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "isBackground": true,
+      "presentation": { "group": "dev", "panel": "dedicated" },
+      "problemMatcher": []
+    },
+
+    // --- Setup ---------------------------------------------------------------
+    {
+      "label": "Setup: install dependencies",
+      "detail": "uv sync + pnpm install",
+      "dependsOn": ["Setup: backend dependencies", "Setup: frontend dependencies"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Setup: backend dependencies",
+      "type": "shell",
+      "command": "uv sync",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Setup: frontend dependencies",
+      "type": "shell",
+      "command": "pnpm install",
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "problemMatcher": []
+    },
+
+    // --- Database ------------------------------------------------------------
+    {
+      "label": "DB: migrate",
+      "type": "shell",
+      "command": "uv run python manage.py migrate",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "problemMatcher": []
+    },
+    {
+      "label": "DB: make migrations",
+      "type": "shell",
+      "command": "uv run python manage.py makemigrations",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "problemMatcher": []
+    },
+    {
+      "label": "DB: seed demo data",
+      "detail": "Demo users (password argus-demo), devices and requests",
+      "type": "shell",
+      "command": "uv run python manage.py seed_demo",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "problemMatcher": []
+    },
+    {
+      "label": "DB: reset and seed (deletes all data!)",
+      "type": "shell",
+      "command": "uv run python manage.py flush --no-input && uv run python manage.py seed_demo",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "problemMatcher": []
+    },
+    {
+      "label": "DB: create superuser",
+      "type": "shell",
+      "command": "uv run python manage.py createsuperuser",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "problemMatcher": []
+    },
+
+    // --- Quality -------------------------------------------------------------
+    {
+      "label": "Check: all",
+      "detail": "Backend tests + lint, frontend type-check + lint + unit tests",
+      "dependsOn": ["Test: backend", "Lint: backend", "Check: frontend types", "Lint: frontend", "Test: frontend"],
+      "dependsOrder": "sequence",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Test: backend",
+      "type": "shell",
+      "command": "uv run pytest",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Lint: backend",
+      "detail": "ruff format + ruff check --fix",
+      "type": "shell",
+      "command": "uv run ruff format . && uv run ruff check --fix .",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Test: frontend",
+      "type": "shell",
+      "command": "pnpm test:unit --run",
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Check: frontend types",
+      "type": "shell",
+      "command": "pnpm type-check",
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "problemMatcher": ["$tsc"]
+    },
+    {
+      "label": "Lint: frontend",
+      "detail": "prettier + oxlint + eslint (with --fix)",
+      "type": "shell",
+      "command": "pnpm format && pnpm lint",
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "problemMatcher": ["$eslint-stylish"]
+    },
+
+    // --- Translations --------------------------------------------------------
+    {
+      "label": "i18n: update backend messages",
+      "detail": "makemessages for German, then edit backend/locale/de/LC_MESSAGES/django.po",
+      "type": "shell",
+      "command": "uv run python manage.py makemessages -l de --ignore '.venv/*' --no-wrap",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "problemMatcher": []
+    },
+    {
+      "label": "i18n: compile backend messages",
+      "type": "shell",
+      "command": "uv run python manage.py compilemessages",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "problemMatcher": []
+    },
+
+    // --- Docker --------------------------------------------------------------
+    {
+      "label": "Docker: build and start",
+      "detail": "docker compose up --build -d (uses .env)",
+      "type": "shell",
+      "command": "docker compose up --build -d",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Docker: stop",
+      "type": "shell",
+      "command": "docker compose down",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Docker: logs",
+      "type": "shell",
+      "command": "docker compose logs -f app",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Docker: Django shell",
+      "type": "shell",
+      "command": "docker compose exec app python manage.py shell",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    }
+  ]
+}

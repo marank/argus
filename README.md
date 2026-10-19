@@ -27,12 +27,45 @@ pnpm install
 pnpm dev                               # http://localhost:5173, proxies /api to :8000
 ```
 
-If the backend runs elsewhere, set `ARGUS_BACKEND_URL` (e.g.
-`ARGUS_BACKEND_URL=http://127.0.0.1:8010 pnpm dev`).
+If the backend runs elsewhere, set `BACKEND_URL` (e.g.
+`BACKEND_URL=http://127.0.0.1:8010 pnpm dev`). Local development needs no
+`.env`: without variables Django runs with debug on and SQLite.
+
+VS Code: *Terminal → Run Task…* offers all of this as tasks (`.vscode/tasks.json`),
+e.g. **Dev: start all**, **Check: all**, **DB: seed demo data**, **Docker: build and start**.
 
 Demo accounts created by `seed_demo` (development only, password `argus-demo`):
 `admin` (superuser), `it` (IT department), `employee`, `sales`, `terminal`
 (shared pickup terminal).
+
+## Docker
+
+One image runs nginx (serves the built frontend, proxies `/api` and `/admin`),
+gunicorn (Django) and supervisord; docker compose adds PostgreSQL.
+
+```bash
+cp .env.example .env      # set APP_URLS, SECRET_KEY, ADMIN_PASSWORD, POSTGRES_PASSWORD
+docker compose up --build -d
+```
+
+Argus is then available on `http://localhost:8080`, the Django admin on `/admin/`
+(user from `ADMIN_USERNAME` / `ADMIN_PASSWORD`, created on first start). On every
+start the container waits for the database and applies migrations.
+
+| Variable | Purpose |
+| --- | --- |
+| `APP_URLS` | All URLs users open Argus under, comma separated. Allowed hosts, CSRF/CORS origins and secure cookies (all `https`) are derived from it. |
+| `APP_PORT` | Host port (default `8080`). |
+| `APP_WORKERS` | Gunicorn workers (default 2 × CPU + 1, max 5). |
+| `APP_DEMO_DATA` | `true` seeds an empty database with demo data. |
+| `SECRET_KEY` | Django secret key (required). |
+| `TIME_ZONE`, `LOG_LEVEL` | Defaults `Europe/Berlin`, `INFO`. |
+| `ADMIN_USERNAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` | First administrator. |
+| `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | Database (also used by the Postgres container). |
+
+The app container runs unprivileged with a read-only root filesystem; health
+checks use `/api/health`. Behind a TLS proxy, forward `X-Forwarded-Proto` and list
+the `https://` URL in `APP_URLS`.
 
 ## Features
 

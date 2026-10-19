@@ -4,7 +4,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
-const backend = process.env.ARGUS_BACKEND_URL ?? 'http://127.0.0.1:8000'
+const backend = process.env.BACKEND_URL ?? 'http://127.0.0.1:8000'
 // Keep the browser's Host header so Django's CSRF origin check sees a same-origin request.
 const proxy = { target: backend, changeOrigin: false }
 

@@ -47,3 +47,7 @@ def test_all_master_data_lists_load(it_client):
         response = it_client.get(f"/api/{path}")
         assert response.status_code == 200, (path, response.content)
         assert response.json()["count"] > 0, path
+
+
+def test_health_endpoint_is_public(client, db):
+    assert client.get("/api/health").json() == {"status": "ok"}
