@@ -52,7 +52,9 @@ const columns: DataTableColumns<ReservationListItem> = [
     key: 'status',
     title: () => t('common.status'),
     width: 150,
-    render: (r) => h(StatusTag, { group: 'reservationStatus', value: r.status }),
+    // Pulse: ready for pickup, the employee has to act.
+    render: (r) =>
+      h(StatusTag, { group: 'reservationStatus', value: r.status, pulse: r.status === 'ready' }),
   },
 ]
 </script>

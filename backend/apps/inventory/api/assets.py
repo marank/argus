@@ -32,6 +32,8 @@ SEARCH_FIELDS = (
 )
 ORDERING_FIELDS = (
     "inventory_number",
+    "model__category__sort_order",
+    "model__category__name",
     "serial_number",
     "status",
     "model__name",

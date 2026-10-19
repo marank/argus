@@ -5,6 +5,9 @@ import type {
   AssetEvent,
   AssetEventWithAsset,
   AssetInput,
+  LicenseDetail,
+  LicenseInput,
+  License,
   LookupResult,
   Consumable,
   ConsumableMovement,
@@ -46,6 +49,19 @@ export const consumablesApi = {
     id: Id,
     data: { delta: number; reason: ConsumableReason; note?: string; recipient?: Id | null },
   ) => http.post<Consumable>(`/inventory/consumables/${id}/move`, data),
+}
+
+export const licensesApi = {
+  list: (params: ListParams = {}) => http.get<Page<License>>('/inventory/licenses', params),
+  get: (id: Id) => http.get<LicenseDetail>(`/inventory/licenses/${id}`),
+  create: (data: LicenseInput) => http.post<LicenseDetail>('/inventory/licenses', data),
+  update: (id: Id, data: LicenseInput) =>
+    http.put<LicenseDetail>(`/inventory/licenses/${id}`, data),
+  remove: (id: Id) => http.delete(`/inventory/licenses/${id}`),
+  assign: (id: Id, data: { user?: Id; asset?: Id; note?: string }) =>
+    http.post<LicenseDetail>(`/inventory/licenses/${id}/assignments`, data),
+  unassign: (id: Id, assignmentId: Id) =>
+    http.delete<LicenseDetail>(`/inventory/licenses/${id}/assignments/${assignmentId}`),
 }
 
 export const lookupApi = {

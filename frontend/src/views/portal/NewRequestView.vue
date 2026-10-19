@@ -12,6 +12,7 @@ import RequestCart from '@/components/reservations/request/RequestCart.vue'
 import { optionKey, ownAvailable, type CartLine } from '@/components/reservations/request/types'
 import { useAction } from '@/composables/useAction'
 import { useAuthStore } from '@/stores/auth'
+import { anyModelLabel } from '@/utils/reservations'
 import type {
   CatalogCategory,
   CatalogModel,
@@ -47,7 +48,7 @@ function add(category: CatalogCategory, model?: CatalogModel) {
   }
   cart.value.push({
     key,
-    label: model ? model.full_name : t('reservations.new.any', { category: category.name }),
+    label: model ? model.full_name : anyModelLabel(category),
     category: model ? undefined : category.id,
     asset_model: model?.id,
     quantity: 1,

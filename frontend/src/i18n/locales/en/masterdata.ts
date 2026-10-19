@@ -1,9 +1,10 @@
 export default {
   title: 'Master data',
+  noDepartment: 'No department',
   resources: {
     manufacturers: 'Manufacturers',
     suppliers: 'Suppliers',
-    categories: 'Device groups',
+    categories: 'Categories',
     models: 'Models',
     locations: 'Locations',
     departments: 'Departments',
@@ -13,7 +14,7 @@ export default {
   singular: {
     manufacturers: 'Manufacturer',
     suppliers: 'Supplier',
-    categories: 'Device group',
+    categories: 'Category',
     models: 'Model',
     locations: 'Location',
     departments: 'Department',
@@ -47,11 +48,12 @@ export default {
     icon: 'Icon',
     numberSequence: 'Number sequence',
     requestable: 'Requestable in portal',
+    requestableShort: 'Requestable',
     sortOrder: 'Sort order',
     kind: 'Kind',
     pickupPoint: 'Pickup point',
     manufacturer: 'Manufacturer',
-    category: 'Device group',
+    category: 'Category',
     partNumber: 'Part number',
     ean: 'EAN / GTIN',
     tracking: 'Tracking',
@@ -77,16 +79,22 @@ export default {
     jobTitle: 'Job title',
     department: 'Department',
     numberSequenceHelp:
-      'New devices of this group draw their inventory number from this sequence. Empty: the parent group’s sequence applies.',
+      'New devices of this category draw their inventory number from this sequence. Empty: the parent category’s sequence applies.',
     trackingHelp:
-      'Individual devices have serial numbers and a history. Consumables such as ink or cables are tracked by quantity.',
+      'Individual devices have serial numbers and a history. Consumables such as ink or cables are tracked by quantity. Software belongs in software categories and is tracked as licenses.',
+    categoryKind: 'Type',
+    itemName: 'Singular name',
+    itemNameHelp:
+      'Name of a single item, e.g. “Laptop”. Shown in the portal as “Laptop · any model”.',
+    categoryKindHelp:
+      'Hardware or software. Subcategories have the same type as their parent category.',
     compatibleWithHelp: 'Accessories, spare parts and consumables that fit this model.',
     pickupPointHelp: 'Employees can collect devices here; offered when scheduling a pickup.',
     itStaffHelp: 'Access to inventory, reservations, procurement and master data.',
     sequenceCodeHelp: 'Technical key. Reserved: asset, reservation, purchase-order.',
     allowAnyModel: '“Any model” requestable',
     allowAnyModelHelp:
-      'Employees may ask for any device of this group. Turn off for accessories or consumables where only a specific model makes sense. Hidden anyway when the group has only one model.',
+      'Employees may ask for “any” of this category. Turn off for accessories or consumables where only a specific model makes sense. Hidden anyway when the category has only one model.',
     terminal: 'Pickup terminal',
     terminalHelp: 'Shared account for the touch terminal; only sees prepared pickups.',
     itStaff: 'IT staff',

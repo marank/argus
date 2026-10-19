@@ -18,8 +18,9 @@ from django.utils import timezone
 from apps.accounts.models import Department, User
 from apps.core.models import NumberSequence
 from apps.core.services.numbering import get_sequence
-from apps.inventory.models import Asset, AssetEvent, Consumable, ConsumableMovement
+from apps.inventory.models import Asset, AssetEvent, Consumable, ConsumableMovement, License
 from apps.inventory.services import assets as asset_service
+from apps.inventory.services import licenses as license_service
 from apps.inventory.services.consumables import move_consumable
 from apps.masterdata.models import AssetModel, Category, Location, Manufacturer, Supplier
 from apps.reservations.services import workflow
@@ -37,7 +38,20 @@ CATEGORIES = [
     ("mde-accessories", "MDE accessories", "plug", "MDA-", "mde"),
     ("printers", "Printers", "printer", "PR-", None),
     ("consumables", "Consumables", "box", None, None),
+    ("office-software", "Office & collaboration", "app", None, None),
+    ("design-software", "Design & engineering", "app", None, None),
 ]
+SOFTWARE_CATEGORIES = {"office-software", "design-software"}
+# Singular names for "any model" requests, e.g. "Laptop · any model".
+ITEM_NAMES = {
+    "laptops": "Laptop",
+    "workstations": "Workstation",
+    "phones": "Smartphone",
+    "headsets": "Headset",
+    "input": "Mouse & keyboard set",
+    "mde": "Mobile data terminal",
+    "printers": "Printer",
+}
 
 MODELS = [
     # manufacturer, name, category, tracking, ean, price
@@ -63,6 +77,9 @@ MODELS = [
     ("HP", "DeskJet 2820e", "printers", "serialized", "0196786123450", "79.00"),
     ("HP", "305 black ink cartridge", "consumables", "bulk", "0190780123458", "14.90"),
     ("HP", "305 tri-colour ink cartridge", "consumables", "bulk", "0190780123459", "16.90"),
+    ("Microsoft", "365 Business Standard", "office-software", "license", "", "150.00"),
+    ("Adobe", "Acrobat Pro", "office-software", "license", "", "239.88"),
+    ("Autodesk", "AutoCAD LT", "design-software", "license", "", "540.00"),
 ]
 
 
@@ -129,9 +146,11 @@ class Command(BaseCommand):
                     padding=4,
                 )
             categories[code] = Category.objects.create(
-                allow_any_model=code not in ("mde-accessories", "consumables"),
+                allow_any_model=code not in ("mde-accessories", "consumables", *SOFTWARE_CATEGORIES),
+                kind=Category.Kind.SOFTWARE if code in SOFTWARE_CATEGORIES else Category.Kind.HARDWARE,
                 code=code,
                 name=name,
+                item_name=ITEM_NAMES.get(code, ""),
                 icon=icon,
                 number_sequence=sequence,
                 parent=categories.get(parent),
@@ -204,6 +223,31 @@ class Command(BaseCommand):
         asset_service.update_asset(created["ThinkPad T14 Gen 5"][0], {"assigned_to": employee.pk}, it)
         asset_service.update_asset(created["iPhone 16"][0], {"assigned_to": employee.pk}, it)
         asset_service.update_asset(created["DeskJet 2820e"][0], {"assigned_to": employee.pk}, it)
+        # Software licenses: per employee and per device, one expiring soon.
+        m365 = License.objects.create(
+            model=models["365 Business Standard"],
+            reference="CSP subscription 2026",
+            seats=25,
+            valid_from=today - timedelta(days=165),
+            valid_until=today + timedelta(days=200),
+            supplier=supplier,
+            purchase_price="3750.00",
+        )
+        acrobat = License.objects.create(
+            model=models["Acrobat Pro"], reference="VIP contract", seats=5, supplier=supplier
+        )
+        autocad = License.objects.create(
+            model=models["AutoCAD LT"],
+            reference="Subscription",
+            seats=2,
+            assign_to=License.AssignTo.DEVICE,
+            valid_until=today + timedelta(days=20),
+            supplier=supplier,
+        )
+        for person in (employee, sales, admin, it):
+            license_service.assign_license(m365, it, user_id=person.pk)
+        license_service.assign_license(acrobat, it, user_id=sales.pk)
+        license_service.assign_license(autocad, it, asset_id=created["Precision 3680 Tower"][0].pk)
         for mde in created["SX58"][:3]:
             asset_service.record_event(
                 mde,

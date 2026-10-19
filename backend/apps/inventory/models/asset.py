@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -124,6 +125,14 @@ class Asset(TimeStampedModel):
 
     def __str__(self) -> str:
         return f"{self.inventory_number} – {self.model}"
+
+    def clean(self) -> None:
+        from apps.masterdata.models import AssetModel
+
+        if self.model_id and self.model.tracking != AssetModel.Tracking.SERIALIZED:
+            raise ValidationError(
+                {"model": _("Only models tracked as individual devices can be added as devices.")}
+            )
 
     def save(self, *args, **kwargs):
         if not self.inventory_number:

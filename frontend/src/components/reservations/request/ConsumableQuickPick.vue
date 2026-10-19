@@ -58,7 +58,11 @@ const devices = computed(() =>
         >
           <Plus :size="13" />
           <span>{{ option.model.full_name }}</span>
-          <span v-if="cartCounts[optionKey(option.category, option.model)]" class="count mono">
+          <span
+            v-if="cartCounts[optionKey(option.category, option.model)]"
+            :key="cartCounts[optionKey(option.category, option.model)]"
+            class="count mono"
+          >
             <Check :size="12" />{{ cartCounts[optionKey(option.category, option.model)] }}
           </span>
         </button>
@@ -115,6 +119,8 @@ const devices = computed(() =>
   border-color: var(--ar-primary);
 }
 .count {
+  /* Re-keyed on every change, so the pop plays when something is added. */
+  animation: ar-pop 0.25s ease-out;
   display: inline-flex;
   align-items: center;
   gap: 2px;

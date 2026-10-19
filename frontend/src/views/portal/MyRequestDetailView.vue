@@ -86,7 +86,10 @@ const columns: DataTableColumns<ReservationItem> = [
     <template v-else>
       <PageHeader :title="reservation.title" :eyebrow="reservation.number">
         <template #badge
-          ><StatusTag group="reservationStatus" :value="reservation.status"
+          ><StatusTag
+            group="reservationStatus"
+            :value="reservation.status"
+            :pulse="reservation.status === 'ready'"
         /></template>
         <template #actions>
           <NButton

@@ -18,6 +18,8 @@ class CatalogModelOut(Schema):
 class CatalogCategoryOut(Schema):
     id: UUID
     name: str
+    kind: str
+    item_name: str
     code: str
     icon: str
     description: str

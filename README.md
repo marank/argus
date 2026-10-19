@@ -98,10 +98,13 @@ read-only.
   (battery replacements, repairs, hand-outs, …). Consumables such as ink cartridges
   are tracked by quantity per location with minimum quantities and movements, and
   can be assigned to device models (compatible with) or to individual devices.
+- **Software licenses** – categories are either hardware or software. Licenses of
+  software products have seats, a term and are assigned to employees or devices;
+  employees can request software in the portal, IT then assigns a license.
 - **Scanning** – keyboard-wedge barcode scanners work anywhere in the IT views:
   inventory number, serial, IMEI or EAN jump straight to the device or model.
   Several devices can be scanned in at once.
-- **Number sequences** – configurable patterns per device group
+- **Number sequences** – configurable patterns per category
   (`{prefix}{year}-{seq}`, yearly/monthly restart) for inventory, reservation and
   order numbers.
 - **Self-service portal** – employees request devices by group ("any headset") or
@@ -119,7 +122,7 @@ read-only.
 - **Procurement** – demand from requests the pool cannot cover and consumables below
   minimum turns into purchase orders; goods receipt creates devices (with scanned
   serials) or books consumables, and directly allocates them to the waiting request.
-- **Master data** – manufacturers, suppliers, device groups, models, locations,
+- **Master data** – manufacturers, suppliers, categories, models, locations,
   departments, employees and number sequences.
 
 ## Project layout

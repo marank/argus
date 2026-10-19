@@ -9,6 +9,7 @@ import PageHeader from '@/components/common/PageHeader.vue'
 import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
 import { useFormat } from '@/composables/useFormat'
+import { useGroupedRows, withGroupHeaders } from '@/composables/useGroupedRows'
 import { useList } from '@/composables/useList'
 
 import CrudFormDrawer from './CrudFormDrawer.vue'
@@ -23,6 +24,7 @@ const { run } = useAction()
 
 const list = useList(props.resource.api.list, {
   ordering: props.resource.ordering,
+  groupOrdering: () => props.resource.groupBy?.ordering,
   filters: Object.fromEntries((props.resource.filters ?? []).map((f) => [f.key, null])),
 })
 onMounted(list.load)
@@ -44,7 +46,7 @@ async function remove(row: any) {
     list.load()
 }
 
-const columns = computed<DataTableColumns<any>>(() => [
+const baseColumns = computed<DataTableColumns<any>>(() => [
   ...props.resource.columns.map((column) => ({
     key: column.sorter ?? column.key,
     title: t(column.label),
@@ -84,6 +86,17 @@ const columns = computed<DataTableColumns<any>>(() => [
       ]),
   },
 ])
+
+const columns = computed(() =>
+  props.resource.groupBy ? withGroupHeaders(baseColumns.value) : baseColumns.value,
+)
+const grouping = useGroupedRows<any>({
+  rows: () => list.rows.value,
+  key: (row) => props.resource.groupBy!.key(row),
+  label: (row) => props.resource.groupBy!.label(row),
+  enabled: () => !!props.resource.groupBy,
+  storageKey: `argus.groups.${props.resource.key}`,
+})
 
 const boolOptions = computed(() => [
   { value: 'true', label: t('common.yes') },
@@ -143,11 +156,12 @@ const boolOptions = computed(() => [
         remote
         size="small"
         :columns="columns"
-        :data="list.rows.value"
+        :data="grouping.rows.value"
         :loading="list.loading.value"
         :pagination="list.pagination.value"
         :row-key="(row: any) => row.id"
-        :row-props="(row: any) => ({ onClick: () => edit(row) })"
+        :row-props="(row: any) => grouping.rowProps(row, edit)"
+        :row-class-name="grouping.rowClass"
         :scroll-x="900"
         @update:sorter="list.onSort"
       />

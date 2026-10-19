@@ -834,7 +834,7 @@ msgstr "Hersteller"
 #: apps/masterdata/models/category.py:51
 #: apps/reservations/models/reservation_item.py:25
 msgid "category"
-msgstr "Gerätegruppe"
+msgstr "Kategorie"
 
 #: apps/masterdata/models/asset_model.py:31
 msgid "part number"
@@ -890,7 +890,7 @@ msgstr "Modelle"
 
 #: apps/masterdata/models/category.py:20
 msgid "parent category"
-msgstr "übergeordnete Gerätegruppe"
+msgstr "übergeordnete Kategorie"
 
 #: apps/masterdata/models/category.py:27
 msgid "icon"
@@ -904,7 +904,7 @@ msgstr "Name des Symbols"
 msgid "Inventory numbers for new assets. Falls back to the parent category."
 msgstr ""
 "Inventarnummern für neue Geräte. Ohne Angabe gilt die übergeordnete "
-"Gerätegruppe."
+"Kategorie."
 
 #: apps/masterdata/models/category.py:38
 msgid "Shown in the employee portal."
@@ -919,9 +919,9 @@ msgid ""
 "Employees may request “any device” of this group. Turn off where only a "
 "specific model makes sense, e.g. accessories or consumables."
 msgstr ""
-"Mitarbeiter dürfen ein „beliebiges Gerät“ dieser Gruppe anfordern. "
-"Abschalten, wo nur ein bestimmtes Modell sinnvoll ist, z. B. bei Zubehör oder"
-" Verbrauchsmaterial."
+"Mitarbeiter dürfen „beliebig“ aus dieser Kategorie anfordern. Abschalten, wo "
+"nur ein bestimmtes Modell sinnvoll ist, z. B. bei Zubehör oder "
+"Verbrauchsmaterial."
 
 #: apps/masterdata/models/category.py:48
 msgid "sort order"
@@ -929,7 +929,7 @@ msgstr "Sortierung"
 
 #: apps/masterdata/models/category.py:52
 msgid "categories"
-msgstr "Gerätegruppen"
+msgstr "Kategorien"
 
 #: apps/masterdata/models/location.py:9
 msgid "Site"
@@ -1342,7 +1342,7 @@ msgstr "Reservierungspositionen"
 #: apps/reservations/models/reservation_item.py:61
 msgid "Choose a category or a model, or describe what you need."
 msgstr ""
-"Wählen Sie eine Gerätegruppe oder ein Modell, oder beschreiben Sie, was Sie "
+"Wählen Sie eine Kategorie oder ein Modell, oder beschreiben Sie, was Sie "
 "brauchen."
 
 #: apps/reservations/services/workflow.py:25
@@ -1455,3 +1455,142 @@ msgid ""
 "Consumables for this device in addition to those compatible with its model."
 msgstr ""
 "Verbrauchsmaterial für dieses Gerät, zusätzlich zu dem, was zum Modell passt."
+
+msgid "Hardware"
+msgstr "Hardware"
+
+msgid "Software"
+msgstr "Software"
+
+msgid "type"
+msgstr "Typ"
+
+msgid "A subcategory must have the same type as its parent category."
+msgstr ""
+"Eine Unterkategorie muss denselben Typ haben wie ihre übergeordnete "
+"Kategorie."
+
+msgid "Change the type of the subcategories first."
+msgstr "Ändern Sie zuerst den Typ der Unterkategorien."
+
+msgid "The type cannot be changed while models belong to this category."
+msgstr ""
+"Der Typ kann nicht geändert werden, solange Modelle zu dieser Kategorie "
+"gehören."
+
+msgid "Software license"
+msgstr "Softwarelizenz"
+
+msgid ""
+"Software categories only take licenses; licenses only belong to software "
+"categories."
+msgstr ""
+"Software-Kategorien enthalten nur Lizenzen, Lizenzen gehören nur in Software-"
+"Kategorien."
+
+msgid "Only models tracked as individual devices can be added as devices."
+msgstr ""
+"Als Gerät können nur Modelle angelegt werden, die als Einzelgeräte geführt "
+"werden."
+
+msgid "Employees"
+msgstr "Mitarbeiter"
+
+msgid "Devices"
+msgstr "Geräte"
+
+msgid "software"
+msgstr "Software"
+
+msgid "contract / reference"
+msgstr "Vertrag / Referenz"
+
+msgid "E.g. contract number or agreement, to tell several licenses apart."
+msgstr ""
+"Z. B. Vertragsnummer, um mehrere Lizenzen derselben Software zu "
+"unterscheiden."
+
+msgid "license key"
+msgstr "Lizenzschlüssel"
+
+msgid "seats"
+msgstr "Plätze"
+
+msgid "valid from"
+msgstr "gültig ab"
+
+msgid "valid until"
+msgstr "gültig bis"
+
+msgid "Leave empty for perpetual licenses."
+msgstr "Leer lassen für unbefristete Lizenzen."
+
+msgid "license"
+msgstr "Lizenz"
+
+msgid "licenses"
+msgstr "Lizenzen"
+
+msgid "Choose a software model."
+msgstr "Wählen Sie eine Software aus."
+
+msgid "The end date is before the start date."
+msgstr "Das Enddatum liegt vor dem Startdatum."
+
+msgid "device"
+msgstr "Gerät"
+
+msgid "assigned by"
+msgstr "zugewiesen von"
+
+msgid "license assignment"
+msgstr "Lizenzzuweisung"
+
+msgid "license assignments"
+msgstr "Lizenzzuweisungen"
+
+msgid "seats used"
+msgstr "belegte Plätze"
+
+#, python-format
+msgid ""
+"%(used)s seats are assigned; remove assignments before reducing the seats."
+msgstr ""
+"%(used)s Plätze sind zugewiesen. Entfernen Sie erst Zuweisungen, bevor Sie "
+"die Plätze reduzieren."
+
+msgid "Remove all assignments before changing whom the license is assigned to."
+msgstr ""
+"Entfernen Sie alle Zuweisungen, bevor Sie ändern, wem die Lizenz zugewiesen "
+"wird."
+
+msgid "This license is assigned to employees. Choose an employee."
+msgstr ""
+"Diese Lizenz wird Mitarbeitern zugewiesen. Wählen Sie einen Mitarbeiter."
+
+msgid "This license is assigned to devices. Choose a device."
+msgstr "Diese Lizenz wird Geräten zugewiesen. Wählen Sie ein Gerät."
+
+msgid "The license has expired."
+msgstr "Die Lizenz ist abgelaufen."
+
+#, python-format
+msgid "All %(seats)s seats of this license are in use."
+msgstr "Alle %(seats)s Plätze dieser Lizenz sind belegt."
+
+msgid "Already assigned."
+msgstr "Bereits zugewiesen."
+
+msgid "Device not found."
+msgstr "Gerät nicht gefunden."
+
+msgid "Remove all assignments before deleting the license."
+msgstr "Entfernen Sie alle Zuweisungen, bevor Sie die Lizenz löschen."
+
+msgid "singular name"
+msgstr "Einzelbezeichnung"
+
+msgid "Name of a single item, e.g. “Laptop”. Shown for “any model” requests."
+msgstr ""
+"Bezeichnung für ein einzelnes Stück, z. B. „Laptop“. Wird bei „beliebiges "
+"Modell“ angezeigt."

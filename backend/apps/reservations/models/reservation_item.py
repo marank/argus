@@ -92,5 +92,14 @@ class ReservationItem(UUIDModel):
         return self.allocations.aggregate(total=Sum("quantity"))["total"] or 0
 
     @property
+    def is_software(self) -> bool:
+        """Software is only requested here; IT assigns licenses in the license management."""
+        if self.asset_model_id:
+            return self.asset_model.is_software
+        return bool(self.category_id and self.category.is_software)
+
+    @property
     def quantity_missing(self) -> int:
+        if self.is_software:
+            return 0
         return max(self.quantity_target - self.quantity_allocated, 0)

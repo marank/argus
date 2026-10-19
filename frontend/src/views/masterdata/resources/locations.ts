@@ -1,3 +1,6 @@
+import { MapPin } from '@lucide/vue'
+import { h } from 'vue'
+
 import { locationsApi } from '@/api/masterdata'
 import { bool, mono } from '@/components/crud/cells'
 import { defineResource } from '@/components/crud/types'
@@ -5,9 +8,16 @@ import { i18n } from '@/i18n'
 import type { Location } from '@/types/masterdata'
 
 const KINDS = ['site', 'building', 'room', 'storage']
+const siteOf = (l: Location) => l.full_name.split(' / ')[0] ?? l.name
 
 export default defineResource<Location>({
   key: 'locations',
+  // Sections per site (the top-level location).
+  groupBy: {
+    ordering: 'site',
+    key: (l) => siteOf(l),
+    label: (l) => [h(MapPin, { size: 14 }), siteOf(l)],
+  },
   api: locationsApi,
   ordering: 'name',
   title: (l) => l.full_name,

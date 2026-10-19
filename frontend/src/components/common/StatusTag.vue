@@ -4,7 +4,8 @@ import { computed } from 'vue'
 import { useFormat } from '@/composables/useFormat'
 import { toneOf } from '@/utils/status'
 
-const props = defineProps<{ group: string; value: string }>()
+/** pulse: animate the dot where the status waits for action (opt-in per place). */
+const props = defineProps<{ group: string; value: string; pulse?: boolean }>()
 const { enumLabel } = useFormat()
 
 const tone = computed(() => toneOf(props.group, props.value))
@@ -12,7 +13,7 @@ const tone = computed(() => toneOf(props.group, props.value))
 
 <template>
   <span class="status-tag" :data-tone="tone">
-    <span class="dot" />
+    <span class="dot" :class="{ pulse }" />
     {{ enumLabel(group, value) }}
   </span>
 </template>
@@ -21,6 +22,10 @@ const tone = computed(() => toneOf(props.group, props.value))
 .status-tag {
   --tone: var(--ar-text-muted);
   display: inline-flex;
+  /* Keep its own width inside grid and flex layouts. */
+  justify-self: start;
+  align-self: center;
+  width: max-content;
   align-items: center;
   gap: 6px;
   padding: 1px 7px 1px 6px;
@@ -38,6 +43,9 @@ const tone = computed(() => toneOf(props.group, props.value))
   height: 6px;
   border-radius: 50%;
   background: currentColor;
+}
+.dot.pulse {
+  animation: ar-pulse-ring 1.8s ease-out infinite;
 }
 [data-tone='info'] {
   --tone: var(--ar-info);

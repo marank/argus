@@ -36,6 +36,7 @@ class ReservationItemOut(Schema):
     asset_model: AssetModelRefOut | None
     description: str
     is_free_text: bool
+    is_software: bool
     quantity_requested: int
     quantity_approved: int | None
     quantity_allocated: int

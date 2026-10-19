@@ -12,7 +12,13 @@ import type { ListParams, Page } from '@/types/common'
  */
 export function useList<T>(
   fetcher: (params: ListParams) => Promise<Page<T>>,
-  options: { filters?: Record<string, unknown>; pageSize?: number; ordering?: string } = {},
+  options: {
+    filters?: Record<string, unknown>
+    pageSize?: number
+    ordering?: string
+    /** Ordering applied before the user's sort, e.g. to keep rows grouped by category. */
+    groupOrdering?: () => string | undefined
+  } = {},
 ) {
   const { t } = useI18n()
   const rows = ref<T[]>([]) as { value: T[] }
@@ -31,7 +37,8 @@ export function useList<T>(
         page: page.value,
         page_size: pageSize.value,
         q: search.value || undefined,
-        ordering: ordering.value || undefined,
+        ordering:
+          [options.groupOrdering?.(), ordering.value].filter(Boolean).join(',') || undefined,
         ...(filters as ListParams),
       })
       rows.value = result.items

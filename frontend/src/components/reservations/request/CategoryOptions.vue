@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 
 import type { CatalogCategory, CatalogModel } from '@/types/reservations'
 import { categoryIcon } from '@/utils/icons'
+import { anyModelLabel } from '@/utils/reservations'
 
 import CatalogOptionRow from './CatalogOptionRow.vue'
 import FreeTextOption from './FreeTextOption.vue'
@@ -43,8 +44,7 @@ const groups = computed(() => [props.category, ...props.children])
       <CatalogOptionRow
         v-if="offersAnyModel(group)"
         primary
-        :label="t('reservations.new.any', { category: group.name })"
-        :hint="t('reservations.new.anyHint')"
+        :label="anyModelLabel(group)"
         :available="ownAvailable(group)"
         :in-cart="cartCounts[optionKey(group)] ?? 0"
         @add="emit('add', group)"

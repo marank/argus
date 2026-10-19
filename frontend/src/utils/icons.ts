@@ -1,21 +1,25 @@
 import {
+  AppWindow,
   Barcode,
   Box,
   Cable,
+  Cloud,
   Cpu,
   Headphones,
   Keyboard,
+  KeyRound,
   Laptop,
   Monitor,
   Package,
   Plug,
   Printer,
+  ShieldCheck,
   Smartphone,
   Tablet,
 } from '@lucide/vue'
 import type { Component } from 'vue'
 
-/** Icons selectable for device groups (stored by name in the backend). */
+/** Icons selectable for categories (stored by name in the backend). */
 export const CATEGORY_ICONS: Record<string, Component> = {
   laptop: Laptop,
   desktop: Monitor,
@@ -29,6 +33,10 @@ export const CATEGORY_ICONS: Record<string, Component> = {
   printer: Printer,
   cpu: Cpu,
   box: Box,
+  app: AppWindow,
+  key: KeyRound,
+  cloud: Cloud,
+  shield: ShieldCheck,
 }
 
 export function categoryIcon(name: string | null | undefined): Component {

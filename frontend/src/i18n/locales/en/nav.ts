@@ -7,6 +7,7 @@ export default {
   it: 'IT operations',
   assets: 'Devices',
   consumables: 'Consumables',
+  licenses: 'Licenses',
   eventLog: 'Service log',
   calendar: 'Calendar',
   reservations: 'Reservations',

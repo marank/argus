@@ -102,6 +102,106 @@ a:hover {
   cursor: pointer;
 }
 
+.nowrap {
+  white-space: nowrap;
+}
+
+/* Collapsible sections of grouped tables (see useGroupedRows). */
+.n-data-table .group-row td {
+  background: var(--ar-surface-sunken) !important;
+  cursor: pointer;
+  user-select: none;
+}
+.n-data-table .group-row:hover td {
+  color: var(--ar-text);
+}
+.n-data-table .group-row:focus-visible {
+  outline: 2px solid var(--ar-primary);
+  outline-offset: -2px;
+}
+.n-data-table .group-row .group-label {
+  display: flex;
+  align-items: center;
+  /* 10px cell padding + 14px icon + 10px gap = 34px, the indent of the child rows. */
+  gap: 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ar-text-muted);
+}
+/* Full row width, so the arrow sits on the right (also inside ellipsis cells). */
+.n-data-table .group-row td .n-ellipsis,
+.n-data-table .group-row td .n-ellipsis > span {
+  display: block;
+}
+.n-data-table .group-row .group-label > svg:first-child {
+  flex: none;
+}
+.n-data-table .group-chevron {
+  flex: none;
+  margin-left: auto;
+  transition: transform 0.15s ease;
+}
+.n-data-table .group-chevron.collapsed {
+  transform: rotate(-90deg);
+}
+.n-data-table .group-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 16px;
+  padding: 0 5px;
+  line-height: 1;
+  border-radius: 999px;
+  background: var(--ar-border);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+/* Rows of a group that is being expanded or collapsed. */
+.n-data-table .group-child-enter td {
+  animation: ar-row-in 0.22s ease-out both;
+}
+.n-data-table .group-child-leave td {
+  animation: ar-row-out 0.14s ease-in both;
+}
+
+/* Child rows: indented, with dashed tree lines from the group header. */
+.n-data-table .group-child td:first-child {
+  padding-left: 34px;
+}
+.n-data-table .group-child td:first-child:not(.n-data-table-td--fixed-left) {
+  position: relative;
+}
+.n-data-table .group-child td:first-child::before,
+.n-data-table .group-child td:first-child::after {
+  content: '';
+  position: absolute;
+  /* Centered under the 14px group icon (10px cell padding). */
+  left: 16px;
+  pointer-events: none;
+  border-color: var(--ar-text-subtle);
+  opacity: 0.6;
+  border-style: dashed;
+  border-width: 0;
+}
+.n-data-table .group-child td:first-child::before {
+  top: 0;
+  bottom: 0;
+  border-left-width: 1px;
+}
+.n-data-table .group-child-last td:first-child::before {
+  bottom: 50%;
+}
+.n-data-table .group-child td:first-child::after {
+  top: 50%;
+  width: 12px;
+  border-top-width: 1px;
+}
+
 @media (max-width: 720px) {
   .page {
     padding: 14px 16px 32px;
@@ -197,4 +297,48 @@ a:hover {
   .n-date-panel-date.n-date-panel-date--excluded.n-date-panel-date--selected::after {
   background-color: var(--n-item-color-active);
   opacity: 0.6;
+}
+
+/* --- Motion -------------------------------------------------------------------
+   Used sparingly: feedback when something appears, and a pulse only where
+   something waits for action. Everything stands still with reduced motion. */
+@keyframes ar-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+@keyframes ar-row-out {
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+@keyframes ar-pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 55%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+@keyframes ar-pulse-soft {
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes ar-pop {
+  40% {
+    transform: scale(1.25);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -98,15 +98,21 @@ const columns = computed<DataTableColumns<ReservationListItem>>(() => [
     key: 'pickup_at',
     title: t('reservations.pickupAt'),
     sorter: true,
-    width: 160,
-    render: (r) => h('span', { class: 'mono' }, r.pickup_at ? weekday(r.pickup_at) : '—'),
+    width: 180,
+    render: (r) => h('span', { class: 'mono nowrap' }, r.pickup_at ? weekday(r.pickup_at) : '—'),
   },
   {
     key: 'status',
     title: t('common.status'),
     sorter: true,
     width: 150,
-    render: (r) => h(StatusTag, { group: 'reservationStatus', value: r.status }),
+    // Pulse: new requests wait for approval.
+    render: (r) =>
+      h(StatusTag, {
+        group: 'reservationStatus',
+        value: r.status,
+        pulse: r.status === 'submitted',
+      }),
   },
 ])
 </script>

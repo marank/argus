@@ -2,9 +2,10 @@
 
 from uuid import UUID
 
-from django.db.models import F, QuerySet, Sum
+from django.db.models import Count, F, Q, QuerySet, Sum
+from django.utils import timezone
 
-from apps.inventory.models import Asset, Consumable
+from apps.inventory.models import Asset, Consumable, License
 from apps.masterdata.models import Category
 
 
@@ -28,6 +29,16 @@ def pool_consumables(category_id: UUID | None = None, model_id: UUID | None = No
     return Consumable.objects.filter(**_model_filter(category_id, model_id))
 
 
+def free_license_seats(category_id: UUID | None = None, model_id: UUID | None = None) -> int:
+    """Unassigned seats of licenses that have not expired."""
+    licenses = (
+        License.objects.filter(**_model_filter(category_id, model_id))
+        .filter(Q(valid_until__isnull=True) | Q(valid_until__gte=timezone.localdate()))
+        .annotate(used=Count("assignments"))
+    )
+    return sum(max(license.seats - license.used, 0) for license in licenses)
+
+
 def available_count(category_id: UUID | None = None, model_id: UUID | None = None) -> int:
     assets = pool_assets(category_id, model_id).count()
     bulk = (
@@ -36,4 +47,4 @@ def available_count(category_id: UUID | None = None, model_id: UUID | None = Non
         .get("total")
         or 0
     )
-    return assets + max(bulk, 0)
+    return assets + max(bulk, 0) + free_license_seats(category_id, model_id)

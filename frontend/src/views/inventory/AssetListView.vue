@@ -2,7 +2,8 @@
 import type { Id } from '@/types/common'
 import { Plus, ScanBarcode } from '@lucide/vue'
 import { NButton, NDataTable, NInput, NSelect, type DataTableColumns } from 'naive-ui'
-import { computed, h, onMounted, ref } from 'vue'
+import { useStorage } from '@vueuse/core'
+import { computed, h, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -16,6 +17,7 @@ import StatusTag from '@/components/common/StatusTag.vue'
 import AssetFormDrawer from '@/components/inventory/AssetFormDrawer.vue'
 import BulkCreateModal from '@/components/inventory/BulkCreateModal.vue'
 import { useFormat } from '@/composables/useFormat'
+import { useGroupedRows, withGroupHeaders } from '@/composables/useGroupedRows'
 import { useList } from '@/composables/useList'
 import { ASSET_STATUSES, type Asset } from '@/types/inventory'
 import { categoryIcon } from '@/utils/icons'
@@ -27,8 +29,13 @@ const { date, enumLabel } = useFormat()
 
 const queryId = (key: string) => (route.query[key] ? String(route.query[key]) : null)
 
+/** Sections per category; the server sorts by category first. */
+const grouped = useStorage('argus.assets-grouped', true)
+
 const list = useList(assetsApi.list, {
   ordering: 'inventory_number',
+  groupOrdering: () =>
+    grouped.value ? 'model__category__sort_order,model__category__name' : undefined,
   filters: {
     status: route.query.status ? [String(route.query.status)] : [],
     category: queryId('category'),
@@ -40,6 +47,7 @@ const list = useList(assetsApi.list, {
   },
 })
 onMounted(list.load)
+watch(grouped, list.reload)
 
 const showForm = ref(false)
 const showBulk = ref(false)
@@ -51,7 +59,7 @@ const loanableOnly = computed({
   set: (value: boolean) => (list.filters.is_loanable = value ? true : null),
 })
 
-const columns = computed<DataTableColumns<Asset>>(() => [
+const baseColumns = computed<DataTableColumns<Asset>>(() => [
   {
     key: 'inventory_number',
     title: t('inventory.fields.inventoryNumber'),
@@ -109,6 +117,18 @@ const columns = computed<DataTableColumns<Asset>>(() => [
   },
 ])
 
+const columns = computed(() =>
+  grouped.value ? withGroupHeaders(baseColumns.value) : baseColumns.value,
+)
+const grouping = useGroupedRows<Asset>({
+  rows: () => list.rows.value,
+  key: (a) => a.category.id,
+  label: (a) => [h(categoryIcon(a.category.icon), { size: 14 }), a.category.name],
+  enabled: () => grouped.value,
+  storageKey: 'argus.groups.assets',
+})
+const openAsset = (a: Asset) => router.push({ name: 'asset', params: { id: a.id } })
+
 function onSaved(asset: { id: Id }) {
   router.push({ name: 'asset', params: { id: asset.id } })
 }
@@ -149,6 +169,7 @@ function onSaved(asset: { id: Id }) {
         <EntitySelect
           v-model="list.filters.category as string | null"
           :fetcher="categoriesApi.list"
+          :params="{ kind: 'hardware' }"
           :label="(c) => c.path.join(' / ')"
           :placeholder="t('inventory.fields.category')"
           style="width: 200px"
@@ -176,6 +197,7 @@ function onSaved(asset: { id: Id }) {
           style="width: 180px"
         />
         <CheckField v-model="loanableOnly" :label="t('inventory.fields.loanable')" />
+        <CheckField v-model="grouped" :label="t('inventory.groupByCategory')" />
       </div>
 
       <NDataTable
@@ -183,13 +205,12 @@ function onSaved(asset: { id: Id }) {
         remote
         size="small"
         :columns="columns"
-        :data="list.rows.value"
+        :data="grouping.rows.value"
         :loading="list.loading.value"
         :pagination="list.pagination.value"
         :row-key="(a: Asset) => a.id"
-        :row-props="
-          (a: Asset) => ({ onClick: () => router.push({ name: 'asset', params: { id: a.id } }) })
-        "
+        :row-props="(a: Asset) => grouping.rowProps(a, openAsset)"
+        :row-class-name="grouping.rowClass"
         :scroll-x="1100"
         @update:sorter="list.onSort"
       />

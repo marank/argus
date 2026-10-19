@@ -52,6 +52,7 @@ const statusBars = computed(() =>
         :value="data.reservations_submitted"
         :icon="ClipboardCheck"
         tone="warning"
+        :alert="!!data.reservations_submitted"
         :to="{ name: 'reservations', query: { status: 'submitted' } }"
       />
       <StatCard
@@ -73,6 +74,7 @@ const statusBars = computed(() =>
         :value="data.reservations_overdue"
         :icon="AlarmClock"
         :tone="data.reservations_overdue ? 'error' : 'default'"
+        :alert="!!data.reservations_overdue"
         :to="{ name: 'reservations', query: { overdue: '1' } }"
       />
       <StatCard
@@ -93,6 +95,7 @@ const statusBars = computed(() =>
         :value="data.low_consumables"
         :icon="CircleAlert"
         :tone="data.low_consumables ? 'warning' : 'default'"
+        :alert="!!data.low_consumables"
         :to="{ name: 'consumables', query: { below_minimum: '1' } }"
       />
       <StatCard
@@ -132,36 +135,41 @@ const statusBars = computed(() =>
     <div class="grid-2">
       <NCard :title="t('dashboard.upcoming')" size="small">
         <p v-if="!data.upcoming.length" class="muted">{{ t('dashboard.noUpcoming') }}</p>
-        <RouterLink
-          v-for="r in data.upcoming"
-          :key="r.id"
-          :to="{ name: 'reservation', params: { id: r.id } }"
-          class="line"
-        >
-          <span class="mono">{{ r.number }}</span>
-          <span class="title"
-            >{{ r.title }}<small class="muted"> · {{ r.requester.display_name }}</small></span
+        <div v-else class="lines upcoming">
+          <RouterLink
+            v-for="r in data.upcoming"
+            :key="r.id"
+            :to="{ name: 'reservation', params: { id: r.id } }"
+            class="line"
           >
-          <span class="mono muted">{{
-            r.pickup_at ? dateTime(r.pickup_at) : date(r.start_date)
-          }}</span>
-          <StatusTag group="reservationStatus" :value="r.status" />
-        </RouterLink>
+            <span class="mono">{{ r.number }}</span>
+            <span class="title"
+              >{{ r.title }}<small class="muted"> · {{ r.requester.display_name }}</small></span
+            >
+            <span class="mono muted">{{
+              r.pickup_at ? dateTime(r.pickup_at) : date(r.start_date)
+            }}</span>
+            <!-- Pending hand-outs wait for IT: the dot pulses. -->
+            <StatusTag group="reservationStatus" :value="r.status" pulse />
+          </RouterLink>
+        </div>
       </NCard>
       <NCard :title="t('dashboard.recentActivity')" size="small">
-        <RouterLink
-          v-for="e in data.recent_events"
-          :key="e.id"
-          :to="{ name: 'asset', params: { id: e.asset.id } }"
-          class="line"
-        >
-          <span class="mono">{{ e.asset.inventory_number }}</span>
-          <span class="title"
-            >{{ enumLabel('eventKind', e.kind)
-            }}<small class="muted"> · {{ e.asset.model.full_name }}</small></span
+        <div class="lines activity">
+          <RouterLink
+            v-for="e in data.recent_events"
+            :key="e.id"
+            :to="{ name: 'asset', params: { id: e.asset.id } }"
+            class="line"
           >
-          <span class="mono muted">{{ dateTime(e.occurred_at) }}</span>
-        </RouterLink>
+            <span class="mono">{{ e.asset.inventory_number }}</span>
+            <span class="title"
+              >{{ enumLabel('eventKind', e.kind)
+              }}<small class="muted"> · {{ e.asset.model.full_name }}</small></span
+            >
+            <span class="mono muted">{{ dateTime(e.occurred_at) }}</span>
+          </RouterLink>
+        </div>
       </NCard>
     </div>
   </div>
@@ -206,15 +214,43 @@ const statusBars = computed(() =>
   gap: 8px 18px;
   margin-top: 12px;
 }
+/* Links to the filtered device list: highlighted as a chip instead of underlined. */
 .legend-item {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  margin: -3px -6px;
+  padding: 3px 6px;
+  border-radius: 3px;
   color: inherit;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+.legend-item:hover,
+.legend-item:focus-visible {
+  background: var(--ar-surface-sunken);
+  text-decoration: none;
+}
+.legend-item:hover .status-tag,
+.legend-item:focus-visible .status-tag {
+  background: color-mix(in srgb, var(--tone) 18%, transparent);
+  border-color: var(--tone);
+}
+/* Lines share one grid (subgrid), so numbers, dates and statuses line up. */
+.lines {
+  display: grid;
+  column-gap: 12px;
+}
+.lines.upcoming {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+.lines.activity {
+  grid-template-columns: auto minmax(0, 1fr) auto;
 }
 .line {
   display: grid;
-  grid-template-columns: 112px 1fr auto auto;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
   align-items: center;
   gap: 12px;
   padding: 7px 0;

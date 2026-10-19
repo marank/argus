@@ -1,12 +1,27 @@
+import { AppWindow, Cpu } from '@lucide/vue'
+import { h } from 'vue'
+
 import { categoriesApi, numberSequencesApi } from '@/api/masterdata'
 import { bool, mono, withIcon } from '@/components/crud/cells'
 import { defineResource } from '@/components/crud/types'
-import type { Category } from '@/types/masterdata'
+import { i18n } from '@/i18n'
+import { CATEGORY_KINDS, type Category } from '@/types/masterdata'
+
+const { t } = i18n.global
 
 export default defineResource<Category>({
   key: 'categories',
   api: categoriesApi,
   ordering: 'sort_order',
+  // Hardware first, then software (alphabetical order of the stored values).
+  groupBy: {
+    ordering: 'kind',
+    key: (c) => c.kind,
+    label: (c) => [
+      h(c.kind === 'software' ? AppWindow : Cpu, { size: 14 }),
+      t(`enums.categoryKind.${c.kind}`),
+    ],
+  },
   title: (c) => c.name,
   columns: [
     {
@@ -36,12 +51,36 @@ export default defineResource<Category>({
       render: (c) => mono(c.sort_order),
     },
   ],
-  filters: [{ key: 'is_requestable', label: 'masterdata.fields.requestable', type: 'boolean' }],
+  filters: [
+    {
+      key: 'kind',
+      label: 'masterdata.fields.categoryKind',
+      type: 'enum',
+      group: 'categoryKind',
+      values: CATEGORY_KINDS,
+    },
+    { key: 'is_requestable', label: 'masterdata.fields.requestable', type: 'boolean' },
+  ],
   sections: [
     {
       fields: [
         { key: 'name', label: 'common.name', type: 'text', required: true },
         { key: 'code', label: 'common.code', type: 'mono', required: true },
+        {
+          key: 'item_name',
+          label: 'masterdata.fields.itemName',
+          type: 'text',
+          help: 'masterdata.fields.itemNameHelp',
+        },
+        {
+          key: 'kind',
+          label: 'masterdata.fields.categoryKind',
+          type: 'enum',
+          group: 'categoryKind',
+          values: CATEGORY_KINDS,
+          required: true,
+          help: 'masterdata.fields.categoryKindHelp',
+        },
         {
           key: 'parent',
           label: 'masterdata.fields.parent',
@@ -86,6 +125,8 @@ export default defineResource<Category>({
   ],
   defaults: () => ({
     name: '',
+    item_name: '',
+    kind: 'hardware',
     code: '',
     parent: null,
     description: '',
@@ -97,6 +138,8 @@ export default defineResource<Category>({
   }),
   toForm: (c) => ({
     name: c.name,
+    item_name: c.item_name,
+    kind: c.kind,
     code: c.code,
     parent: c.parent?.id ?? null,
     description: c.description,

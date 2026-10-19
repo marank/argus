@@ -5,11 +5,18 @@ import { bool, mono } from '@/components/crud/cells'
 import { defineResource } from '@/components/crud/types'
 import { i18n } from '@/i18n'
 import type { AssetModel, Category } from '@/types/masterdata'
+import { categoryIcon } from '@/utils/icons'
 
 const { n, t } = i18n.global
 
 export default defineResource<AssetModel>({
   key: 'models',
+  // Sections per category, hardware before software.
+  groupBy: {
+    ordering: 'category__kind,category__sort_order,category__name',
+    key: (m) => m.category.id,
+    label: (m) => [h(categoryIcon(m.category.icon), { size: 14 }), m.category.name],
+  },
   api: assetModelsApi,
   ordering: 'manufacturer__name',
   title: (m) => m.full_name,
@@ -50,7 +57,7 @@ export default defineResource<AssetModel>({
     },
     {
       key: 'is_requestable',
-      label: 'masterdata.fields.requestable',
+      label: 'masterdata.fields.requestableShort',
       width: 110,
       render: (m) => bool(m.is_requestable),
     },
@@ -76,7 +83,7 @@ export default defineResource<AssetModel>({
       label: 'masterdata.fields.tracking',
       type: 'enum',
       group: 'tracking',
-      values: ['serialized', 'bulk'],
+      values: ['serialized', 'bulk', 'license'],
     },
     { key: 'is_active', label: 'common.active', type: 'boolean' },
   ],
@@ -107,7 +114,7 @@ export default defineResource<AssetModel>({
           label: 'masterdata.fields.tracking',
           type: 'enum',
           group: 'tracking',
-          values: ['serialized', 'bulk'],
+          values: ['serialized', 'bulk', 'license'],
           help: 'masterdata.fields.trackingHelp',
         },
         { key: 'is_active', label: 'common.active', type: 'switch' },

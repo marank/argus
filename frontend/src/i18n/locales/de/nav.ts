@@ -7,6 +7,7 @@ export default {
   it: 'IT-Betrieb',
   assets: 'Geräte',
   consumables: 'Verbrauchsmaterial',
+  licenses: 'Lizenzen',
   eventLog: 'Servicebuch',
   calendar: 'Kalender',
   reservations: 'Reservierungen',

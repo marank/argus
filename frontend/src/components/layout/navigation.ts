@@ -6,6 +6,7 @@ import {
   Factory,
   FolderTree,
   Hash,
+  KeyRound,
   LayoutDashboard,
   ListChecks,
   MapPin,
@@ -82,6 +83,7 @@ export const NAVIGATION: NavSection[] = [
       { key: 'calendar', label: 'nav.calendar', icon: CalendarDays, to: { name: 'calendar' } },
       { key: 'assets', label: 'nav.assets', icon: MonitorSmartphone, to: { name: 'assets' } },
       { key: 'consumables', label: 'nav.consumables', icon: Boxes, to: { name: 'consumables' } },
+      { key: 'licenses', label: 'nav.licenses', icon: KeyRound, to: { name: 'licenses' } },
       { key: 'event-log', label: 'nav.eventLog', icon: Wrench, to: { name: 'event-log' } },
     ],
   },
@@ -164,6 +166,8 @@ export function activeKey(name: string | undefined, params: Record<string, unkno
   switch (name) {
     case 'asset':
       return 'assets'
+    case 'license':
+      return 'licenses'
     case 'reservation':
       return 'reservations'
     case 'order':

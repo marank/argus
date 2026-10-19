@@ -70,6 +70,8 @@ export interface ResourceDef<T extends { id: Id }> {
     remove: (id: Id) => Promise<void>
   }
   ordering?: string
+  /** Show the rows in sections; the server sorts by the group's ordering first. */
+  groupBy?: { ordering: string; key: (row: T) => string; label: (row: T) => VNodeChild }
   columns: ColumnDef<T>[]
   sections: FormSection[]
   filters?: FilterDef[]

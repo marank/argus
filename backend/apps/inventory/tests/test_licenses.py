@@ -1,0 +1,153 @@
+from datetime import date, timedelta
+
+from apps.accounts.models import User
+from apps.inventory.models import Asset, License
+from apps.masterdata.models import AssetModel, Category
+
+JSON = "application/json"
+
+
+def license_payload(model: AssetModel, **changes) -> dict:
+    return {"model": str(model.pk), "seats": 2, "assign_to": "user", **changes}
+
+
+def test_license_list_counts_used_seats(it_client):
+    response = it_client.get("/api/inventory/licenses?ordering=model__name")
+    assert response.status_code == 200, response.content
+    by_name = {item["model"]["name"]: item for item in response.json()["items"]}
+    assert by_name["365 Business Standard"]["seats"] == 25
+    assert by_name["365 Business Standard"]["seats_used"] == 4
+    assert by_name["AutoCAD LT"]["assign_to"] == "device"
+    assert by_name["AutoCAD LT"]["category"]["kind"] == "software"
+
+
+def test_assign_seats_until_full(it_client):
+    acrobat = AssetModel.objects.get(name="Acrobat Pro")
+    response = it_client.post("/api/inventory/licenses", license_payload(acrobat), content_type=JSON)
+    assert response.status_code == 201, response.content
+    license_id = response.json()["id"]
+    users = list(User.objects.filter(username__in=["employee", "sales", "admin"]).order_by("username"))
+
+    for user in users[:2]:
+        response = it_client.post(
+            f"/api/inventory/licenses/{license_id}/assignments", {"user": str(user.pk)}, content_type=JSON
+        )
+        assert response.status_code == 201, response.content
+    assert response.json()["seats_used"] == 2
+    assert len(response.json()["assignments"]) == 2
+
+    # No seat left.
+    response = it_client.post(
+        f"/api/inventory/licenses/{license_id}/assignments", {"user": str(users[2].pk)}, content_type=JSON
+    )
+    assert response.status_code == 409
+
+    # Seats cannot drop below what is assigned.
+    response = it_client.put(
+        f"/api/inventory/licenses/{license_id}", license_payload(acrobat, seats=1), content_type=JSON
+    )
+    assert response.status_code == 409
+
+    # Freeing a seat makes room again.
+    assignment = License.objects.get(pk=license_id).assignments.first()
+    response = it_client.delete(f"/api/inventory/licenses/{license_id}/assignments/{assignment.pk}")
+    assert response.json()["seats_used"] == 1
+
+
+def test_assignment_must_match_license_type(it_client):
+    autocad = License.objects.get(model__name="AutoCAD LT")
+    employee = User.objects.get(username="employee")
+    response = it_client.post(
+        f"/api/inventory/licenses/{autocad.pk}/assignments", {"user": str(employee.pk)}, content_type=JSON
+    )
+    assert response.status_code == 409
+
+    laptop = Asset.objects.filter(model__name="ThinkPad T14 Gen 5").first()
+    response = it_client.post(
+        f"/api/inventory/licenses/{autocad.pk}/assignments", {"asset": str(laptop.pk)}, content_type=JSON
+    )
+    assert response.status_code == 201, response.content
+    detail = it_client.get(f"/api/inventory/assets/{laptop.pk}").json()
+    assert [entry["model"]["name"] for entry in detail["licenses"]] == ["AutoCAD LT"]
+
+
+def test_expired_license_cannot_be_assigned(it_client):
+    License.objects.filter(model__name="Acrobat Pro").update(valid_until=date.today() - timedelta(days=1))
+    acrobat = License.objects.get(model__name="Acrobat Pro")
+    admin = User.objects.get(username="admin")
+    response = it_client.post(
+        f"/api/inventory/licenses/{acrobat.pk}/assignments", {"user": str(admin.pk)}, content_type=JSON
+    )
+    assert response.status_code == 409
+
+
+def test_license_needs_software_model(it_client):
+    laptop = AssetModel.objects.get(name="ThinkPad T14 Gen 5")
+    response = it_client.post("/api/inventory/licenses", license_payload(laptop), content_type=JSON)
+    assert response.status_code == 422
+
+
+def test_category_and_model_types_must_match(it_client):
+    office = Category.objects.get(code="office-software")
+    response = it_client.post(
+        "/api/masterdata/categories",
+        {"name": "Notebooks", "code": "notebooks", "parent": str(office.pk), "kind": "hardware"},
+        content_type=JSON,
+    )
+    assert response.status_code == 422
+
+    manufacturer = AssetModel.objects.get(name="Acrobat Pro").manufacturer
+    response = it_client.post(
+        "/api/masterdata/models",
+        {
+            "name": "Reader",
+            "manufacturer": str(manufacturer.pk),
+            "category": str(office.pk),
+            "tracking": "serialized",
+        },
+        content_type=JSON,
+    )
+    assert response.status_code == 422
+
+
+def test_software_is_not_a_device(it_client):
+    acrobat = AssetModel.objects.get(name="Acrobat Pro")
+    response = it_client.post("/api/inventory/assets", {"model": str(acrobat.pk)}, content_type=JSON)
+    assert response.status_code == 422
+
+
+def test_software_request_needs_no_allocation(employee_client, it_client):
+    acrobat = AssetModel.objects.get(name="Acrobat Pro")
+    start = date.today() + timedelta(days=1)
+    response = employee_client.post(
+        "/api/reservations",
+        {
+            "title": "PDF forms",
+            "duration": "permanent",
+            "start_date": start.isoformat(),
+            "items": [{"asset_model": str(acrobat.pk), "quantity": 1}],
+        },
+        content_type=JSON,
+    )
+    assert response.status_code == 201, response.content
+    reservation = response.json()
+    item = reservation["items"][0]
+    assert item["is_software"] is True
+
+    response = it_client.post(
+        f"/api/reservations/{reservation['id']}/approve",
+        {"items": [{"id": item["id"], "quantity_approved": 1}]},
+        content_type=JSON,
+    )
+    assert response.status_code == 200, response.content
+    assert response.json()["items"][0]["quantity_missing"] == 0
+    response = it_client.post(f"/api/reservations/{reservation['id']}/ready", {}, content_type=JSON)
+    assert response.status_code == 200, response.content
+
+
+def test_catalog_shows_free_seats_to_it(it_client):
+    catalog = it_client.get("/api/portal/catalog").json()
+    office = next(c for c in catalog if c["code"] == "office-software")
+    assert office["kind"] == "software"
+    m365 = next(m for m in office["models"] if m["name"] == "365 Business Standard")
+    assert m365["available"] == 21

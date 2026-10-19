@@ -24,7 +24,14 @@ router = build_crud_router(
         in_schema=AssetModelIn,
         filter_schema=AssetModelFilter,
         search_fields=("name", "manufacturer__name", "part_number", "ean", "category__name"),
-        ordering_fields=("name", "manufacturer__name", "category__name", "part_number"),
+        ordering_fields=(
+            "name",
+            "manufacturer__name",
+            "category__name",
+            "category__kind",
+            "category__sort_order",
+            "part_number",
+        ),
         queryset=lambda: AssetModel.objects.select_related(
             "manufacturer", "category", "default_supplier"
         ).prefetch_related("compatible_with__manufacturer"),

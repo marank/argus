@@ -1,7 +1,10 @@
 import type { Id } from '@/types/common'
 import type { Ref } from './common'
 
-export type Tracking = 'serialized' | 'bulk'
+export type Tracking = 'serialized' | 'bulk' | 'license'
+
+export type CategoryKind = 'hardware' | 'software'
+export const CATEGORY_KINDS: CategoryKind[] = ['hardware', 'software']
 
 export interface AssetModelRef {
   id: Id
@@ -13,6 +16,9 @@ export interface AssetModelRef {
 export interface CategoryRef {
   id: Id
   name: string
+  kind: CategoryKind
+  /** Singular, e.g. "Laptop"; may be empty. */
+  item_name: string
   code: string
   icon: string
 }
@@ -49,6 +55,8 @@ export interface Supplier {
 export interface Category {
   id: Id
   name: string
+  kind: CategoryKind
+  item_name: string
   code: string
   parent: Ref | null
   description: string

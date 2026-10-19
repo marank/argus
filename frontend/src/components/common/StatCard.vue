@@ -10,11 +10,19 @@ defineProps<{
   icon?: Component
   tone?: Tone
   to?: RouteLocationRaw
+  /** Something needs attention: the colored edge pulses gently. */
+  alert?: boolean
 }>()
 </script>
 
 <template>
-  <component :is="to ? 'RouterLink' : 'div'" :to="to" class="stat" :data-tone="tone ?? 'default'">
+  <component
+    :is="to ? 'RouterLink' : 'div'"
+    :to="to"
+    class="stat"
+    :class="{ alert }"
+    :data-tone="tone ?? 'default'"
+  >
     <div class="head">
       <span class="eyebrow">{{ label }}</span>
       <component :is="icon" v-if="icon" :size="15" class="icon" />
@@ -44,6 +52,9 @@ defineProps<{
   width: 3px;
   background: var(--tone);
   opacity: 0.85;
+}
+.stat.alert::before {
+  animation: ar-pulse-soft 2.4s ease-in-out infinite;
 }
 a.stat:hover {
   border-color: var(--ar-border-strong);

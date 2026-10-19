@@ -43,7 +43,13 @@ export default {
     received: 'Received',
     cancelled: 'Cancelled',
   },
-  tracking: { serialized: 'Individual devices', bulk: 'Consumable (quantity)' },
+  tracking: {
+    serialized: 'Individual devices',
+    bulk: 'Consumable (quantity)',
+    license: 'Software license',
+  },
+  categoryKind: { hardware: 'Hardware', software: 'Software' },
+  licenseAssignTo: { user: 'Employees', device: 'Devices' },
   consumableReason: {
     receipt: 'Goods receipt',
     issue: 'Issue',

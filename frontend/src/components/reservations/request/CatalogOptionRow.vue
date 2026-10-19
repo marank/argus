@@ -19,16 +19,20 @@ const { t } = useI18n()
   <div class="option" :class="{ primary }">
     <div class="text">
       <span class="label">{{ label }}</span>
-      <small v-if="hint" class="muted">{{ hint }}</small>
+      <!-- Hint and availability (IT only) as one quiet line under the name. -->
+      <span v-if="hint || available !== null" class="meta">
+        <span v-if="hint" class="muted">{{ hint }}</span>
+        <span v-if="available !== null" class="avail" :class="{ none: !available }">
+          <span class="avail-dot" />
+          {{
+            available
+              ? t('reservations.new.available', { count: available })
+              : t('reservations.new.unavailable')
+          }}
+        </span>
+      </span>
     </div>
-    <span v-if="available !== null" class="mono avail" :class="{ none: !available }">
-      {{
-        available
-          ? t('reservations.new.available', { count: available })
-          : t('reservations.new.unavailable')
-      }}
-    </span>
-    <span v-if="inCart" class="in-cart mono">
+    <span v-if="inCart" :key="inCart" class="in-cart mono">
       <Check :size="13" /> {{ t('reservations.new.inCart', { count: inCart }) }}
     </span>
     <NButton
@@ -68,15 +72,32 @@ const { t } = useI18n()
 .primary .label {
   font-weight: 600;
 }
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 10px;
+  font-size: 11.5px;
+}
 .avail {
-  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   color: var(--ar-success);
   white-space: nowrap;
 }
 .avail.none {
   color: var(--ar-text-subtle);
 }
+.avail-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
 .in-cart {
+  /* Re-keyed on every change, so the pop plays when something is added. */
+  animation: ar-pop 0.25s ease-out;
   display: inline-flex;
   align-items: center;
   gap: 4px;

@@ -1,9 +1,10 @@
 export default {
   title: 'Stammdaten',
+  noDepartment: 'Ohne Abteilung',
   resources: {
     manufacturers: 'Hersteller',
     suppliers: 'Lieferanten',
-    categories: 'Gerätegruppen',
+    categories: 'Kategorien',
     models: 'Modelle',
     locations: 'Standorte',
     departments: 'Abteilungen',
@@ -13,7 +14,7 @@ export default {
   singular: {
     manufacturers: 'Hersteller',
     suppliers: 'Lieferant',
-    categories: 'Gerätegruppe',
+    categories: 'Kategorie',
     models: 'Modell',
     locations: 'Standort',
     departments: 'Abteilung',
@@ -47,11 +48,12 @@ export default {
     icon: 'Symbol',
     numberSequence: 'Nummernserie',
     requestable: 'Im Portal anforderbar',
+    requestableShort: 'Anforderbar',
     sortOrder: 'Sortierung',
     kind: 'Art',
     pickupPoint: 'Abholort',
     manufacturer: 'Hersteller',
-    category: 'Gerätegruppe',
+    category: 'Kategorie',
     partNumber: 'Artikelnummer',
     ean: 'EAN / GTIN',
     tracking: 'Führung',
@@ -77,16 +79,22 @@ export default {
     jobTitle: 'Position',
     department: 'Abteilung',
     numberSequenceHelp:
-      'Neue Geräte dieser Gruppe erhalten ihre Inventarnummer aus dieser Serie. Leer: Es gilt die Serie der übergeordneten Gruppe.',
+      'Neue Geräte dieser Kategorie erhalten ihre Inventarnummer aus dieser Serie. Leer: Es gilt die Serie der übergeordneten Kategorie.',
     trackingHelp:
-      'Einzelgeräte haben Seriennummer und Historie. Verbrauchsmaterial wie Tinte oder Kabel wird über Mengen geführt.',
+      'Einzelgeräte haben Seriennummer und Historie. Verbrauchsmaterial wie Tinte oder Kabel wird über Mengen geführt. Software gehört in Software-Kategorien und wird über Lizenzen geführt.',
+    categoryKind: 'Typ',
+    itemName: 'Einzelbezeichnung',
+    itemNameHelp:
+      'Bezeichnung für ein einzelnes Stück, z. B. „Laptop“. Wird im Portal als „Laptop · beliebiges Modell“ angezeigt.',
+    categoryKindHelp:
+      'Hardware oder Software. Unterkategorien haben denselben Typ wie ihre übergeordnete Kategorie.',
     compatibleWithHelp: 'Zubehör, Ersatzteile und Verbrauchsmaterial, die zu diesem Modell passen.',
     pickupPointHelp: 'Mitarbeiter können hier Geräte abholen; wird bei der Abholplanung angeboten.',
     itStaffHelp: 'Zugriff auf Inventar, Reservierungen, Beschaffung und Stammdaten.',
     sequenceCodeHelp: 'Technischer Schlüssel. Reserviert: asset, reservation, purchase-order.',
     allowAnyModel: '„Beliebiges Modell“ anforderbar',
     allowAnyModelHelp:
-      'Mitarbeiter dürfen ein beliebiges Gerät dieser Gruppe anfordern. Für Zubehör oder Verbrauchsmaterial abschalten, wo nur ein bestimmtes Modell sinnvoll ist. Bei nur einem Modell ohnehin ausgeblendet.',
+      'Mitarbeiter dürfen „beliebig“ aus dieser Kategorie anfordern. Für Zubehör oder Verbrauchsmaterial abschalten, wo nur ein bestimmtes Modell sinnvoll ist. Bei nur einem Modell ohnehin ausgeblendet.',
     terminal: 'Abholterminal',
     terminalHelp: 'Gemeinsames Konto für das Touch-Terminal; sieht nur vorbereitete Abholungen.',
     itStaff: 'IT-Mitarbeiter',

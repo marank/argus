@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -8,12 +9,14 @@ class AssetModel(TimeStampedModel):
     """A concrete product, e.g. *Lenovo ThinkPad T14 Gen 5* or *HP 305 black*.
 
     ``SERIALIZED`` models are tracked as individual assets with serial numbers;
-    ``BULK`` models (ink cartridges, cables, ...) are tracked as consumables with quantities.
+    ``BULK`` models (ink cartridges, cables, ...) are tracked as consumables with quantities;
+    ``LICENSE`` models are software products (in software categories) tracked as licenses.
     """
 
     class Tracking(models.TextChoices):
         SERIALIZED = "serialized", _("Individual devices")
         BULK = "bulk", _("Consumable (quantity)")
+        LICENSE = "license", _("Software license")
 
     name = models.CharField(_("name"), max_length=150)
     manufacturer = models.ForeignKey(
@@ -72,3 +75,17 @@ class AssetModel(TimeStampedModel):
     @property
     def is_bulk(self) -> bool:
         return self.tracking == self.Tracking.BULK
+
+    @property
+    def is_software(self) -> bool:
+        return self.tracking == self.Tracking.LICENSE
+
+    def clean(self) -> None:
+        if self.category_id and self.category.is_software != self.is_software:
+            raise ValidationError(
+                {
+                    "tracking": _(
+                        "Software categories only take licenses; licenses only belong to software categories."
+                    )
+                }
+            )

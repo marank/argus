@@ -1,10 +1,23 @@
+import { Building2 } from '@lucide/vue'
+import { h } from 'vue'
+
 import { departmentsApi, usersApi } from '@/api/accounts'
 import { bool, mono, text } from '@/components/crud/cells'
 import { defineResource } from '@/components/crud/types'
+import { i18n } from '@/i18n'
 import type { User } from '@/types/accounts'
 
 export default defineResource<User>({
   key: 'users',
+  // Sections per department.
+  groupBy: {
+    ordering: 'department__name',
+    key: (u) => u.department?.id ?? 'none',
+    label: (u) => [
+      h(Building2, { size: 14 }),
+      u.department?.name ?? i18n.global.t('masterdata.noDepartment'),
+    ],
+  },
   api: usersApi,
   ordering: 'last_name',
   title: (u) => u.display_name,

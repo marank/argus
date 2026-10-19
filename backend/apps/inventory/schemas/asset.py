@@ -7,6 +7,7 @@ from ninja import Field, Schema
 from apps.accounts.schemas import UserRefOut
 from apps.core.schemas import RefOut
 from apps.inventory.models import Asset
+from apps.inventory.schemas.license import AssetLicenseOut
 from apps.masterdata.models import AssetModel
 from apps.masterdata.schemas.refs import AssetModelRefOut, CategoryRefOut, LocationRefOut
 
@@ -48,6 +49,11 @@ class AssetDetailOut(AssetOut):
     # Assigned to this device directly; ``model_consumables`` come from its model.
     consumables: list[AssetModelRefOut]
     model_consumables: list[AssetModelRefOut]
+    licenses: list[AssetLicenseOut]
+
+    @staticmethod
+    def resolve_licenses(obj: Asset):
+        return list(obj.license_assignments.select_related("license__model__manufacturer"))
 
     @staticmethod
     def resolve_consumables(obj: Asset):

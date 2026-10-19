@@ -70,7 +70,7 @@ function submit() {
   <aside class="cart">
     <header>
       <h2>{{ t('reservations.new.cart') }}</h2>
-      <span v-if="total" class="mono badge">{{ total }}</span>
+      <span v-if="total" :key="total" class="mono badge">{{ total }}</span>
     </header>
 
     <div v-if="!lines.length" class="empty">
@@ -79,7 +79,7 @@ function submit() {
     </div>
 
     <template v-else>
-      <ul class="lines">
+      <TransitionGroup tag="ul" name="cart-line" class="lines">
         <li v-for="(line, index) in lines" :key="line.key">
           <div class="line">
             <div class="text">
@@ -126,7 +126,7 @@ function submit() {
             {{ t('reservations.new.available', { count: line.available }) }}
           </small>
         </li>
-      </ul>
+      </TransitionGroup>
 
       <NForm
         class="details ar-form"
@@ -193,6 +193,21 @@ function submit() {
 </template>
 
 <style scoped>
+/* New lines slide in, removed ones fade out. */
+.cart-line-enter-active,
+.cart-line-leave-active {
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+.cart-line-enter-from,
+.cart-line-leave-to {
+  opacity: 0;
+  transform: translateX(8px);
+}
+.cart-line-move {
+  transition: transform 0.2s ease;
+}
 .cart {
   position: sticky;
   top: 16px;
@@ -214,9 +229,16 @@ h2 {
   font-weight: 600;
 }
 .badge {
-  min-width: 22px;
+  /* Centered digits; re-keyed on change so the count pops. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
   padding: 0 6px;
   border-radius: 10px;
+  line-height: 1;
+  animation: ar-pop 0.25s ease-out;
   background: var(--ar-primary);
   color: var(--ar-on-primary);
   font-size: 11px;
@@ -288,6 +310,9 @@ h2 {
 }
 .qty {
   width: 104px;
+}
+.qty :deep(input) {
+  text-align: center;
 }
 .warn {
   color: var(--ar-warning);

@@ -207,6 +207,20 @@ async function removeEvent(event: AssetEvent) {
             </div>
             <span v-else class="muted">{{ t('inventory.noConsumables') }}</span>
           </NCard>
+          <NCard :title="t('inventory.licenses.deviceLicenses')" size="small">
+            <div v-if="asset.licenses.length" class="consumables">
+              <RouterLink
+                v-for="l in asset.licenses"
+                :key="l.id"
+                :to="{ name: 'license', params: { id: l.id } }"
+                class="consumable"
+              >
+                {{ l.model.full_name }}
+                <span v-if="l.valid_until" class="muted small mono">{{ date(l.valid_until) }}</span>
+              </RouterLink>
+            </div>
+            <span v-else class="muted">{{ t('inventory.licenses.noDeviceLicenses') }}</span>
+          </NCard>
           <NCard :title="t('inventory.sections.purchase')" size="small"
             ><DetailGrid :entries="purchase"
           /></NCard>

@@ -71,7 +71,7 @@ async function remove(allocationId: Id) {
         </div>
         <div v-if="item.note" class="muted small">{{ item.note }}</div>
       </div>
-      <div class="counts mono">
+      <div v-if="!item.is_software" class="counts mono">
         <span :class="{ done: !item.quantity_missing }">{{ item.quantity_allocated }}</span>
         <span class="muted">/ {{ target }}</span>
         <span
@@ -83,7 +83,14 @@ async function remove(allocationId: Id) {
         </span>
       </div>
     </div>
+    <div v-if="item.is_software" class="software-hint muted small">
+      {{ t('reservations.allocation.softwareHint') }}
+      <RouterLink :to="{ name: 'licenses' }">{{
+        t('reservations.allocation.toLicenses')
+      }}</RouterLink>
+    </div>
     <NProgress
+      v-else
       type="line"
       :percentage="percent"
       :show-indicator="false"
@@ -187,6 +194,11 @@ async function remove(allocationId: Id) {
 </template>
 
 <style scoped>
+.software-hint {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
 .item {
   display: grid;
   gap: 8px;

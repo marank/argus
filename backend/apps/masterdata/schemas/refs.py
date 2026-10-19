@@ -19,5 +19,7 @@ class LocationRefOut(Schema):
 class CategoryRefOut(Schema):
     id: UUID
     name: str
+    kind: str
+    item_name: str
     code: str
     icon: str

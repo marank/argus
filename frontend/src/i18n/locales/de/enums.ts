@@ -43,7 +43,13 @@ export default {
     received: 'Geliefert',
     cancelled: 'Storniert',
   },
-  tracking: { serialized: 'Einzelgeräte', bulk: 'Verbrauchsmaterial (Menge)' },
+  tracking: {
+    serialized: 'Einzelgeräte',
+    bulk: 'Verbrauchsmaterial (Menge)',
+    license: 'Softwarelizenz',
+  },
+  categoryKind: { hardware: 'Hardware', software: 'Software' },
+  licenseAssignTo: { user: 'Mitarbeiter', device: 'Geräte' },
   consumableReason: {
     receipt: 'Wareneingang',
     issue: 'Ausgabe',

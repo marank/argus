@@ -2,7 +2,7 @@ import type { Id } from '@/types/common'
 import type { UserRef } from './accounts'
 import type { Ref } from './common'
 import type { AssetRef } from './inventory'
-import type { AssetModelRef, CategoryRef, LocationRef } from './masterdata'
+import type { AssetModelRef, CategoryKind, CategoryRef, LocationRef } from './masterdata'
 
 export type ReservationStatus =
   'submitted' | 'approved' | 'ready' | 'handed_out' | 'completed' | 'rejected' | 'cancelled'
@@ -40,6 +40,8 @@ export interface ReservationItem {
   asset_model: AssetModelRef | null
   description: string
   is_free_text: boolean
+  /** Software is only requested; IT assigns licenses separately. */
+  is_software: boolean
   quantity_requested: number
   quantity_approved: number | null
   quantity_allocated: number
@@ -133,6 +135,8 @@ export interface CatalogModel {
 export interface CatalogCategory {
   id: Id
   name: string
+  kind: CategoryKind
+  item_name: string
   code: string
   icon: string
   description: string

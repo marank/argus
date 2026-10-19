@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -7,13 +8,25 @@ from apps.core.models import TimeStampedModel
 
 
 class Category(TimeStampedModel):
-    """Device group such as *Laptops*, *Headsets* or *MDE accessories*.
+    """Category such as *Laptops*, *MDE accessories* or *Office software*.
 
-    Categories form a tree. Employees request devices by category when the exact
+    Categories form a tree and are either hardware or software; subcategories
+    share the type of their parent. Employees request by category when the exact
     model does not matter ("I need a headset").
     """
 
+    class Kind(models.TextChoices):
+        HARDWARE = "hardware", _("Hardware")
+        SOFTWARE = "software", _("Software")
+
     name = models.CharField(_("name"), max_length=100)
+    kind = models.CharField(_("type"), max_length=10, choices=Kind.choices, default=Kind.HARDWARE)
+    item_name = models.CharField(
+        _("singular name"),
+        max_length=100,
+        blank=True,
+        help_text=_("Name of a single item, e.g. “Laptop”. Shown for “any model” requests."),
+    )
     code = models.SlugField(_("code"), max_length=30, unique=True)
     parent = models.ForeignKey(
         "self",
@@ -54,6 +67,23 @@ class Category(TimeStampedModel):
 
     def __str__(self) -> str:
         return self.name
+
+    @property
+    def is_software(self) -> bool:
+        return self.kind == self.Kind.SOFTWARE
+
+    def clean(self) -> None:
+        if self.parent_id and self.parent.kind != self.kind:
+            raise ValidationError(
+                {"kind": _("A subcategory must have the same type as its parent category.")}
+            )
+        if self.pk and self.children.exclude(kind=self.kind).exists():
+            raise ValidationError({"kind": _("Change the type of the subcategories first.")})
+        if self.pk and self.kind != Category.objects.get(pk=self.pk).kind:
+            if self.asset_models.exists():
+                raise ValidationError(
+                    {"kind": _("The type cannot be changed while models belong to this category.")}
+                )
 
     def ancestors(self) -> list[Category]:
         chain, node = [], self.parent

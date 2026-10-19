@@ -8,6 +8,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import type { Id } from '@/types/common'
 import type { CatalogCategory, CatalogModel } from '@/types/reservations'
 import { categoryIcon } from '@/utils/icons'
+import { anyModelLabel } from '@/utils/reservations'
 
 import CatalogOptionRow from './CatalogOptionRow.vue'
 import CategoryOptions from './CategoryOptions.vue'
@@ -31,6 +32,12 @@ const topLevel = computed(() => {
   return props.catalog.filter((c) => !c.parent_id || !ids.has(c.parent_id))
 })
 const childrenOf = (id: Id) => props.catalog.filter((c) => c.parent_id === id)
+/** Tiles split into hardware and software, followed by the section for anything else. */
+const tileGroups = computed(() =>
+  (['hardware', 'software'] as const)
+    .map((kind) => ({ kind, items: topLevel.value.filter((c) => c.kind === kind) }))
+    .filter((group) => group.items.length),
+)
 
 /** Pseudo selection for the "something else" tile. */
 const OTHER = 'other'
@@ -83,12 +90,8 @@ const results = computed<CatalogOption[]>(() => {
         <CatalogOptionRow
           v-for="option in results"
           :key="option.key"
-          :label="
-            option.model
-              ? option.model.full_name
-              : t('reservations.new.any', { category: option.category.name })
-          "
-          :hint="option.model ? option.category.name : t('reservations.new.anyHint')"
+          :label="option.model ? option.model.full_name : anyModelLabel(option.category)"
+          :hint="option.model ? option.category.name : undefined"
           :available="option.model ? option.model.available : ownAvailable(option.category)"
           :in-cart="cartCounts[option.key] ?? 0"
           @add="emit('add', option.category, option.model)"
@@ -98,20 +101,26 @@ const results = computed<CatalogOption[]>(() => {
 
     <template v-else>
       <div class="tiles" role="tablist">
-        <button
-          v-for="category in topLevel"
-          :key="category.id"
-          type="button"
-          role="tab"
-          class="tile"
-          :aria-selected="category.id === selectedId"
-          :class="{ active: category.id === selectedId }"
-          @click="selectedId = category.id"
-        >
-          <component :is="categoryIcon(category.icon)" :size="20" :stroke-width="1.5" />
-          <span class="name">{{ category.name }}</span>
-        </button>
-        <!-- Last tile: anything the catalog does not list. -->
+        <template v-for="group in tileGroups" :key="group.kind">
+          <div class="tile-heading eyebrow">
+            {{ t(`enums.categoryKind.${group.kind}`) }}
+          </div>
+          <button
+            v-for="category in group.items"
+            :key="category.id"
+            type="button"
+            role="tab"
+            class="tile"
+            :aria-selected="category.id === selectedId"
+            :class="{ active: category.id === selectedId }"
+            @click="selectedId = category.id"
+          >
+            <component :is="categoryIcon(category.icon)" :size="20" :stroke-width="1.5" />
+            <span class="name">{{ category.name }}</span>
+          </button>
+        </template>
+        <!-- Own section at the end: anything the catalog does not list. -->
+        <div class="tile-heading eyebrow">{{ t('reservations.new.otherSection') }}</div>
         <button
           type="button"
           role="tab"
@@ -178,6 +187,10 @@ const results = computed<CatalogOption[]>(() => {
   line-height: 1.3;
   font-weight: 500;
   color: var(--ar-text);
+}
+.tile-heading {
+  grid-column: 1 / -1;
+  margin-top: 4px;
 }
 .tile.other {
   border-style: dashed;

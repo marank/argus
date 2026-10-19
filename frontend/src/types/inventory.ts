@@ -57,6 +57,7 @@ export interface AssetDetail extends Asset {
   consumables: AssetModelRef[]
   /** Compatible with the device's model. */
   model_consumables: AssetModelRef[]
+  licenses: AssetLicense[]
 }
 
 export interface AssetInput {
@@ -147,4 +148,67 @@ export interface LookupResult {
   kind: 'asset' | 'model' | 'multiple' | 'none'
   assets: Asset[]
   models: AssetModel[]
+}
+
+export type LicenseAssignTo = 'user' | 'device'
+
+export interface License {
+  id: Id
+  model: AssetModelRef
+  category: CategoryRef
+  manufacturer: Ref
+  reference: string
+  license_key: string
+  seats: number
+  seats_used: number
+  assign_to: LicenseAssignTo
+  valid_from: string | null
+  valid_until: string | null
+  is_expired: boolean
+  supplier: Ref | null
+  purchase_date: string | null
+  purchase_price: string | null
+  notes: string
+  created_at: string
+  updated_at: string
+}
+
+export interface LicenseAssignment {
+  id: Id
+  user: UserRef | null
+  asset: {
+    id: Id
+    inventory_number: string
+    model: AssetModelRef
+    assigned_to: UserRef | null
+  } | null
+  assigned_by: UserRef | null
+  note: string
+  created_at: string
+}
+
+export interface LicenseDetail extends License {
+  assignments: LicenseAssignment[]
+}
+
+export interface LicenseInput {
+  model: Id | null
+  reference: string
+  license_key: string
+  seats: number
+  assign_to: LicenseAssignTo
+  valid_from: string | null
+  valid_until: string | null
+  supplier: Id | null
+  purchase_date: string | null
+  purchase_price: string | null
+  notes: string
+}
+
+/** A license seat used by a device. */
+export interface AssetLicense {
+  id: Id
+  model: AssetModelRef
+  reference: string
+  valid_until: string | null
 }
