@@ -39,8 +39,6 @@ export interface NavItem {
 export interface NavSection {
   key: string
   label?: string
-  /** The heading folds the entries away (remembered per browser). */
-  collapsible?: boolean
   it?: boolean
   superuser?: boolean
   items: NavItem[]
@@ -159,7 +157,6 @@ export const NAVIGATION: NavSection[] = [
     key: 'masterdata',
     label: 'nav.masterdata',
     it: true,
-    collapsible: true,
     items: [
       {
         key: 'md-models',

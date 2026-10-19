@@ -29,7 +29,7 @@ function toggle(key: string) {
 watch(
   active,
   (key) => {
-    const section = NAVIGATION.find((s) => s.collapsible && s.items.some((i) => i.key === key))
+    const section = NAVIGATION.find((s) => s.label && s.items.some((i) => i.key === key))
     if (section && isFolded(section.key)) toggle(section.key)
   },
   { immediate: true },
@@ -51,7 +51,7 @@ function foldableTitle(key: string, label: string) {
     )
 }
 
-const options = computed<MenuOption[]>(() =>
+const sections = computed(() =>
   NAVIGATION.filter(
     (section) => (!section.it || auth.isItStaff) && (!section.superuser || auth.isSuperuser),
   )
@@ -60,26 +60,36 @@ const options = computed<MenuOption[]>(() =>
       items: section.items.filter((item) => !item.module || features.isOn(item.module)),
     }))
     // Sections whose modules are all switched off disappear.
-    .filter((section) => section.items.length)
-    .flatMap<MenuOption>((section) => {
-      const children: MenuOption[] = section.items.map((item) => ({
-        key: item.key,
-        label: () => h(RouterLink, { to: item.to }, () => t(item.label)),
-        icon: () => h(item.icon, { size: 16, strokeWidth: 1.75 }),
-      }))
-      // Without a heading the entries stand alone; an empty group would still leave a gap.
-      if (!section.label) return children
-      // A narrow sidebar has no headings to unfold with, so it shows everything.
-      if (section.collapsible && !props.collapsed) {
-        return {
-          type: 'group',
-          key: section.key,
-          label: foldableTitle(section.key, t(section.label)),
-          children: isFolded(section.key) ? [] : children,
-        }
+    .filter((section) => section.items.length),
+)
+
+/**
+ * Sections fold only when there is something to choose between (employees see a
+ * single one) and the sidebar is wide enough to show headings.
+ */
+const foldable = computed(
+  () => !props.collapsed && sections.value.filter((section) => section.label).length > 1,
+)
+
+const options = computed<MenuOption[]>(() =>
+  sections.value.flatMap<MenuOption>((section) => {
+    const children: MenuOption[] = section.items.map((item) => ({
+      key: item.key,
+      label: () => h(RouterLink, { to: item.to }, () => t(item.label)),
+      icon: () => h(item.icon, { size: 16, strokeWidth: 1.75 }),
+    }))
+    // Without a heading the entries stand alone; an empty group would still leave a gap.
+    if (!section.label) return children
+    if (foldable.value) {
+      return {
+        type: 'group',
+        key: section.key,
+        label: foldableTitle(section.key, t(section.label)),
+        children: isFolded(section.key) ? [] : children,
       }
-      return { type: 'group', key: section.key, label: t(section.label), children }
-    }),
+    }
+    return { type: 'group', key: section.key, label: t(section.label), children }
+  }),
 )
 </script>
 
