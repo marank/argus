@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import type { Id } from '@/types/common'
 import {
-  ArrowLeft,
+  CalendarClock,
   Check,
   CircleCheckBig,
+  Info,
   MessageSquareWarning,
-  RotateCcw,
+  Search,
   UserRound,
   Users,
+  X,
 } from '@lucide/vue'
-import { useDebounceFn, useIdle } from '@vueuse/core'
+import { onClickOutside, useDebounceFn, useIdle } from '@vueuse/core'
 import { NButton, NInput, NSkeleton } from 'naive-ui'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -18,9 +20,10 @@ import { useRouter } from 'vue-router'
 import { terminalApi } from '@/api/reservations'
 import SignaturePad from '@/components/terminal/SignaturePad.vue'
 import { useAction } from '@/composables/useAction'
+import { useConfirm } from '@/composables/useConfirm'
 import { useFormat } from '@/composables/useFormat'
 import type { Allocation, Reservation, TerminalPerson } from '@/types/reservations'
-import { itemLabel } from '@/utils/reservations'
+import { categoryIcon } from '@/utils/icons'
 
 /**
  * Pickup at the shared terminal in three steps:
@@ -31,6 +34,7 @@ const { t } = useI18n()
 const router = useRouter()
 const { weekday } = useFormat()
 const { busy, run } = useAction()
+const confirmDialog = useConfirm()
 
 type Step = 'devices' | 'person' | 'sign' | 'done'
 
@@ -50,8 +54,8 @@ async function toggleNote(id: Id) {
 const collector = ref<'requester' | 'other'>('requester')
 const personQuery = ref('')
 const people = ref<TerminalPerson[]>([])
+/** Picked from the search; without a pick the typed name is recorded as is. */
 const person = ref<TerminalPerson | null>(null)
-const freeName = ref('')
 
 const pad = ref<InstanceType<typeof SignaturePad> | null>(null)
 const signed = ref(false)
@@ -59,6 +63,8 @@ const signed = ref(false)
 onMounted(async () => {
   try {
     reservation.value = await terminalApi.get(props.id)
+    // IT can skip the check, e.g. for sealed devices: start with who collects.
+    if (reservation.value.skip_device_check) step.value = 'person'
   } catch {
     router.replace({ name: 'terminal' })
   }
@@ -72,13 +78,28 @@ const devices = computed(() =>
 
 const collectorName = computed(() => {
   if (collector.value === 'requester') return reservation.value?.requester.display_name ?? ''
-  return person.value?.display_name ?? freeName.value.trim()
+  return person.value?.display_name ?? personQuery.value.trim()
 })
 
 const searchPeople = useDebounceFn(async (q: string) => {
   people.value = q.trim().length >= 2 ? await terminalApi.people(q) : []
 }, 200)
-watch(personQuery, searchPeople)
+watch(personQuery, (q) => {
+  if (person.value && q !== person.value.display_name) person.value = null
+  searchPeople(q)
+})
+
+function pick(p: TerminalPerson) {
+  person.value = p
+  personQuery.value = p.display_name
+  people.value = []
+}
+
+// Matches open as a dropdown under the field; tapping elsewhere keeps the typed name.
+const personBox = ref<HTMLElement | null>(null)
+const dropdownOpen = ref(false)
+watch(personQuery, () => (dropdownOpen.value = true))
+onClickOutside(personBox, () => (dropdownOpen.value = false))
 
 function deviceLabel(allocation: Allocation) {
   return allocation.asset?.model.full_name ?? allocation.consumable?.model.full_name ?? ''
@@ -114,7 +135,17 @@ const stopIdle = watch(
 )
 onBeforeUnmount(stopIdle)
 
-const STEPS: Step[] = ['devices', 'person', 'sign']
+const STEPS = computed<Step[]>(() =>
+  reservation.value?.skip_device_check ? ['person', 'sign'] : ['devices', 'person', 'sign'],
+)
+
+async function cancelPickup() {
+  const leave = await confirmDialog(t('terminal.cancelPickup'), {
+    positiveText: t('terminal.cancelConfirm'),
+    negativeText: t('terminal.cancelKeep'),
+  })
+  if (leave) router.push({ name: 'terminal' })
+}
 </script>
 
 <template>
@@ -131,10 +162,6 @@ const STEPS: Step[] = ['devices', 'person', 'sign']
 
   <div v-else class="pickup">
     <div class="head">
-      <NButton size="large" quaternary @click="router.push({ name: 'terminal' })">
-        <template #icon><ArrowLeft :size="22" /></template>
-        {{ t('common.back') }}
-      </NButton>
       <div class="title">
         <span class="eyebrow">{{ reservation.number }}</span>
         <h1>{{ reservation.requester.display_name }}</h1>
@@ -150,43 +177,81 @@ const STEPS: Step[] = ['devices', 'person', 'sign']
           >{{ t(`terminal.steps.${s}`) }}
         </li>
       </ol>
+      <!-- Leaves the pickup without saving anything; back to the list of pickups. -->
+      <NButton size="large" secondary class="cancel" @click="cancelPickup">
+        <template #icon><X :size="20" /></template>
+        {{ t('common.cancel') }}
+      </NButton>
     </div>
 
     <!-- 1 · Devices -->
     <section v-if="step === 'devices'" class="panel">
-      <h2>{{ t('terminal.devicesTitle') }}</h2>
-      <p class="muted">{{ t('terminal.devicesHint') }}</p>
+      <div class="panel-head">
+        <div>
+          <h2>{{ t('terminal.devicesTitle') }}</h2>
+          <p class="muted">{{ t('terminal.devicesHint') }}</p>
+        </div>
+        <div class="facts">
+          <span class="fact">{{ t('terminal.deviceCount', devices.length) }}</span>
+          <span class="fact">
+            <CalendarClock :size="16" />
+            <template v-if="reservation.end_date">
+              {{ t('terminal.returnBy', { date: weekday(reservation.end_date) }) }}
+            </template>
+            <template v-else>{{ t('terminal.keep') }}</template>
+          </span>
+        </div>
+      </div>
       <ul class="devices">
-        <li v-for="{ item, allocation } in devices" :key="allocation.id">
-          <div class="device">
-            <div>
-              <strong>{{ deviceLabel(allocation) }}</strong>
-              <div class="mono muted">
-                <template v-if="allocation.asset">
-                  {{ allocation.asset.inventory_number }} · {{ allocation.asset.serial_number }}
-                </template>
-                <template v-else>{{ allocation.quantity }}× · {{ itemLabel(item) }}</template>
-              </div>
-            </div>
-            <NButton
-              size="large"
-              :type="notes[allocation.id] ? 'warning' : 'default'"
-              secondary
-              @click="toggleNote(allocation.id)"
-            >
-              <template #icon><MessageSquareWarning :size="20" /></template>
-              {{ notes[allocation.id] ? t('terminal.noteAdded') : t('terminal.addNote') }}
-            </NButton>
-          </div>
+        <li
+          v-for="{ allocation } in devices"
+          :key="allocation.id"
+          :class="{ noted: notes[allocation.id]?.trim() }"
+        >
+          <span class="device-icon">
+            <component :is="categoryIcon(allocation.category_icon)" :size="26" :stroke-width="1.5" />
+          </span>
+          <strong class="device-name">{{ deviceLabel(allocation) }}</strong>
+          <template v-if="allocation.asset">
+            <span class="code">
+              <small>{{ t('inventory.fields.inventoryNumber') }}</small>
+              <span class="mono">{{ allocation.asset.inventory_number }}</span>
+            </span>
+            <span class="code">
+              <small>{{ t('inventory.fields.serialNumber') }}</small>
+              <span class="mono">{{ allocation.asset.serial_number || '–' }}</span>
+            </span>
+          </template>
+          <span v-else class="code wide">
+            <small>{{ t('common.quantity') }}</small>
+            <span class="mono">{{ allocation.quantity }}×</span>
+          </span>
+          <NButton
+            size="large"
+            :type="notes[allocation.id]?.trim() ? 'warning' : 'default'"
+            secondary
+            class="note-button"
+            @click="toggleNote(allocation.id)"
+          >
+            <template #icon><MessageSquareWarning :size="20" /></template>
+            {{ notes[allocation.id]?.trim() ? t('terminal.noteAdded') : t('terminal.addNote') }}
+          </NButton>
+          <p v-if="allocation.handout_note" class="it-note">
+            <Info :size="15" /> {{ t('terminal.itNote', { note: allocation.handout_note }) }}
+          </p>
           <NInput
             v-if="openNote === allocation.id"
             :ref="(el) => el && (noteInput = el as InstanceType<typeof NInput>)"
             v-model:value="notes[allocation.id]"
+            class="note-input"
             type="textarea"
             size="large"
             :autosize="{ minRows: 2 }"
             :placeholder="t('handover.deviceNotePlaceholder')"
           />
+          <p v-else-if="notes[allocation.id]?.trim()" class="own-note">
+            {{ notes[allocation.id] }}
+          </p>
         </li>
       </ul>
       <NInput
@@ -234,35 +299,45 @@ const STEPS: Step[] = ['devices', 'person', 'sign']
           </span>
         </button>
       </div>
-      <div v-if="collector === 'other'" class="other">
+      <div v-if="collector === 'other'" ref="personBox" class="other">
         <NInput
           v-model:value="personQuery"
-          size="large"
+          class="touch-input"
           clearable
           :placeholder="t('terminal.searchPerson')"
-          @update:value="person = null"
-        />
-        <div v-if="people.length && !person" class="people">
+          @focus="dropdownOpen = true"
+          @keydown.escape="dropdownOpen = false"
+        >
+          <template #prefix><Search :size="22" /></template>
+          <template v-if="person" #suffix><Check :size="22" class="picked" /></template>
+        </NInput>
+        <div v-if="dropdownOpen && people.length && !person" class="people" role="listbox">
           <button
             v-for="p in people"
             :key="p.id"
             type="button"
+            role="option"
             class="person"
-            @click="((person = p), (personQuery = p.display_name))"
+            @click="pick(p)"
           >
-            <strong>{{ p.display_name }}</strong>
+            <UserRound :size="22" :stroke-width="1.5" />
+            <span class="person-name">
+              <strong>{{ p.display_name }}</strong>
+              <span v-if="p.employee_number" class="mono muted">{{ p.employee_number }}</span>
+            </span>
             <span class="muted">{{ p.department?.name }}</span>
           </button>
         </div>
-        <NInput
-          v-if="!person"
-          v-model:value="freeName"
-          size="large"
-          :placeholder="t('terminal.freeName')"
-        />
       </div>
       <div class="actions">
-        <NButton size="large" @click="step = 'devices'">{{ t('common.back') }}</NButton>
+        <NButton
+          v-if="!reservation.skip_device_check"
+          size="large"
+          class="back"
+          @click="step = 'devices'"
+        >
+          {{ t('common.back') }}
+        </NButton>
         <NButton
           size="large"
           type="primary"
@@ -278,37 +353,56 @@ const STEPS: Step[] = ['devices', 'person', 'sign']
     <!-- 3 · Signature -->
     <section v-else class="panel">
       <h2>{{ t('terminal.signTitle') }}</h2>
-      <div class="summary">
-        <div>
-          <span class="eyebrow">{{ t('handover.receivedBy') }}</span>
-          <strong>{{ collectorName }}</strong>
-        </div>
-        <div>
-          <span class="eyebrow">{{ t('reservations.items') }}</span>
-          <strong>{{ devices.length }}</strong>
-        </div>
-        <div v-if="reservation.end_date">
-          <span class="eyebrow">{{ t('reservations.endDate') }}</span>
-          <strong class="mono">{{ weekday(reservation.end_date) }}</strong>
+      <div class="sign-layout">
+        <!-- What is being signed for. -->
+        <aside class="receipt">
+          <div class="receipt-facts">
+            <div>
+              <span class="eyebrow">{{ t('handover.receivedBy') }}</span>
+              <strong>{{ collectorName }}</strong>
+              <small v-if="collector === 'other'" class="muted">
+                {{ t('terminal.someoneElseHint', { name: reservation.requester.display_name }) }}
+              </small>
+            </div>
+            <div>
+              <span class="eyebrow">{{ t('reservations.endDate') }}</span>
+              <strong v-if="reservation.end_date" class="mono">{{
+                weekday(reservation.end_date)
+              }}</strong>
+              <strong v-else>{{ t('terminal.keep') }}</strong>
+            </div>
+          </div>
+          <div class="eyebrow">{{ t('terminal.deviceCount', devices.length) }}</div>
+          <ul class="compact">
+            <li v-for="{ allocation } in devices" :key="allocation.id">
+              <component
+                :is="categoryIcon(allocation.category_icon)"
+                :size="20"
+                :stroke-width="1.5"
+                class="compact-icon"
+              />
+              <span class="compact-text">
+                <span>{{ deviceLabel(allocation) }}</span>
+                <span class="mono muted">{{
+                  allocation.asset?.inventory_number ?? `${allocation.quantity}×`
+                }}</span>
+                <span v-if="notes[allocation.id]?.trim()" class="note">{{
+                  notes[allocation.id]
+                }}</span>
+              </span>
+            </li>
+          </ul>
+          <p v-if="generalNote.trim()" class="general-note">{{ generalNote }}</p>
+        </aside>
+        <div class="signature">
+          <SignaturePad ref="pad" :height="340" @change="(empty: boolean) => (signed = !empty)" />
+          <p class="legal">
+            {{ t('terminal.legal', { name: reservation.requester.display_name }) }}
+          </p>
         </div>
       </div>
-      <ul class="compact">
-        <li v-for="{ allocation } in devices" :key="allocation.id">
-          <span class="mono">{{
-            allocation.asset?.inventory_number ?? `${allocation.quantity}×`
-          }}</span>
-          <span>{{ deviceLabel(allocation) }}</span>
-          <span v-if="notes[allocation.id]" class="note">{{ notes[allocation.id] }}</span>
-        </li>
-      </ul>
-      <p class="legal">{{ t('terminal.legal', { name: reservation.requester.display_name }) }}</p>
-      <SignaturePad ref="pad" @change="(empty: boolean) => (signed = !empty)" />
       <div class="actions">
-        <NButton size="large" @click="step = 'person'">{{ t('common.back') }}</NButton>
-        <NButton size="large" quaternary @click="pad?.clear()">
-          <template #icon><RotateCcw :size="18" /></template>
-          {{ t('terminal.clear') }}
-        </NButton>
+        <NButton size="large" class="back" @click="step = 'person'">{{ t('common.back') }}</NButton>
         <NButton
           size="large"
           type="primary"
@@ -332,7 +426,7 @@ const STEPS: Step[] = ['devices', 'person', 'sign']
 }
 .head {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: 1fr auto auto;
   gap: 20px;
   align-items: center;
 }
@@ -400,23 +494,91 @@ h2 {
   padding: 0;
   list-style: none;
 }
+.panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 24px;
+}
+.panel-head p {
+  margin: 4px 0 0;
+}
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.fact {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--ar-border);
+  border-radius: 999px;
+  background: var(--ar-surface-sunken);
+  font-size: 15px;
+  white-space: nowrap;
+}
+/* One row per device: icon, name, codes in fixed columns, note button. */
 .devices li {
   display: grid;
-  gap: 10px;
+  grid-template-columns: 52px minmax(0, 1fr) 150px 190px 196px;
+  align-items: center;
+  gap: 6px 18px;
   padding: 14px 16px;
   border: 1px solid var(--ar-border);
   border-radius: 4px;
 }
-.device {
+.devices li.noted {
+  border-color: color-mix(in srgb, var(--ar-warning) 55%, transparent);
+}
+.device-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 4px;
+  background: var(--ar-primary-soft);
+  color: var(--ar-primary);
+}
+.device-name {
+  font-size: 19px;
+  overflow-wrap: anywhere;
+}
+.code {
+  display: grid;
+  gap: 2px;
+}
+.code.wide {
+  grid-column: span 2;
+}
+.code small {
+  color: var(--ar-text-subtle);
+  font-size: 12px;
+}
+.code .mono {
+  font-size: 15px;
+}
+.it-note,
+.own-note,
+.note-input {
+  grid-column: 2 / -1;
+  margin: 0;
+}
+.it-note {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  font-size: 18px;
-}
-.device .mono {
+  gap: 6px;
+  color: var(--ar-text-muted);
   font-size: 14px;
-  margin-top: 2px;
+}
+.note-button {
+  width: 100%;
+}
+.own-note {
+  color: var(--ar-warning);
+  font-size: 15px;
 }
 .choices {
   display: grid;
@@ -450,47 +612,125 @@ h2 {
   color: var(--ar-primary);
 }
 .other {
-  display: grid;
-  gap: 10px;
+  position: relative;
 }
+/* Dropdown under the field, above the buttons below it. */
 .people {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  z-index: 10;
   display: grid;
-  gap: 6px;
+  max-height: 360px;
+  overflow-y: auto;
+  border: 1px solid var(--ar-border-strong);
+  border-radius: 4px;
+  background: var(--ar-surface);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.35);
+}
+/* Large enough for a finger: the terminal is a touch screen. */
+.touch-input {
+  --n-height: 60px !important;
+  --n-font-size: 19px !important;
+  --n-padding-left: 16px !important;
+  --n-padding-right: 16px !important;
+}
+.touch-input :deep(.n-input__prefix) {
+  margin-right: 10px;
+}
+.picked {
+  color: var(--ar-success);
 }
 .person {
-  display: flex;
-  justify-content: space-between;
-  padding: 14px 16px;
-  border: 1px solid var(--ar-border);
-  border-radius: 4px;
-  background: var(--ar-surface-sunken);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 60px;
+  padding: 12px 18px;
+  text-align: left;
+  border: 0;
+  border-bottom: 1px solid var(--ar-border);
+  background: none;
   color: inherit;
   font: inherit;
   font-size: 17px;
   cursor: pointer;
 }
-.summary {
+.person-name {
   display: flex;
-  flex-wrap: wrap;
-  gap: 16px 40px;
+  align-items: baseline;
+  gap: 12px;
 }
-.summary div {
+.person-name .mono {
+  font-size: 14px;
+}
+.person:last-child {
+  border-bottom: 0;
+}
+.person:hover,
+.person:active {
+  background: var(--ar-primary-soft);
+}
+/* Receipt on the left, a large signature field on the right. */
+.sign-layout {
   display: grid;
-  gap: 4px;
+  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
 }
-.summary strong {
-  font-size: 20px;
+.receipt {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 4px;
+  background: var(--ar-surface-sunken);
+}
+.receipt-facts {
+  display: grid;
+  gap: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--ar-border);
+}
+.receipt-facts div {
+  display: grid;
+  gap: 3px;
+}
+.receipt-facts strong {
+  font-size: 19px;
 }
 .compact li {
   display: grid;
-  grid-template-columns: 120px 1fr auto;
-  gap: 14px;
-  padding: 6px 10px;
-  border-left: 3px solid var(--ar-primary);
-  background: var(--ar-surface-sunken);
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
 }
-.note {
+.compact-icon {
+  margin-top: 2px;
+  color: var(--ar-primary);
+}
+.compact-text {
+  display: grid;
+  gap: 1px;
+  font-size: 16px;
+}
+.compact-text .mono {
+  font-size: 13px;
+}
+.note,
+.general-note {
   color: var(--ar-warning);
+  font-size: 14px;
+}
+.general-note {
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--ar-border);
+}
+.signature {
+  display: grid;
+  gap: 10px;
 }
 .legal {
   margin: 0;
@@ -504,6 +744,10 @@ h2 {
 }
 .next {
   min-width: 220px;
+}
+/* Going back sits on the left, away from the step's main action. */
+.back {
+  margin-right: auto;
 }
 .done {
   display: grid;
@@ -523,13 +767,29 @@ h2 {
 }
 @media (max-width: 900px) {
   .head {
-    grid-template-columns: auto 1fr;
+    grid-template-columns: 1fr auto;
   }
   .steps {
     grid-column: 1 / -1;
+    grid-row: 2;
   }
-  .choices {
+  .choices,
+  .sign-layout {
     grid-template-columns: 1fr;
+  }
+  .devices li {
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+  }
+  .device-name {
+    grid-column: 2 / -1;
+  }
+  .code.wide {
+    grid-column: auto;
+  }
+  .note-button {
+    grid-column: 2 / -1;
+    justify-self: start;
+    width: auto;
   }
 }
 </style>

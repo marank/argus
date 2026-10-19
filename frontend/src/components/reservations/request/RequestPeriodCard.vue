@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { CalendarRange } from '@lucide/vue'
 import { NRadioButton, NRadioGroup } from 'naive-ui'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import DateField from '@/components/common/DateField.vue'
@@ -15,6 +16,21 @@ const { t } = useI18n()
 
 const today = new Date().setHours(0, 0, 0, 0)
 const beforeToday = (ts: number) => ts < today
+
+// The pickup wish moves with the first day until the employee sets it; it can be
+// earlier (collect the day before) but not after the devices are needed.
+const firstDay = computed(() =>
+  period.value.duration === 'temporary' ? period.value.range[0] : period.value.start,
+)
+const pickupTouched = ref(false)
+watch(firstDay, (day) => {
+  if (!pickupTouched.value || period.value.pickup > day) period.value.pickup = day
+})
+const outsidePickup = (ts: number) => ts < today || ts > firstDay.value
+function setPickup(value: number | [number, number] | null) {
+  pickupTouched.value = true
+  period.value.pickup = typeof value === 'number' ? value : firstDay.value
+}
 </script>
 
 <template>
@@ -52,6 +68,20 @@ const beforeToday = (ts: number) => ts < today
           size="small"
           :is-date-disabled="beforeToday"
           style="width: 100%"
+        />
+      </div>
+      <div class="field">
+        <FieldLabel
+          :label="t('reservations.new.pickupWish')"
+          :help="t('reservations.new.pickupWishHelp')"
+        />
+        <DateField
+          :value="period.pickup"
+          type="date"
+          size="small"
+          :is-date-disabled="outsidePickup"
+          style="width: 100%"
+          @update:value="setPickup"
         />
       </div>
     </div>

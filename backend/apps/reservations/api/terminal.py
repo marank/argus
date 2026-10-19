@@ -65,11 +65,19 @@ def sign(request: HttpRequest, pk: UUID, payload: TerminalSignIn):
 
 @router.get("/people", response=list[TerminalPersonOut])
 def people(request: HttpRequest, q: str = ""):
-    """Minimal employee lookup to record who collects the devices."""
+    """Minimal employee lookup to record who collects the devices.
+
+    Every word must match the first or last name, the username or the employee
+    number, so "anna sch" finds Anna Schmidt.
+    """
     if len(q.strip()) < 2:
         return []
-    return list(
-        User.objects.filter(is_active=True, is_terminal=False)
-        .filter(Q(first_name__icontains=q) | Q(last_name__icontains=q) | Q(username__icontains=q))
-        .select_related("department")[:15]
-    )
+    people = User.objects.filter(is_active=True, is_terminal=False)
+    for word in q.split():
+        people = people.filter(
+            Q(first_name__icontains=word)
+            | Q(last_name__icontains=word)
+            | Q(username__icontains=word)
+            | Q(employee_number__iexact=word)
+        )
+    return list(people.select_related("department")[:15])

@@ -8,7 +8,7 @@ export type ReservationStatus =
   'submitted' | 'approved' | 'ready' | 'handed_out' | 'completed' | 'rejected' | 'cancelled'
 
 export type Duration = 'temporary' | 'permanent'
-export type HandoverMode = 'pickup' | 'delivery'
+export type HandoverMode = 'pickup' | 'collect' | 'delivery'
 export type HandoverMethod = 'signature' | 'delivered' | 'direct'
 
 export const RESERVATION_STATUSES: ReservationStatus[] = [
@@ -31,6 +31,7 @@ export interface Allocation {
   handout_note: string
   handed_out_at: string | null
   returned_at: string | null
+  category_icon: string
 }
 
 export interface ReservationItem {
@@ -61,6 +62,10 @@ export interface ReservationListItem {
   end_date: string | null
   status: ReservationStatus
   handover_mode: HandoverMode
+  /** The employee's preferred pickup day; IT sets the appointment (pickup_at). */
+  requested_pickup_date?: string | null
+  /** The terminal starts with who collects (set when marking ready). */
+  skip_device_check: boolean
   is_overdue: boolean
   pickup_at: string | null
   item_count: number
@@ -107,6 +112,7 @@ export interface ReservationInput {
   duration: Duration
   start_date: string
   end_date: string | null
+  requested_pickup_date: string | null
   items: ReservationItemInput[]
   requester?: Id | null
 }
@@ -190,6 +196,7 @@ export interface MyConsumables {
 export interface TerminalPerson {
   id: Id
   display_name: string
+  employee_number: string
   department: Ref | null
 }
 

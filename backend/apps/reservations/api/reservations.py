@@ -2,6 +2,7 @@ from datetime import date
 from typing import Annotated
 from uuid import UUID
 
+from django.db import transaction
 from django.db.models import Q
 from django.http import HttpRequest
 from django.utils import timezone
@@ -126,8 +127,26 @@ def schedule(request: HttpRequest, pk: UUID, payload: ScheduleIn):
 
 
 @router.post("/{uuid:pk}/ready", response=ReservationOut, auth=it_staff_auth)
+@transaction.atomic
 def mark_ready(request: HttpRequest, pk: UUID, payload: ReadyIn):
-    workflow.mark_ready(get_for_update(pk), request.user, payload.handover_mode)
+    reservation = get_for_update(pk)
+    if {"pickup_at", "pickup_location"} & payload.model_fields_set:
+        workflow.reschedule(
+            reservation,
+            request.user,
+            payload.pickup_at if "pickup_at" in payload.model_fields_set else reservation.pickup_at,
+            payload.pickup_location
+            if "pickup_location" in payload.model_fields_set
+            else reservation.pickup_location_id,
+        )
+    workflow.mark_ready(reservation, request.user, payload.handover_mode, payload.skip_device_check)
+    return get_reservation(request, pk)
+
+
+@router.post("/{uuid:pk}/reopen", response=ReservationOut, auth=it_staff_auth)
+def reopen(request: HttpRequest, pk: UUID):
+    """Take a ready request back into preparation."""
+    workflow.reopen(get_for_update(pk), request.user)
     return get_reservation(request, pk)
 
 

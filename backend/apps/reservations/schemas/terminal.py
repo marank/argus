@@ -12,6 +12,7 @@ from .reservation import AllocationNoteIn
 class TerminalPersonOut(Schema):
     id: UUID
     display_name: str
+    employee_number: str
     department: RefOut | None
 
 

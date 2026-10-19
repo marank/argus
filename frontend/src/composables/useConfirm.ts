@@ -6,14 +6,17 @@ export function useConfirm() {
   const dialog = useDialog()
   const { t } = useI18n()
 
-  return (content: string, options: { danger?: boolean; positiveText?: string } = {}) =>
+  return (
+    content: string,
+    options: { danger?: boolean; positiveText?: string; negativeText?: string } = {},
+  ) =>
     new Promise<boolean>((resolve) => {
       const show = options.danger ? dialog.error : dialog.warning
       show({
         title: t('common.confirmTitle'),
         content,
         positiveText: options.positiveText ?? t('common.confirm'),
-        negativeText: t('common.cancel'),
+        negativeText: options.negativeText ?? t('common.cancel'),
         onPositiveClick: () => resolve(true),
         onNegativeClick: () => resolve(false),
         onClose: () => resolve(false),

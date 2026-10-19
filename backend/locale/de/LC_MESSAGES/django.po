@@ -401,7 +401,8 @@ msgstr "Neustart"
 msgid "current period"
 msgstr "aktueller Zeitraum"
 
-#: apps/core/models/number_sequence.py:36 apps/masterdata/models/category.py:30
+#: apps/core/models/number_sequence.py:36
+#: apps/masterdata/models/category.py:30
 msgid "number sequence"
 msgstr "Nummernserie"
 
@@ -919,8 +920,8 @@ msgid ""
 "Employees may request “any device” of this group. Turn off where only a "
 "specific model makes sense, e.g. accessories or consumables."
 msgstr ""
-"Mitarbeiter dürfen „beliebig“ aus dieser Kategorie anfordern. Abschalten, wo "
-"nur ein bestimmtes Modell sinnvoll ist, z. B. bei Zubehör oder "
+"Mitarbeiter dürfen „beliebig“ aus dieser Kategorie anfordern. Abschalten, wo"
+" nur ein bestimmtes Modell sinnvoll ist, z. B. bei Zubehör oder "
 "Verbrauchsmaterial."
 
 #: apps/masterdata/models/category.py:48
@@ -1391,8 +1392,8 @@ msgstr "Entfernen Sie zugewiesene Geräte, bevor Sie das Modell ändern."
 #, python-format
 msgid "“%(item)s” is free text. Create or assign a model first."
 msgstr ""
-"„%(item)s“ ist Freitext. Legen Sie zuerst ein Modell an oder ordnen Sie eines"
-" zu."
+"„%(item)s“ ist Freitext. Legen Sie zuerst ein Modell an oder ordnen Sie "
+"eines zu."
 
 #: apps/reservations/services/workflow.py:186
 #, python-format
@@ -1454,7 +1455,8 @@ msgstr "Einem Gerät kann nur Verbrauchsmaterial zugeordnet werden."
 msgid ""
 "Consumables for this device in addition to those compatible with its model."
 msgstr ""
-"Verbrauchsmaterial für dieses Gerät, zusätzlich zu dem, was zum Modell passt."
+"Verbrauchsmaterial für dieses Gerät, zusätzlich zu dem, was zum Modell "
+"passt."
 
 msgid "Hardware"
 msgstr "Hardware"
@@ -1485,8 +1487,8 @@ msgid ""
 "Software categories only take licenses; licenses only belong to software "
 "categories."
 msgstr ""
-"Software-Kategorien enthalten nur Lizenzen, Lizenzen gehören nur in Software-"
-"Kategorien."
+"Software-Kategorien enthalten nur Lizenzen, Lizenzen gehören nur in "
+"Software-Kategorien."
 
 msgid "Only models tracked as individual devices can be added as devices."
 msgstr ""
@@ -1559,7 +1561,8 @@ msgstr ""
 "%(used)s Plätze sind zugewiesen. Entfernen Sie erst Zuweisungen, bevor Sie "
 "die Plätze reduzieren."
 
-msgid "Remove all assignments before changing whom the license is assigned to."
+msgid ""
+"Remove all assignments before changing whom the license is assigned to."
 msgstr ""
 "Entfernen Sie alle Zuweisungen, bevor Sie ändern, wem die Lizenz zugewiesen "
 "wird."
@@ -1707,11 +1710,11 @@ msgstr "Rückgabe überfällig: %(number)s"
 
 #, python-format
 msgid ""
-"The devices for “%(title)s” were due back on %(date)s. Please return them to "
-"IT."
+"The devices for “%(title)s” were due back on %(date)s. Please return them to"
+" IT."
 msgstr ""
-"Die Geräte für „%(title)s“ waren am %(date)s zurückzugeben. Bitte bringen Sie"
-" sie zur IT."
+"Die Geräte für „%(title)s“ waren am %(date)s zurückzugeben. Bitte bringen "
+"Sie sie zur IT."
 
 #, python-format
 msgid "Problem reported: %(device)s"
@@ -1748,7 +1751,8 @@ msgid "warranty warning (days)"
 msgstr "Garantie-Vorwarnung (Tage)"
 
 msgid "Warranties ending within this many days count as ending soon."
-msgstr "Garantien, die innerhalb so vieler Tage enden, gelten als bald endend."
+msgstr ""
+"Garantien, die innerhalb so vieler Tage enden, gelten als bald endend."
 
 msgid "license warning (days)"
 msgstr "Lizenz-Vorwarnung (Tage)"
@@ -1860,3 +1864,31 @@ msgstr "Ein Benutzer mit diesem Benutzernamen existiert bereits."
 
 msgid "Lower numbers come first; equal numbers by name."
 msgstr "Kleinere Zahlen zuerst, gleiche Zahlen nach Name."
+
+#: apps/reservations/models/reservation.py
+msgid "skip device check"
+msgstr "Geräteprüfung überspringen"
+
+#: apps/reservations/models/reservation.py
+msgid ""
+"The pickup terminal starts with who collects, without checking the devices."
+msgstr "Das Abholterminal beginnt mit „Wer holt ab?“, ohne Geräteprüfung."
+
+#: apps/reservations/models/reservation.py
+msgid "Simple pickup"
+msgstr "Einfache Abholung"
+
+#: apps/reservations/services/workflow.py
+msgid "preferred pickup day"
+msgstr "gewünschter Abholtag"
+
+#: apps/reservations/services/workflow.py
+msgid "The preferred pickup day must not be in the past."
+msgstr "Der gewünschte Abholtag darf nicht in der Vergangenheit liegen."
+
+#: apps/reservations/services/workflow.py
+msgid ""
+"The preferred pickup day must not be after the day the devices are needed."
+msgstr ""
+"Der gewünschte Abholtag darf nicht nach dem Tag liegen, ab dem die Geräte "
+"benötigt werden."

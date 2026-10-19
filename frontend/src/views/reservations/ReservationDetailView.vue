@@ -4,6 +4,7 @@ import {
   CalendarClock,
   Check,
   PackageCheck,
+  PackageOpen,
   ShoppingCart,
   Sparkles,
   Undo2,
@@ -91,6 +92,12 @@ async function returnAll() {
   }
 }
 
+async function reopen() {
+  if (await confirm(t('reservations.actions.confirmReopen'))) {
+    await act(() => reservationsApi.reopen(props.id), t('common.saved'))
+  }
+}
+
 async function cancel() {
   if (await confirm(t('reservations.actions.confirmCancel'), { danger: true })) {
     await act(() => reservationsApi.cancel(props.id))
@@ -131,12 +138,15 @@ async function cancel() {
               {{ t('reservations.actions.markReady') }}
             </NButton>
           </template>
-          <template v-if="status === 'approved' || status === 'ready'">
-            <NButton @click="openApprove('schedule')">
-              <template #icon><CalendarClock :size="15" /></template>
-              {{ t('reservations.actions.schedule') }}
-            </NButton>
-          </template>
+          <NButton v-if="status === 'ready'" :loading="busy" @click="reopen">
+            <template #icon><PackageOpen :size="15" /></template>
+            {{ t('reservations.actions.reopen') }}
+          </NButton>
+          <!-- While preparing, "Edit" covers date and place; once ready this is the way to change them. -->
+          <NButton v-if="status === 'ready'" @click="openApprove('schedule')">
+            <template #icon><CalendarClock :size="15" /></template>
+            {{ t('reservations.actions.schedule') }}
+          </NButton>
           <NButton
             v-if="status === 'ready'"
             :type="reservation.handover_mode === 'pickup' ? 'default' : 'primary'"
@@ -185,12 +195,23 @@ async function cancel() {
             />
           </NCard>
           <div class="stack">
+            <!-- How the devices get to the employee, while that is still ahead. -->
             <NAlert
-              v-if="status === 'ready' && reservation.handover_mode === 'pickup'"
+              v-if="status === 'ready'"
               type="info"
               :bordered="false"
+              :title="t(`handover.mode.${reservation.handover_mode}`)"
             >
-              {{ t('handover.waitingAtTerminal') }}
+              <template v-if="reservation.handover_mode === 'pickup'">
+                {{ t('handover.waitingAtTerminal') }}
+                <template v-if="reservation.skip_device_check">
+                  {{ t('handover.checkSkipped') }}</template
+                >
+              </template>
+              <template v-else-if="reservation.handover_mode === 'collect'">{{
+                t('handover.collectPending')
+              }}</template>
+              <template v-else>{{ t('handover.deliveryPending') }}</template>
             </NAlert>
             <HandoverCard v-if="reservation.handover" :reservation="reservation" />
             <NCard size="small"><ReservationInfo :reservation="reservation" /></NCard>

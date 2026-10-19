@@ -9,6 +9,7 @@ import { reservationsApi } from '@/api/reservations'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import DateField from '@/components/common/DateField.vue'
 import { useAction } from '@/composables/useAction'
+import { useFormat } from '@/composables/useFormat'
 import type { HandoverMode, Reservation } from '@/types/reservations'
 import { itemLabel } from '@/utils/reservations'
 
@@ -19,6 +20,7 @@ const props = defineProps<{ reservation: Reservation; mode: 'approve' | 'schedul
 const show = defineModel<boolean>('show', { required: true })
 const emit = defineEmits<{ saved: [reservation: Reservation] }>()
 const { t } = useI18n()
+const { weekday } = useFormat()
 const { busy, run } = useAction()
 
 const form = reactive({
@@ -30,7 +32,8 @@ const form = reactive({
 })
 
 function defaultPickup(): number {
-  const start = new Date(`${props.reservation.start_date}T09:00:00`)
+  const day = props.reservation.requested_pickup_date ?? props.reservation.start_date
+  const start = new Date(`${day}T09:00:00`)
   return Math.max(start.getTime(), Date.now())
 }
 
@@ -83,7 +86,7 @@ async function save() {
         ? t('reservations.actions.approveTitle')
         : t('reservations.actions.schedule')
     "
-    style="max-width: 620px"
+    style="max-width: 720px"
   >
     <NForm class="ar-form" label-placement="top" size="small" :show-feedback="false">
       <template v-if="mode === 'approve'">
@@ -119,13 +122,18 @@ async function save() {
       </template>
       <div class="cols">
         <NFormItem :label="t('reservations.pickupAt')">
-          <DateField
-            v-model:value="form.pickup_at"
-            type="datetime"
-            :minutes="[0, 15, 30, 45]"
-            clearable
-            style="width: 100%"
-          />
+          <div class="when">
+            <DateField
+              v-model:value="form.pickup_at"
+              type="datetime"
+              :minutes="[0, 15, 30, 45]"
+              clearable
+              style="width: 100%"
+            />
+            <small v-if="reservation.requested_pickup_date" class="muted wish">{{
+              t('reservations.wishHint', { date: weekday(reservation.requested_pickup_date) })
+            }}</small>
+          </div>
         </NFormItem>
         <NFormItem :label="t('reservations.pickupLocation')">
           <EntitySelect
@@ -160,6 +168,11 @@ async function save() {
 </template>
 
 <style scoped>
+.when {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+}
 .items {
   margin-bottom: 14px;
 }

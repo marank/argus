@@ -44,6 +44,7 @@ const period = reactive<RequestPeriod>({
   // Suggested period from the site settings (default loan period, start day included).
   range: [today, today + (features.rules.default_loan_days - 1) * 86400000],
   start: today,
+  pickup: today,
 })
 
 onMounted(async () => {

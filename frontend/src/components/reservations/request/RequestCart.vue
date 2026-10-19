@@ -7,6 +7,7 @@ import { useI18n } from 'vue-i18n'
 import { usersApi } from '@/api/accounts'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import FieldLabel from '@/components/common/FieldLabel.vue'
+import { toIsoDate } from '@/composables/useFormat'
 import type { Id } from '@/types/common'
 import type { ReservationInput } from '@/types/reservations'
 
@@ -34,13 +35,15 @@ const total = computed(() => lines.value.reduce((sum, line) => sum + line.quanti
 const canSubmit = computed(() => form.title.trim() && lines.value.length > 0)
 
 function submit() {
-  const { start, end } = periodQuery(props.period)
+  const { end } = periodQuery(props.period)
+  const first = props.period.duration === 'permanent' ? props.period.start : props.period.range[0]
   emit('submit', {
     title: form.title,
     notes: form.notes,
     duration: props.period.duration,
-    start_date: start,
+    start_date: toIsoDate(first)!,
     end_date: end ?? null,
+    requested_pickup_date: toIsoDate(props.period.pickup),
     requester: form.requester,
     items: lines.value.map(({ category, asset_model, description, quantity, note }) => ({
       category: category ?? null,

@@ -27,11 +27,16 @@ export interface RequestPeriod {
   duration: Duration
   range: [number, number]
   start: number
+  /** Preferred pickup day: follows the first day unless the employee picks another. */
+  pickup: number
 }
 
+/** Availability window: from the pickup day (devices leave then) to the end. */
 export function periodQuery(period: RequestPeriod): PeriodQuery {
-  if (period.duration === 'permanent') return { start: toIsoDate(period.start)!, permanent: true }
-  return { start: toIsoDate(period.range[0])!, end: toIsoDate(period.range[1])! }
+  const first = period.duration === 'permanent' ? period.start : period.range[0]
+  const start = toIsoDate(Math.min(period.pickup, first))!
+  if (period.duration === 'permanent') return { start, permanent: true }
+  return { start, end: toIsoDate(period.range[1])! }
 }
 
 /** Something that can be put into the request: a whole group ("any") or a model. */

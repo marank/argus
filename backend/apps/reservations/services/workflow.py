@@ -40,6 +40,16 @@ def _validate_period(duration: str, start: date, end: date | None) -> None:
             raise BusinessError(_("Temporary requests can last at most %(days)s days.") % {"days": limit})
 
 
+def _validate_pickup_wish(day: date | None, start: date) -> None:
+    """The devices are collected before they are needed, but not in the past."""
+    if day is None:
+        return
+    if day < timezone.localdate():
+        raise BusinessError(_("The preferred pickup day must not be in the past."))
+    if day > start:
+        raise BusinessError(_("The preferred pickup day must not be after the day the devices are needed."))
+
+
 # --- Employee actions --------------------------------------------------------
 
 
@@ -49,6 +59,7 @@ def submit(requester, data: dict, items: list[dict], created_by) -> Reservation:
         raise BusinessError(_("Add at least one device to the request."))
     end_date = data.get("end_date") if data["duration"] == Reservation.Duration.TEMPORARY else None
     _validate_period(data["duration"], data["start_date"], end_date)
+    _validate_pickup_wish(data.get("requested_pickup_date"), data["start_date"])
 
     reservation = Reservation.objects.create(
         requester=requester, created_by=created_by, **{**data, "end_date": end_date}
@@ -297,7 +308,9 @@ def _release_all(reservation: Reservation, user=None) -> None:
 
 
 @transaction.atomic
-def mark_ready(reservation: Reservation, user, handover_mode: str | None = None) -> Reservation:
+def mark_ready(
+    reservation: Reservation, user, handover_mode: str | None = None, skip_device_check: bool = False
+) -> Reservation:
     """All devices are prepared. Pickup requests now show up on the pickup terminal."""
     _require_status(reservation, Status.APPROVED)
     missing = [item.label for item in reservation.items.all() if item.quantity_missing]
@@ -305,10 +318,21 @@ def mark_ready(reservation: Reservation, user, handover_mode: str | None = None)
         raise BusinessError(_("Devices are still missing for: %(items)s") % {"items": ", ".join(missing)})
     if handover_mode:
         reservation.handover_mode = handover_mode
+    reservation.skip_device_check = skip_device_check
     reservation.status = Status.READY
     reservation.handled_by = user
     reservation.save()
     notifications.request_ready(reservation)
+    return reservation
+
+
+@transaction.atomic
+def reopen(reservation: Reservation, user) -> Reservation:
+    """Back from ready to preparing, e.g. to change devices; allocations stay."""
+    _require_status(reservation, Status.READY)
+    reservation.status = Status.APPROVED
+    reservation.handled_by = user
+    reservation.save(update_fields=["status", "handled_by", "updated_at"])
     return reservation
 
 

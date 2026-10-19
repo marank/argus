@@ -55,8 +55,16 @@ export const reservationsApi = {
     http.post<{ allocated: number; reservation: Reservation }>(`${base}/${id}/auto-allocate`),
   removeAllocation: (id: Id, allocationId: Id) =>
     http.delete<Reservation>(`${base}/${id}/allocations/${allocationId}`),
-  markReady: (id: Id, handover_mode: HandoverMode) =>
-    http.post<Reservation>(`${base}/${id}/ready`, { handover_mode }),
+  markReady: (
+    id: Id,
+    data: {
+      handover_mode: HandoverMode
+      skip_device_check: boolean
+      pickup_at: string | null
+      pickup_location: Id | null
+    },
+  ) => http.post<Reservation>(`${base}/${id}/ready`, data),
+  reopen: (id: Id) => http.post<Reservation>(`${base}/${id}/reopen`),
   handOut: (id: Id, data: HandOutInput) => http.post<Reservation>(`${base}/${id}/hand-out`, data),
   returnDevices: (id: Id, allocations?: Id[]) =>
     http.post<Reservation>(`${base}/${id}/return`, { allocations: allocations ?? null }),

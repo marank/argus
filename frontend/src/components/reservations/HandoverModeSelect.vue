@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { PenLine, Truck } from '@lucide/vue'
+import { HandHelping, PenLine, Truck } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 
 import type { HandoverMode } from '@/types/reservations'
 
-/** Two large options: pickup with signature at the terminal, or delivery by IT. */
+/** Large options: pickup with signature at the terminal, simple pickup, or delivery by IT. */
 const model = defineModel<HandoverMode>({ required: true })
 const { t } = useI18n()
 
 const options = [
   { value: 'pickup' as const, icon: PenLine },
+  { value: 'collect' as const, icon: HandHelping },
   { value: 'delivery' as const, icon: Truck },
 ]
 </script>
@@ -38,7 +39,7 @@ const options = [
 <style scoped>
 .modes {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 10px;
 }
 .mode {

@@ -10,7 +10,7 @@ import EntitySelect from '@/components/common/EntitySelect.vue'
 import { useAction } from '@/composables/useAction'
 import type { Reservation } from '@/types/reservations'
 
-/** Hand-out documented by IT without signature: directly at the desk or delivered. */
+/** Hand-out documented by IT without signature: collected at the desk or delivered. */
 const props = defineProps<{ reservation: Reservation }>()
 const show = defineModel<boolean>('show', { required: true })
 const emit = defineEmits<{ saved: [reservation: Reservation] }>()

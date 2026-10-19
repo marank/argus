@@ -24,13 +24,29 @@ const entries = computed<DetailEntry[]>(() => {
     { label: t('reservations.department'), value: r.department?.name },
     { label: t('reservations.duration'), value: enumLabel('duration', r.duration) },
     { label: t('reservations.period'), value: period.value, mono: true, slot: 'period' },
+    ...(r.requested_pickup_date
+      ? [
+          {
+            label: t('reservations.requestedPickup'),
+            value: weekday(r.requested_pickup_date),
+            mono: true,
+          },
+        ]
+      : []),
     {
       label: t('reservations.pickupAt'),
       value: r.pickup_at ? weekday(r.pickup_at) : null,
       mono: true,
     },
     { label: t('reservations.pickupLocation'), value: r.pickup_location?.full_name },
-    { label: t('handover.method'), value: t(`handover.mode.${r.handover_mode}`) },
+    {
+      label: t('handover.method'),
+      value:
+        t(`handover.mode.${r.handover_mode}`) +
+        (r.handover_mode === 'pickup' && r.skip_device_check
+          ? ` · ${t('handover.withoutCheck')}`
+          : ''),
+    },
     { label: t('reservations.handledBy'), value: r.handled_by?.display_name },
     { label: t('common.createdAt'), value: date(r.created_at), mono: true },
     ...(r.notes ? [{ label: t('reservations.notes'), value: r.notes, wide: true }] : []),

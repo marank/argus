@@ -3,7 +3,9 @@ from datetime import date, timedelta
 from apps.masterdata.models import Category
 
 
-def _request_laptops(employee_client, it_client, start: date, days: int, quantity: int) -> dict:
+def _request_laptops(
+    employee_client, it_client, start: date, days: int, quantity: int, pickup: date | None = None
+) -> dict:
     laptops = Category.objects.get(code="laptops")
     reservation = employee_client.post(
         "/api/reservations",
@@ -12,6 +14,7 @@ def _request_laptops(employee_client, it_client, start: date, days: int, quantit
             "duration": "temporary",
             "start_date": start.isoformat(),
             "end_date": (start + timedelta(days=days)).isoformat(),
+            "requested_pickup_date": pickup.isoformat() if pickup else None,
             "items": [{"category": laptops.pk, "quantity": quantity}],
         },
         content_type="application/json",
@@ -81,3 +84,16 @@ def test_catalog_counts_follow_the_period(employee_client, it_client):
 def test_availability_is_for_it_staff_only(employee_client):
     response = employee_client.get("/api/portal/availability", {"start": date.today().isoformat()})
     assert response.status_code in (401, 403)
+
+
+def test_early_pickup_reserves_from_the_pickup_day(employee_client, it_client):
+    start = date.today() + timedelta(days=10)
+    pickup = start - timedelta(days=2)
+    earlier = pickup - timedelta(days=1)
+    before_pickup_day = _laptops(it_client, pickup, pickup)
+    before_earlier = _laptops(it_client, earlier, earlier)
+    _request_laptops(employee_client, it_client, start, days=1, quantity=2, pickup=pickup)
+
+    # Taken from the pickup day on, not only from the day they are needed.
+    assert _laptops(it_client, pickup, pickup)["reserved"] == before_pickup_day["reserved"] + 2
+    assert _laptops(it_client, earlier, earlier) == before_earlier

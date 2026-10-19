@@ -1,11 +1,15 @@
 <script setup lang="ts">
+import { RotateCcw } from '@lucide/vue'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 /**
  * Touch/pen/mouse signature field. Draws black ink on white so the exported PNG
  * reads well on paper and in dark mode.
  */
+const props = withDefaults(defineProps<{ height?: number }>(), { height: 220 })
 const emit = defineEmits<{ change: [empty: boolean] }>()
+const { t } = useI18n()
 
 const canvas = ref<HTMLCanvasElement | null>(null)
 const empty = ref(true)
@@ -88,7 +92,7 @@ defineExpose({ clear, toDataUrl, isEmpty: () => empty.value })
 </script>
 
 <template>
-  <div class="pad">
+  <div class="pad" :style="{ height: `${props.height}px` }">
     <canvas
       ref="canvas"
       @pointerdown="start"
@@ -99,13 +103,16 @@ defineExpose({ clear, toDataUrl, isEmpty: () => empty.value })
     />
     <div class="baseline" />
     <span class="cross">✕</span>
+    <span v-if="empty" class="placeholder">{{ t('terminal.signHere') }}</span>
+    <button v-else type="button" class="clear" @click="clear">
+      <RotateCcw :size="18" /> {{ t('terminal.clear') }}
+    </button>
   </div>
 </template>
 
 <style scoped>
 .pad {
   position: relative;
-  height: 220px;
   border: 1px solid var(--ar-border-strong);
   border-radius: 4px;
   overflow: hidden;
@@ -125,6 +132,33 @@ canvas {
   bottom: 52px;
   border-bottom: 1px dashed #9aa6b2;
   pointer-events: none;
+}
+.placeholder {
+  position: absolute;
+  inset: 0 0 52px;
+  display: grid;
+  place-items: center;
+  color: #9aa6b2;
+  font-size: 22px;
+  pointer-events: none;
+}
+/* Light colors on purpose: the pad stays white in dark mode. */
+.clear {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 1px solid #c8d0d8;
+  border-radius: 4px;
+  background: #f4f6f8;
+  color: #334155;
+  font: inherit;
+  font-size: 16px;
+  cursor: pointer;
 }
 .cross {
   position: absolute;

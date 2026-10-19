@@ -1,7 +1,10 @@
 from datetime import date, timedelta
 
+from django.utils import timezone
+
+from apps.accounts.models import User
 from apps.inventory.models import Asset
-from apps.masterdata.models import Category
+from apps.masterdata.models import Category, Location
 
 
 def test_full_reservation_cycle(employee_client, it_client):
@@ -122,3 +125,113 @@ def test_catalog_hides_availability_from_employees(employee_client, it_client):
 
     it_view = it_client.get("/api/portal/catalog").json()
     assert any(c["available"] for c in it_view)
+
+
+def _ready_request(employee_client, it_client, **ready) -> dict:
+    headsets = Category.objects.get(code="headsets")
+    start = date.today() + timedelta(days=2)
+    reservation = employee_client.post(
+        "/api/reservations",
+        {
+            "title": "Calls",
+            "duration": "temporary",
+            "start_date": start.isoformat(),
+            "end_date": (start + timedelta(days=2)).isoformat(),
+            "items": [{"category": headsets.pk, "quantity": 1}],
+        },
+        content_type="application/json",
+    ).json()
+    item_id = reservation["items"][0]["id"]
+    base = f"/api/reservations/{reservation['id']}"
+    it_client.post(
+        f"{base}/approve",
+        {"items": [{"id": item_id, "quantity_approved": 1}]},
+        content_type="application/json",
+    )
+    it_client.post(f"{base}/auto-allocate")
+    response = it_client.post(f"{base}/ready", ready, content_type="application/json")
+    assert response.status_code == 200, response.content
+    return response.json()
+
+
+def test_ready_can_skip_the_device_check(employee_client, it_client, terminal_client):
+    reservation = _ready_request(employee_client, it_client, handover_mode="pickup", skip_device_check=True)
+    assert reservation["skip_device_check"] is True
+    pickup = terminal_client.get(f"/api/terminal/pickups/{reservation['id']}").json()
+    assert pickup["skip_device_check"] is True
+
+
+def test_ready_request_can_be_reopened(employee_client, it_client, terminal_client):
+    reservation = _ready_request(employee_client, it_client, handover_mode="pickup")
+    base = f"/api/reservations/{reservation['id']}"
+
+    response = it_client.post(f"{base}/reopen")
+    assert response.status_code == 200
+    reopened = response.json()
+    assert reopened["status"] == "approved"
+    # Devices stay allocated; the terminal no longer offers the pickup.
+    assert reopened["items"][0]["allocations"]
+    assert terminal_client.get(f"/api/terminal/pickups/{reservation['id']}").status_code == 404
+    # Only ready requests can be reopened.
+    assert it_client.post(f"{base}/reopen").status_code == 409
+
+
+def test_ready_confirms_date_and_place(employee_client, it_client):
+    place = Location.objects.first()
+    pickup = (timezone.now() + timedelta(days=3)).replace(microsecond=0)
+    reservation = _ready_request(
+        employee_client,
+        it_client,
+        handover_mode="pickup",
+        pickup_at=pickup.isoformat(),
+        pickup_location=str(place.pk),
+    )
+    assert reservation["status"] == "ready"
+    assert reservation["pickup_location"]["id"] == str(place.pk)
+    assert reservation["pickup_at"].startswith(
+        pickup.astimezone(timezone.get_current_timezone()).date().isoformat()
+    )
+
+
+def test_simple_pickup_is_recorded_by_it(employee_client, it_client, terminal_client):
+    reservation = _ready_request(employee_client, it_client, handover_mode="collect")
+    # Not offered at the terminal: nobody signs.
+    assert terminal_client.get(f"/api/terminal/pickups/{reservation['id']}").status_code == 404
+
+    colleague = User.objects.get(username="sales")
+    response = it_client.post(
+        f"/api/reservations/{reservation['id']}/hand-out",
+        {"method": "direct", "received_by": str(colleague.pk)},
+        content_type="application/json",
+    )
+    assert response.status_code == 200, response.content
+    assert response.json()["handover"]["received_by"]["id"] == str(colleague.pk)
+
+
+def _request_with_pickup_wish(client, start: date, wish: date):
+    return client.post(
+        "/api/reservations",
+        {
+            "title": "Trip",
+            "duration": "temporary",
+            "start_date": start.isoformat(),
+            "end_date": (start + timedelta(days=2)).isoformat(),
+            "requested_pickup_date": wish.isoformat(),
+            "items": [{"category": Category.objects.get(code="headsets").pk, "quantity": 1}],
+        },
+        content_type="application/json",
+    )
+
+
+def test_employees_name_a_preferred_pickup_day(employee_client):
+    start = date.today() + timedelta(days=5)
+    response = _request_with_pickup_wish(employee_client, start, start - timedelta(days=1))
+    assert response.status_code == 201, response.content
+    assert response.json()["requested_pickup_date"] == (start - timedelta(days=1)).isoformat()
+    assert response.json()["pickup_at"] is None  # the appointment is IT's decision
+
+    # Not after the devices are needed, not in the past.
+    assert _request_with_pickup_wish(employee_client, start, start + timedelta(days=1)).status_code == 409
+    assert (
+        _request_with_pickup_wish(employee_client, start, date.today() - timedelta(days=1)).status_code == 409
+    )

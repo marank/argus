@@ -31,6 +31,8 @@ class Reservation(TimeStampedModel):
 
     class HandoverMode(models.TextChoices):
         PICKUP = "pickup", _("Pickup with signature")
+        # The employee collects at the IT desk; IT records afterwards who received the devices.
+        COLLECT = "collect", _("Simple pickup")
         DELIVERY = "delivery", _("Delivered by IT")
 
     OPEN_STATUSES = (Status.SUBMITTED, Status.APPROVED, Status.READY, Status.HANDED_OUT)
@@ -56,6 +58,8 @@ class Reservation(TimeStampedModel):
         _("duration"), max_length=10, choices=Duration.choices, default=Duration.TEMPORARY
     )
     start_date = models.DateField(_("needed from"))
+    # The employee's wish; IT sets the actual appointment in ``pickup_at``.
+    requested_pickup_date = models.DateField(_("preferred pickup day"), null=True, blank=True)
     end_date = models.DateField(_("needed until"), null=True, blank=True)
     status = models.CharField(
         _("status"), max_length=12, choices=Status.choices, default=Status.SUBMITTED, db_index=True
@@ -76,6 +80,11 @@ class Reservation(TimeStampedModel):
         choices=HandoverMode.choices,
         default=HandoverMode.PICKUP,
         help_text=_("Pickup requests appear on the pickup terminal once they are ready."),
+    )
+    skip_device_check = models.BooleanField(
+        _("skip device check"),
+        default=False,
+        help_text=_("The pickup terminal starts with who collects, without checking the devices."),
     )
     it_comment = models.TextField(_("IT comment"), blank=True)
     handled_by = models.ForeignKey(

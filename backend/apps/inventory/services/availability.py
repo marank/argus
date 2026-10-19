@@ -74,7 +74,8 @@ class Counts:
 def period_availability(start: date, end: date | None) -> tuple[dict[UUID, Counts], dict[UUID, Counts]]:
     """Counts per model and per category (its own models only) for ``start``–``end``.
 
-    ``end=None`` means from ``start`` on without end (permanent request). Reserved
+    ``end=None`` means from ``start`` on without end (permanent request). A request
+    occupies its devices from the pickup day (wish or appointment) on. Reserved
     are units of approved or ready requests whose period overlaps: devices
     allocated to them plus what they still lack. Devices allocated to a request
     in another period count as available. Software is never reserved; licenses
@@ -98,7 +99,12 @@ def period_availability(start: date, end: date | None) -> tuple[dict[UUID, Count
         Q(reservation__end_date__isnull=True) | Q(reservation__end_date__gte=start)
     )
     if end is not None:
-        overlapping &= Q(reservation__start_date__lte=end)
+        # Devices leave on the pickup day, which can be before they are needed.
+        overlapping &= (
+            Q(reservation__start_date__lte=end)
+            | Q(reservation__requested_pickup_date__lte=end)
+            | Q(reservation__pickup_at__date__lte=end)
+        )
     items = ReservationItem.objects.filter(overlapping).select_related("asset_model", "category")
     allocated = defaultdict(int)
     for row in (

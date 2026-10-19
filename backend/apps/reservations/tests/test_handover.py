@@ -1,3 +1,4 @@
+from apps.accounts.models import User
 from apps.inventory.models import Asset, AssetEvent
 from apps.reservations.models import Handover, Reservation
 
@@ -77,3 +78,16 @@ def test_delivered_by_it(it_client):
     assert handover["received_by_name"] == reservation.requester.display_name
     assert handover["location"] == "Sales office 2.14"
     assert handover["signature"] == ""
+
+
+def test_terminal_finds_people_by_name_words_and_number(terminal_client):
+    employee = User.objects.get(username="employee")
+    employee.employee_number = "4711"
+    employee.save()
+
+    def names(q):
+        return {p["display_name"] for p in terminal_client.get("/api/terminal/people", {"q": q}).json()}
+
+    assert employee.display_name in names("4711")
+    assert names(f"{employee.first_name} {employee.last_name[:3]}") == {employee.display_name}
+    assert names("47") == set()  # numbers only match in full

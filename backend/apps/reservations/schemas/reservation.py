@@ -27,6 +27,13 @@ class AllocationOut(Schema):
     handout_note: str
     handed_out_at: datetime | None
     returned_at: datetime | None
+    # Icon of the device's category, so lists can show what kind of device it is.
+    category_icon: str
+
+    @staticmethod
+    def resolve_category_icon(obj) -> str:
+        model = obj.asset.model if obj.asset_id else obj.consumable.model
+        return model.category.icon
 
 
 class ReservationItemOut(Schema):
@@ -93,6 +100,8 @@ class HandoverOut(Schema):
 
 class ReservationOut(ReservationListOut):
     notes: str
+    requested_pickup_date: date | None
+    skip_device_check: bool
     pickup_location: LocationRefOut | None
     it_comment: str
     created_by: UserRefOut | None
@@ -126,6 +135,7 @@ class ReservationIn(Schema):
     duration: Reservation.Duration = Reservation.Duration.TEMPORARY
     start_date: date
     end_date: date | None = None
+    requested_pickup_date: date | None = None
     items: list[ReservationItemIn] = Field(..., min_length=1)
     requester: UUID | None = Field(None, description="IT only: create on behalf of an employee")
 
@@ -154,6 +164,10 @@ class ScheduleIn(Schema):
 
 class ReadyIn(Schema):
     handover_mode: Reservation.HandoverMode | None = None
+    skip_device_check: bool = False
+    # Date and place are confirmed with the ready message; left out, they stay as they are.
+    pickup_at: datetime | None = None
+    pickup_location: UUID | None = None
 
 
 class AllocationNoteIn(Schema):
