@@ -26,7 +26,7 @@ export default {
     missing: 'Fehlt',
   },
   new: {
-    title: 'Geräte anfordern',
+    title: 'Neue Anforderung',
     subtitle:
       'Wählen Sie aus, was Sie brauchen. Die IT bestätigt und teilt Ihnen den Abholtermin mit.',
     catalog: 'Katalog',
@@ -83,6 +83,23 @@ export default {
       overdue: 'Rückgabe überfällig seit {date}.',
     },
   },
+  mySoftware: {
+    title: 'Meine Software',
+    subtitle: 'Lizenzen, die Ihnen oder Ihren Geräten zugewiesen sind.',
+    empty: 'Ihnen ist keine Software zugewiesen.',
+    software: 'Software',
+    usedVia: 'Zugewiesen an',
+    personal: 'Sie persönlich',
+    since: 'Seit',
+  },
+  myIssues: {
+    title: 'Meine Meldungen',
+    subtitle: 'Probleme, die Sie der IT gemeldet haben, und deren Antworten.',
+    empty: 'Sie haben noch keine Probleme gemeldet. Das geht unter „Meine Geräte“.',
+    current: 'Offen',
+    done: 'Erledigt',
+    returned: 'zurückgegeben',
+  },
   myDevices: {
     title: 'Meine Geräte',
     subtitle: 'Geräte, die Ihnen aktuell ausgegeben sind.',
@@ -101,6 +118,8 @@ export default {
     device: 'Gerät',
     returnBy: 'Rückgabe',
     reports: 'Meldungen',
+    reportOpen: 'Meldung offen',
+    reportInProgress: 'Meldung in Bearbeitung',
     noReports: 'Zu diesem Gerät gibt es keine Meldungen.',
   },
   actions: {

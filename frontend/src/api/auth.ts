@@ -9,6 +9,6 @@ export const authApi = {
   },
   logout: () => http.post<void>('/auth/logout'),
   me: () => http.get<CurrentUser>('/auth/me'),
-  updatePreferences: (data: Partial<Pick<CurrentUser, 'language'>>) =>
+  updatePreferences: (data: Partial<Pick<CurrentUser, 'language' | 'notification_settings'>>) =>
     http.patch<CurrentUser>('/auth/me', data),
 }

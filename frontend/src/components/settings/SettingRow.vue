@@ -4,13 +4,20 @@ import { NTooltip } from 'naive-ui'
 
 /**
  * Label (with optional help and "set by environment" lock) next to its control.
- * Rows inside a SettingsGroup are separated by thin lines.
+ * Rows inside a SettingsGroup are separated by thin lines. `toggle`: a short control
+ * (switch) on the right, the label gets the remaining width.
  */
-defineProps<{ label: string; help?: string; lockedBy?: string; required?: boolean }>()
+defineProps<{
+  label: string
+  help?: string
+  lockedBy?: string
+  required?: boolean
+  toggle?: boolean
+}>()
 </script>
 
 <template>
-  <div class="setting-row">
+  <div class="setting-row" :class="{ toggle }">
     <div class="label">
       <span> {{ label }}<span v-if="required" class="required" aria-hidden="true">*</span> </span>
       <NTooltip v-if="help" :show-arrow="false" :style="{ maxWidth: '320px' }">
@@ -73,6 +80,12 @@ defineProps<{ label: string; help?: string; lockedBy?: string; required?: boolea
 }
 .control {
   min-width: 0;
+}
+.setting-row.toggle {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.toggle .control {
+  justify-self: end;
 }
 @container (max-width: 440px) {
   .setting-row {

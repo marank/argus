@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { onUnauthorized } from '@/api/client'
 import { i18n } from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
+import { useFeaturesStore } from '@/stores/features'
 
 import { routes } from './routes'
 
@@ -25,6 +26,8 @@ router.beforeEach(async (to) => {
   if (!auth.isAuthenticated) {
     return { name: 'login', query: to.fullPath !== '/' ? { next: to.fullPath } : {} }
   }
+  const features = useFeaturesStore()
+  if (!features.settings) await features.load().catch(() => undefined)
   // The shared terminal account only ever sees the pickup terminal.
   if (auth.isTerminal) {
     return to.meta.terminal ? true : { name: 'terminal' }
@@ -33,6 +36,10 @@ router.beforeEach(async (to) => {
     return { name: 'dashboard' }
   }
   if (to.meta.superuser && !auth.isSuperuser) {
+    return { name: 'dashboard' }
+  }
+  // Pages of modules switched off in the site settings are not reachable.
+  if (to.meta.module && !features.isOn(to.meta.module)) {
     return { name: 'dashboard' }
   }
   return true

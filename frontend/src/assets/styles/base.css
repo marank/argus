@@ -193,8 +193,9 @@ a:hover {
   bottom: 0;
   border-left-width: 1px;
 }
-.n-data-table .group-child-last td:first-child::before {
-  bottom: 50%;
+/* Beats Naive's `--last-row::before { bottom: 0 !important }` on the table's last row. */
+.n-data-table .group-child-last .n-data-table-td.n-data-table-td:first-child::before {
+  bottom: 50% !important;
 }
 .n-data-table .group-child td:first-child::after {
   top: 50%;
@@ -332,6 +333,11 @@ a:hover {
   40% {
     transform: scale(1.25);
   }
+}
+/* Site setting "attention animations" off: pulses stand still, feedback motion stays. */
+.no-attention-motion .dot.pulse,
+.no-attention-motion .stat.alert::before {
+  animation: none !important;
 }
 @media (prefers-reduced-motion: reduce) {
   *,

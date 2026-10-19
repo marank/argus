@@ -1,4 +1,4 @@
-import { CalendarClock, PackageCheck, ShieldAlert, Truck, Undo2 } from '@lucide/vue'
+import { CalendarClock, KeyRound, PackageCheck, ShieldAlert, Truck, Undo2 } from '@lucide/vue'
 import type { Component } from 'vue'
 
 import type { CalendarEntry, CalendarKind } from '@/types/calendar'
@@ -9,6 +9,7 @@ export const KIND_ICONS: Record<CalendarKind, Component> = {
   return: Undo2,
   delivery: Truck,
   warranty: ShieldAlert,
+  license: KeyRound,
 }
 
 /** One colour per kind (matching the filter chips), from the app palette. */
@@ -18,6 +19,7 @@ const KIND_COLORS: Record<CalendarKind, string> = {
   return: 'var(--ar-info)',
   delivery: 'var(--ar-warning)',
   warranty: 'var(--ar-violet)',
+  license: 'var(--ar-pink)',
 }
 
 export const kindColor = (kind: CalendarKind) => KIND_COLORS[kind]

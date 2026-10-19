@@ -1642,3 +1642,215 @@ msgstr "Beschreiben Sie das Problem."
 
 msgid "Describe how the problem was solved."
 msgstr "Beschreiben Sie, wie das Problem gelöst wurde."
+
+msgid "modules and features"
+msgstr "Module und Funktionen"
+
+msgid "site settings"
+msgstr "Website-Einstellungen"
+
+msgid "This module is switched off."
+msgstr "Dieses Modul ist ausgeschaltet."
+
+#, python-format
+msgid "Pickup: %(when)s%(place)s"
+msgstr "Abholung: %(when)s%(place)s"
+
+#, python-format
+msgid "New request %(number)s from %(name)s"
+msgstr "Neue Anforderung %(number)s von %(name)s"
+
+#, python-format
+msgid "%(name)s requests for “%(title)s”:"
+msgstr "%(name)s fordert für „%(title)s“ an:"
+
+#, python-format
+msgid "Your request %(number)s was confirmed"
+msgstr "Ihre Anforderung %(number)s wurde bestätigt"
+
+#, python-format
+msgid "IT confirmed your request “%(title)s” and is preparing it."
+msgstr ""
+"Die IT hat Ihre Anforderung „%(title)s“ bestätigt und bereitet sie vor."
+
+#, python-format
+msgid "Your request %(number)s was declined"
+msgstr "Ihre Anforderung %(number)s wurde abgelehnt"
+
+#, python-format
+msgid "IT declined your request “%(title)s”."
+msgstr "Die IT hat Ihre Anforderung „%(title)s“ abgelehnt."
+
+#, python-format
+msgid "Comment from IT: %(comment)s"
+msgstr "Kommentar der IT: %(comment)s"
+
+#, python-format
+msgid "Ready for pickup: %(number)s"
+msgstr "Abholbereit: %(number)s"
+
+#, python-format
+msgid "Everything for “%(title)s” is ready."
+msgstr "Alles für „%(title)s“ liegt bereit."
+
+#, python-format
+msgid "Return due on %(date)s: %(number)s"
+msgstr "Rückgabe am %(date)s: %(number)s"
+
+#, python-format
+msgid "Please return the devices for “%(title)s” by %(date)s."
+msgstr "Bitte geben Sie die Geräte für „%(title)s“ bis zum %(date)s zurück."
+
+#, python-format
+msgid "Return overdue: %(number)s"
+msgstr "Rückgabe überfällig: %(number)s"
+
+#, python-format
+msgid ""
+"The devices for “%(title)s” were due back on %(date)s. Please return them to "
+"IT."
+msgstr ""
+"Die Geräte für „%(title)s“ waren am %(date)s zurückzugeben. Bitte bringen Sie"
+" sie zur IT."
+
+#, python-format
+msgid "Problem reported: %(device)s"
+msgstr "Problem gemeldet: %(device)s"
+
+#, python-format
+msgid "%(name)s reports for %(device)s (%(model)s): %(kind)s"
+msgstr "%(name)s meldet zu %(device)s (%(model)s): %(kind)s"
+
+#, python-format
+msgid "Your problem report for %(device)s was resolved"
+msgstr "Ihre Problemmeldung zu %(device)s ist erledigt"
+
+#, python-format
+msgid "IT resolved your report “%(description)s”."
+msgstr "Die IT hat Ihre Meldung „%(description)s“ erledigt."
+
+msgid "Answer from IT:"
+msgstr "Antwort der IT:"
+
+#, python-format
+msgid "License ends on %(date)s: %(name)s"
+msgstr "Lizenz endet am %(date)s: %(name)s"
+
+#, python-format
+msgid "The license %(name)s %(reference)s ends on %(date)s."
+msgstr "Die Lizenz %(name)s %(reference)s endet am %(date)s."
+
+#, python-format
+msgid "Temporary requests can last at most %(days)s days."
+msgstr "Ausleihen dürfen höchstens %(days)s Tage dauern."
+
+msgid "warranty warning (days)"
+msgstr "Garantie-Vorwarnung (Tage)"
+
+msgid "Warranties ending within this many days count as ending soon."
+msgstr "Garantien, die innerhalb so vieler Tage enden, gelten als bald endend."
+
+msgid "license warning (days)"
+msgstr "Lizenz-Vorwarnung (Tage)"
+
+msgid "Licenses ending within this many days count as ending soon."
+msgstr "Lizenzen, die innerhalb so vieler Tage enden, gelten als bald endend."
+
+msgid "default loan period (days)"
+msgstr "Standard-Ausleihdauer (Tage)"
+
+msgid "Suggested length of a temporary request."
+msgstr "Vorgeschlagene Dauer einer Ausleihe."
+
+msgid "maximum loan period (days)"
+msgstr "Maximale Ausleihdauer (Tage)"
+
+msgid "Longest allowed temporary request; 0 = no limit."
+msgstr "Längste erlaubte Ausleihe; 0 = unbegrenzt."
+
+msgid "return reminder (days before)"
+msgstr "Rückgabe-Erinnerung (Tage vorher)"
+
+msgid "Employees are reminded this many days before a return is due."
+msgstr "Mitarbeiter werden so viele Tage vor der Rückgabe erinnert."
+
+msgid "STARTTLS"
+msgstr "STARTTLS"
+
+msgid "SSL/TLS"
+msgstr "SSL/TLS"
+
+msgid "None"
+msgstr "Keine"
+
+msgid "send emails"
+msgstr "E-Mails senden"
+
+msgid "SMTP server"
+msgstr "SMTP-Server"
+
+msgid "port"
+msgstr "Port"
+
+msgid "encryption"
+msgstr "Verschlüsselung"
+
+msgid "user name"
+msgstr "Benutzername"
+
+msgid "password"
+msgstr "Passwort"
+
+msgid "sender address"
+msgstr "Absenderadresse"
+
+msgid "sender name"
+msgstr "Absendername"
+
+msgid "app address"
+msgstr "App-Adresse"
+
+msgid "Address of Argus for links in emails, e.g. https://argus.example.com"
+msgstr ""
+"Adresse von Argus für Links in E-Mails, z. B. https://argus.example.com"
+
+msgid "notifications"
+msgstr "Benachrichtigungen"
+
+msgid "mail settings"
+msgstr "E-Mail-Einstellungen"
+
+msgid "notification"
+msgstr "Benachrichtigung"
+
+msgid "key"
+msgstr "Schlüssel"
+
+msgid "sent notification"
+msgstr "gesendete Benachrichtigung"
+
+msgid "sent notifications"
+msgstr "gesendete Benachrichtigungen"
+
+msgid "email notifications"
+msgstr "E-Mail-Benachrichtigungen"
+
+msgid "Enter the SMTP server and the sender address to send emails."
+msgstr "Geben Sie SMTP-Server und Absenderadresse an, um E-Mails zu senden."
+
+msgid "Enter the SMTP server and the sender address first."
+msgstr "Geben Sie zuerst SMTP-Server und Absenderadresse an."
+
+msgid "Argus test email"
+msgstr "Argus-Testmail"
+
+msgid "If you can read this, Argus can send emails."
+msgstr "Wenn Sie das lesen können, kann Argus E-Mails senden."
+
+#, python-format
+msgid "Sending failed: %(error)s"
+msgstr "Senden fehlgeschlagen: %(error)s"
+
+#, python-format
+msgid "Test email sent to %(to)s."
+msgstr "Testmail an %(to)s gesendet."

@@ -1,4 +1,4 @@
-"""Calendar feed for IT: lending periods, pickups, returns, deliveries, warranty ends.
+"""Calendar feed for IT: lending periods, pickups, returns, deliveries, warranty and license ends.
 
 Permanent hand-outs (work equipment) are left out entirely: they have no end and
 would only clutter the calendar. Their pickup appointment is still shown while
@@ -9,13 +9,14 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 
+from django.db.models import Count
 from django.utils import timezone
 
-from apps.inventory.models import Asset
+from apps.inventory.models import Asset, License
 from apps.procurement.models import PurchaseOrder
 from apps.reservations.models import Reservation
 
-KINDS = ("loan", "pickup", "return", "delivery", "warranty")
+KINDS = ("loan", "pickup", "return", "delivery", "warranty", "license")
 
 
 @dataclass
@@ -147,6 +148,24 @@ def calendar_entries(start: date, end: date, kinds: set[str] | None = None) -> l
                     link={"name": "assets", "warranty_until": day.isoformat()},
                     details=[f"{a.inventory_number} · {a.model.full_name}" for a in items[:10]]
                     + ([f"+{len(items) - 10}"] if len(items) > 10 else []),
+                )
+            )
+
+    if "license" in kinds:
+        licenses = (
+            License.objects.select_related("model__manufacturer")
+            .filter(valid_until__gte=start, valid_until__lte=end)
+            .annotate(used=Count("assignments"))
+        )
+        for lic in licenses:
+            entries.append(
+                Entry(
+                    id=f"license-{lic.pk}",
+                    kind="license",
+                    title=lic.model.full_name,
+                    start=lic.valid_until,
+                    link={"name": "license", "id": str(lic.pk)},
+                    details=[d for d in (lic.reference, f"{lic.used} / {lic.seats}") if d],
                 )
             )
 

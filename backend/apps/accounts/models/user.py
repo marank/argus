@@ -39,6 +39,8 @@ class User(AbstractUser):
     language = models.CharField(
         _("language"), max_length=5, choices=Language.choices, default=Language.GERMAN
     )
+    # Email notifications the user switched off: {event: false}; missing means on.
+    notification_settings = models.JSONField(_("email notifications"), default=dict, blank=True)
 
     class Meta:
         verbose_name = _("user")

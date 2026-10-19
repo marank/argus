@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDown, Languages, LogOut, Monitor, Moon, Settings, Sun } from '@lucide/vue'
+import { Bell, ChevronDown, Languages, LogOut, Monitor, Moon, Settings, Sun } from '@lucide/vue'
 import { NButton, NDropdown, type DropdownOption } from 'naive-ui'
 import { computed, h, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -44,6 +44,7 @@ const options = computed<DropdownOption[]>(() => [
     ],
   },
   { type: 'divider', key: 'd2' },
+  { key: 'notifications', label: t('profile.notifications.title'), icon: icon(Bell) },
   ...(auth.isItStaff ? [{ key: 'admin', label: t('nav.admin'), icon: icon(Settings) }] : []),
   { key: 'logout', label: t('nav.logout'), icon: icon(LogOut) },
 ])
@@ -53,6 +54,7 @@ async function onSelect(key: string) {
   if (kind === 'theme') mode.value = value as ThemeMode
   else if (kind === 'lang') await auth.changeLanguage(value as 'en' | 'de')
   else if (kind === 'admin') window.open('/admin/', '_blank')
+  else if (kind === 'notifications') router.push({ name: 'profile-notifications' })
   else if (kind === 'logout') {
     await auth.logout()
     router.push({ name: 'login' })

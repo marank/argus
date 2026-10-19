@@ -4,6 +4,7 @@ from django.utils.translation import gettext as _
 
 from apps.core.exceptions import BusinessError
 from apps.inventory.models import Asset, AssetEvent, AssetIssue
+from apps.inventory.services import notifications
 from apps.inventory.services.events import log_event
 
 Status = AssetIssue.Status
@@ -23,6 +24,7 @@ def report_issue(asset: Asset, user, kind: str, description: str) -> AssetIssue:
         related_user=user,
         description=f"{issue.get_kind_display()}: {description}",
     )
+    notifications.issue_reported(issue)
     return issue
 
 
@@ -49,4 +51,5 @@ def update_issue(issue: AssetIssue, user, status: str, resolution: str = "") -> 
             related_user=issue.reported_by,
             description=resolution,
         )
+        notifications.issue_resolved(issue)
     return issue

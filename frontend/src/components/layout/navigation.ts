@@ -1,4 +1,5 @@
 import {
+  AppWindow,
   Boxes,
   CalendarDays,
   Building2,
@@ -24,8 +25,12 @@ import {
 import type { Component } from 'vue'
 import type { RouteLocationRaw } from 'vue-router'
 
+import type { ModuleKey } from '@/types/settings'
+
 export interface NavItem {
   key: string
+  /** Hidden while this module is switched off in the site settings. */
+  module?: ModuleKey
   label: string
   icon: Component
   to: RouteLocationRaw
@@ -34,6 +39,8 @@ export interface NavItem {
 export interface NavSection {
   key: string
   label?: string
+  /** The heading folds the entries away (remembered per browser). */
+  collapsible?: boolean
   it?: boolean
   superuser?: boolean
   items: NavItem[]
@@ -68,6 +75,20 @@ export const NAVIGATION: NavSection[] = [
         icon: UserRound,
         to: { name: 'portal-devices' },
       },
+      {
+        key: 'portal-licenses',
+        module: 'licenses',
+        label: 'nav.mySoftware',
+        icon: AppWindow,
+        to: { name: 'portal-licenses' },
+      },
+      {
+        key: 'portal-issues',
+        module: 'issues',
+        label: 'nav.myIssues',
+        icon: MessageSquareWarning,
+        to: { name: 'portal-issues' },
+      },
     ],
   },
   {
@@ -81,11 +102,35 @@ export const NAVIGATION: NavSection[] = [
         icon: ListChecks,
         to: { name: 'reservations' },
       },
-      { key: 'calendar', label: 'nav.calendar', icon: CalendarDays, to: { name: 'calendar' } },
+      {
+        key: 'calendar',
+        module: 'calendar',
+        label: 'nav.calendar',
+        icon: CalendarDays,
+        to: { name: 'calendar' },
+      },
       { key: 'assets', label: 'nav.assets', icon: MonitorSmartphone, to: { name: 'assets' } },
-      { key: 'consumables', label: 'nav.consumables', icon: Boxes, to: { name: 'consumables' } },
-      { key: 'licenses', label: 'nav.licenses', icon: KeyRound, to: { name: 'licenses' } },
-      { key: 'issues', label: 'nav.issues', icon: MessageSquareWarning, to: { name: 'issues' } },
+      {
+        key: 'consumables',
+        module: 'consumables',
+        label: 'nav.consumables',
+        icon: Boxes,
+        to: { name: 'consumables' },
+      },
+      {
+        key: 'licenses',
+        module: 'licenses',
+        label: 'nav.licenses',
+        icon: KeyRound,
+        to: { name: 'licenses' },
+      },
+      {
+        key: 'issues',
+        module: 'issues',
+        label: 'nav.issues',
+        icon: MessageSquareWarning,
+        to: { name: 'issues' },
+      },
       { key: 'event-log', label: 'nav.eventLog', icon: Wrench, to: { name: 'event-log' } },
     ],
   },
@@ -94,14 +139,27 @@ export const NAVIGATION: NavSection[] = [
     label: 'nav.procurement',
     it: true,
     items: [
-      { key: 'needs', label: 'nav.needs', icon: ShoppingCart, to: { name: 'needs' } },
-      { key: 'orders', label: 'nav.orders', icon: Truck, to: { name: 'orders' } },
+      {
+        key: 'needs',
+        module: 'procurement',
+        label: 'nav.needs',
+        icon: ShoppingCart,
+        to: { name: 'needs' },
+      },
+      {
+        key: 'orders',
+        module: 'procurement',
+        label: 'nav.orders',
+        icon: Truck,
+        to: { name: 'orders' },
+      },
     ],
   },
   {
     key: 'masterdata',
     label: 'nav.masterdata',
     it: true,
+    collapsible: true,
     items: [
       {
         key: 'md-models',

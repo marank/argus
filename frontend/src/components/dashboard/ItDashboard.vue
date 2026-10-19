@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import {
   AlarmClock,
+  CalendarClock,
   CircleAlert,
+  ClipboardList,
+  Boxes,
+  KeyRound,
   MessageSquareWarning,
   ClipboardCheck,
   PackageCheck,
@@ -17,12 +21,15 @@ import { useI18n } from 'vue-i18n'
 import { dashboardApi } from '@/api/dashboard'
 import StatCard from '@/components/common/StatCard.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
+import StatGroup from '@/components/dashboard/StatGroup.vue'
 import { useFormat } from '@/composables/useFormat'
 import { ASSET_STATUSES } from '@/types/inventory'
 import type { ITOverview } from '@/types/dashboard'
 import { toneOf } from '@/utils/status'
+import { useFeaturesStore } from '@/stores/features'
 
 const { t } = useI18n()
+const features = useFeaturesStore()
 const { date, dateTime, enumLabel } = useFormat()
 const data = ref<ITOverview | null>(null)
 
@@ -40,6 +47,15 @@ const statusBars = computed(() =>
       : 0,
   })),
 )
+
+/** Visible cards per panel (modules can be switched off). */
+const requestCount = 4
+const stockCount = computed(
+  () => (features.isOn('procurement') ? 2 : 0) + (features.isOn('consumables') ? 1 : 0),
+)
+const attentionCount = computed(
+  () => 1 + (features.isOn('issues') ? 1 : 0) + (features.isOn('licenses') ? 1 : 0),
+)
 </script>
 
 <template>
@@ -47,71 +63,104 @@ const statusBars = computed(() =>
     <NSkeleton height="90px" :repeat="2" />
   </div>
   <div v-else class="stack">
-    <section class="stats">
-      <StatCard
-        :label="t('dashboard.toApprove')"
-        :value="data.reservations_submitted"
-        :icon="ClipboardCheck"
-        tone="warning"
-        :alert="!!data.reservations_submitted"
-        :to="{ name: 'reservations', query: { status: 'submitted' } }"
-      />
-      <StatCard
-        :label="t('dashboard.toPrepare')"
-        :value="data.reservations_to_prepare"
-        :icon="PackageOpen"
-        tone="primary"
-        :to="{ name: 'reservations', query: { status: 'approved' } }"
-      />
-      <StatCard
-        :label="t('dashboard.readyForPickup')"
-        :value="data.reservations_ready"
-        :icon="PackageCheck"
-        tone="success"
-        :to="{ name: 'reservations', query: { status: 'ready' } }"
-      />
-      <StatCard
-        :label="t('dashboard.overdue')"
-        :value="data.reservations_overdue"
-        :icon="AlarmClock"
-        :tone="data.reservations_overdue ? 'error' : 'default'"
-        :alert="!!data.reservations_overdue"
-        :to="{ name: 'reservations', query: { overdue: '1' } }"
-      />
-      <StatCard
-        :label="t('dashboard.ordersToPlace')"
-        :value="data.orders_to_place"
-        :icon="ShoppingCart"
-        :to="{ name: 'orders', query: { status: 'draft' } }"
-      />
-      <StatCard
-        :label="t('dashboard.ordersInTransit')"
-        :value="data.orders_in_transit"
-        :icon="Truck"
-        tone="info"
-        :to="{ name: 'orders', query: { status: 'ordered' } }"
-      />
-      <StatCard
-        :label="t('dashboard.belowMinimum')"
-        :value="data.low_consumables"
-        :icon="CircleAlert"
-        :tone="data.low_consumables ? 'warning' : 'default'"
-        :alert="!!data.low_consumables"
-        :to="{ name: 'consumables', query: { below_minimum: '1' } }"
-      />
-      <StatCard
-        :label="t('dashboard.openIssues')"
-        :value="data.open_issues"
-        :icon="MessageSquareWarning"
-        :tone="data.open_issues ? 'warning' : 'default'"
-        :alert="!!data.open_issues"
-        :to="{ name: 'issues' }"
-      />
-      <StatCard
-        :label="t('dashboard.warrantyExpiring')"
-        :value="data.warranty_expiring"
-        :icon="ShieldAlert"
-      />
+    <!-- Key figures: procurement/stock and deadlines side by side, requests below in a row of their own. -->
+    <section class="stat-groups">
+      <StatGroup
+        v-if="stockCount"
+        :title="t('dashboard.groups.stock')"
+        :icon="Boxes"
+        :count="stockCount"
+      >
+        <StatCard
+          v-if="features.isOn('procurement')"
+          :label="t('dashboard.ordersToPlace')"
+          :value="data.orders_to_place"
+          :icon="ShoppingCart"
+          :to="{ name: 'orders', query: { status: 'draft' } }"
+        />
+        <StatCard
+          v-if="features.isOn('procurement')"
+          :label="t('dashboard.ordersInTransit')"
+          :value="data.orders_in_transit"
+          :icon="Truck"
+          tone="info"
+          :to="{ name: 'orders', query: { status: 'ordered' } }"
+        />
+        <StatCard
+          v-if="features.isOn('consumables')"
+          :label="t('dashboard.belowMinimum')"
+          :value="data.low_consumables"
+          :icon="CircleAlert"
+          :tone="data.low_consumables ? 'warning' : 'default'"
+          :alert="!!data.low_consumables"
+          :to="{ name: 'consumables', query: { below_minimum: '1' } }"
+        />
+      </StatGroup>
+      <StatGroup
+        :title="t('dashboard.groups.attention')"
+        :icon="CalendarClock"
+        :count="attentionCount"
+      >
+        <StatCard
+          v-if="features.isOn('issues')"
+          :label="t('dashboard.openIssues')"
+          :value="data.open_issues"
+          :icon="MessageSquareWarning"
+          :tone="data.open_issues ? 'warning' : 'default'"
+          :alert="!!data.open_issues"
+          :to="{ name: 'issues' }"
+        />
+        <StatCard
+          v-if="features.isOn('licenses')"
+          :label="t('dashboard.licensesExpiring', { days: features.rules.license_warning_days })"
+          :value="data.licenses_expiring"
+          :icon="KeyRound"
+          :tone="data.licenses_expiring ? 'warning' : 'default'"
+          :to="{ name: 'licenses', query: { expiring: '1' } }"
+        />
+        <StatCard
+          :label="t('dashboard.warrantyExpiring', { days: features.rules.warranty_warning_days })"
+          :value="data.warranty_expiring"
+          :icon="ShieldAlert"
+        />
+      </StatGroup>
+      <StatGroup
+        wide
+        :title="t('dashboard.groups.requests')"
+        :icon="ClipboardList"
+        :count="requestCount"
+      >
+        <StatCard
+          :label="t('dashboard.toApprove')"
+          :value="data.reservations_submitted"
+          :icon="ClipboardCheck"
+          tone="warning"
+          :alert="!!data.reservations_submitted"
+          :to="{ name: 'reservations', query: { status: 'submitted' } }"
+        />
+        <StatCard
+          :label="t('dashboard.toPrepare')"
+          :value="data.reservations_to_prepare"
+          :icon="PackageOpen"
+          tone="primary"
+          :to="{ name: 'reservations', query: { status: 'approved' } }"
+        />
+        <StatCard
+          :label="t('dashboard.readyForPickup')"
+          :value="data.reservations_ready"
+          :icon="PackageCheck"
+          tone="success"
+          :to="{ name: 'reservations', query: { status: 'ready' } }"
+        />
+        <StatCard
+          :label="t('dashboard.overdue')"
+          :value="data.reservations_overdue"
+          :icon="AlarmClock"
+          :tone="data.reservations_overdue ? 'error' : 'default'"
+          :alert="!!data.reservations_overdue"
+          :to="{ name: 'reservations', query: { overdue: '1' } }"
+        />
+      </StatGroup>
     </section>
 
     <NCard :title="t('dashboard.devicesByStatus')" size="small">
@@ -185,10 +234,10 @@ const statusBars = computed(() =>
 </template>
 
 <style scoped>
-.stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: 10px;
+.stat-groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 .bar {
   display: flex;

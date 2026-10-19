@@ -31,6 +31,7 @@ class UserOut(Schema):
 
 class CurrentUserOut(UserOut):
     language: str
+    notification_settings: dict[str, bool]
     is_superuser: bool
 
 
@@ -50,3 +51,5 @@ class UserIn(Schema):
 
 class PreferencesIn(Schema):
     language: User.Language | None = None
+    # Email notifications the user switches off ({event: false}).
+    notification_settings: dict[str, bool] | None = None

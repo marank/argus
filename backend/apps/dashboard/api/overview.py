@@ -33,6 +33,7 @@ class ITOverviewOut(Schema):
     low_consumables: int
     open_issues: int
     warranty_expiring: int
+    licenses_expiring: int
     upcoming: list[UpcomingOut]
     recent_events: list[AssetEventWithAssetOut]
 

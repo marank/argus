@@ -1,6 +1,13 @@
-export type CalendarKind = 'loan' | 'pickup' | 'return' | 'delivery' | 'warranty'
+export type CalendarKind = 'loan' | 'pickup' | 'return' | 'delivery' | 'warranty' | 'license'
 
-export const CALENDAR_KINDS: CalendarKind[] = ['loan', 'pickup', 'return', 'delivery', 'warranty']
+export const CALENDAR_KINDS: CalendarKind[] = [
+  'loan',
+  'pickup',
+  'return',
+  'delivery',
+  'warranty',
+  'license',
+]
 
 export interface CalendarEntry {
   id: string

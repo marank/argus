@@ -7,7 +7,9 @@ import handover from './handover'
 import inventory from './inventory'
 import masterdata from './masterdata'
 import nav from './nav'
+import notifications from './notifications'
 import procurement from './procurement'
+import profile from './profile'
 import reservations from './reservations'
 import settings from './settings'
 import terminal from './terminal'
@@ -22,7 +24,9 @@ export default {
   inventory,
   masterdata,
   nav,
+  notifications,
   procurement,
+  profile,
   reservations,
   settings,
   terminal,

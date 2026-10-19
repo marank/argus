@@ -26,7 +26,7 @@ export default {
     missing: 'Missing',
   },
   new: {
-    title: 'Request devices',
+    title: 'New request',
     subtitle: 'Pick what you need. The IT department confirms and tells you when to collect.',
     catalog: 'Catalog',
     quickPick: 'For your devices',
@@ -82,6 +82,23 @@ export default {
       overdue: 'Return overdue since {date}.',
     },
   },
+  mySoftware: {
+    title: 'My software',
+    subtitle: 'Licenses assigned to you or your devices.',
+    empty: 'No software is assigned to you.',
+    software: 'Software',
+    usedVia: 'Assigned to',
+    personal: 'You personally',
+    since: 'Since',
+  },
+  myIssues: {
+    title: 'My reports',
+    subtitle: 'Problems you reported to IT and their answers.',
+    empty: 'You have not reported any problems yet. You can do so under “My devices”.',
+    current: 'Open',
+    done: 'Resolved',
+    returned: 'returned',
+  },
   myDevices: {
     title: 'My devices',
     subtitle: 'Devices currently handed out to you.',
@@ -100,6 +117,8 @@ export default {
     device: 'Device',
     returnBy: 'Return',
     reports: 'Problem reports',
+    reportOpen: 'Report open',
+    reportInProgress: 'Report in progress',
     noReports: 'There are no reports for this device.',
   },
   actions: {

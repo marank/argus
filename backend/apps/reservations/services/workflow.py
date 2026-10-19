@@ -9,12 +9,14 @@ from django.utils.translation import gettext as _
 
 from apps.accounts.models import User
 from apps.core.exceptions import BusinessError
+from apps.core.models import SiteSettings
 from apps.inventory.models import Asset, AssetEvent, Consumable, ConsumableMovement
 from apps.inventory.services.availability import pool_assets, pool_consumables
 from apps.inventory.services.consumables import move_consumable, release_consumable, reserve_consumable
 from apps.inventory.services.events import log_event
 from apps.masterdata.models import Category
 from apps.reservations.models import Handover, Reservation, ReservationAllocation, ReservationItem
+from apps.reservations.services import notifications
 
 Status = Reservation.Status
 
@@ -33,6 +35,9 @@ def _validate_period(duration: str, start: date, end: date | None) -> None:
             raise BusinessError(_("Temporary reservations need an end date."))
         if end < start:
             raise BusinessError(_("The end date must not be before the start date."))
+        limit = SiteSettings.load().max_loan_days
+        if limit and (end - start).days + 1 > limit:
+            raise BusinessError(_("Temporary requests can last at most %(days)s days.") % {"days": limit})
 
 
 # --- Employee actions --------------------------------------------------------
@@ -65,6 +70,7 @@ def submit(requester, data: dict, items: list[dict], created_by) -> Reservation:
                     _("Please choose a specific model for “%(category)s”.") % {"category": line.category}
                 )
         line.save()
+    notifications.request_submitted(reservation)
     return reservation
 
 
@@ -92,6 +98,8 @@ def approve(
 ) -> Reservation:
     """Confirm a reservation, possibly with fewer devices than requested."""
     _require_status(reservation, Status.SUBMITTED, Status.APPROVED)
+    # Editing an approved request again does not notify a second time.
+    first_decision = reservation.status == Status.SUBMITTED
     for item in reservation.items.all():
         approved = quantities.get(item.pk, item.quantity_requested)
         if approved > item.quantity_requested:
@@ -114,6 +122,8 @@ def approve(
     reservation.handled_by = user
     reservation.approved_at = reservation.approved_at or timezone.now()
     reservation.save()
+    if first_decision:
+        notifications.request_decided(reservation)
     return reservation
 
 
@@ -126,6 +136,7 @@ def reject(reservation: Reservation, user, comment: str) -> Reservation:
     reservation.handled_by = user
     reservation.completed_at = timezone.now()
     reservation.save()
+    notifications.request_decided(reservation)
     return reservation
 
 
@@ -297,6 +308,7 @@ def mark_ready(reservation: Reservation, user, handover_mode: str | None = None)
     reservation.status = Status.READY
     reservation.handled_by = user
     reservation.save()
+    notifications.request_ready(reservation)
     return reservation
 
 

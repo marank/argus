@@ -1,21 +1,22 @@
 <script setup lang="ts">
 import { MessageSquareWarning } from '@lucide/vue'
 import { NButton, NDataTable, type DataTableColumns } from 'naive-ui'
-import { h, onMounted, ref } from 'vue'
+import { computed, h, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import { portalApi } from '@/api/reservations'
 import EmptyState from '@/components/common/EmptyState.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
-import StatusTag from '@/components/common/StatusTag.vue'
 import ReportIssueModal from '@/components/portal/ReportIssueModal.vue'
 import { useFormat } from '@/composables/useFormat'
 import type { MyAsset } from '@/types/reservations'
 import { categoryIcon } from '@/utils/icons'
+import { useFeaturesStore } from '@/stores/features'
 
 /** Devices handed out to the employee; a row opens the device, the button reports a problem. */
 const { t } = useI18n()
+const features = useFeaturesStore()
 const router = useRouter()
 const { date } = useFormat()
 const assets = ref<MyAsset[] | null>(null)
@@ -32,10 +33,19 @@ function report(asset: MyAsset) {
   showReport.value = true
 }
 
-/** The open report if there is one, otherwise the most recent (recently resolved) one. */
-const latestIssue = (a: MyAsset) => a.issues.find((i) => i.status !== 'resolved') ?? a.issues[0]
+/** Small badge next to the device name while a report is open or in progress. */
+function reportBadge(a: MyAsset) {
+  const issue = a.issues.find((i) => i.status !== 'resolved')
+  if (!issue) return null
+  const inProgress = issue.status === 'in_progress'
+  return h(
+    'span',
+    { class: ['report-badge', { 'in-progress': inProgress }] },
+    t(inProgress ? 'reservations.myDevices.reportInProgress' : 'reservations.myDevices.reportOpen'),
+  )
+}
 
-const columns: DataTableColumns<MyAsset> = [
+const columns = computed<DataTableColumns<MyAsset>>(() => [
   {
     key: 'model',
     title: () => t('reservations.myDevices.device'),
@@ -43,7 +53,10 @@ const columns: DataTableColumns<MyAsset> = [
     render: (a) =>
       h('div', { class: 'device-cell' }, [
         h(categoryIcon(a.category_icon), { size: 16, class: 'muted' }),
-        h('div', [h('div', a.model.full_name), h('small', { class: 'muted' }, a.category)]),
+        h('div', [
+          h('div', { class: 'device-name' }, [a.model.full_name, reportBadge(a)]),
+          h('small', { class: 'muted' }, a.category),
+        ]),
       ]),
   },
   {
@@ -73,35 +86,31 @@ const columns: DataTableColumns<MyAsset> = [
         ? h('span', { class: 'mono' }, date(a.return_due))
         : h('span', { class: 'muted' }, t('common.permanent')),
   },
-  {
-    key: 'issues',
-    title: () => t('reservations.myDevices.reports'),
-    width: 150,
-    render: (a) => {
-      const issue = latestIssue(a)
-      return issue ? h(StatusTag, { group: 'issueStatus', value: issue.status }) : '—'
-    },
-  },
-  {
-    key: 'actions',
-    title: '',
-    width: 160,
-    align: 'right',
-    render: (a) =>
-      h(
-        NButton,
+  // Problem reports can be switched off in the site settings.
+  ...(features.isOn('issues')
+    ? ([
         {
-          size: 'small',
-          secondary: true,
-          onClick: (e: Event) => (e.stopPropagation(), report(a)),
+          key: 'actions',
+          title: '',
+          width: 160,
+          align: 'right',
+          render: (a) =>
+            h(
+              NButton,
+              {
+                size: 'small',
+                secondary: true,
+                onClick: (e: Event) => (e.stopPropagation(), report(a)),
+              },
+              {
+                icon: () => h(MessageSquareWarning, { size: 15 }),
+                default: () => t('reservations.myDevices.report'),
+              },
+            ),
         },
-        {
-          icon: () => h(MessageSquareWarning, { size: 15 }),
-          default: () => t('reservations.myDevices.report'),
-        },
-      ),
-  },
-]
+      ] as DataTableColumns<MyAsset>)
+    : []),
+])
 </script>
 
 <template>
@@ -131,6 +140,26 @@ const columns: DataTableColumns<MyAsset> = [
 </template>
 
 <style scoped>
+:deep(.device-name) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+:deep(.report-badge) {
+  --tone: var(--ar-warning);
+  padding: 0 6px;
+  border: 1px solid color-mix(in srgb, var(--tone) 40%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tone) 12%, transparent);
+  color: var(--tone);
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 16px;
+  white-space: nowrap;
+}
+:deep(.report-badge.in-progress) {
+  --tone: var(--ar-info);
+}
 :deep(.device-cell) {
   display: flex;
   align-items: center;

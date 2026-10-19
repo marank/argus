@@ -1,9 +1,11 @@
 export default {
   dashboard: 'Dashboard',
   selfService: 'Self-service',
-  newRequest: 'Request devices',
+  newRequest: 'New request',
   myRequests: 'My requests',
   myDevices: 'My devices',
+  mySoftware: 'My software',
+  myIssues: 'My reports',
   it: 'IT operations',
   assets: 'Devices',
   consumables: 'Consumables',

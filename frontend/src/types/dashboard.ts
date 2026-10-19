@@ -13,6 +13,7 @@ export interface ITOverview {
   low_consumables: number
   open_issues: number
   warranty_expiring: number
+  licenses_expiring: number
   upcoming: {
     id: Id
     number: string

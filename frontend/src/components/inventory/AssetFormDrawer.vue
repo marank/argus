@@ -23,6 +23,7 @@ import FieldLabel from '@/components/common/FieldLabel.vue'
 import DateField from '@/components/common/DateField.vue'
 import { useAction } from '@/composables/useAction'
 import { fromIsoDate, toIsoDate, useFormat } from '@/composables/useFormat'
+import { useFeaturesStore } from '@/stores/features'
 import {
   ASSET_CONDITIONS,
   ASSET_STATUSES,
@@ -35,6 +36,7 @@ const show = defineModel<boolean>('show', { required: true })
 const emit = defineEmits<{ saved: [asset: AssetDetail] }>()
 
 const { t } = useI18n()
+const features = useFeaturesStore()
 const { enumLabel } = useFormat()
 const { busy, run } = useAction()
 
@@ -219,7 +221,7 @@ async function save() {
               :help="t('inventory.fields.loanableHelp')"
             />
           </NFormItemGi>
-          <NFormItemGi :span="2">
+          <NFormItemGi v-if="features.isOn('consumables')" :span="2">
             <template #label
               ><FieldLabel
                 :label="t('inventory.fields.consumables')"

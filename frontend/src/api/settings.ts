@@ -1,4 +1,13 @@
-import type { LdapSettings, LdapSettingsInput, LdapTestResult } from '@/types/settings'
+import type {
+  FlagKey,
+  LdapSettings,
+  LdapSettingsInput,
+  LdapTestResult,
+  MailSettings,
+  MailSettingsInput,
+  Rules,
+  SiteSettings,
+} from '@/types/settings'
 
 import { http } from './client'
 
@@ -7,4 +16,16 @@ export const ldapSettingsApi = {
   update: (data: LdapSettingsInput) => http.put<LdapSettings>('/settings/ldap', data),
   test: (data: LdapSettingsInput & { username: string }) =>
     http.post<LdapTestResult>('/settings/ldap/test', data),
+}
+
+export const siteSettingsApi = {
+  get: () => http.get<SiteSettings>('/settings/site'),
+  update: (data: { flags?: Partial<Record<FlagKey, boolean>>; rules?: Rules }) =>
+    http.put<SiteSettings>('/settings/site', data),
+}
+
+export const mailSettingsApi = {
+  get: () => http.get<MailSettings>('/settings/mail'),
+  update: (data: MailSettingsInput) => http.put<MailSettings>('/settings/mail', data),
+  test: (to: string) => http.post<{ detail: string }>('/settings/mail/test', { to }),
 }

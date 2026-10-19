@@ -19,11 +19,13 @@ import DateField from '@/components/common/DateField.vue'
 import { useAction } from '@/composables/useAction'
 import { useFormat } from '@/composables/useFormat'
 import { MANUAL_EVENT_KINDS, type AssetEventKind } from '@/types/inventory'
+import { useFeaturesStore } from '@/stores/features'
 
 const props = defineProps<{ assetId: Id }>()
 const show = defineModel<boolean>('show', { required: true })
 const emit = defineEmits<{ saved: [] }>()
 const { t } = useI18n()
+const features = useFeaturesStore()
 const { enumLabel } = useFormat()
 const { busy, run } = useAction()
 
@@ -114,7 +116,9 @@ async function save() {
           :autosize="{ minRows: 2, maxRows: 6 }"
         />
       </NFormItem>
-      <NCheckbox v-model:checked="consume">{{ t('inventory.event.consume') }}</NCheckbox>
+      <NCheckbox v-if="features.isOn('consumables')" v-model:checked="consume">{{
+        t('inventory.event.consume')
+      }}</NCheckbox>
       <div v-if="consume" class="cols consume">
         <NFormItem :label="t('inventory.event.consumeItem')">
           <EntitySelect

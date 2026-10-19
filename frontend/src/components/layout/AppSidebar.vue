@@ -1,35 +1,86 @@
 <script setup lang="ts">
+import { ChevronDown } from '@lucide/vue'
 import { NMenu, type MenuOption } from 'naive-ui'
-import { computed, h } from 'vue'
+import { useStorage } from '@vueuse/core'
+import { computed, h, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
 
 import { useAuthStore } from '@/stores/auth'
+import { useFeaturesStore } from '@/stores/features'
 
 import { activeKey, NAVIGATION } from './navigation'
 
-defineProps<{ collapsed: boolean }>()
+const props = defineProps<{ collapsed: boolean }>()
 
 const { t } = useI18n()
 const route = useRoute()
 const auth = useAuthStore()
+const features = useFeaturesStore()
+
+const active = computed(() => activeKey(route.name?.toString(), route.params))
+
+/** Folded sections, remembered per browser; the section of the current page always opens. */
+const folded = useStorage<string[]>('argus.sidebar-folded', [])
+const isFolded = (key: string) => folded.value.includes(key)
+function toggle(key: string) {
+  folded.value = isFolded(key) ? folded.value.filter((k) => k !== key) : [...folded.value, key]
+}
+watch(
+  active,
+  (key) => {
+    const section = NAVIGATION.find((s) => s.collapsible && s.items.some((i) => i.key === key))
+    if (section && isFolded(section.key)) toggle(section.key)
+  },
+  { immediate: true },
+)
+
+/** Same heading as the other sections, plus an arrow that folds the entries away. */
+function foldableTitle(key: string, label: string) {
+  const open = !isFolded(key)
+  return () =>
+    h(
+      'button',
+      {
+        type: 'button',
+        class: 'section-toggle',
+        'aria-expanded': open,
+        onClick: () => toggle(key),
+      },
+      [h('span', label), h(ChevronDown, { size: 13, class: ['chevron', { open }] })],
+    )
+}
 
 const options = computed<MenuOption[]>(() =>
   NAVIGATION.filter(
     (section) => (!section.it || auth.isItStaff) && (!section.superuser || auth.isSuperuser),
-  ).map((section) => {
-    const children: MenuOption[] = section.items.map((item) => ({
-      key: item.key,
-      label: () => h(RouterLink, { to: item.to }, () => t(item.label)),
-      icon: () => h(item.icon, { size: 16, strokeWidth: 1.75 }),
+  )
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => !item.module || features.isOn(item.module)),
     }))
-    return section.label
-      ? { type: 'group', key: section.key, label: t(section.label), children }
-      : { type: 'group', key: section.key, children }
-  }),
+    // Sections whose modules are all switched off disappear.
+    .filter((section) => section.items.length)
+    .flatMap<MenuOption>((section) => {
+      const children: MenuOption[] = section.items.map((item) => ({
+        key: item.key,
+        label: () => h(RouterLink, { to: item.to }, () => t(item.label)),
+        icon: () => h(item.icon, { size: 16, strokeWidth: 1.75 }),
+      }))
+      // Without a heading the entries stand alone; an empty group would still leave a gap.
+      if (!section.label) return children
+      // A narrow sidebar has no headings to unfold with, so it shows everything.
+      if (section.collapsible && !props.collapsed) {
+        return {
+          type: 'group',
+          key: section.key,
+          label: foldableTitle(section.key, t(section.label)),
+          children: isFolded(section.key) ? [] : children,
+        }
+      }
+      return { type: 'group', key: section.key, label: t(section.label), children }
+    }),
 )
-
-const active = computed(() => activeKey(route.name?.toString(), route.params))
 </script>
 
 <template>
@@ -98,6 +149,31 @@ const active = computed(() => activeKey(route.name?.toString(), route.params))
   overflow: hidden;
   background: var(--ar-border);
   color: transparent !important;
+}
+:deep(.section-toggle) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  /* The arrow ends where the entries' content ends. */
+  padding: 0 18px 0 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+:deep(.section-toggle:hover) {
+  color: var(--ar-text-muted);
+}
+:deep(.section-toggle .chevron) {
+  transform: rotate(-90deg);
+  transition: transform 0.15s ease;
+}
+:deep(.section-toggle .chevron.open) {
+  transform: none;
 }
 :deep(.n-menu-item-content a) {
   color: inherit;

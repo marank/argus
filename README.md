@@ -101,6 +101,13 @@ read-only.
 - **Software licenses** – categories are either hardware or software. Licenses of
   software products have seats, a term and are assigned to employees or devices;
   employees can request software in the portal, IT then assigns a license.
+- **Email notifications** – via SMTP, configured under Settings → Email: new
+  requests and problem reports for IT, confirmations, pickups and return reminders
+  for employees, license expiry. Administrators switch kinds on and off site-wide,
+  every user can opt out under Notifications. Time-based reminders come from
+  `python manage.py send_reminders`, which the Docker image runs every hour.
+- **Site settings** – modules and features can be switched off; deadlines such as
+  the default and maximum loan period and warning periods are configurable.
 - **Scanning** – keyboard-wedge barcode scanners work anywhere in the IT views:
   inventory number, serial, IMEI or EAN jump straight to the device or model.
   Several devices can be scanned in at once.

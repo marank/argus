@@ -1,5 +1,7 @@
 import type { RouteRecordRaw } from 'vue-router'
 
+import type { ModuleKey } from '@/types/settings'
+
 declare module 'vue-router' {
   interface RouteMeta {
     /** Accessible without login. */
@@ -12,6 +14,8 @@ declare module 'vue-router' {
     terminal?: boolean
     /** i18n key of the page title. */
     title?: string
+    /** Module that can be switched off in the site settings. */
+    module?: ModuleKey
   }
 }
 
@@ -31,14 +35,14 @@ export const routes: RouteRecordRaw[] = [
         path: '',
         name: 'terminal',
         component: () => import('@/views/terminal/TerminalListView.vue'),
-        meta: { terminal: true, title: 'terminal.title' },
+        meta: { module: 'terminal', terminal: true, title: 'terminal.title' },
       },
       {
         path: ':id([0-9a-f-]{36})',
         name: 'terminal-pickup',
         component: () => import('@/views/terminal/TerminalPickupView.vue'),
         props: (route) => ({ id: String(route.params.id) }),
-        meta: { terminal: true, title: 'terminal.title' },
+        meta: { module: 'terminal', terminal: true, title: 'terminal.title' },
       },
     ],
   },
@@ -80,10 +84,28 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: 'nav.myRequests' },
       },
       {
+        path: 'profile/notifications',
+        name: 'profile-notifications',
+        component: () => import('@/views/profile/NotificationSettingsView.vue'),
+        meta: { title: 'profile.notifications.title' },
+      },
+      {
         path: 'portal/devices',
         name: 'portal-devices',
         component: () => import('@/views/portal/MyDevicesView.vue'),
         meta: { title: 'nav.myDevices' },
+      },
+      {
+        path: 'portal/software',
+        name: 'portal-licenses',
+        component: () => import('@/views/portal/MyLicensesView.vue'),
+        meta: { module: 'licenses', title: 'nav.mySoftware' },
+      },
+      {
+        path: 'portal/issues',
+        name: 'portal-issues',
+        component: () => import('@/views/portal/MyIssuesView.vue'),
+        meta: { module: 'issues', title: 'nav.myIssues' },
       },
       {
         path: 'portal/devices/:id([0-9a-f-]{36})',
@@ -97,7 +119,7 @@ export const routes: RouteRecordRaw[] = [
         path: 'calendar',
         name: 'calendar',
         component: () => import('@/views/calendar/CalendarView.vue'),
-        meta: { it: true, title: 'nav.calendar' },
+        meta: { module: 'calendar', it: true, title: 'nav.calendar' },
       },
       // IT: inventory
       {
@@ -117,26 +139,26 @@ export const routes: RouteRecordRaw[] = [
         path: 'inventory/consumables',
         name: 'consumables',
         component: () => import('@/views/inventory/ConsumableListView.vue'),
-        meta: { it: true, title: 'nav.consumables' },
+        meta: { module: 'consumables', it: true, title: 'nav.consumables' },
       },
       {
         path: 'inventory/licenses',
         name: 'licenses',
         component: () => import('@/views/inventory/LicenseListView.vue'),
-        meta: { it: true, title: 'nav.licenses' },
+        meta: { module: 'licenses', it: true, title: 'nav.licenses' },
       },
       {
         path: 'inventory/licenses/:id([0-9a-f-]{36})',
         name: 'license',
         component: () => import('@/views/inventory/LicenseDetailView.vue'),
         props: (route) => ({ id: String(route.params.id) }),
-        meta: { it: true, title: 'nav.licenses' },
+        meta: { module: 'licenses', it: true, title: 'nav.licenses' },
       },
       {
         path: 'inventory/issues',
         name: 'issues',
         component: () => import('@/views/inventory/IssueListView.vue'),
-        meta: { it: true, title: 'nav.issues' },
+        meta: { module: 'issues', it: true, title: 'nav.issues' },
       },
       // Former name of the consumables page; keeps old bookmarks working.
       { path: 'inventory/stock', redirect: (to) => ({ name: 'consumables', query: to.query }) },
@@ -165,20 +187,20 @@ export const routes: RouteRecordRaw[] = [
         path: 'procurement/needs',
         name: 'needs',
         component: () => import('@/views/procurement/NeedsView.vue'),
-        meta: { it: true, title: 'nav.needs' },
+        meta: { module: 'procurement', it: true, title: 'nav.needs' },
       },
       {
         path: 'procurement/orders',
         name: 'orders',
         component: () => import('@/views/procurement/OrderListView.vue'),
-        meta: { it: true, title: 'nav.orders' },
+        meta: { module: 'procurement', it: true, title: 'nav.orders' },
       },
       {
         path: 'procurement/orders/:id([0-9a-f-]{36})',
         name: 'order',
         component: () => import('@/views/procurement/OrderDetailView.vue'),
         props: (route) => ({ id: String(route.params.id) }),
-        meta: { it: true, title: 'nav.orders' },
+        meta: { module: 'procurement', it: true, title: 'nav.orders' },
       },
       // IT: master data
       {
@@ -194,7 +216,25 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/settings/SettingsView.vue'),
         meta: { superuser: true },
         children: [
-          { path: '', name: 'settings', redirect: { name: 'settings-ldap' } },
+          { path: '', name: 'settings', redirect: { name: 'settings-features' } },
+          {
+            path: 'features',
+            name: 'settings-features',
+            component: () => import('@/views/settings/FeatureSettingsView.vue'),
+            meta: { superuser: true, title: 'settings.sections.features' },
+          },
+          {
+            path: 'rules',
+            name: 'settings-rules',
+            component: () => import('@/views/settings/RulesSettingsView.vue'),
+            meta: { superuser: true, title: 'settings.sections.rules' },
+          },
+          {
+            path: 'mail',
+            name: 'settings-mail',
+            component: () => import('@/views/settings/MailSettingsView.vue'),
+            meta: { superuser: true, title: 'settings.sections.mail' },
+          },
           {
             path: 'ldap',
             name: 'settings-ldap',

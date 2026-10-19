@@ -206,6 +206,17 @@ export interface LicenseInput {
   notes: string
 }
 
+/** Software the employee uses, directly or through one of their devices (no key). */
+export interface OwnLicense {
+  id: Id
+  model: AssetModelRef
+  category_icon: string
+  valid_until: string | null
+  is_expired: boolean
+  assigned_at: string
+  device: { id: Id; inventory_number: string; model: AssetModelRef } | null
+}
+
 /** A license seat used by a device. */
 export interface AssetLicense {
   id: Id
@@ -227,6 +238,13 @@ export interface OwnIssue {
   status: IssueStatus
   resolution: string
   created_at: string
+}
+
+/** One of the employee's reports in their list of all reports. */
+export interface OwnIssueWithDevice extends OwnIssue {
+  asset: { id: Id; inventory_number: string; model: AssetModelRef; category_icon: string }
+  /** False once the device was returned; then there is no device page to open. */
+  still_assigned: boolean
 }
 
 /** A problem report in the IT list. */

@@ -20,9 +20,11 @@ import { useConfirm } from '@/composables/useConfirm'
 import { useFormat } from '@/composables/useFormat'
 import type { AssetDetail, AssetEvent } from '@/types/inventory'
 import { categoryIcon } from '@/utils/icons'
+import { useFeaturesStore } from '@/stores/features'
 
 const props = defineProps<{ id: Id }>()
 const { t } = useI18n()
+const features = useFeaturesStore()
 const router = useRouter()
 const message = useMessage()
 const confirm = useConfirm()
@@ -167,7 +169,11 @@ async function removeEvent(event: AssetEvent) {
               }}
             </RouterLink>
           </NAlert>
-          <NAlert v-if="asset.open_issues.length" type="warning" :bordered="false">
+          <NAlert
+            v-if="features.isOn('issues') && asset.open_issues.length"
+            type="warning"
+            :bordered="false"
+          >
             <RouterLink :to="{ name: 'issues' }">
               {{
                 t(
@@ -214,7 +220,11 @@ async function removeEvent(event: AssetEvent) {
           <NCard :title="t('inventory.sections.usage')" size="small"
             ><DetailGrid :entries="usage"
           /></NCard>
-          <NCard :title="t('inventory.fields.consumables')" size="small">
+          <NCard
+            v-if="features.isOn('consumables')"
+            :title="t('inventory.fields.consumables')"
+            size="small"
+          >
             <div v-if="consumables.length" class="consumables">
               <span v-for="c in consumables" :key="c.model.id" class="consumable">
                 {{ c.model.full_name }}
@@ -223,7 +233,11 @@ async function removeEvent(event: AssetEvent) {
             </div>
             <span v-else class="muted">{{ t('inventory.noConsumables') }}</span>
           </NCard>
-          <NCard :title="t('inventory.licenses.deviceLicenses')" size="small">
+          <NCard
+            v-if="features.isOn('licenses')"
+            :title="t('inventory.licenses.deviceLicenses')"
+            size="small"
+          >
             <div v-if="asset.licenses.length" class="consumables">
               <RouterLink
                 v-for="l in asset.licenses"

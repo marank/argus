@@ -3,13 +3,15 @@ from datetime import timedelta
 from django.db.models import Count, F
 from django.utils import timezone
 
-from apps.inventory.models import Asset, AssetEvent, AssetIssue, Consumable
+from apps.core.models import SiteSettings
+from apps.inventory.models import Asset, AssetEvent, AssetIssue, Consumable, License
 from apps.procurement.models import PurchaseOrder
 from apps.reservations.models import Reservation
 
 
 def it_overview() -> dict:
     today = timezone.localdate()
+    rules = SiteSettings.load()
     reservations = Reservation.objects.all()
     upcoming = (
         reservations.filter(
@@ -35,9 +37,14 @@ def it_overview() -> dict:
         ).count(),
         "low_consumables": Consumable.objects.filter(quantity__lt=F("min_quantity")).count(),
         "open_issues": AssetIssue.objects.exclude(status=AssetIssue.Status.RESOLVED).count(),
-        "warranty_expiring": Asset.objects.filter(warranty_until__range=(today, today + timedelta(days=60)))
+        "warranty_expiring": Asset.objects.filter(
+            warranty_until__range=(today, today + timedelta(days=rules.warranty_warning_days))
+        )
         .exclude(status=Asset.Status.RETIRED)
         .count(),
+        "licenses_expiring": License.objects.filter(
+            valid_until__range=(today, today + timedelta(days=rules.license_warning_days))
+        ).count(),
         "upcoming": list(upcoming),
         "recent_events": list(
             AssetEvent.objects.select_related("asset__model__manufacturer", "performed_by")[:10]

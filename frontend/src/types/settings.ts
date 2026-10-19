@@ -36,3 +36,69 @@ export interface LdapTestResult {
   server: string
   user: Record<string, string> | null
 }
+
+/** Switchable modules and features, see the backend's apps/core/features.py. */
+export type ModuleKey =
+  'consumables' | 'licenses' | 'procurement' | 'calendar' | 'issues' | 'terminal'
+export type FeatureKey =
+  | 'calendar_warranty'
+  | 'calendar_license_expiry'
+  | 'calendar_deliveries'
+  | 'consumable_quick_pick'
+  | 'software_requests'
+  | 'attention_motion'
+export type FlagKey = ModuleKey | FeatureKey
+
+export interface SiteSettings {
+  /** Effective values: a feature is off while a module it needs is off. */
+  flags: Record<FlagKey, boolean>
+  /** What the administrator switched, before dependencies apply. */
+  stored: Record<FlagKey, boolean>
+  definitions: { key: FlagKey; kind: 'module' | 'feature'; requires: ModuleKey[] }[]
+  rules: Rules
+  /** Whether emails are sent at all. */
+  mail_enabled: boolean
+  /** Notification kinds and whether they are switched on site-wide. */
+  notifications: { key: NotificationKey; audience: 'employee' | 'it'; enabled: boolean }[]
+}
+
+/** Deadlines and warning periods (days). */
+export interface Rules {
+  warranty_warning_days: number
+  license_warning_days: number
+  default_loan_days: number
+  /** 0 = no limit */
+  max_loan_days: number
+  return_reminder_days: number
+}
+
+export type NotificationKey =
+  | 'request_submitted'
+  | 'issue_reported'
+  | 'license_expiring'
+  | 'request_approved'
+  | 'request_rejected'
+  | 'request_ready'
+  | 'return_reminder'
+  | 'return_overdue'
+  | 'issue_resolved'
+
+export type MailSecurity = 'starttls' | 'ssl' | 'none'
+
+export interface MailSettings {
+  enabled: boolean
+  host: string
+  port: number
+  security: MailSecurity
+  username: string
+  password_set: boolean
+  from_email: string
+  from_name: string
+  app_url: string
+  events: Record<NotificationKey, boolean>
+}
+
+export interface MailSettingsInput extends Omit<MailSettings, 'password_set'> {
+  /** null keeps the stored password, '' removes it. */
+  password: string | null
+}

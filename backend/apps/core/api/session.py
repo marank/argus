@@ -10,6 +10,7 @@ from ninja.utils import check_csrf
 
 from apps.accounts.schemas import CurrentUserOut, PreferencesIn
 from apps.core.api.security import session_auth
+from apps.core.notifications import EVENT_KEYS
 
 # Plain session auth: the pickup terminal account must be able to sign in and out too.
 router = Router(tags=["auth"], auth=session_auth)
@@ -57,6 +58,8 @@ def me(request: HttpRequest):
 def update_preferences(request: HttpRequest, payload: PreferencesIn):
     user = request.user
     for name, value in payload.dict(exclude_unset=True).items():
+        if name == "notification_settings":
+            value = {k: bool(v) for k, v in (value or {}).items() if k in EVENT_KEYS}
         setattr(user, name, value)
     user.save()
     return user

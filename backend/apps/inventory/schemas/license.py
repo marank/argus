@@ -80,6 +80,25 @@ class LicenseAssignIn(Schema):
     note: str = ""
 
 
+class OwnLicenseOut(Schema):
+    """A license seat the employee uses, directly or through one of their devices. No key."""
+
+    id: UUID
+    model: AssetModelRefOut = Field(..., alias="license.model")
+    category_icon: str = Field(..., alias="license.model.category.icon")
+    valid_until: date | None = Field(..., alias="license.valid_until")
+    is_expired: bool = Field(..., alias="license.is_expired")
+    assigned_at: datetime = Field(..., alias="created_at")
+    # Set when the seat belongs to one of the employee's devices.
+    device: LicensedDeviceOut | None = Field(None, alias="asset")
+
+
+class LicensedDeviceOut(Schema):
+    id: UUID
+    inventory_number: str
+    model: AssetModelRefOut
+
+
 class AssetLicenseOut(Schema):
     """A license seat used by a device, shown on the device."""
 
@@ -87,3 +106,6 @@ class AssetLicenseOut(Schema):
     model: AssetModelRefOut = Field(..., alias="license.model")
     reference: str = Field(..., alias="license.reference")
     valid_until: date | None = Field(..., alias="license.valid_until")
+
+
+OwnLicenseOut.model_rebuild()

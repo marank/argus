@@ -85,3 +85,18 @@ def test_device_detail_shows_all_reports(employee_client):
 
     foreign = Asset.objects.exclude(assigned_to__username="employee").first()
     assert employee_client.get(f"/api/portal/my-assets/{foreign.pk}").status_code == 404
+
+
+def test_my_issues_lists_own_reports(employee_client, it_client):
+    asset = own_device()
+    employee_client.post(
+        f"/api/portal/my-assets/{asset.pk}/issues",
+        {"kind": "lost", "description": "Left in the train"},
+        content_type=JSON,
+    )
+    issues = employee_client.get("/api/portal/my-issues").json()
+    assert [(i["description"], i["still_assigned"]) for i in issues] == [("Left in the train", True)]
+    assert issues[0]["asset"]["inventory_number"] == asset.inventory_number
+
+    # Other employees' reports are not listed.
+    assert it_client.get("/api/portal/my-issues").json() == []

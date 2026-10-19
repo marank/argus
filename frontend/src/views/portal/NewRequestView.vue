@@ -13,6 +13,7 @@ import { optionKey, ownAvailable, type CartLine } from '@/components/reservation
 import { useAction } from '@/composables/useAction'
 import { useAuthStore } from '@/stores/auth'
 import { anyModelLabel } from '@/utils/reservations'
+import { useFeaturesStore } from '@/stores/features'
 import type {
   CatalogCategory,
   CatalogModel,
@@ -21,6 +22,7 @@ import type {
 } from '@/types/reservations'
 
 const { t } = useI18n()
+const features = useFeaturesStore()
 const router = useRouter()
 const auth = useAuthStore()
 const { busy, run } = useAction()
@@ -30,7 +32,11 @@ const cart = ref<CartLine[]>([])
 const myConsumables = ref<MyConsumables[]>([])
 
 onMounted(async () => {
-  const [entries, consumables] = await Promise.all([portalApi.catalog(), portalApi.myConsumables()])
+  // The quick pick can be switched off; its endpoint is gone then.
+  const [entries, consumables] = await Promise.all([
+    portalApi.catalog(),
+    features.isOn('consumable_quick_pick') ? portalApi.myConsumables() : Promise.resolve([]),
+  ])
   catalog.value = entries
   myConsumables.value = consumables
 })

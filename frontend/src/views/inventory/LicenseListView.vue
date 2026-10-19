@@ -3,7 +3,7 @@ import { Plus } from '@lucide/vue'
 import { NButton, NDataTable, NInput, NSelect, NTag, type DataTableColumns } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import { licensesApi } from '@/api/inventory'
 import { categoriesApi } from '@/api/masterdata'
@@ -18,18 +18,26 @@ import { useList } from '@/composables/useList'
 import type { Id } from '@/types/common'
 import type { License } from '@/types/inventory'
 import { categoryIcon } from '@/utils/icons'
+import { useFeaturesStore } from '@/stores/features'
 
 const { t } = useI18n()
+const features = useFeaturesStore()
 const router = useRouter()
+const route = useRoute()
 const { date, enumLabel } = useFormat()
 
-const SOON_DAYS = 60
-const soonDate = () => toIsoDate(Date.now() + SOON_DAYS * 86_400_000)
+/** "Ends soon": within the license warning period from the site settings. */
+const soonDate = () => toIsoDate(Date.now() + features.rules.license_warning_days * 86_400_000)
 
 const list = useList(licensesApi.list, {
   ordering: 'model__name',
   groupOrdering: () => 'model__category__sort_order,model__category__name',
-  filters: { category: null, assign_to: null, expires_before: null },
+  filters: {
+    category: null,
+    assign_to: null,
+    // The dashboard tile links here with ?expiring=1.
+    expires_before: route.query.expiring ? soonDate() : null,
+  },
 })
 onMounted(list.load)
 

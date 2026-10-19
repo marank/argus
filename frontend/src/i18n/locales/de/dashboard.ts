@@ -10,7 +10,8 @@ export default {
   ordersInTransit: 'Bestellt, unterwegs',
   belowMinimum: 'Unter Mindestbestand',
   openIssues: 'Offene Meldungen',
-  warrantyExpiring: 'Garantie endet ≤ 60 Tage',
+  licensesExpiring: 'Lizenzende ≤ {days} Tage',
+  warrantyExpiring: 'Garantieende ≤ {days} Tage',
   devicesByStatus: 'Geräte nach Status',
   upcoming: 'Anstehende Ausgaben (7 Tage)',
   recentActivity: 'Letzte Aktivitäten',
@@ -19,5 +20,10 @@ export default {
   pickupReady: 'Zur Abholung bereit',
   pickupAt: 'Abholung {date}',
   noUpcoming: 'Nichts geplant.',
-  requestCta: 'Etwas benötigt? Geräte anfordern',
+  requestCta: 'Etwas benötigt? Neue Anforderung stellen',
+  groups: {
+    requests: 'Anforderungen',
+    stock: 'Beschaffung & Bestand',
+    attention: 'Fristen & Meldungen',
+  },
 }

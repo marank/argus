@@ -10,8 +10,10 @@ from django.utils import timezone
 from ninja import Router, Status
 
 from apps.core.api.security import is_it_staff
-from apps.inventory.models import Asset, AssetIssue
-from apps.inventory.schemas.asset_issue import AssetIssueIn, OwnIssueOut
+from apps.core.features import is_enabled
+from apps.inventory.models import Asset, AssetIssue, LicenseAssignment
+from apps.inventory.schemas.asset_issue import AssetIssueIn, OwnIssueOut, OwnIssueWithDeviceOut
+from apps.inventory.schemas.license import OwnLicenseOut
 from apps.inventory.services.availability import available_count
 from apps.inventory.services.issues import report_issue
 from apps.masterdata.models import AssetModel, Category
@@ -29,15 +31,19 @@ def catalog(request: HttpRequest):
     they need and IT decides what the pool can cover.
     """
     show_availability = is_it_staff(request.user)
+    categories = Category.objects.filter(is_requestable=True)
+    models = AssetModel.objects.filter(is_requestable=True, is_active=True)
+    if not is_enabled("software_requests"):
+        # Software can be switched off as a request option in the site settings.
+        categories = categories.exclude(kind=Category.Kind.SOFTWARE)
+        models = models.exclude(tracking=AssetModel.Tracking.LICENSE)
     models_by_category: dict[UUID, list] = {}
-    for model in AssetModel.objects.filter(is_requestable=True, is_active=True).select_related(
-        "manufacturer"
-    ):
+    for model in models.select_related("manufacturer"):
         model.available = available_count(model_id=model.pk) if show_availability else None
         models_by_category.setdefault(model.category_id, []).append(model)
 
     result = []
-    for category in Category.objects.filter(is_requestable=True):
+    for category in categories:
         category.available = available_count(category_id=category.pk) if show_availability else None
         category.models = models_by_category.get(category.pk, [])
         result.append(category)
@@ -120,3 +126,26 @@ def report(request: HttpRequest, pk: UUID, payload: AssetIssueIn):
     """Report a problem with one of the employee's own devices; IT sees it under problem reports."""
     asset = get_object_or_404(Asset, pk=pk, assigned_to=request.user)
     return Status(201, report_issue(asset, request.user, payload.kind, payload.description))
+
+
+@router.get("/my-issues", response=list[OwnIssueWithDeviceOut])
+def my_issues(request: HttpRequest):
+    """All problems the employee has reported, newest first."""
+    issues = AssetIssue.objects.filter(reported_by=request.user).select_related(
+        "asset__model__manufacturer", "asset__model__category"
+    )
+    for issue in issues:
+        issue.still_assigned = issue.asset.assigned_to_id == request.user.pk
+    return issues
+
+
+@router.get("/my-licenses", response=list[OwnLicenseOut])
+def my_licenses(request: HttpRequest):
+    """Software the employee uses: seats assigned to them or to one of their devices."""
+    return list(
+        LicenseAssignment.objects.filter(Q(user=request.user) | Q(asset__assigned_to=request.user))
+        .select_related(
+            "license__model__manufacturer", "license__model__category", "asset__model__manufacturer"
+        )
+        .order_by("license__model__name")
+    )

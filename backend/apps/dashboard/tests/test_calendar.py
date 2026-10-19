@@ -63,3 +63,9 @@ def test_warranty_ends_are_grouped_per_day(it_client):
     entries = [e for e in fetch(it_client, kinds=["warranty"]) if e["start"] == day.isoformat()]
     assert len(entries) == 1
     assert entries[0]["title"] == "2" and len(entries[0]["details"]) == 2
+
+
+def test_calendar_shows_license_expiry(it_client):
+    entries = fetch(it_client, kinds="license")
+    assert [e["title"] for e in entries] == ["Autodesk AutoCAD LT"]
+    assert entries[0]["link"]["name"] == "license"

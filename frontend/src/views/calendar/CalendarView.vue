@@ -20,7 +20,9 @@ import PageHeader from '@/components/common/PageHeader.vue'
 import { entryColor, isTentative, KIND_ICONS, kindColor } from '@/components/calendar/kinds'
 import { toIsoDate, useFormat } from '@/composables/useFormat'
 import { useTheme } from '@/theme/useTheme'
+import type { FeatureKey } from '@/types/settings'
 import { CALENDAR_KINDS, type CalendarEntry, type CalendarKind } from '@/types/calendar'
+import { useFeaturesStore } from '@/stores/features'
 
 /**
  * Planning calendar for IT: lending periods, pickup appointments, due returns,
@@ -29,13 +31,28 @@ import { CALENDAR_KINDS, type CalendarEntry, type CalendarKind } from '@/types/c
 type ViewName = 'dayGridMonth' | 'timeGridWeek' | 'listMonth'
 
 const { t, locale } = useI18n()
+const features = useFeaturesStore()
 const router = useRouter()
 const { date, enumLabel } = useFormat()
 const { isDark } = useTheme()
 
 const calendar = ref<InstanceType<typeof FullCalendar> | null>(null)
 const view = useStorage<ViewName>('argus.calendar-view', 'dayGridMonth')
-const enabled = useStorage<CalendarKind[]>('argus.calendar-kinds', [...CALENDAR_KINDS])
+/** Calendar kinds that can be switched off in the site settings. */
+const KIND_FEATURES: Partial<Record<CalendarKind, FeatureKey>> = {
+  warranty: 'calendar_warranty',
+  license: 'calendar_license_expiry',
+  delivery: 'calendar_deliveries',
+}
+const available = computed(() =>
+  CALENDAR_KINDS.filter((kind) => {
+    const feature = KIND_FEATURES[kind]
+    return !feature || features.isOn(feature)
+  }),
+)
+/** Kinds hidden with the filter chips; remembering the hidden ones lets new kinds show up. */
+const hidden = useStorage<CalendarKind[]>('argus.calendar-hidden-kinds', [])
+const enabled = computed(() => available.value.filter((kind) => !hidden.value.includes(kind)))
 const title = ref('')
 const loading = ref(false)
 
@@ -51,6 +68,8 @@ function label(entry: CalendarEntry): string {
       return t('calendar.titles.delivery', { supplier: entry.title })
     case 'warranty':
       return t('calendar.titles.warranty', { count: Number(entry.title) }, Number(entry.title))
+    case 'license':
+      return t('calendar.titles.license', { name: entry.title })
     default:
       return entry.title
   }
@@ -111,13 +130,13 @@ watch(view, (name) => api()?.changeView(name))
 watch(enabled, () => api()?.refetchEvents(), { deep: true })
 
 function toggle(kind: CalendarKind) {
-  enabled.value = enabled.value.includes(kind)
-    ? enabled.value.filter((k) => k !== kind)
-    : [...enabled.value, kind]
+  hidden.value = hidden.value.includes(kind)
+    ? hidden.value.filter((k) => k !== kind)
+    : [...hidden.value, kind]
 }
 
 const legend = computed(() =>
-  CALENDAR_KINDS.map((kind) => ({ kind, icon: KIND_ICONS[kind], color: kindColor(kind) })),
+  available.value.map((kind) => ({ kind, icon: KIND_ICONS[kind], color: kindColor(kind) })),
 )
 </script>
 

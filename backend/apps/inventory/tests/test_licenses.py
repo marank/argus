@@ -151,3 +151,21 @@ def test_catalog_shows_free_seats_to_it(it_client):
     assert office["kind"] == "software"
     m365 = next(m for m in office["models"] if m["name"] == "365 Business Standard")
     assert m365["available"] == 21
+
+
+def test_my_licenses_lists_user_and_device_seats(employee_client, it_client):
+    from apps.inventory.models import License
+
+    workstation = Asset.objects.filter(model__name="Precision 3680 Tower").first()
+    it_client.post(
+        f"/api/inventory/assets/{workstation.pk}/assign",
+        {"user": str(User.objects.get(username="employee").pk)},
+        content_type=JSON,
+    )
+    licenses = employee_client.get("/api/portal/my-licenses").json()
+    by_name = {entry["model"]["name"]: entry for entry in licenses}
+    # Microsoft 365 is assigned to the employee, AutoCAD to the workstation they now use.
+    assert by_name["365 Business Standard"]["device"] is None
+    assert by_name["AutoCAD LT"]["device"]["inventory_number"] == workstation.inventory_number
+    assert "license_key" not in by_name["AutoCAD LT"]
+    assert License.objects.filter(model__name="AutoCAD LT").exists()

@@ -13,10 +13,12 @@ import { useFormat } from '@/composables/useFormat'
 import type { Id } from '@/types/common'
 import type { MyAsset } from '@/types/reservations'
 import { categoryIcon } from '@/utils/icons'
+import { useFeaturesStore } from '@/stores/features'
 
 /** One of the employee's devices with all its problem reports and IT's answers. */
 const props = defineProps<{ id: Id }>()
 const { t } = useI18n()
+const features = useFeaturesStore()
 const { date, dateTime, enumLabel } = useFormat()
 
 const asset = ref<MyAsset | null>(null)
@@ -51,7 +53,7 @@ const details = computed<DetailEntry[]>(() => {
     <template v-else>
       <PageHeader :title="asset.model.full_name" :eyebrow="t('reservations.myDevices.title')">
         <template #actions>
-          <NButton type="primary" @click="showReport = true">
+          <NButton v-if="features.isOn('issues')" type="primary" @click="showReport = true">
             <template #icon><MessageSquareWarning :size="16" /></template>
             {{ t('reservations.myDevices.report') }}
           </NButton>
@@ -68,7 +70,11 @@ const details = computed<DetailEntry[]>(() => {
           </div>
         </NCard>
 
-        <NCard :title="t('reservations.myDevices.reports')" size="small">
+        <NCard
+          v-if="features.isOn('issues')"
+          :title="t('reservations.myDevices.reports')"
+          size="small"
+        >
           <p v-if="!asset.issues.length" class="muted">
             {{ t('reservations.myDevices.noReports') }}
           </p>

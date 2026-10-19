@@ -1,4 +1,5 @@
 import type { Id } from '@/types/common'
+import type { NotificationKey } from './settings'
 import type { Ref } from './common'
 
 export interface UserRef {
@@ -24,6 +25,8 @@ export interface User extends UserRef {
 
 export interface CurrentUser extends User {
   language: 'en' | 'de'
+  /** Email notifications switched off by the user ({event: false}). */
+  notification_settings: Partial<Record<NotificationKey, boolean>>
   is_superuser: boolean
 }
 

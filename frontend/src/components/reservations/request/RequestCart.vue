@@ -19,6 +19,7 @@ import DateField from '@/components/common/DateField.vue'
 import { toIsoDate } from '@/composables/useFormat'
 import type { Id } from '@/types/common'
 import type { Duration, ReservationInput } from '@/types/reservations'
+import { useFeaturesStore } from '@/stores/features'
 
 import type { CartLine } from './types'
 
@@ -32,12 +33,14 @@ const lines = defineModel<CartLine[]>('lines', { required: true })
 const emit = defineEmits<{ submit: [data: ReservationInput] }>()
 const { t } = useI18n()
 
+const features = useFeaturesStore()
 const today = new Date().setHours(0, 0, 0, 0)
 const form = reactive({
   title: '',
   notes: '',
   duration: 'temporary' as Duration,
-  range: [today, today + 4 * 86400000] as [number, number],
+  // Suggested period from the site settings (default loan period, start day included).
+  range: [today, today + (features.rules.default_loan_days - 1) * 86400000] as [number, number],
   start: today,
   requester: null as Id | null,
 })

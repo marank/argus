@@ -39,6 +39,21 @@ class OwnIssueOut(Schema):
     created_at: datetime
 
 
+class OwnIssueDeviceOut(Schema):
+    id: UUID
+    inventory_number: str
+    model: AssetModelRefOut
+    category_icon: str = Field(..., alias="model.category.icon")
+
+
+class OwnIssueWithDeviceOut(OwnIssueOut):
+    """An employee's report in their list of all reports."""
+
+    asset: OwnIssueDeviceOut
+    # The device may have been returned since; then there is no device page to open.
+    still_assigned: bool
+
+
 class AssetIssueIn(Schema):
     kind: AssetIssue.Kind = AssetIssue.Kind.DEFECT
     description: str = Field(..., max_length=2000)

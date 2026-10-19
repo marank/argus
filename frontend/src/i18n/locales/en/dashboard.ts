@@ -10,7 +10,8 @@ export default {
   ordersInTransit: 'Orders in transit',
   belowMinimum: 'Consumables below minimum',
   openIssues: 'Open problem reports',
-  warrantyExpiring: 'Warranty ends ≤ 60 days',
+  licensesExpiring: 'License ends ≤ {days} days',
+  warrantyExpiring: 'Warranty ends ≤ {days} days',
   devicesByStatus: 'Devices by status',
   upcoming: 'Upcoming hand-outs (7 days)',
   recentActivity: 'Recent activity',
@@ -19,5 +20,10 @@ export default {
   pickupReady: 'Ready to collect',
   pickupAt: 'Pickup {date}',
   noUpcoming: 'Nothing scheduled.',
-  requestCta: 'Need something? Request devices',
+  requestCta: 'Need something? Create a request',
+  groups: {
+    requests: 'Requests',
+    stock: 'Procurement & stock',
+    attention: 'Deadlines & reports',
+  },
 }

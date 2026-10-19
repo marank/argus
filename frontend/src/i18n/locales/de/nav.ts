@@ -1,9 +1,11 @@
 export default {
   dashboard: 'Dashboard',
   selfService: 'Self-Service',
-  newRequest: 'Geräte anfordern',
+  newRequest: 'Neue Anforderung',
   myRequests: 'Meine Anforderungen',
   myDevices: 'Meine Geräte',
+  mySoftware: 'Meine Software',
+  myIssues: 'Meine Meldungen',
   it: 'IT-Betrieb',
   assets: 'Geräte',
   consumables: 'Verbrauchsmaterial',

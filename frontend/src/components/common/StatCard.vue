@@ -62,10 +62,17 @@ a.stat:hover {
 }
 .head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 8px;
+}
+/* Long labels wrap instead of running into the icon. */
+.head .eyebrow {
+  min-width: 0;
+  line-height: 1.35;
 }
 .icon {
+  flex: none;
   color: var(--ar-text-subtle);
 }
 .value {
