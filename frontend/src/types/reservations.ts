@@ -21,16 +21,30 @@ export const RESERVATION_STATUSES: ReservationStatus[] = [
   'cancelled',
 ]
 
+/** A license seat allocated to a request; device licenses name the device. */
+export interface LicenseSeat {
+  id: Id
+  model: AssetModelRef
+  reference: string
+  valid_until: string | null
+  device: AssetRef | null
+}
+
 export interface Allocation {
   id: Id
   asset: AssetRef | null
   consumable: { id: Id; model: AssetModelRef; location: LocationRef } | null
+  license: LicenseSeat | null
   quantity: number
   allocated_by: UserRef | null
   allocated_at: string
   handout_note: string
   handed_out_at: string | null
   returned_at: string | null
+  /** The return record it came back with. */
+  device_return: Id | null
+  returned_damaged: boolean
+  return_note: string
   category_icon: string
 }
 
@@ -41,7 +55,7 @@ export interface ReservationItem {
   asset_model: AssetModelRef | null
   description: string
   is_free_text: boolean
-  /** Software is only requested; IT assigns licenses separately. */
+  /** Software lines are filled with license seats instead of devices. */
   is_software: boolean
   quantity_requested: number
   quantity_approved: number | null
@@ -81,8 +95,18 @@ export interface Handover {
   signature: string
   notes: string
   location: string
+  /** IT member responsible; at the terminal whoever prepared the pickup unless changed. */
   handed_out_by: UserRef | null
+  /** The account the hand-out was recorded with, e.g. the pickup terminal. */
+  recorded_by: UserRef | null
   handed_out_at: string
+}
+
+export interface DeviceReturn {
+  id: Id
+  notes: string
+  returned_by: UserRef | null
+  returned_at: string
 }
 
 export interface Reservation extends ReservationListItem {
@@ -91,11 +115,13 @@ export interface Reservation extends ReservationListItem {
   it_comment: string
   created_by: UserRef | null
   handled_by: UserRef | null
+  prepared_by: UserRef | null
   approved_at: string | null
   handed_out_at: string | null
   completed_at: string | null
   items: ReservationItem[]
   handover: Handover | null
+  returns: DeviceReturn[]
 }
 
 export interface ReservationItemInput {
@@ -127,6 +153,16 @@ export interface Candidates {
     location: LocationRef | null
   }[]
   consumables: { id: Id; model: AssetModelRef; location: LocationRef; available_quantity: number }[]
+  licenses?: {
+    id: Id
+    model: AssetModelRef
+    reference: string
+    assign_to: 'user' | 'device'
+    valid_until: string | null
+    free_seats: number
+  }[]
+  /** The requester's devices, for licenses that are assigned to a device. */
+  devices?: AssetRef[]
 }
 
 export interface CatalogModel {
@@ -221,9 +257,25 @@ export interface HandOutInput {
 }
 
 export interface SignInput {
+  /** IT member handing out; left out, whoever prepared the pickup. */
+  handed_out_by?: Id | null
   received_by: Id | null
   received_by_name: string
   signature: string
   notes: string
   allocation_notes: { allocation: Id; note: string }[]
+}
+
+export interface ReturnInput {
+  /** Left out: everything still lent. */
+  allocations: Id[] | null
+  notes: string
+  allocation_notes: { allocation: Id; note: string }[]
+  /** Devices that go to repair instead of back into stock. */
+  damaged: Id[]
+}
+
+export interface TerminalStaff {
+  id: Id
+  display_name: string
 }

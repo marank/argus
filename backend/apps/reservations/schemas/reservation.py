@@ -17,23 +17,44 @@ class ConsumableRefOut(Schema):
     location: LocationRefOut
 
 
+class LicenseSeatOut(Schema):
+    """A license seat allocated to a request: the license and the device it is on, if any."""
+
+    id: UUID
+    model: AssetModelRefOut
+    reference: str
+    valid_until: date | None
+    device: AssetRefOut | None = None
+
+
 class AllocationOut(Schema):
     id: UUID
     asset: AssetRefOut | None
     consumable: ConsumableRefOut | None
+    license: LicenseSeatOut | None
     quantity: int
     allocated_by: UserRefOut | None
     allocated_at: datetime
     handout_note: str
     handed_out_at: datetime | None
     returned_at: datetime | None
+    device_return: UUID | None = Field(None, alias="device_return_id")
+    returned_damaged: bool
+    return_note: str
     # Icon of the device's category, so lists can show what kind of device it is.
     category_icon: str
 
     @staticmethod
+    def resolve_license(obj):
+        if not obj.license_id:
+            return None
+        assignment = obj.license_assignment
+        obj.license.device = assignment.asset if assignment and assignment.asset_id else None
+        return obj.license
+
+    @staticmethod
     def resolve_category_icon(obj) -> str:
-        model = obj.asset.model if obj.asset_id else obj.consumable.model
-        return model.category.icon
+        return obj.model.category.icon
 
 
 class ReservationItemOut(Schema):
@@ -95,7 +116,15 @@ class HandoverOut(Schema):
     notes: str
     location: str
     handed_out_by: UserRefOut | None
+    recorded_by: UserRefOut | None
     handed_out_at: datetime
+
+
+class DeviceReturnOut(Schema):
+    id: UUID
+    notes: str
+    returned_by: UserRefOut | None
+    returned_at: datetime
 
 
 class ReservationOut(ReservationListOut):
@@ -106,11 +135,17 @@ class ReservationOut(ReservationListOut):
     it_comment: str
     created_by: UserRefOut | None
     handled_by: UserRefOut | None
+    prepared_by: UserRefOut | None
     approved_at: datetime | None
     handed_out_at: datetime | None
     completed_at: datetime | None
     items: list[ReservationItemOut]
     handover: HandoverOut | None = None
+    returns: list[DeviceReturnOut] = []
+
+    @staticmethod
+    def resolve_returns(obj):
+        return list(obj.returns.all())
 
     @staticmethod
     def resolve_items(obj):
@@ -188,8 +223,9 @@ class HandOutIn(Schema):
 
 class AllocateIn(Schema):
     item: UUID
-    asset: UUID | None = None
+    asset: UUID | None = Field(None, description="Device to allocate, or the device a license seat is for")
     consumable: UUID | None = None
+    license: UUID | None = None
     quantity: int = Field(1, ge=1)
     code: str | None = Field(None, description="Scanned inventory or serial number")
 
@@ -199,12 +235,18 @@ class ResolveItemIn(Schema):
 
 
 class ReturnIn(Schema):
-    allocations: list[UUID] | None = None
+    allocations: list[UUID] | None = Field(None, description="Left out: everything still lent")
+    notes: str = ""
+    allocation_notes: list[AllocationNoteIn] = []
+    damaged: list[UUID] = Field([], description="Devices that go to repair instead of back into stock")
 
 
 class CandidatesOut(Schema):
     assets: list[AssetCandidateOut]
     consumables: list[ConsumableCandidateOut]
+    licenses: list[LicenseCandidateOut] = []
+    # The requester's devices, for licenses that are assigned to a device.
+    devices: list[AssetRefOut] = []
 
 
 class AssetCandidateOut(Schema):
@@ -221,6 +263,19 @@ class ConsumableCandidateOut(Schema):
     model: AssetModelRefOut
     location: LocationRefOut
     available_quantity: int
+
+
+class LicenseCandidateOut(Schema):
+    id: UUID
+    model: AssetModelRefOut
+    reference: str
+    assign_to: str
+    valid_until: date | None
+    free_seats: int
+
+    @staticmethod
+    def resolve_free_seats(obj) -> int:
+        return obj.seats - obj.used
 
 
 CandidatesOut.model_rebuild()

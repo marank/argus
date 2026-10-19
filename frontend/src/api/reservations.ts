@@ -12,9 +12,11 @@ import type {
   ReservationListItem,
   HandOutInput,
   HandoverMode,
+  ReturnInput,
   SignInput,
   TerminalPerson,
   TerminalPickup,
+  TerminalStaff,
 } from '@/types/reservations'
 
 import { http } from './client'
@@ -47,7 +49,14 @@ export const reservationsApi = {
     http.get<Candidates>(`${base}/items/${itemId}/candidates`, { q }),
   allocate: (
     id: Id,
-    data: { item: Id; asset?: Id; consumable?: Id; quantity?: number; code?: string },
+    data: {
+      item: Id
+      asset?: Id
+      consumable?: Id
+      license?: Id
+      quantity?: number
+      code?: string
+    },
   ) => http.post<Reservation>(`${base}/${id}/allocations`, data),
   resolveItem: (id: Id, itemId: Id, assetModel: Id) =>
     http.post<Reservation>(`${base}/${id}/items/${itemId}/resolve`, { asset_model: assetModel }),
@@ -66,8 +75,8 @@ export const reservationsApi = {
   ) => http.post<Reservation>(`${base}/${id}/ready`, data),
   reopen: (id: Id) => http.post<Reservation>(`${base}/${id}/reopen`),
   handOut: (id: Id, data: HandOutInput) => http.post<Reservation>(`${base}/${id}/hand-out`, data),
-  returnDevices: (id: Id, allocations?: Id[]) =>
-    http.post<Reservation>(`${base}/${id}/return`, { allocations: allocations ?? null }),
+  returnDevices: (id: Id, data: Partial<ReturnInput> = {}) =>
+    http.post<Reservation>(`${base}/${id}/return`, data),
 }
 
 export const portalApi = {
@@ -88,4 +97,5 @@ export const terminalApi = {
   get: (id: Id) => http.get<Reservation>(`/terminal/pickups/${id}`),
   sign: (id: Id, data: SignInput) => http.post<Reservation>(`/terminal/pickups/${id}/sign`, data),
   people: (q: string) => http.get<TerminalPerson[]>('/terminal/people', { q }),
+  staff: () => http.get<TerminalStaff[]>('/terminal/staff'),
 }

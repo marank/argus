@@ -8,8 +8,8 @@ from ninja import Router, Schema
 
 from apps.core.api.security import it_staff_auth
 from apps.core.exceptions import BusinessError
-from apps.inventory.models import Asset, Consumable
-from apps.inventory.services.availability import pool_assets, pool_consumables
+from apps.inventory.models import Asset, Consumable, License
+from apps.inventory.services.availability import pool_assets, pool_consumables, pool_licenses
 from apps.masterdata.models import AssetModel
 from apps.reservations.models import ReservationAllocation, ReservationItem
 from apps.reservations.schemas.reservation import (
@@ -33,11 +33,21 @@ class AutoAllocateOut(Schema):
 
 @router.get("/items/{uuid:item_id}/candidates", response=CandidatesOut)
 def candidates(request: HttpRequest, item_id: UUID, q: str | None = None):
-    """Devices from the pool that could be allocated to an item."""
-    item = get_object_or_404(ReservationItem, pk=item_id)
+    """Devices from the pool (or free license seats) that could be allocated to an item."""
+    item = get_object_or_404(ReservationItem.objects.select_related("reservation"), pk=item_id)
     if item.is_free_text:
         return {"assets": [], "consumables": []}
     filters = {"model_id": item.asset_model_id, "category_id": item.category_id}
+    if item.is_software:
+        devices = Asset.objects.filter(assigned_to=item.reservation.requester_id).select_related(
+            "model__manufacturer"
+        )
+        return {
+            "assets": [],
+            "consumables": [],
+            "licenses": list(pool_licenses(**filters)),
+            "devices": list(devices.order_by("inventory_number")),
+        }
     assets = pool_assets(**filters).select_related("model__manufacturer", "location__parent")
     if q:
         assets = assets.filter(Q(inventory_number__icontains=q) | Q(serial_number__icontains=q))
@@ -60,6 +70,10 @@ def allocate(request: HttpRequest, pk: UUID, payload: AllocateIn):
         if asset is None:
             raise BusinessError(_("No device found for “%(code)s”.") % {"code": payload.code})
         workflow.allocate_asset(item, asset, request.user)
+    elif payload.license:
+        license = get_object_or_404(License, pk=payload.license)
+        device = get_object_or_404(Asset, pk=payload.asset) if payload.asset else None
+        workflow.allocate_license(item, license, request.user, device)
     elif payload.asset:
         workflow.allocate_asset(item, get_object_or_404(Asset, pk=payload.asset), request.user)
     elif payload.consumable:
@@ -97,5 +111,12 @@ def remove_allocation(request: HttpRequest, pk: UUID, allocation_id: UUID):
 
 @router.post("/{uuid:pk}/return", response=ReservationOut)
 def return_devices(request: HttpRequest, pk: UUID, payload: ReturnIn):
-    workflow.return_devices(get_for_update(pk), request.user, payload.allocations)
+    workflow.return_devices(
+        get_for_update(pk),
+        request.user,
+        payload.allocations,
+        notes=payload.notes,
+        allocation_notes={n.allocation: n.note for n in payload.allocation_notes},
+        damaged=set(payload.damaged),
+    )
     return get_reservation(request, pk)

@@ -38,8 +38,16 @@ class TerminalPickupOut(Schema):
         return ", ".join(f"{i.quantity_target}× {i.label}" for i in obj.items.all() if i.quantity_target)
 
 
+class TerminalStaffOut(Schema):
+    id: UUID
+    display_name: str
+
+
 class TerminalSignIn(Schema):
     received_by: UUID | None = Field(None, description="Employee collecting the devices")
+    handed_out_by: UUID | None = Field(
+        None, description="IT staff member handing out; left out, whoever prepared the pickup"
+    )
     received_by_name: str = Field("", max_length=150)
     signature: str = Field(..., description="PNG data URL of the signature")
     notes: str = ""

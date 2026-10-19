@@ -10,14 +10,17 @@ class AllocationInline(admin.TabularInline):
     fields = [
         "asset",
         "consumable",
+        "license",
         "quantity",
         "allocated_by",
         "allocated_at",
         "handout_note",
         "handed_out_at",
         "returned_at",
+        "return_note",
     ]
     readonly_fields = ["allocated_at"]
+    raw_id_fields = ["license"]
     autocomplete_fields = ["asset", "consumable", "allocated_by"]
 
 

@@ -33,6 +33,18 @@ def pool_consumables(category_id: UUID | None = None, model_id: UUID | None = No
     return Consumable.objects.filter(**_model_filter(category_id, model_id))
 
 
+def pool_licenses(category_id: UUID | None = None, model_id: UUID | None = None) -> QuerySet[License]:
+    """Licenses that have not expired and still have a free seat, fullest-term first."""
+    return (
+        License.objects.filter(**_model_filter(category_id, model_id))
+        .filter(Q(valid_until__isnull=True) | Q(valid_until__gte=timezone.localdate()))
+        .annotate(used=Count("assignments"))
+        .filter(used__lt=F("seats"))
+        .select_related("model__manufacturer")
+        .order_by("valid_until", "created_at")
+    )
+
+
 def free_license_seats(category_id: UUID | None = None, model_id: UUID | None = None) -> int:
     """Unassigned seats of licenses that have not expired."""
     licenses = (

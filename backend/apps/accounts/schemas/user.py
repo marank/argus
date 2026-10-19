@@ -4,6 +4,7 @@ from ninja import Schema
 
 from apps.accounts.models import User
 from apps.core.schemas import RefOut
+from apps.masterdata.schemas.refs import LocationRefOut
 
 
 class UserRefOut(Schema):
@@ -25,6 +26,7 @@ class UserOut(Schema):
     department: RefOut | None
     is_it_staff: bool
     is_terminal: bool
+    terminal_location: LocationRefOut | None
     is_active: bool
     is_ldap_user: bool
 
@@ -46,6 +48,7 @@ class UserIn(Schema):
     department: UUID | None = None
     is_staff: bool = False
     is_terminal: bool = False
+    terminal_location: UUID | None = None
     is_active: bool = True
 
 

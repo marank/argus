@@ -42,3 +42,11 @@ class Location(TimeStampedModel):
             parts.append(node.name)
             node = node.parent
         return " / ".join(reversed(parts))
+
+    def descendant_ids(self) -> set:
+        """IDs of this location and all locations below it."""
+        ids, frontier = {self.pk}, [self.pk]
+        while frontier:
+            frontier = list(Location.objects.filter(parent_id__in=frontier).values_list("pk", flat=True))
+            ids.update(frontier)
+        return ids

@@ -99,6 +99,8 @@ export default {
       'Employees may ask for “any” of this category. Turn off for accessories or consumables where only a specific model makes sense. Hidden anyway when the category has only one model.',
     terminal: 'Pickup terminal',
     terminalHelp: 'Shared account for the touch terminal; only sees prepared pickups.',
+    terminalLocation: 'Terminal site',
+    terminalLocationHelp: 'Pickup terminal accounts only: lists pickups at this location and below. Empty: all.',
     itStaff: 'IT staff',
   },
 }

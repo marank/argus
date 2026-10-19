@@ -1,6 +1,7 @@
 import type { Id } from '@/types/common'
 import type { NotificationKey } from './settings'
 import type { Ref } from './common'
+import type { LocationRef } from './masterdata'
 
 export interface UserRef {
   id: Id
@@ -18,6 +19,8 @@ export interface User extends UserRef {
   department: Ref | null
   is_it_staff: boolean
   is_terminal: boolean
+  /** Pickup terminal only: lists pickups at this location and below. */
+  terminal_location: LocationRef | null
   is_active: boolean
   /** Directory account; synced fields are overwritten at every login. */
   is_ldap_user: boolean

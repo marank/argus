@@ -30,7 +30,7 @@ router = build_crud_router(
             "department__sort_order",
             "department__name",
         ),
-        queryset=lambda: User.objects.select_related("department"),
+        queryset=lambda: User.objects.select_related("department", "terminal_location__parent"),
     ),
     tags=["users"],
 )

@@ -26,9 +26,12 @@ import HandOutModal from '@/components/reservations/HandOutModal.vue'
 import ReadyModal from '@/components/reservations/ReadyModal.vue'
 import ReservationInfo from '@/components/reservations/ReservationInfo.vue'
 import ReservationSteps from '@/components/reservations/ReservationSteps.vue'
+import ReturnModal from '@/components/reservations/ReturnModal.vue'
+import ReturnsCard from '@/components/reservations/ReturnsCard.vue'
 import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
 import type { Reservation } from '@/types/reservations'
+import { isReturnable } from '@/utils/reservations'
 
 const props = defineProps<{ id: Id }>()
 const { t } = useI18n()
@@ -44,12 +47,46 @@ const rejectReason = ref('')
 const showOrder = ref(false)
 const showReady = ref(false)
 const showHandOut = ref(false)
+const showReturn = ref(false)
 
 onMounted(async () => (reservation.value = await reservationsApi.get(props.id)))
 
 const status = computed(() => reservation.value?.status)
 const missing = computed(() => reservation.value?.items.some((i) => i.quantity_missing) ?? false)
 const preparing = computed(() => status.value === 'approved')
+/** Only license seats: nothing to collect, so marking ready hands it out right away. */
+const seatsOnly = computed(() => {
+  const allocations = (reservation.value?.items ?? []).flatMap((i) => i.allocations)
+  return allocations.length > 0 && allocations.every((a) => a.license)
+})
+
+async function markReady() {
+  if (!seatsOnly.value) {
+    showReady.value = true
+    return
+  }
+  if (await confirm(t('reservations.actions.confirmSeatsOnly'))) {
+    await act(
+      () =>
+        reservationsApi.markReady(props.id, {
+          handover_mode: reservation.value!.handover_mode,
+          skip_device_check: false,
+          pickup_at: reservation.value!.pickup_at,
+          pickup_location: reservation.value!.pickup_location?.id ?? null,
+        }),
+      t('common.saved'),
+    )
+  }
+}
+
+/** Devices or seats still with the employee, also after a permanent hand-out. */
+const lent = computed(
+  () =>
+    ['handed_out', 'completed'].includes(status.value ?? '') &&
+    (reservation.value?.items ?? []).some((i) =>
+      i.allocations.some((a) => isReturnable(a) && a.handed_out_at && !a.returned_at),
+    ),
+)
 
 const orderLines = computed<DraftLine[]>(() =>
   (reservation.value?.items ?? [])
@@ -84,12 +121,6 @@ async function autoAllocate() {
 async function reject() {
   await act(() => reservationsApi.reject(props.id, rejectReason.value))
   showReject.value = false
-}
-
-async function returnAll() {
-  if (await confirm(t('reservations.actions.confirmReturn'))) {
-    await act(() => reservationsApi.returnDevices(props.id), t('common.saved'))
-  }
 }
 
 async function reopen() {
@@ -133,9 +164,13 @@ async function cancel() {
               <template #icon><Sparkles :size="15" /></template>
               {{ t('reservations.actions.autoAllocate') }}
             </NButton>
-            <NButton type="primary" :disabled="missing" :loading="busy" @click="showReady = true">
+            <NButton type="primary" :disabled="missing" :loading="busy" @click="markReady">
               <template #icon><PackageCheck :size="15" /></template>
-              {{ t('reservations.actions.markReady') }}
+              {{
+                seatsOnly
+                  ? t('reservations.actions.completeSeats')
+                  : t('reservations.actions.markReady')
+              }}
             </NButton>
           </template>
           <NButton v-if="status === 'ready'" :loading="busy" @click="reopen">
@@ -155,7 +190,11 @@ async function cancel() {
             <template #icon><UserCheck :size="15" /></template>
             {{ t('reservations.actions.handOut') }}
           </NButton>
-          <NButton v-if="status === 'handed_out'" type="primary" :loading="busy" @click="returnAll">
+          <NButton
+            v-if="lent"
+            :type="status === 'handed_out' ? 'primary' : 'default'"
+            @click="showReturn = true"
+          >
             <template #icon><Undo2 :size="15" /></template>
             {{ t('reservations.actions.return') }}
           </NButton>
@@ -214,6 +253,7 @@ async function cancel() {
               <template v-else>{{ t('handover.deliveryPending') }}</template>
             </NAlert>
             <HandoverCard v-if="reservation.handover" :reservation="reservation" />
+            <ReturnsCard v-if="reservation.returns.length" :reservation="reservation" />
             <NCard size="small"><ReservationInfo :reservation="reservation" /></NCard>
           </div>
         </div>
@@ -233,6 +273,11 @@ async function cancel() {
       />
       <HandOutModal
         v-model:show="showHandOut"
+        :reservation="reservation"
+        @saved="(r) => (reservation = r)"
+      />
+      <ReturnModal
+        v-model:show="showReturn"
         :reservation="reservation"
         @saved="(r) => (reservation = r)"
       />

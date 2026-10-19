@@ -14,6 +14,10 @@ class Reservation(TimeStampedModel):
         submitted ─► approved ─► ready ─► handed_out ─► completed
             │            │                     (permanent requests complete on hand-out)
             └─► rejected / cancelled
+
+    Requests without anything to collect (only software) are handed out right
+    when they are marked ready. Temporary requests stay handed out until the
+    devices and license seats are back; consumables are not returned.
     """
 
     class Status(models.TextChoices):
@@ -37,6 +41,8 @@ class Reservation(TimeStampedModel):
 
     OPEN_STATUSES = (Status.SUBMITTED, Status.APPROVED, Status.READY, Status.HANDED_OUT)
     CANCELLABLE_STATUSES = (Status.SUBMITTED, Status.APPROVED, Status.READY)
+    # Devices handed out permanently can still be taken back later.
+    RETURNABLE_STATUSES = (Status.HANDED_OUT, Status.COMPLETED)
 
     number = models.CharField(_("number"), max_length=30, unique=True, blank=True)
     requester = models.ForeignKey(
@@ -94,6 +100,15 @@ class Reservation(TimeStampedModel):
         null=True,
         blank=True,
         related_name="handled_reservations",
+    )
+    prepared_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("prepared by"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+        help_text=_("Who marked the request ready; shown as handing out at the pickup terminal."),
     )
     approved_at = models.DateTimeField(_("approved at"), null=True, blank=True)
     handed_out_at = models.DateTimeField(_("handed out at"), null=True, blank=True)

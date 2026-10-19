@@ -116,7 +116,9 @@ def test_software_is_not_a_device(it_client):
     assert response.status_code == 422
 
 
-def test_software_request_needs_no_allocation(employee_client, it_client):
+def test_software_request_is_filled_with_a_license_seat(employee_client, it_client):
+    from apps.inventory.models import LicenseAssignment
+
     acrobat = AssetModel.objects.get(name="Acrobat Pro")
     start = date.today() + timedelta(days=1)
     response = employee_client.post(
@@ -131,18 +133,62 @@ def test_software_request_needs_no_allocation(employee_client, it_client):
     )
     assert response.status_code == 201, response.content
     reservation = response.json()
-    item = reservation["items"][0]
+    rid, item = reservation["id"], reservation["items"][0]
     assert item["is_software"] is True
 
     response = it_client.post(
-        f"/api/reservations/{reservation['id']}/approve",
+        f"/api/reservations/{rid}/approve",
         {"items": [{"id": item["id"], "quantity_approved": 1}]},
         content_type=JSON,
     )
+    assert response.json()["items"][0]["quantity_missing"] == 1
+    # Without a seat the request cannot be marked ready.
+    assert it_client.post(f"/api/reservations/{rid}/ready", {}, content_type=JSON).status_code == 409
+
+    candidates = it_client.get(f"/api/reservations/items/{item['id']}/candidates").json()
+    assert candidates["licenses"] and candidates["licenses"][0]["free_seats"] > 0
+    assert it_client.post(f"/api/reservations/{rid}/auto-allocate").json()["allocated"] == 1
+    employee = User.objects.get(username="employee")
+    assert LicenseAssignment.objects.filter(license__model=acrobat, user=employee).exists()
+
+    # Nothing to collect: marking ready hands it out and completes the permanent request.
+    response = it_client.post(
+        f"/api/reservations/{rid}/ready", {"handover_mode": "pickup"}, content_type=JSON
+    )
     assert response.status_code == 200, response.content
-    assert response.json()["items"][0]["quantity_missing"] == 0
-    response = it_client.post(f"/api/reservations/{reservation['id']}/ready", {}, content_type=JSON)
+    assert response.json()["status"] == "completed"
+    assert response.json()["items"][0]["allocations"][0]["license"]["model"]["name"] == "Acrobat Pro"
+
+
+def test_temporary_software_seat_is_taken_back(employee_client, it_client):
+    from apps.inventory.models import LicenseAssignment
+
+    acrobat = AssetModel.objects.get(name="Acrobat Pro")
+    start = date.today()
+    rid = employee_client.post(
+        "/api/reservations",
+        {
+            "title": "Project",
+            "duration": "temporary",
+            "start_date": start.isoformat(),
+            "end_date": (start + timedelta(days=5)).isoformat(),
+            "items": [{"asset_model": str(acrobat.pk), "quantity": 1}],
+        },
+        content_type=JSON,
+    ).json()["id"]
+    it_client.post(f"/api/reservations/{rid}/approve", {"items": []}, content_type=JSON)
+    it_client.post(f"/api/reservations/{rid}/auto-allocate")
+    reservation = it_client.post(f"/api/reservations/{rid}/ready", {}, content_type=JSON).json()
+    assert reservation["status"] == "handed_out"
+    employee = User.objects.get(username="employee")
+
+    # Removing the seat on the license page counts as the return.
+    assignment = LicenseAssignment.objects.get(license__model=acrobat, user=employee)
+    response = it_client.delete(
+        f"/api/inventory/licenses/{assignment.license_id}/assignments/{assignment.pk}"
+    )
     assert response.status_code == 200, response.content
+    assert it_client.get(f"/api/reservations/{rid}").json()["status"] == "completed"
 
 
 def test_catalog_shows_free_seats_to_it(it_client):

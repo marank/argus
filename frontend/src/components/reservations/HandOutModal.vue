@@ -9,6 +9,7 @@ import { reservationsApi } from '@/api/reservations'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import { useAction } from '@/composables/useAction'
 import type { Reservation } from '@/types/reservations'
+import { allocationCode, allocationModel } from '@/utils/reservations'
 
 /** Hand-out documented by IT without signature: collected at the desk or delivered. */
 const props = defineProps<{ reservation: Reservation }>()
@@ -94,12 +95,8 @@ async function save() {
       </div>
       <div class="eyebrow">{{ t('handover.deviceNotes') }}</div>
       <div v-for="allocation in allocations" :key="allocation.id" class="device">
-        <span class="mono">{{
-          allocation.asset?.inventory_number ?? `${allocation.quantity}×`
-        }}</span>
-        <span class="name">{{
-          allocation.asset?.model.full_name ?? allocation.consumable?.model.full_name
-        }}</span>
+        <span class="mono">{{ allocationCode(allocation) }}</span>
+        <span class="name">{{ allocationModel(allocation) }}</span>
         <NInput
           v-model:value="form.allocationNotes[allocation.id]"
           size="small"

@@ -15,7 +15,7 @@ import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
 import { useFormat } from '@/composables/useFormat'
 import type { Reservation, ReservationItem } from '@/types/reservations'
-import { itemLabel } from '@/utils/reservations'
+import { allocationCode, allocationModel, itemLabel } from '@/utils/reservations'
 
 const props = defineProps<{ id: Id }>()
 const { t } = useI18n()
@@ -74,7 +74,7 @@ const columns: DataTableColumns<ReservationItem> = [
       h(
         'span',
         { class: 'mono muted' },
-        i.allocations.map((a) => a.asset?.inventory_number ?? `${a.quantity}×`).join(', ') || '—',
+        i.allocations.map((a) => allocationCode(a) || allocationModel(a)).join(', ') || '—',
       ),
   },
 ]

@@ -45,3 +45,19 @@ def assign_license(
     if asset_id and not Asset.objects.filter(pk=asset_id).exists():
         raise BusinessError(_("Device not found."))
     return LicenseAssignment.objects.create(license=license, assigned_by=user, note=note.strip(), **target)
+
+
+@transaction.atomic
+def unassign_license(assignment: LicenseAssignment, user) -> None:
+    """Remove a seat; a seat handed out with a request counts as returned there."""
+    from apps.reservations.models import ReservationAllocation
+    from apps.reservations.services import workflow
+
+    allocation = (
+        ReservationAllocation.objects.filter(license_assignment=assignment)
+        .select_related("item__reservation")
+        .first()
+    )
+    if allocation:
+        workflow.release_from_elsewhere(allocation, user)
+    LicenseAssignment.objects.filter(pk=assignment.pk).delete()

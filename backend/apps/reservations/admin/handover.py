@@ -32,6 +32,7 @@ class HandoverAdmin(admin.ModelAdmin):
         "location",
         "notes",
         "handed_out_by",
+        "recorded_by",
         "handed_out_at",
         "signature_preview",
     ]

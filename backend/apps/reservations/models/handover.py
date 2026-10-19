@@ -41,12 +41,23 @@ class Handover(UUIDModel):
     signature = models.TextField(_("signature"), blank=True, help_text=_("PNG image as data URL."))
     notes = models.TextField(_("notes"), blank=True)
     location = models.CharField(_("delivered to"), max_length=150, blank=True)
+    # The IT staff member responsible for the hand-out; at the terminal the one who
+    # prepared the pickup unless the terminal names someone else.
     handed_out_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_("handed out by"),
         on_delete=models.SET_NULL,
         null=True,
         related_name="+",
+    )
+    recorded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("recorded by"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+        help_text=_("The account the hand-out was recorded with, e.g. the pickup terminal."),
     )
     handed_out_at = models.DateTimeField(_("handed out at"), auto_now_add=True)
 

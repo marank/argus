@@ -146,6 +146,8 @@ def receive(order: PurchaseOrder, receipts: list[dict], user) -> PurchaseOrder:
                 take = min(quantity, item.quantity_missing)
                 if take:
                     workflow.allocate_consumable(item, consumable, take, user)
+        elif model.is_software:
+            pass  # Seats are recorded as a license under Licenses, not as devices.
         else:
             serials = serials or [""] * quantity
             for serial in serials:

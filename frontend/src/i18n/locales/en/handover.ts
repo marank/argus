@@ -30,5 +30,6 @@ export default {
   deviceNotePlaceholder: 'e.g. scratch on the lid, charger missing',
   handedOutAt: 'Handed out',
   handedOutBy: 'Handed out by',
+  recordedBy: 'Recorded via',
   signature: 'Signature',
 }

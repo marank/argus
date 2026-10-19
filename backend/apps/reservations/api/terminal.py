@@ -11,7 +11,12 @@ from apps.accounts.models import User
 from apps.core.api.security import terminal_auth
 from apps.reservations.models import Reservation
 from apps.reservations.schemas.reservation import ReservationOut
-from apps.reservations.schemas.terminal import TerminalPersonOut, TerminalPickupOut, TerminalSignIn
+from apps.reservations.schemas.terminal import (
+    TerminalPersonOut,
+    TerminalPickupOut,
+    TerminalSignIn,
+    TerminalStaffOut,
+)
 from apps.reservations.services import workflow
 
 from .queries import get_for_update, reservation_queryset
@@ -19,16 +24,21 @@ from .queries import get_for_update, reservation_queryset
 router = Router(tags=["pickup terminal"], auth=terminal_auth)
 
 
-def pickups():
-    return reservation_queryset().filter(
+def pickups(user):
+    """Prepared pickups; a terminal with a site only lists pickups at that site."""
+    queryset = reservation_queryset().filter(
         status=Reservation.Status.READY, handover_mode=Reservation.HandoverMode.PICKUP
     )
+    site = getattr(user, "terminal_location", None) if getattr(user, "is_terminal", False) else None
+    if site is not None:
+        queryset = queryset.filter(pickup_location_id__in=site.descendant_ids())
+    return queryset
 
 
 @router.get("/pickups", response=list[TerminalPickupOut])
 def list_pickups(request: HttpRequest, q: str | None = None):
     """Prepared pickups, next pickup first."""
-    queryset = pickups()
+    queryset = pickups(request.user)
     if q:
         queryset = queryset.filter(
             Q(number__icontains=q)
@@ -41,15 +51,13 @@ def list_pickups(request: HttpRequest, q: str | None = None):
 
 @router.get("/pickups/{uuid:pk}", response=ReservationOut)
 def get_pickup(request: HttpRequest, pk: UUID):
-    return get_object_or_404(pickups(), pk=pk)
+    return get_object_or_404(pickups(request.user), pk=pk)
 
 
 @router.post("/pickups/{uuid:pk}/sign", response=ReservationOut)
 def sign(request: HttpRequest, pk: UUID, payload: TerminalSignIn):
     """Complete the hand-out with the collecting person's signature."""
-    reservation = get_object_or_404(
-        Reservation, pk=pk, status=Reservation.Status.READY, handover_mode=Reservation.HandoverMode.PICKUP
-    )
+    reservation = get_object_or_404(pickups(request.user), pk=pk)
     workflow.hand_out(
         get_for_update(reservation.pk),
         request.user,
@@ -59,8 +67,15 @@ def sign(request: HttpRequest, pk: UUID, payload: TerminalSignIn):
         signature=payload.signature,
         notes=payload.notes,
         allocation_notes={n.allocation: n.note for n in payload.allocation_notes},
+        handed_out_by_id=payload.handed_out_by,
     )
     return get_object_or_404(reservation_queryset(), pk=pk)
+
+
+@router.get("/staff", response=list[TerminalStaffOut])
+def staff(request: HttpRequest):
+    """IT staff members, to name who hands out when it is not the one who prepared the pickup."""
+    return list(User.objects.filter(is_active=True, is_staff=True, is_terminal=False))
 
 
 @router.get("/people", response=list[TerminalPersonOut])

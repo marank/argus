@@ -43,6 +43,15 @@ class User(AbstractUser):
         default=False,
         help_text=_("Shared account for the pickup terminal; it only sees prepared hand-outs."),
     )
+    terminal_location = models.ForeignKey(
+        "masterdata.Location",
+        verbose_name=_("terminal site"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+        help_text=_("Pickup terminal only: lists pickups at this location and below; empty lists all."),
+    )
     ldap_dn = models.CharField(
         _("LDAP DN"),
         max_length=500,

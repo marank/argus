@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Id } from '@/types/common'
 import { ScanLine, X } from '@lucide/vue'
-import { NButton, NInput, NInputNumber, NPopselect, NProgress } from 'naive-ui'
+import { NButton, NInput, NInputNumber, NPopselect, NProgress, NSelect } from 'naive-ui'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -22,6 +22,36 @@ const { busy, run } = useAction()
 const code = ref('')
 const candidates = ref<Candidates | null>(null)
 const consumableQuantity = ref(1)
+const licenseId = ref<Id | null>(null)
+const deviceId = ref<Id | null>(null)
+
+const licenseOptions = computed(() =>
+  (candidates.value?.licenses ?? []).map((l) => ({
+    value: l.id,
+    label: `${l.model.full_name}${l.reference ? ` (${l.reference})` : ''} · ${t('reservations.allocation.freeSeats', { count: l.free_seats })}`,
+  })),
+)
+const chosenLicense = computed(() =>
+  candidates.value?.licenses?.find((l) => l.id === licenseId.value),
+)
+const deviceOptions = computed(() =>
+  (candidates.value?.devices ?? []).map((d) => ({
+    value: d.id,
+    label: `${d.inventory_number} · ${d.model.full_name}`,
+  })),
+)
+const canAssignSeat = computed(
+  () =>
+    Boolean(chosenLicense.value) &&
+    (chosenLicense.value?.assign_to === 'user' || Boolean(deviceId.value)),
+)
+
+async function assignSeat() {
+  if (!licenseId.value) return
+  await allocate({ license: licenseId.value, ...(deviceId.value ? { asset: deviceId.value } : {}) })
+  licenseId.value = null
+  deviceId.value = null
+}
 
 const target = computed(() => props.item.quantity_approved ?? props.item.quantity_requested)
 const percent = computed(() =>
@@ -39,7 +69,13 @@ async function loadCandidates() {
   candidates.value = await reservationsApi.candidates(props.item.id)
 }
 
-async function allocate(data: { asset?: Id; consumable?: Id; quantity?: number; code?: string }) {
+async function allocate(data: {
+  asset?: Id
+  consumable?: Id
+  license?: Id
+  quantity?: number
+  code?: string
+}) {
   const updated = await run(() =>
     reservationsApi.allocate(props.reservation.id, { item: props.item.id, ...data }),
   )
@@ -71,7 +107,7 @@ async function remove(allocationId: Id) {
         </div>
         <div v-if="item.note" class="muted small">{{ item.note }}</div>
       </div>
-      <div v-if="!item.is_software" class="counts mono">
+      <div class="counts mono">
         <span :class="{ done: !item.quantity_missing }">{{ item.quantity_allocated }}</span>
         <span class="muted">/ {{ target }}</span>
         <span
@@ -83,14 +119,7 @@ async function remove(allocationId: Id) {
         </span>
       </div>
     </div>
-    <div v-if="item.is_software" class="software-hint muted small">
-      {{ t('reservations.allocation.softwareHint') }}
-      <RouterLink :to="{ name: 'licenses' }">{{
-        t('reservations.allocation.toLicenses')
-      }}</RouterLink>
-    </div>
     <NProgress
-      v-else
       type="line"
       :percentage="percent"
       :show-indicator="false"
@@ -114,6 +143,19 @@ async function remove(allocationId: Id) {
           <span>{{ allocation.asset.model.full_name }}</span>
           <span class="mono muted">{{ allocation.asset.serial_number }}</span>
         </template>
+        <template v-else-if="allocation.license">
+          <RouterLink
+            :to="{ name: 'license', params: { id: allocation.license.id } }"
+            class="mono"
+            >{{ t('reservations.allocation.seat') }}</RouterLink
+          >
+          <span>{{ allocation.license.model.full_name }}</span>
+          <span class="mono muted">{{
+            allocation.license.device
+              ? allocation.license.device.inventory_number
+              : reservation.requester.display_name
+          }}</span>
+        </template>
         <template v-else-if="allocation.consumable">
           <span class="mono">{{ allocation.quantity }}×</span>
           <span>{{ allocation.consumable.model.full_name }}</span>
@@ -127,7 +169,11 @@ async function remove(allocationId: Id) {
           allocation.handout_note
         }}</span>
         <span class="state">
-          <StatusTag v-if="allocation.returned_at" group="assetStatus" value="in_stock" />
+          <StatusTag
+            v-if="allocation.returned_at"
+            group="assetStatus"
+            :value="allocation.returned_damaged ? 'in_repair' : 'in_stock'"
+          />
           <span v-else-if="allocation.handed_out_at" class="muted small">{{
             t('reservations.allocation.handedOut')
           }}</span>
@@ -144,7 +190,36 @@ async function remove(allocationId: Id) {
       </li>
     </ul>
 
-    <div v-if="editable && item.quantity_missing && !item.is_free_text" class="tools">
+    <div v-if="editable && item.quantity_missing && item.is_software" class="tools">
+      <NSelect
+        v-model:value="licenseId"
+        size="small"
+        :options="licenseOptions"
+        :placeholder="t('reservations.allocation.chooseLicense')"
+        class="pick"
+        @focus="!candidates && loadCandidates()"
+      />
+      <NSelect
+        v-if="chosenLicense?.assign_to === 'device'"
+        v-model:value="deviceId"
+        size="small"
+        :options="deviceOptions"
+        :placeholder="t('reservations.allocation.chooseDevice')"
+        class="pick"
+      />
+      <NButton size="small" :disabled="!canAssignSeat" :loading="busy" @click="assignSeat">{{
+        t('reservations.allocation.assignSeat')
+      }}</NButton>
+      <span v-if="candidates && !licenseOptions.length" class="muted small">
+        {{ t('reservations.allocation.noSeats') }}
+        <RouterLink :to="{ name: 'licenses' }">{{ t('reservations.allocation.toLicenses') }}</RouterLink>
+      </span>
+    </div>
+
+    <div
+      v-if="editable && item.quantity_missing && !item.is_free_text && !item.is_software"
+      class="tools"
+    >
       <NInput
         v-model:value="code"
         size="small"
@@ -194,10 +269,8 @@ async function remove(allocationId: Id) {
 </template>
 
 <style scoped>
-.software-hint {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 8px;
+.pick {
+  width: 280px;
 }
 .item {
   display: grid;

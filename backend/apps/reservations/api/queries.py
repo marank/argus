@@ -6,7 +6,7 @@ from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
 
 from apps.core.api.security import is_it_staff
-from apps.reservations.models import Reservation, ReservationAllocation, ReservationItem
+from apps.reservations.models import DeviceReturn, Reservation, ReservationAllocation, ReservationItem
 
 
 def reservation_queryset() -> QuerySet[Reservation]:
@@ -14,6 +14,9 @@ def reservation_queryset() -> QuerySet[Reservation]:
         "asset__model__manufacturer",
         "consumable__model__manufacturer",
         "consumable__location__parent",
+        "license__model__manufacturer",
+        "license__model__category",
+        "license_assignment__asset__model__manufacturer",
         "allocated_by",
     )
     items = (
@@ -29,10 +32,15 @@ def reservation_queryset() -> QuerySet[Reservation]:
         "requester__department",
         "created_by",
         "handled_by",
+        "prepared_by",
         "pickup_location__parent",
         "handover__received_by",
         "handover__handed_out_by",
-    ).prefetch_related(Prefetch("items", queryset=items))
+        "handover__recorded_by",
+    ).prefetch_related(
+        Prefetch("items", queryset=items),
+        Prefetch("returns", queryset=DeviceReturn.objects.select_related("returned_by")),
+    )
 
 
 def visible_reservations(request: HttpRequest) -> QuerySet[Reservation]:

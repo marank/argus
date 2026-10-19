@@ -113,5 +113,7 @@ def assign(request: HttpRequest, pk: UUID, payload: LicenseAssignIn):
 
 @router.delete("/{uuid:pk}/assignments/{uuid:assignment_id}", response=LicenseDetailOut)
 def unassign(request: HttpRequest, pk: UUID, assignment_id: UUID):
-    get_object_or_404(License, pk=pk).assignments.filter(pk=assignment_id).delete()
+    assignment = get_object_or_404(License, pk=pk).assignments.filter(pk=assignment_id).first()
+    if assignment:
+        license_service.unassign_license(assignment, request.user)
     return get_license(request, pk)

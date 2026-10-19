@@ -8,6 +8,7 @@ import { useI18n } from 'vue-i18n'
 import { reservationsApi } from '@/api/reservations'
 import { useFormat } from '@/composables/useFormat'
 import type { Reservation } from '@/types/reservations'
+import { allocationModel } from '@/utils/reservations'
 
 /** Printable handover record (A4), opened from the reservation in a new tab. */
 const props = defineProps<{ id: Id }>()
@@ -23,14 +24,32 @@ const rows = computed(() =>
   (reservation.value?.items ?? []).flatMap((item) =>
     item.allocations.map((a) => ({
       id: a.id,
-      number: a.asset?.inventory_number ?? '',
-      model: a.asset?.model.full_name ?? a.consumable?.model.full_name ?? item.label,
+      number: a.asset?.inventory_number ?? a.license?.device?.inventory_number ?? '',
+      model: allocationModel(a) || item.label,
       serial: a.asset?.serial_number ?? '',
       quantity: a.quantity,
       note: a.handout_note,
     })),
   ),
 )
+
+/** Each return with what came back, the note and whether it came back damaged. */
+const returns = computed(() => {
+  const allocations = (reservation.value?.items ?? []).flatMap((item) => item.allocations)
+  return (reservation.value?.returns ?? []).map((r) => ({
+    ...r,
+    rows: allocations
+      .filter((a) => a.device_return === r.id)
+      .map((a) => ({
+        id: a.id,
+        number: a.asset?.inventory_number ?? a.license?.device?.inventory_number ?? '',
+        model: allocationModel(a),
+        serial: a.asset?.serial_number ?? '',
+        damaged: a.returned_damaged,
+        note: a.return_note,
+      })),
+  }))
+})
 </script>
 
 <template>
@@ -85,6 +104,15 @@ const rows = computed(() =>
           <dt>{{ t('handover.handedOutBy') }}</dt>
           <dd>{{ reservation.handover.handed_out_by?.display_name ?? '—' }}</dd>
         </div>
+        <div
+          v-if="
+            reservation.handover.recorded_by &&
+            reservation.handover.recorded_by.id !== reservation.handover.handed_out_by?.id
+          "
+        >
+          <dt>{{ t('handover.recordedBy') }}</dt>
+          <dd>{{ reservation.handover.recorded_by.display_name }}</dd>
+        </div>
         <div v-if="reservation.handover.location">
           <dt>{{ t('handover.deliveredTo') }}</dt>
           <dd>{{ reservation.handover.location }}</dd>
@@ -121,6 +149,42 @@ const rows = computed(() =>
         <div class="line" />
         <span>{{ t('handover.signature') }} · {{ reservation.handover?.received_by_name }}</span>
       </div>
+    </section>
+
+    <section v-for="r in returns" :key="r.id" class="return">
+      <h2>{{ t('reservations.returning.title') }}</h2>
+      <dl class="facts">
+        <div>
+          <dt>{{ t('reservations.returning.at') }}</dt>
+          <dd class="mono">{{ dateTime(r.returned_at) }}</dd>
+        </div>
+        <div>
+          <dt>{{ t('reservations.returning.by') }}</dt>
+          <dd>{{ r.returned_by?.display_name ?? '—' }}</dd>
+        </div>
+      </dl>
+      <table>
+        <thead>
+          <tr>
+            <th>{{ t('inventory.fields.inventoryNumber') }}</th>
+            <th>{{ t('inventory.fields.model') }}</th>
+            <th>{{ t('inventory.fields.serialNumber') }}</th>
+            <th>{{ t('common.notes') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="row in r.rows" :key="row.id">
+            <td class="mono">{{ row.number }}</td>
+            <td>{{ row.model }}</td>
+            <td class="mono">{{ row.serial }}</td>
+            <td>
+              <strong v-if="row.damaged">{{ t('reservations.returning.damaged') }}</strong>
+              {{ row.note }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p v-if="r.notes" class="notes">{{ r.notes }}</p>
     </section>
   </div>
 </template>
@@ -206,6 +270,16 @@ th {
   height: 90px;
   max-width: 100%;
   object-fit: contain;
+}
+.return {
+  margin-top: 40px;
+  padding-top: 18px;
+  border-top: 2px solid #0b1220;
+  break-inside: avoid;
+}
+.return h2 {
+  margin: 0;
+  font-size: 17px;
 }
 .line {
   border-bottom: 1px solid #0b1220;

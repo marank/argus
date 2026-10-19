@@ -423,7 +423,7 @@ msgstr "Ungültiger Platzhalter: %(error)s"
 #: apps/dashboard/api/calendar.py:21
 #, python-format
 msgid "Choose a range of at most %(days)s days."
-msgstr ""
+msgstr "Wählen Sie einen Zeitraum von höchstens %(days)s Tagen."
 
 #: apps/dashboard/apps.py:8
 msgid "Dashboard"
@@ -1904,3 +1904,76 @@ msgstr ""
 msgid "%(asset)s is set aside for %(number)s. Remove it there first."
 msgstr ""
 "%(asset)s ist für %(number)s zurückgelegt. Entfernen Sie es zuerst dort."
+
+msgid "terminal site"
+msgstr "Standort des Terminals"
+
+msgid ""
+"Pickup terminal only: lists pickups at this location and below; empty lists "
+"all."
+msgstr ""
+"Nur für das Abholterminal: zeigt Abholungen an diesem Standort und darunter; "
+"leer zeigt alle."
+
+msgid "return"
+msgstr "Rücknahme"
+
+msgid "returns"
+msgstr "Rücknahmen"
+
+msgid "returned damaged"
+msgstr "defekt zurück"
+
+msgid "return note"
+msgstr "Rücknahmevermerk"
+
+msgid "E.g. the condition when it came back."
+msgstr "Z. B. der Zustand bei der Rückgabe."
+
+msgid "Allocate either a device, a consumable quantity or a license seat."
+msgstr ""
+"Weisen Sie entweder ein Gerät, eine Menge Verbrauchsmaterial oder einen "
+"Lizenzplatz zu."
+
+msgid "taken back by"
+msgstr "zurückgenommen von"
+
+msgid "recorded by"
+msgstr "erfasst über"
+
+msgid "The account the hand-out was recorded with, e.g. the pickup terminal."
+msgstr "Das Konto, mit dem die Ausgabe erfasst wurde, z. B. das Abholterminal."
+
+msgid "prepared by"
+msgstr "bereitgestellt von"
+
+msgid ""
+"Who marked the request ready; shown as handing out at the pickup terminal."
+msgstr ""
+"Wer die Anforderung bereitgemeldet hat; erscheint bei Abholung am Terminal "
+"als ausgebend."
+
+msgid "The start date must not be in the past."
+msgstr "Das Startdatum darf nicht in der Vergangenheit liegen."
+
+#, python-format
+msgid "All approved licenses for “%(item)s” are already allocated."
+msgstr "Alle bestätigten Lizenzen für „%(item)s“ sind bereits zugewiesen."
+
+#, python-format
+msgid "%(asset)s is not used by %(name)s."
+msgstr "%(asset)s wird nicht von %(name)s genutzt."
+
+msgid "Choose a member of the IT department."
+msgstr "Wählen Sie jemanden aus der IT-Abteilung."
+
+msgid "Nothing is left to take back."
+msgstr "Es ist nichts mehr zurückzunehmen."
+
+#, python-format
+msgid "Returned damaged from %(number)s"
+msgstr "Defekt zurück aus %(number)s"
+
+#, python-format
+msgid "This is set aside for %(number)s. Remove it there first."
+msgstr "Das ist für %(number)s zurückgelegt. Entfernen Sie es zuerst dort."

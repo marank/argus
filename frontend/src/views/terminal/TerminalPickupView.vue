@@ -12,7 +12,7 @@ import {
   X,
 } from '@lucide/vue'
 import { onClickOutside, useDebounceFn, useIdle } from '@vueuse/core'
-import { NButton, NInput, NSkeleton } from 'naive-ui'
+import { NButton, NInput, NSelect, NSkeleton } from 'naive-ui'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
@@ -22,8 +22,9 @@ import SignaturePad from '@/components/terminal/SignaturePad.vue'
 import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
 import { useFormat } from '@/composables/useFormat'
-import type { Allocation, Reservation, TerminalPerson } from '@/types/reservations'
+import type { Allocation, Reservation, TerminalPerson, TerminalStaff } from '@/types/reservations'
 import { categoryIcon } from '@/utils/icons'
+import { allocationCode, allocationModel } from '@/utils/reservations'
 
 /**
  * Pickup at the shared terminal in three steps:
@@ -60,9 +61,26 @@ const person = ref<TerminalPerson | null>(null)
 const pad = ref<InstanceType<typeof SignaturePad> | null>(null)
 const signed = ref(false)
 
+/** IT member named on the record: who prepared the pickup, unless changed here. */
+const handedOutBy = ref<Id | null>(null)
+const staff = ref<TerminalStaff[]>([])
+const changingStaff = ref(false)
+const staffOptions = computed(() => staff.value.map((s) => ({ value: s.id, label: s.display_name })))
+const handedOutByName = computed(() => {
+  const chosen = staff.value.find((s) => s.id === handedOutBy.value)
+  const preparer = reservation.value?.prepared_by ?? reservation.value?.handled_by
+  return chosen?.display_name ?? preparer?.display_name ?? '—'
+})
+
+async function changeStaff() {
+  if (!staff.value.length) staff.value = await terminalApi.staff()
+  changingStaff.value = true
+}
+
 onMounted(async () => {
   try {
     reservation.value = await terminalApi.get(props.id)
+    handedOutBy.value = reservation.value.prepared_by?.id ?? reservation.value.handled_by?.id ?? null
     // IT can skip the check, e.g. for sealed devices: start with who collects.
     if (reservation.value.skip_device_check) step.value = 'person'
   } catch {
@@ -72,7 +90,8 @@ onMounted(async () => {
 
 const devices = computed(() =>
   (reservation.value?.items ?? []).flatMap((item) =>
-    item.allocations.map((allocation) => ({ item, allocation })),
+    // License seats are already assigned; only things to take along are checked here.
+    item.allocations.filter((a) => !a.license).map((allocation) => ({ item, allocation })),
   ),
 )
 
@@ -102,13 +121,14 @@ watch(personQuery, () => (dropdownOpen.value = true))
 onClickOutside(personBox, () => (dropdownOpen.value = false))
 
 function deviceLabel(allocation: Allocation) {
-  return allocation.asset?.model.full_name ?? allocation.consumable?.model.full_name ?? ''
+  return allocationModel(allocation)
 }
 
 async function confirm() {
   if (!reservation.value || !pad.value || pad.value.isEmpty()) return
   const done = await run(() =>
     terminalApi.sign(reservation.value!.id, {
+      handed_out_by: handedOutBy.value,
       received_by:
         collector.value === 'requester'
           ? reservation.value!.requester.id
@@ -371,6 +391,22 @@ async function cancelPickup() {
               }}</strong>
               <strong v-else>{{ t('terminal.keep') }}</strong>
             </div>
+            <div class="handed-out-by">
+              <span class="eyebrow">{{ t('handover.handedOutBy') }}</span>
+              <NSelect
+                v-if="changingStaff"
+                v-model:value="handedOutBy"
+                size="large"
+                :options="staffOptions"
+                filterable
+              />
+              <template v-else>
+                <strong>{{ handedOutByName }}</strong>
+                <button type="button" class="link" @click="changeStaff">
+                  {{ t('terminal.changeStaff') }}
+                </button>
+              </template>
+            </div>
           </div>
           <div class="eyebrow">{{ t('terminal.deviceCount', devices.length) }}</div>
           <ul class="compact">
@@ -383,9 +419,7 @@ async function cancelPickup() {
               />
               <span class="compact-text">
                 <span>{{ deviceLabel(allocation) }}</span>
-                <span class="mono muted">{{
-                  allocation.asset?.inventory_number ?? `${allocation.quantity}×`
-                }}</span>
+                <span class="mono muted">{{ allocationCode(allocation) }}</span>
                 <span v-if="notes[allocation.id]?.trim()" class="note">{{
                   notes[allocation.id]
                 }}</span>
@@ -420,6 +454,19 @@ async function cancelPickup() {
 </template>
 
 <style scoped>
+.handed-out-by {
+  grid-column: 1 / -1;
+}
+.link {
+  justify-self: start;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ar-primary);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
 .pickup {
   display: grid;
   gap: 20px;

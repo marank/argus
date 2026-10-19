@@ -62,14 +62,14 @@ class ReservationAdmin(admin.ModelAdmin):
     list_filter = ["status", "duration", "handover_mode", "requester__department"]
     search_fields = ["number", "title", "requester__username", "requester__last_name"]
     list_select_related = ["requester"]
-    autocomplete_fields = ["requester", "created_by", "handled_by", "pickup_location"]
+    autocomplete_fields = ["requester", "created_by", "handled_by", "prepared_by", "pickup_location"]
     date_hierarchy = "start_date"
     readonly_fields = ["number", "approved_at", "handed_out_at", "completed_at", "created_at", "updated_at"]
     fieldsets = [
         (None, {"fields": ["number", "title", "requester", "created_by", "status"]}),
         (_("Period"), {"fields": ["duration", "start_date", "end_date"]}),
         (_("Pickup"), {"fields": ["handover_mode", "pickup_at", "pickup_location"]}),
-        (_("Notes"), {"fields": ["notes", "it_comment", "handled_by"]}),
+        (_("Notes"), {"fields": ["notes", "it_comment", "handled_by", "prepared_by"]}),
         (
             _("History"),
             {

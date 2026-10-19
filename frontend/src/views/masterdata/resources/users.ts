@@ -2,10 +2,12 @@ import { Building2 } from '@lucide/vue'
 import { h } from 'vue'
 
 import { departmentsApi, usersApi } from '@/api/accounts'
+import { locationsApi } from '@/api/masterdata'
 import { bool, mono, text } from '@/components/crud/cells'
 import { defineResource } from '@/components/crud/types'
 import { i18n } from '@/i18n'
 import type { User } from '@/types/accounts'
+import type { Location } from '@/types/masterdata'
 
 export default defineResource<User>({
   key: 'users',
@@ -122,6 +124,15 @@ export default defineResource<User>({
           type: 'switch',
           help: 'masterdata.fields.terminalHelp',
         },
+        {
+          key: 'terminal_location',
+          label: 'masterdata.fields.terminalLocation',
+          type: 'entity',
+          fetcher: locationsApi.list,
+          display: (l: Location) => l.full_name,
+          initial: (u: User) => u.terminal_location,
+          help: 'masterdata.fields.terminalLocationHelp',
+        },
       ],
     },
   ],
@@ -136,6 +147,7 @@ export default defineResource<User>({
     department: null,
     is_staff: false,
     is_terminal: false,
+    terminal_location: null,
     is_active: true,
   }),
   toForm: (u) => ({
@@ -149,6 +161,7 @@ export default defineResource<User>({
     department: u.department?.id ?? null,
     is_staff: u.is_it_staff,
     is_terminal: u.is_terminal,
+    terminal_location: u.terminal_location?.id ?? null,
     is_active: u.is_active,
   }),
 })

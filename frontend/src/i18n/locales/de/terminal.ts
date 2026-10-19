@@ -10,6 +10,7 @@ export default {
   devicesHint: 'Vermerken Sie, wenn etwas nicht stimmt, z. B. einen sichtbaren Schaden.',
   deviceCount: '{n} Gerät | {n} Geräte',
   returnBy: 'Rückgabe bis {date}',
+  changeStaff: 'Ändern',
   keep: 'Dauerhaft',
   itNote: 'Vermerk der IT: {note}',
   addNote: 'Hinweis erfassen',

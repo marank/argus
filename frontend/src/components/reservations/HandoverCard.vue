@@ -7,6 +7,7 @@ import { useI18n } from 'vue-i18n'
 import DetailGrid, { type DetailEntry } from '@/components/common/DetailGrid.vue'
 import { useFormat } from '@/composables/useFormat'
 import type { Reservation } from '@/types/reservations'
+import { allocationCode, allocationModel } from '@/utils/reservations'
 
 const props = defineProps<{ reservation: Reservation }>()
 const { t } = useI18n()
@@ -19,7 +20,7 @@ const deviceNotes = computed(() =>
     .filter((a) => a.handout_note)
     .map((a) => ({
       id: a.id,
-      label: a.asset?.inventory_number ?? a.consumable?.model.full_name,
+      label: allocationCode(a) || allocationModel(a),
       note: a.handout_note,
     })),
 )
@@ -31,6 +32,9 @@ const entries = computed<DetailEntry[]>(() => {
     { label: t('handover.receivedBy'), value: h.received_by_name },
     { label: t('handover.handedOutAt'), value: dateTime(h.handed_out_at), mono: true },
     { label: t('handover.handedOutBy'), value: h.handed_out_by?.display_name },
+    ...(h.recorded_by && h.recorded_by.id !== h.handed_out_by?.id
+      ? [{ label: t('handover.recordedBy'), value: h.recorded_by.display_name }]
+      : []),
     ...(h.location ? [{ label: t('handover.deliveredTo'), value: h.location }] : []),
     ...(h.notes ? [{ label: t('common.notes'), value: h.notes, wide: true }] : []),
   ]

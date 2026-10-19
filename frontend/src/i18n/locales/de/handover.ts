@@ -30,5 +30,6 @@ export default {
   deviceNotePlaceholder: 'z. B. Kratzer am Deckel, Netzteil fehlt',
   handedOutAt: 'Ausgegeben',
   handedOutBy: 'Ausgegeben von',
+  recordedBy: 'Erfasst über',
   signature: 'Unterschrift',
 }

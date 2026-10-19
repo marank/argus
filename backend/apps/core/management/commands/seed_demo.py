@@ -701,7 +701,7 @@ def seed_extra(base: dict, stdout) -> None:
         }
         if duration == "temporary":
             data["end_date"] = today + timedelta(days=start + days - 1)
-        return workflow.submit(user, data, items, created_by=user)
+        return workflow.submit(user, data, items, created_by=user, allow_past_start=start < 0)
 
     def approve(reservation, pickup_days=1, location=None, comment=""):
         pickup = now.replace(hour=10, minute=0, second=0, microsecond=0) + timedelta(days=pickup_days)

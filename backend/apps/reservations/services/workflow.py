@@ -4,17 +4,25 @@ from datetime import date, datetime
 from uuid import UUID
 
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from apps.accounts.models import User
 from apps.core.exceptions import BusinessError
 from apps.core.models import SiteSettings
-from apps.inventory.models import Asset, AssetEvent, Consumable, ConsumableMovement
-from apps.inventory.services.availability import pool_assets, pool_consumables
+from apps.inventory.models import Asset, AssetEvent, Consumable, ConsumableMovement, License
+from apps.inventory.services.availability import pool_assets, pool_consumables, pool_licenses
 from apps.inventory.services.consumables import move_consumable, release_consumable, reserve_consumable
 from apps.inventory.services.events import log_event
-from apps.reservations.models import Handover, Reservation, ReservationAllocation, ReservationItem
+from apps.inventory.services.licenses import assign_license
+from apps.reservations.models import (
+    DeviceReturn,
+    Handover,
+    Reservation,
+    ReservationAllocation,
+    ReservationItem,
+)
 from apps.reservations.services import notifications
 
 Status = Reservation.Status
@@ -53,9 +61,14 @@ def _validate_pickup_wish(day: date | None, start: date) -> None:
 
 
 @transaction.atomic
-def submit(requester, data: dict, items: list[dict], created_by) -> Reservation:
+def submit(
+    requester, data: dict, items: list[dict], created_by, *, allow_past_start: bool = False
+) -> Reservation:
+    """Create a request; ``allow_past_start`` is for recording history (demo data)."""
     if not items:
         raise BusinessError(_("Add at least one device to the request."))
+    if data["start_date"] < timezone.localdate() and not allow_past_start:
+        raise BusinessError(_("The start date must not be in the past."))
     end_date = data.get("end_date") if data["duration"] == Reservation.Duration.TEMPORARY else None
     _validate_period(data["duration"], data["start_date"], end_date)
     _validate_pickup_wish(data.get("requested_pickup_date"), data["start_date"])
@@ -192,6 +205,8 @@ def _require_resolved(item: ReservationItem) -> None:
 
 def _matches(item: ReservationItem, model) -> bool:
     _require_resolved(item)
+    if model.is_software != item.is_software:
+        return False
     if item.asset_model_id:
         return model.pk == item.asset_model_id
     # "Any laptop" means the category's own models; subcategories hold accessories.
@@ -250,6 +265,38 @@ def allocate_consumable(
 
 
 @transaction.atomic
+def allocate_license(
+    item: ReservationItem, license: License, user, asset: Asset | None = None
+) -> ReservationAllocation:
+    """Give the requester a seat of ``license`` (or one of their devices, for device licenses)."""
+    reservation = item.reservation
+    _require_status(reservation, Status.APPROVED)
+    if not _matches(item, license.model):
+        raise BusinessError(
+            _("%(model)s does not match “%(item)s”.") % {"model": license.model, "item": item.label}
+        )
+    if item.quantity_missing < 1:
+        raise BusinessError(
+            _("All approved licenses for “%(item)s” are already allocated.") % {"item": item.label}
+        )
+    if license.assign_to == License.AssignTo.DEVICE:
+        if asset is None:
+            raise BusinessError(_("This license is assigned to devices. Choose a device."))
+        if asset.assigned_to_id != reservation.requester_id:
+            raise BusinessError(
+                _("%(asset)s is not used by %(name)s.")
+                % {"asset": asset.inventory_number, "name": reservation.requester.display_name}
+            )
+        target = {"asset_id": asset.pk}
+    else:
+        target = {"user_id": reservation.requester_id}
+    assignment = assign_license(license, user, note=reservation.number, **target)
+    return ReservationAllocation.objects.create(
+        item=item, license=license, license_assignment=assignment, allocated_by=user
+    )
+
+
+@transaction.atomic
 def auto_allocate(reservation: Reservation, user) -> int:
     """Fill every open item from the pool; returns the number of units allocated."""
     _require_status(reservation, Status.APPROVED)
@@ -258,6 +305,15 @@ def auto_allocate(reservation: Reservation, user) -> int:
         if item.is_free_text:
             continue  # needs a decision by IT first
         filters = {"model_id": item.asset_model_id, "category_id": item.category_id}
+        if item.is_software:
+            # Seats for the person only; device licenses need IT to pick the device.
+            for license in pool_licenses(**filters).filter(assign_to=License.AssignTo.USER):
+                if item.quantity_missing < 1:
+                    break
+                if not license.assignments.filter(user=reservation.requester).exists():
+                    allocate_license(item, license, user)
+                    allocated += 1
+            continue
         for asset in pool_assets(**filters).order_by("condition", "inventory_number"):
             if item.quantity_missing < 1:
                 break
@@ -284,7 +340,10 @@ def remove_allocation(allocation: ReservationAllocation, user) -> None:
 
 
 def _release(allocation: ReservationAllocation, user) -> None:
-    if allocation.asset_id:
+    if allocation.license_id:
+        if allocation.license_assignment_id:
+            allocation.license_assignment.delete()
+    elif allocation.asset_id:
         asset = allocation.asset
         if asset.status == Asset.Status.RESERVED:
             asset.status = Asset.Status.IN_STOCK
@@ -302,16 +361,24 @@ def _release(allocation: ReservationAllocation, user) -> None:
 def _release_all(reservation: Reservation, user=None) -> None:
     for allocation in ReservationAllocation.objects.filter(
         item__reservation=reservation, handed_out_at__isnull=True
-    ).select_related("asset", "consumable", "item__reservation"):
+    ).select_related("asset", "consumable", "license_assignment", "item__reservation"):
         _release(allocation, user)
         allocation.delete()
+
+
+def _has_physical(reservation: Reservation) -> bool:
+    """Something to collect or deliver: devices or consumables (license seats are not)."""
+    return ReservationAllocation.objects.filter(item__reservation=reservation, license__isnull=True).exists()
 
 
 @transaction.atomic
 def mark_ready(
     reservation: Reservation, user, handover_mode: str | None = None, skip_device_check: bool = False
 ) -> Reservation:
-    """All devices are prepared. Pickup requests now show up on the pickup terminal."""
+    """All devices are prepared. Pickup requests now show up on the pickup terminal.
+
+    Without anything to collect (only software), the request is handed out right away.
+    """
     _require_status(reservation, Status.APPROVED)
     missing = [item.label for item in reservation.items.all() if item.quantity_missing]
     if missing:
@@ -321,8 +388,11 @@ def mark_ready(
     reservation.skip_device_check = skip_device_check
     reservation.status = Status.READY
     reservation.handled_by = user
+    reservation.prepared_by = user
     reservation.save()
     notifications.request_ready(reservation)
+    if not _has_physical(reservation):
+        hand_out(reservation, user)
     return reservation
 
 
@@ -364,13 +434,23 @@ def hand_out(
     notes: str = "",
     location: str = "",
     allocation_notes: dict[UUID, str] | None = None,
+    handed_out_by_id: UUID | None = None,
 ) -> Reservation:
     """Hand all allocated devices to the requester and document the handover.
 
     The devices are always assigned to the requester, even if a colleague
-    collects them; the collecting person is recorded on the handover.
+    collects them; the collecting person is recorded on the handover. ``user``
+    records it (at the terminal: the terminal account); the handover names
+    ``handed_out_by_id`` as responsible, at the terminal by default whoever
+    prepared the pickup.
     """
     _require_status(reservation, Status.READY)
+    if method == Handover.Method.SIGNATURE:
+        handed_out_by_id = handed_out_by_id or reservation.prepared_by_id or reservation.handled_by_id
+        if handed_out_by_id and not User.objects.filter(pk=handed_out_by_id, is_staff=True).exists():
+            raise BusinessError(_("Choose a member of the IT department."))
+    else:
+        handed_out_by_id = user.pk
     requester = reservation.requester
     if not received_by_id and not received_by_name.strip():
         received_by_id = requester.pk
@@ -385,7 +465,9 @@ def hand_out(
     )
     for allocation in allocations:
         note = allocation_notes.get(allocation.pk, "").strip()
-        if allocation.asset_id:
+        if allocation.license_id:
+            pass  # the seat was assigned when it was allocated
+        elif allocation.asset_id:
             asset = allocation.asset
             asset.status = Asset.Status.IN_USE
             asset.assigned_to = requester
@@ -422,13 +504,15 @@ def hand_out(
         signature=signature,
         notes=notes.strip(),
         location=location.strip(),
-        handed_out_by=user,
+        handed_out_by_id=handed_out_by_id,
+        recorded_by=user,
     )
 
     reservation.handed_out_at = now
     if method != Handover.Method.SIGNATURE:
         reservation.handled_by = user
-    if reservation.duration == Reservation.Duration.PERMANENT:
+    lent = any(allocation.is_returnable for allocation in allocations)
+    if reservation.duration == Reservation.Duration.PERMANENT or not lent:
         reservation.status = Status.COMPLETED
         reservation.completed_at = now
     else:
@@ -438,22 +522,47 @@ def hand_out(
 
 
 @transaction.atomic
-def return_devices(reservation: Reservation, user, allocation_ids: list[UUID] | None = None) -> Reservation:
-    """Take back lent devices; completes the reservation once everything is back.
+def return_devices(
+    reservation: Reservation,
+    user,
+    allocation_ids: list[UUID] | None = None,
+    *,
+    notes: str = "",
+    allocation_notes: dict[UUID, str] | None = None,
+    damaged: set[UUID] | None = None,
+) -> Reservation:
+    """Take back lent devices and license seats and document the return.
 
-    Bulk items (consumables) are not expected back and count as returned.
+    Devices listed in ``damaged`` go to repair instead of back into stock. A
+    temporary reservation completes once everything is back; consumables are
+    not expected back. Permanently handed-out devices can be taken back as well.
     """
-    _require_status(reservation, Status.HANDED_OUT)
+    _require_status(reservation, *Reservation.RETURNABLE_STATUSES)
+    allocation_notes = allocation_notes or {}
+    damaged = damaged or set()
     now = timezone.now()
     open_allocations = ReservationAllocation.objects.filter(
-        item__reservation=reservation, returned_at__isnull=True
-    ).select_related("asset")
-    selected = open_allocations.filter(pk__in=allocation_ids) if allocation_ids else open_allocations
+        item__reservation=reservation, returned_at__isnull=True, handed_out_at__isnull=False
+    ).select_related("asset", "license_assignment")
+    returnable = open_allocations.filter(Q(asset__isnull=False) | Q(license__isnull=False))
+    selected = list(returnable.filter(pk__in=allocation_ids) if allocation_ids else returnable.all())
+    if not selected:
+        if reservation.status == Status.HANDED_OUT and not returnable.exists():
+            # Only consumables were handed out: nothing comes back, the request is done.
+            open_allocations.update(returned_at=now)
+            reservation.status = Status.COMPLETED
+            reservation.completed_at = now
+            reservation.save()
+            return reservation
+        raise BusinessError(_("Nothing is left to take back."))
 
+    record = DeviceReturn.objects.create(reservation=reservation, notes=notes.strip(), returned_by=user)
     for allocation in selected:
+        note = allocation_notes.get(allocation.pk, "").strip()
         if allocation.asset_id:
             asset = allocation.asset
-            asset.status = Asset.Status.IN_STOCK
+            broken = allocation.pk in damaged
+            asset.status = Asset.Status.IN_REPAIR if broken else Asset.Status.IN_STOCK
             asset.assigned_to = None
             asset.assigned_since = None
             asset.save(update_fields=["status", "assigned_to", "assigned_since", "updated_at"])
@@ -463,14 +572,53 @@ def return_devices(reservation: Reservation, user, allocation_ids: list[UUID] | 
                 user,
                 related_user=reservation.requester,
                 reservation=reservation,
+                description=note,
             )
+            if broken:
+                log_event(
+                    asset,
+                    AssetEvent.Kind.STATUS_CHANGED,
+                    user,
+                    description=_("Returned damaged from %(number)s") % {"number": reservation.number},
+                )
+        elif allocation.license_assignment_id:
+            allocation.license_assignment.delete()
+            allocation.license_assignment = None
         allocation.returned_at = now
-        allocation.save(update_fields=["returned_at"])
+        allocation.device_return = record
+        allocation.return_note = note
+        allocation.returned_damaged = bool(allocation.asset_id) and allocation.pk in damaged
+        allocation.save(
+            update_fields=[
+                "returned_at",
+                "device_return",
+                "return_note",
+                "returned_damaged",
+                "license_assignment",
+            ]
+        )
 
-    if not open_allocations.filter(asset__isnull=False).exists():
+    if reservation.status == Status.HANDED_OUT and not returnable.exists():
         open_allocations.update(returned_at=now)
         reservation.status = Status.COMPLETED
         reservation.completed_at = now
     reservation.handled_by = user
     reservation.save()
     return reservation
+
+
+def release_from_elsewhere(allocation: ReservationAllocation, user) -> None:
+    """A device or seat was taken back outside the request (device or license page).
+
+    Allocations still being prepared must be removed on the request first; lent
+    ones count as returned there.
+    """
+    reservation = allocation.item.reservation
+    if allocation.handed_out_at is None:
+        if reservation.status in (Status.APPROVED, Status.READY):
+            raise BusinessError(
+                _("This is set aside for %(number)s. Remove it there first.") % {"number": reservation.number}
+            )
+        return
+    if allocation.returned_at is None and reservation.status in Reservation.RETURNABLE_STATUSES:
+        return_devices(reservation, user, [allocation.pk])

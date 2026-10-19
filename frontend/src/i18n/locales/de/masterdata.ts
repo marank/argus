@@ -99,6 +99,8 @@ export default {
       'Mitarbeiter dürfen „beliebig“ aus dieser Kategorie anfordern. Für Zubehör oder Verbrauchsmaterial abschalten, wo nur ein bestimmtes Modell sinnvoll ist. Bei nur einem Modell ohnehin ausgeblendet.',
     terminal: 'Abholterminal',
     terminalHelp: 'Gemeinsames Konto für das Touch-Terminal; sieht nur vorbereitete Abholungen.',
+    terminalLocation: 'Standort des Terminals',
+    terminalLocationHelp: 'Nur für Terminal-Konten: zeigt nur Abholungen an diesem Standort und darunter. Leer: alle.',
     itStaff: 'IT-Mitarbeiter',
   },
 }

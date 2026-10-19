@@ -10,6 +10,7 @@ export default {
   devicesHint: 'Note anything that is not right, e.g. visible damage.',
   deviceCount: '{n} device | {n} devices',
   returnBy: 'Return by {date}',
+  changeStaff: 'Change',
   keep: 'Permanent',
   itNote: 'Noted by IT: {note}',
   addNote: 'Add note',

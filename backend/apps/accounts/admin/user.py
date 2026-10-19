@@ -27,7 +27,7 @@ class UserAdmin(BaseUserAdmin):
             _("Organisation"),
             {"fields": ("department", "employee_number", "job_title", "phone", "language")},
         ),
-        (_("Argus roles"), {"fields": ("is_terminal",)}),
+        (_("Argus roles"), {"fields": ("is_terminal", "terminal_location")}),
         (_("Directory"), {"fields": ("ldap_dn",)}),
     )
     readonly_fields = ["ldap_dn"]
