@@ -33,6 +33,7 @@ export const i18n = createI18n<[MessageSchema], Locale, false>({
         hour: '2-digit',
         minute: '2-digit',
       },
+      weekdayDate: { weekday: 'short', day: '2-digit', month: 'short' },
     },
     de: {
       date: { year: 'numeric', month: '2-digit', day: '2-digit' },
@@ -50,6 +51,7 @@ export const i18n = createI18n<[MessageSchema], Locale, false>({
         hour: '2-digit',
         minute: '2-digit',
       },
+      weekdayDate: { weekday: 'short', day: '2-digit', month: 'short' },
     },
   },
   numberFormats: {

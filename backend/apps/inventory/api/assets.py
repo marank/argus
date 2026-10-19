@@ -2,15 +2,17 @@ from datetime import date
 from typing import Annotated
 from uuid import UUID
 
-from django.db.models import Q
+from django.db.models import ProtectedError, Q
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext as _
 from ninja import FilterLookup, FilterSchema, Query, Router, Status
 from ninja.pagination import paginate
 
 from apps.core.api.pagination import Pagination
 from apps.core.api.querying import order, search
 from apps.core.api.security import it_staff_auth
+from apps.core.exceptions import BusinessError
 from apps.inventory.models import Asset
 from apps.inventory.schemas.asset import AssetBulkIn, AssetDetailOut, AssetIn, AssetOut, AssignIn
 from apps.inventory.services import assets as asset_service
@@ -123,5 +125,10 @@ def assign_asset(request: HttpRequest, pk: UUID, payload: AssignIn):
 
 @router.delete("/{uuid:pk}", response={204: None})
 def delete_asset(request: HttpRequest, pk: UUID):
-    get_object_or_404(Asset, pk=pk).delete()
+    try:
+        get_object_or_404(Asset, pk=pk).delete()
+    except ProtectedError as exc:
+        raise BusinessError(
+            _("The device appears in requests or orders and cannot be deleted. Set it to “Retired” instead.")
+        ) from exc
     return Status(204, None)

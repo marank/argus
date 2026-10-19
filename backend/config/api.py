@@ -2,6 +2,7 @@
 
 from django.core.exceptions import ValidationError
 from django.db import connection
+from django.db.models import ProtectedError
 from django.http import Http404
 from django.utils.translation import gettext as _
 from ninja import NinjaAPI, Status
@@ -65,3 +66,10 @@ def validation_error(request, exc: ValidationError):
 @api.exception_handler(Http404)
 def not_found(request, exc):
     return api.create_response(request, {"detail": _("Not found.")}, status=404)
+
+
+@api.exception_handler(ProtectedError)
+def protected_error(request, exc: ProtectedError):
+    return api.create_response(
+        request, {"detail": _("This record is still in use and cannot be deleted.")}, status=409
+    )

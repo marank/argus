@@ -14,7 +14,6 @@ from apps.inventory.models import Asset, AssetEvent, Consumable, ConsumableMovem
 from apps.inventory.services.availability import pool_assets, pool_consumables
 from apps.inventory.services.consumables import move_consumable, release_consumable, reserve_consumable
 from apps.inventory.services.events import log_event
-from apps.masterdata.models import Category
 from apps.reservations.models import Handover, Reservation, ReservationAllocation, ReservationItem
 from apps.reservations.services import notifications
 
@@ -195,7 +194,8 @@ def _matches(item: ReservationItem, model) -> bool:
     _require_resolved(item)
     if item.asset_model_id:
         return model.pk == item.asset_model_id
-    return model.category_id in Category.objects.get(pk=item.category_id).descendant_ids()
+    # "Any laptop" means the category's own models; subcategories hold accessories.
+    return model.category_id == item.category_id
 
 
 @transaction.atomic

@@ -11,15 +11,14 @@ from django.db.models import Count, F, Q, QuerySet, Sum
 from django.utils import timezone
 
 from apps.inventory.models import Asset, Consumable, License
-from apps.masterdata.models import Category
 
 
 def _model_filter(category_id: UUID | None, model_id: UUID | None) -> dict:
+    """A model, or the category's own models: subcategories hold accessories, not "any device"."""
     if model_id:
         return {"model_id": model_id}
     if category_id:
-        category = Category.objects.get(pk=category_id)
-        return {"model__category_id__in": category.descendant_ids()}
+        return {"model__category_id": category_id}
     return {}
 
 

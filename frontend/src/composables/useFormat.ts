@@ -4,12 +4,15 @@ import { useI18n } from 'vue-i18n'
 export function useFormat() {
   const { d, n, t, te } = useI18n()
 
-  const toDate = (value: string) => new Date(value.length === 10 ? `${value}T00:00:00` : value)
+  const isDateOnly = (value: string) => value.length === 10
+  const toDate = (value: string) => new Date(isDateOnly(value) ? `${value}T00:00:00` : value)
 
   return {
     date: (value: string | null | undefined) => (value ? d(toDate(value), 'date') : '—'),
     dateTime: (value: string | null | undefined) => (value ? d(toDate(value), 'dateTime') : '—'),
-    weekday: (value: string | null | undefined) => (value ? d(toDate(value), 'weekday') : '—'),
+    /** Weekday and date; with the time only when the value has one (not for plain dates). */
+    weekday: (value: string | null | undefined) =>
+      value ? d(toDate(value), isDateOnly(value) ? 'weekdayDate' : 'weekday') : '—',
     money: (value: string | number | null | undefined) =>
       value === null || value === undefined || value === '' ? '—' : n(Number(value), 'currency'),
     /** Translate an enum value, e.g. `enumLabel('assetStatus', 'in_use')`. */

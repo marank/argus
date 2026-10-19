@@ -45,10 +45,39 @@ def create_asset(data: dict, user) -> Asset:
     return asset
 
 
+def _sync_reservation(asset: Asset, user) -> None:
+    """Keep requests in step when a device is taken back or reassigned on the device page.
+
+    A lent device counts as returned on its request (which completes once everything is
+    back); a device set aside for a request must be released there first.
+    """
+    from apps.reservations.models import Reservation, ReservationAllocation
+    from apps.reservations.services import workflow
+
+    allocations = ReservationAllocation.objects.filter(asset=asset, returned_at__isnull=True)
+    pending = allocations.filter(
+        handed_out_at__isnull=True,
+        item__reservation__status__in=[Reservation.Status.APPROVED, Reservation.Status.READY],
+    ).select_related("item__reservation")
+    if allocation := pending.first():
+        raise BusinessError(
+            _("%(asset)s is set aside for %(number)s. Remove it there first.")
+            % {"asset": asset.inventory_number, "number": allocation.item.reservation.number}
+        )
+    lent = allocations.filter(
+        handed_out_at__isnull=False, item__reservation__status=Reservation.Status.HANDED_OUT
+    ).select_related("item__reservation")
+    for allocation in lent:
+        workflow.return_devices(allocation.item.reservation, user, [allocation.pk])
+        asset.refresh_from_db()
+
+
 @transaction.atomic
 def update_asset(asset: Asset, data: dict, user) -> Asset:
-    previous_status, previous_user = asset.status, asset.assigned_to_id
     data = dict(data)
+    if "assigned_to" in data and str(data["assigned_to"] or "") != str(asset.assigned_to_id or ""):
+        _sync_reservation(asset, user)
+    previous_status, previous_user = asset.status, asset.assigned_to_id
     consumables = data.pop("consumables", None)
     _apply(asset, data)
 

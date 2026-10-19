@@ -1892,3 +1892,15 @@ msgid ""
 msgstr ""
 "Der gewünschte Abholtag darf nicht nach dem Tag liegen, ab dem die Geräte "
 "benötigt werden."
+
+msgid ""
+"The device appears in requests or orders and cannot be deleted. Set it to "
+"“Retired” instead."
+msgstr ""
+"Das Gerät kommt in Anforderungen oder Bestellungen vor und kann nicht "
+"gelöscht werden. Setzen Sie es stattdessen auf „Ausgemustert“."
+
+#, python-format
+msgid "%(asset)s is set aside for %(number)s. Remove it there first."
+msgstr ""
+"%(asset)s ist für %(number)s zurückgelegt. Entfernen Sie es zuerst dort."

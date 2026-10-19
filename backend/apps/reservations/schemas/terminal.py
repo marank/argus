@@ -34,7 +34,8 @@ class TerminalPickupOut(Schema):
 
     @staticmethod
     def resolve_summary(obj) -> str:
-        return ", ".join(f"{i.quantity_target}× {i.label}" for i in obj.items.all())
+        # Lines IT did not approve (quantity 0) are nothing to collect.
+        return ", ".join(f"{i.quantity_target}× {i.label}" for i in obj.items.all() if i.quantity_target)
 
 
 class TerminalSignIn(Schema):
