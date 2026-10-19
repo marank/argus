@@ -58,17 +58,28 @@ class ReservationAdmin(admin.ModelAdmin):
         "status",
         "handover_mode",
         "pickup_at",
+        "assigned_team",
+        "assignee",
     ]
-    list_filter = ["status", "duration", "handover_mode", "requester__department"]
+    list_filter = ["status", "duration", "handover_mode", "requester__department", "assigned_team"]
     search_fields = ["number", "title", "requester__username", "requester__last_name"]
-    list_select_related = ["requester"]
-    autocomplete_fields = ["requester", "created_by", "handled_by", "prepared_by", "pickup_location"]
+    list_select_related = ["requester", "assigned_team", "assignee"]
+    autocomplete_fields = [
+        "requester",
+        "created_by",
+        "handled_by",
+        "prepared_by",
+        "pickup_location",
+        "assigned_team",
+        "assignee",
+    ]
     date_hierarchy = "start_date"
     readonly_fields = ["number", "approved_at", "handed_out_at", "completed_at", "created_at", "updated_at"]
     fieldsets = [
         (None, {"fields": ["number", "title", "requester", "created_by", "status"]}),
         (_("Period"), {"fields": ["duration", "start_date", "end_date"]}),
         (_("Pickup"), {"fields": ["handover_mode", "pickup_at", "pickup_location"]}),
+        (_("Responsible"), {"fields": ["assigned_team", "assignee"]}),
         (_("Notes"), {"fields": ["notes", "it_comment", "handled_by", "prepared_by"]}),
         (
             _("History"),

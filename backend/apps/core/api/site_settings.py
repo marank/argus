@@ -1,7 +1,7 @@
 """Site settings: everyone reads them, administrators change them.
 
-Modules and features, deadlines, and which email notifications exist (so users
-can see what they may switch off for themselves).
+Modules and features, deadlines, which email notifications exist (so users
+can see what they may switch off for themselves), and whether LDAP login is on.
 """
 
 from django.http import HttpRequest
@@ -44,12 +44,23 @@ class SiteSettingsOut(Schema):
     definitions: list[FlagOut]
     rules: RulesSchema
     mail_enabled: bool
+    # Directory login is configured and on: forms show the LDAP-related fields.
+    ldap_enabled: bool
     notifications: list[NotificationEventOut]
 
 
 class SiteSettingsIn(Schema):
     flags: dict[str, bool] = {}
     rules: RulesSchema | None = None
+
+
+def _ldap_enabled() -> bool:
+    from apps.accounts.services.ldap import LdapError, load_config
+
+    try:
+        return load_config().is_usable
+    except LdapError:
+        return False
 
 
 def _out() -> dict:
@@ -64,6 +75,7 @@ def _out() -> dict:
         ],
         "rules": {name: getattr(site, name) for name in RULE_FIELDS},
         "mail_enabled": mail.enabled,
+        "ldap_enabled": _ldap_enabled(),
         "notifications": [
             {"key": event.key, "audience": event.audience, "enabled": events[event.key]} for event in EVENTS
         ],

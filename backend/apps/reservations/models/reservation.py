@@ -101,6 +101,24 @@ class Reservation(TimeStampedModel):
         blank=True,
         related_name="handled_reservations",
     )
+    # Who is responsible, set on purpose by IT (``handled_by`` is just the last one acting).
+    # Both are optional and independent: a team, a person, both or neither.
+    assigned_team = models.ForeignKey(
+        "accounts.Team",
+        verbose_name=_("team"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reservations",
+    )
+    assignee = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("assignee"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="assigned_reservations",
+    )
     prepared_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_("prepared by"),

@@ -16,6 +16,8 @@ const props = withDefaults(
     label: (item: T) => string
     params?: ListParams
     initial?: T | T[] | null
+    /** Items to list first (e.g. members of the chosen team); the order is kept otherwise. */
+    prefer?: (item: T) => boolean
     multiple?: boolean
     placeholder?: string
     clearable?: boolean
@@ -56,7 +58,11 @@ const options = computed<SelectOption[]>(() => {
     const item = known.get(id)
     if (item && !list.some((i) => i.id === id)) list.unshift(item)
   }
-  return list.map((item) => ({ label: props.label(item), value: item.id }))
+  const prefer = props.prefer
+  const ordered = prefer
+    ? [...list.filter((i) => prefer(i)), ...list.filter((i) => !prefer(i))]
+    : list
+  return ordered.map((item) => ({ label: props.label(item), value: item.id }))
 })
 
 watch(

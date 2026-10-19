@@ -41,3 +41,17 @@ export interface Department {
   sort_order: number
   member_count: number
 }
+
+export interface TeamRef {
+  id: Id
+  name: string
+  code: string
+}
+
+/** An IT work queue (e.g. support, Ledgerline); one person may be in several teams. */
+export interface Team extends TeamRef {
+  sort_order: number
+  /** Members follow this directory group at sign-in; empty = maintained by hand. */
+  ldap_group_dn: string
+  members: UserRef[]
+}

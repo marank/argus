@@ -197,6 +197,18 @@ export default {
     assign: 'Assign',
     requested: 'Requested: {text}',
   },
+  assignment: {
+    title: 'Responsible',
+    team: 'Team',
+    assignee: 'Assignee',
+    noTeam: 'No team',
+    nobody: 'Nobody',
+    assignToMe: 'Assign to me',
+    me: 'Assigned to me',
+    myTeams: 'My teams',
+    unassigned: 'Unassigned',
+    allAssignments: 'All',
+  },
   history: 'History',
   handledBy: 'Handled by',
 }

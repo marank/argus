@@ -73,6 +73,8 @@ export const reservationsApi = {
       pickup_location: Id | null
     },
   ) => http.post<Reservation>(`${base}/${id}/ready`, data),
+  assign: (id: Id, data: { team: Id | null; assignee: Id | null }) =>
+    http.post<Reservation>(`${base}/${id}/assign`, data),
   reopen: (id: Id) => http.post<Reservation>(`${base}/${id}/reopen`),
   handOut: (id: Id, data: HandOutInput) => http.post<Reservation>(`${base}/${id}/hand-out`, data),
   returnDevices: (id: Id, data: Partial<ReturnInput> = {}) =>

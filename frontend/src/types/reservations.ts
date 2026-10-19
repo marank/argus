@@ -1,5 +1,5 @@
 import type { Id } from '@/types/common'
-import type { UserRef } from './accounts'
+import type { TeamRef, UserRef } from './accounts'
 import type { Ref } from './common'
 import type { AssetRef, OwnIssue } from './inventory'
 import type { AssetModelRef, CategoryKind, CategoryRef, LocationRef } from './masterdata'
@@ -86,6 +86,9 @@ export interface ReservationListItem {
   unit_count: number
   summary: string
   created_at: string
+  /** Responsible IT team and person; independent of each other, both optional. IT only. */
+  assigned_team: TeamRef | null
+  assignee: UserRef | null
 }
 
 export interface Handover {

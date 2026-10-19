@@ -13,7 +13,7 @@ import { useGroupedRows, withGroupHeaders } from '@/composables/useGroupedRows'
 import { useList } from '@/composables/useList'
 
 import CrudFormDrawer from './CrudFormDrawer.vue'
-import type { ResourceDef } from './types'
+import { isVisible, type ResourceDef } from './types'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const props = defineProps<{ resource: ResourceDef<any> }>()
@@ -49,7 +49,7 @@ async function remove(row: any) {
 const FLEX_MIN_WIDTH = 180
 
 const baseColumns = computed<DataTableColumns<any>>(() => [
-  ...props.resource.columns.map((column) => ({
+  ...props.resource.columns.filter(isVisible).map((column) => ({
     key: column.sorter ?? column.key,
     title: t(column.label),
     sorter: column.sorter ? true : undefined,

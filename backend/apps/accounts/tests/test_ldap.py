@@ -6,11 +6,13 @@ from django.test import Client
 from ldap3 import MOCK_SYNC, Connection, Server
 from ldap3.core.exceptions import LDAPBindError
 
-from apps.accounts.models import LdapSettings, User
+from apps.accounts.models import LdapSettings, Team, User
 from apps.accounts.services import ldap
 
 SERVICE_DN = "CN=svc-argus,OU=Service,DC=example,DC=com"
 ANNA_DN = "CN=Anna Berger,OU=Staff,DC=example,DC=com"
+LEDGERLINE_DN = "CN=IT-Ledgerline,OU=Groups,DC=example,DC=com"
+SUPPORT_DN = "CN=IT-Support,OU=Groups,DC=example,DC=com"
 
 DIRECTORY = {
     SERVICE_DN: {"objectClass": ["user"], "sAMAccountName": "svc-argus", "userPassword": "svc-secret"},
@@ -24,6 +26,8 @@ DIRECTORY = {
         "mail": "anna.berger@example.com",
         "userPassword": "anna-secret",
     },
+    LEDGERLINE_DN: {"objectClass": ["group"], "member": [ANNA_DN]},
+    SUPPORT_DN: {"objectClass": ["group"], "member": [SERVICE_DN]},
 }
 
 
@@ -189,3 +193,26 @@ def test_local_password_of_a_linked_account_keeps_working(configured):
     assert api_login("ABerger", "anna-secret").status_code == 200
     assert User.objects.get(username="ABerger").ldap_dn == ANNA_DN
     assert api_login("ABerger", "local-secret").status_code == 200
+
+
+def test_team_membership_follows_ldap_groups(configured):
+    ledgerline = Team.objects.create(name="Ledgerline", ldap_group_dn=LEDGERLINE_DN)
+    support = Team.objects.create(name="IT-Support", ldap_group_dn=SUPPORT_DN)
+    missing = Team.objects.create(name="Old", ldap_group_dn="CN=Gone,OU=Groups,DC=example,DC=com")
+    manual = Team.objects.create(name="Manual")
+
+    user = User.objects.create_user("aberger")
+    support.members.add(user)  # no longer in the group: removed at login
+    missing.members.add(user)  # group unreadable: membership kept
+    manual.members.add(user)  # no LDAP group: left alone
+
+    user = authenticate(username="aberger", password="anna-secret")
+    assert set(user.teams.values_list("name", flat=True)) == {"Ledgerline", "Old", "Manual"}
+    assert not ledgerline.members.exclude(pk=user.pk).exists()
+
+
+def test_site_settings_tell_whether_ldap_is_on(configured, it_client):
+    assert it_client.get("/api/settings/site").json()["ldap_enabled"] is True
+    configured.enabled = False
+    configured.save()
+    assert it_client.get("/api/settings/site").json()["ldap_enabled"] is False

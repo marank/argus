@@ -58,6 +58,8 @@ export interface SiteSettings {
   rules: Rules
   /** Whether emails are sent at all. */
   mail_enabled: boolean
+  /** Directory login is configured and on; forms show LDAP-related fields. */
+  ldap_enabled: boolean
   /** Notification kinds and whether they are switched on site-wide. */
   notifications: { key: NotificationKey; audience: 'employee' | 'it'; enabled: boolean }[]
 }

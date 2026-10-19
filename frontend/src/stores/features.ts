@@ -25,6 +25,8 @@ export const useFeaturesStore = defineStore('features', () => {
     settings.value = await siteSettingsApi.update({ rules })
   }
 
+  const ldapEnabled = computed(() => settings.value?.ldap_enabled ?? false)
+
   /** Deadlines with defaults until the settings are loaded. */
   const rules = computed<Rules>(
     () =>
@@ -42,5 +44,14 @@ export const useFeaturesStore = defineStore('features', () => {
     document.documentElement.classList.toggle('no-attention-motion', !isOn('attention_motion')),
   )
 
-  return { settings, rules, isOn, load, update, updateRules, clear: () => (settings.value = null) }
+  return {
+    settings,
+    rules,
+    ldapEnabled,
+    isOn,
+    load,
+    update,
+    updateRules,
+    clear: () => (settings.value = null),
+  }
 })

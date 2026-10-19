@@ -8,7 +8,7 @@ from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from apps.accounts.models import User
+from apps.accounts.models import Team, User
 from apps.core.exceptions import BusinessError
 from apps.core.models import SiteSettings
 from apps.inventory.models import Asset, AssetEvent, Consumable, ConsumableMovement, License
@@ -403,6 +403,23 @@ def reopen(reservation: Reservation, user) -> Reservation:
     reservation.status = Status.APPROVED
     reservation.handled_by = user
     reservation.save(update_fields=["status", "handled_by", "updated_at"])
+    return reservation
+
+
+# --- Assignment --------------------------------------------------------------
+
+
+def assign(reservation: Reservation, team_id: UUID | None, assignee_id: UUID | None) -> Reservation:
+    """Set the responsible team and IT staff member; either may stay empty."""
+    team = Team.objects.filter(pk=team_id).first() if team_id else None
+    if team_id and team is None:
+        raise BusinessError(_("Unknown team."))
+    assignee = User.objects.filter(pk=assignee_id, is_active=True).first() if assignee_id else None
+    if assignee_id and (assignee is None or not assignee.is_it_staff):
+        raise BusinessError(_("Requests can only be assigned to active IT staff."))
+    reservation.assigned_team = team
+    reservation.assignee = assignee
+    reservation.save(update_fields=["assigned_team", "assignee", "updated_at"])
     return reservation
 
 

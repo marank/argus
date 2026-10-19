@@ -8,6 +8,7 @@ export default {
     models: 'Models',
     locations: 'Locations',
     departments: 'Departments',
+    teams: 'Teams',
     users: 'Employees',
     numberSequences: 'Number sequences',
   },
@@ -18,6 +19,7 @@ export default {
     models: 'Model',
     locations: 'Location',
     departments: 'Department',
+    teams: 'Team',
     users: 'Employee',
     numberSequences: 'Number sequence',
   },
@@ -66,6 +68,11 @@ export default {
     compatibleWith: 'Compatible with',
     costCenter: 'Cost center',
     members: 'Members',
+    usernameLdapHelp:
+      'Must match the login name in the directory (e.g. sAMAccountName). It links the account to the directory at the first LDAP sign-in.',
+    ldapGroup: 'LDAP group',
+    ldapGroupHelp:
+      'DN of a directory group, e.g. CN=IT-Ledgerline,OU=Groups,DC=example,DC=com. Members then follow the directory at every sign-in; empty: maintain members by hand.',
     prefix: 'Prefix',
     pattern: 'Pattern',
     patternHelp: "Placeholders: {'{prefix}'} {'{year}'} {'{yy}'} {'{month}'} {'{seq}'}",

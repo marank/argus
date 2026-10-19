@@ -33,6 +33,8 @@ def reservation_queryset() -> QuerySet[Reservation]:
         "created_by",
         "handled_by",
         "prepared_by",
+        "assigned_team",
+        "assignee",
         "pickup_location__parent",
         "handover__received_by",
         "handover__handed_out_by",

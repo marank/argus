@@ -8,7 +8,7 @@ pass ``LDAP_X=${LDAP_X:-}`` without locking the in-app value.
 Login: search the user with the service account (or anonymously), bind as the found
 DN with the entered password, then create or update the Argus user from the mapped
 attributes. The directory wins: first/last name, employee number etc. are overwritten
-at every login.
+at every login, and so is the membership in teams linked to an LDAP group.
 """
 
 import logging
@@ -22,6 +22,7 @@ from django.utils.translation import gettext as _
 from ldap3 import (
     AUTO_BIND_NO_TLS,
     AUTO_BIND_TLS_BEFORE_BIND,
+    BASE,
     NONE,
     SUBTREE,
     Connection,
@@ -31,7 +32,7 @@ from ldap3 import (
 from ldap3.core.exceptions import LDAPBindError, LDAPException
 from ldap3.utils.conv import escape_filter_chars
 
-from apps.accounts.models import LdapSettings, User
+from apps.accounts.models import LdapSettings, Team, User
 
 logger = logging.getLogger(__name__)
 
@@ -260,6 +261,36 @@ def sync_user(config: LdapConfig, entry: DirectoryUser) -> User | None:
     return user
 
 
+def _is_group_member(connection: Connection, group_dn: str, member_dn: str) -> bool | None:
+    """Direct membership of ``member_dn`` in the group (AD ``member`` or ``uniqueMember``).
+
+    ``None`` when the group cannot be read, so the membership is left as it is.
+    """
+    dn = escape_filter_chars(member_dn)
+    connection.search(group_dn, f"(|(member={dn})(uniqueMember={dn}))", BASE, attributes=[])
+    if connection.result.get("description") != "success":
+        logger.warning("LDAP group %s not readable: %s", group_dn, connection.result.get("description"))
+        return None
+    return any(e.get("type") == "searchResEntry" for e in connection.response or [])
+
+
+def sync_teams(config: LdapConfig, user: User) -> None:
+    """Add the user to or remove them from the teams linked to an LDAP group."""
+    teams = list(Team.objects.exclude(ldap_group_dn=""))
+    if not teams or not user.ldap_dn:
+        return
+    connection = _service_connection(config)
+    try:
+        for team in teams:
+            member = _is_group_member(connection, team.ldap_group_dn, user.ldap_dn)
+            if member is True:
+                team.members.add(user)
+            elif member is False:
+                team.members.remove(user)
+    finally:
+        connection.unbind()
+
+
 def authenticate(username: str, password: str) -> User | None:
     """Check credentials against the directory; ``None`` on any failure (logged)."""
     # An empty password would be an anonymous ("unauthenticated") bind that always succeeds.
@@ -276,10 +307,17 @@ def authenticate(username: str, password: str) -> User | None:
             connection.unbind()
         if entry is None or not _check_password(config, entry.dn, password):
             return None
-        return sync_user(config, entry)
+        user = sync_user(config, entry)
     except (LdapError, LDAPException) as exc:
         logger.error("LDAP login failed: %s", exc)
         return None
+    if user is not None:
+        # Team membership is a convenience; a directory hiccup must not block the login.
+        try:
+            sync_teams(config, user)
+        except (LdapError, LDAPException) as exc:
+            logger.error("LDAP team sync for %s failed: %s", user.username, exc)
+    return user
 
 
 def test_connection(config: LdapConfig, username: str = "") -> dict:

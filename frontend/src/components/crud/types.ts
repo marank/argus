@@ -11,7 +11,10 @@ interface BaseField {
   required?: boolean
   /** Grid span out of 2 columns. */
   span?: 1 | 2
-  help?: string
+  /** i18n key of an explanation, or a function returning one (undefined = none). */
+  help?: string | (() => string | undefined)
+  /** Show the field only while this returns true (e.g. LDAP fields while LDAP is on). */
+  visible?: () => boolean
 }
 
 export type FieldDef = BaseField &
@@ -48,6 +51,8 @@ export interface ColumnDef<T> {
   sorter?: string
   width?: number
   render?: (row: T) => VNodeChild
+  /** Show the column only while this returns true. */
+  visible?: () => boolean
 }
 
 export interface FilterDef {
@@ -81,6 +86,12 @@ export interface ResourceDef<T extends { id: Id }> {
   /** Primary label of a record, used in titles and confirmations. */
   title: (row: T) => string
 }
+
+export const isVisible = (def: { visible?: () => boolean }) => def.visible?.() ?? true
+
+/** The i18n key of a field's explanation, if any. */
+export const helpKey = (field: FieldDef) =>
+  typeof field.help === 'function' ? field.help() : field.help
 
 export function sectionFields(resource: ResourceDef<any>): FieldDef[] {
   return resource.sections.flatMap((section) => section.fields)

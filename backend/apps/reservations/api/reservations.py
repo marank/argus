@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from django.db import transaction
@@ -16,6 +16,7 @@ from apps.core.api.security import is_it_staff, it_staff_auth
 from apps.reservations.models import Reservation
 from apps.reservations.schemas.reservation import (
     ApproveIn,
+    AssignIn,
     HandOutIn,
     ReadyIn,
     RejectIn,
@@ -40,6 +41,8 @@ class ReservationFilter(FilterSchema):
     start_until: Annotated[date | None, FilterLookup("start_date__lte")] = None
     overdue: bool | None = None
     open: bool | None = None
+    team: Annotated[list[UUID] | None, FilterLookup("assigned_team_id__in")] = None
+    assignee: Annotated[UUID | None, FilterLookup("assignee_id")] = None
 
     def filter_overdue(self, value: bool | None) -> Q:
         if not value:
@@ -58,11 +61,22 @@ def list_reservations(
     q: str | None = None,
     ordering: str | None = None,
     mine: bool = False,
+    assigned: Literal["me", "my_teams", "nobody"] | None = None,
 ):
-    """IT staff see every reservation, employees only their own."""
+    """IT staff see every reservation, employees only their own.
+
+    ``assigned``: ``me`` – assigned to the current user; ``my_teams`` – to one of
+    their teams or to them; ``nobody`` – neither a team nor a person set.
+    """
     queryset = filters.filter(visible_reservations(request))
     if mine:
         queryset = queryset.filter(requester=request.user)
+    if assigned == "me":
+        queryset = queryset.filter(assignee=request.user)
+    elif assigned == "my_teams":
+        queryset = queryset.filter(Q(assigned_team__in=request.user.teams.all()) | Q(assignee=request.user))
+    elif assigned == "nobody":
+        queryset = queryset.filter(assigned_team__isnull=True, assignee__isnull=True)
     queryset = search(
         queryset,
         q,
@@ -147,6 +161,12 @@ def mark_ready(request: HttpRequest, pk: UUID, payload: ReadyIn):
 def reopen(request: HttpRequest, pk: UUID):
     """Take a ready request back into preparation."""
     workflow.reopen(get_for_update(pk), request.user)
+    return get_reservation(request, pk)
+
+
+@router.post("/{uuid:pk}/assign", response=ReservationOut, auth=it_staff_auth)
+def assign(request: HttpRequest, pk: UUID, payload: AssignIn):
+    workflow.assign(get_for_update(pk), payload.team, payload.assignee)
     return get_reservation(request, pk)
 
 

@@ -4,7 +4,8 @@ from uuid import UUID
 
 from ninja import Field, Schema
 
-from apps.accounts.schemas import UserRefOut
+from apps.accounts.schemas import TeamRefOut, UserRefOut
+from apps.core.api.security import is_it_staff
 from apps.core.schemas import RefOut
 from apps.inventory.schemas.refs import AssetRefOut
 from apps.masterdata.schemas.refs import AssetModelRefOut, CategoryRefOut, LocationRefOut
@@ -77,6 +78,11 @@ class ReservationItemOut(Schema):
         return list(obj.allocations.all())
 
 
+def _for_it_staff(context) -> bool:
+    request = (context or {}).get("request")
+    return request is not None and is_it_staff(request.user)
+
+
 class ReservationListOut(Schema):
     id: UUID
     number: str
@@ -94,6 +100,17 @@ class ReservationListOut(Schema):
     unit_count: int = 0
     summary: str = ""
     created_at: datetime
+    # IT-internal: always empty for employees (the portal does not show who works on it).
+    assigned_team: TeamRefOut | None = None
+    assignee: UserRefOut | None = None
+
+    @staticmethod
+    def resolve_assigned_team(obj, context):
+        return obj.assigned_team if _for_it_staff(context) else None
+
+    @staticmethod
+    def resolve_assignee(obj, context):
+        return obj.assignee if _for_it_staff(context) else None
 
     @staticmethod
     def resolve_summary(obj) -> str:
@@ -185,6 +202,11 @@ class ApproveIn(Schema):
     pickup_at: datetime | None = None
     pickup_location: UUID | None = None
     comment: str = ""
+
+
+class AssignIn(Schema):
+    team: UUID | None = None
+    assignee: UUID | None = None
 
 
 class RejectIn(Schema):

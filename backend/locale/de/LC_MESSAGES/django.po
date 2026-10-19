@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 01:47+0200\n"
+"POT-Creation-Date: 2026-10-19 22:55+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: apps/accounts/admin/department.py:16
+#: apps/accounts/admin/department.py:16 apps/accounts/admin/team.py:17
+#: apps/accounts/models/team.py:28
 msgid "members"
 msgstr "Mitglieder"
 
@@ -67,16 +68,18 @@ msgstr "Verzeichnis"
 msgid "Accounts"
 msgstr "Benutzerkonten"
 
-#: apps/accounts/models/department.py:8 apps/core/models/number_sequence.py:25
-#: apps/masterdata/models/asset_model.py:18
-#: apps/masterdata/models/category.py:16 apps/masterdata/models/location.py:14
+#: apps/accounts/models/department.py:8 apps/accounts/models/team.py:16
+#: apps/core/models/number_sequence.py:25
+#: apps/masterdata/models/asset_model.py:21
+#: apps/masterdata/models/category.py:22 apps/masterdata/models/location.py:14
 #: apps/masterdata/models/manufacturer.py:8
 #: apps/masterdata/models/supplier.py:8
 msgid "name"
 msgstr "Name"
 
-#: apps/accounts/models/department.py:9 apps/core/models/number_sequence.py:24
-#: apps/masterdata/models/category.py:17 apps/masterdata/models/location.py:15
+#: apps/accounts/models/department.py:9 apps/accounts/models/team.py:17
+#: apps/core/models/number_sequence.py:24 apps/masterdata/models/category.py:30
+#: apps/masterdata/models/location.py:15
 msgid "code"
 msgstr "Kürzel"
 
@@ -84,11 +87,20 @@ msgstr "Kürzel"
 msgid "cost center"
 msgstr "Kostenstelle"
 
-#: apps/accounts/models/department.py:13 apps/accounts/models/user.py:18
+#: apps/accounts/models/department.py:12 apps/accounts/models/team.py:19
+#: apps/masterdata/models/category.py:61
+msgid "sort order"
+msgstr "Sortierung"
+
+#: apps/accounts/models/department.py:12 apps/accounts/models/team.py:19
+msgid "Lower numbers come first; equal numbers by name."
+msgstr "Kleinere Zahlen zuerst, gleiche Zahlen nach Name."
+
+#: apps/accounts/models/department.py:16 apps/accounts/models/user.py:32
 msgid "department"
 msgstr "Abteilung"
 
-#: apps/accounts/models/department.py:14
+#: apps/accounts/models/department.py:17
 msgid "departments"
 msgstr "Abteilungen"
 
@@ -205,45 +217,73 @@ msgstr ""
 msgid "LDAP settings"
 msgstr "LDAP-Einstellungen"
 
-#: apps/accounts/models/user.py:12 config/settings.py:128
+#: apps/accounts/models/team.py:22
+msgid "LDAP group"
+msgstr "LDAP-Gruppe"
+
+#: apps/accounts/models/team.py:25
+msgid "DN of a directory group; its members join the team when they sign in."
+msgstr "DN einer Verzeichnisgruppe; ihre Mitglieder kommen beim Anmelden ins Team."
+
+#: apps/accounts/models/team.py:32 apps/reservations/models/reservation.py:108
+msgid "team"
+msgstr "Team"
+
+#: apps/accounts/models/team.py:33
+msgid "teams"
+msgstr "Teams"
+
+#: apps/accounts/models/user.py:26 config/settings.py:129
 msgid "English"
 msgstr "Englisch"
 
-#: apps/accounts/models/user.py:13 config/settings.py:128
+#: apps/accounts/models/user.py:27 config/settings.py:129
 msgid "German"
 msgstr "Deutsch"
 
-#: apps/accounts/models/user.py:15 apps/core/models/base.py:10
+#: apps/accounts/models/user.py:29 apps/core/models/base.py:10
 msgid "ID"
 msgstr "ID"
 
-#: apps/accounts/models/user.py:24
+#: apps/accounts/models/user.py:38
 msgid "employee number"
 msgstr "Personalnummer"
 
-#: apps/accounts/models/user.py:25
+#: apps/accounts/models/user.py:39
 msgid "job title"
 msgstr "Position"
 
-#: apps/accounts/models/user.py:26 apps/masterdata/models/supplier.py:12
+#: apps/accounts/models/user.py:40 apps/masterdata/models/supplier.py:12
 msgid "phone"
 msgstr "Telefon"
 
-#: apps/accounts/models/user.py:28
+#: apps/accounts/models/user.py:42
 msgid "handover terminal"
 msgstr "Abholterminal"
 
-#: apps/accounts/models/user.py:30
+#: apps/accounts/models/user.py:44
 msgid ""
 "Shared account for the pickup terminal; it only sees prepared hand-outs."
 msgstr ""
 "Gemeinsames Konto für das Abholterminal; es sieht nur vorbereitete Ausgaben."
 
-#: apps/accounts/models/user.py:33
+#: apps/accounts/models/user.py:48
+msgid "terminal site"
+msgstr "Standort des Terminals"
+
+#: apps/accounts/models/user.py:53
+msgid ""
+"Pickup terminal only: lists pickups at this location and below; empty lists "
+"all."
+msgstr ""
+"Nur für das Abholterminal: zeigt Abholungen an diesem Standort und darunter; "
+"leer zeigt alle."
+
+#: apps/accounts/models/user.py:56
 msgid "LDAP DN"
 msgstr "LDAP-DN"
 
-#: apps/accounts/models/user.py:37
+#: apps/accounts/models/user.py:60
 msgid ""
 "Set for directory accounts; name and numbers are synced from LDAP at every "
 "login."
@@ -251,47 +291,55 @@ msgstr ""
 "Bei Verzeichniskonten gesetzt; Name und Nummern werden bei jeder Anmeldung "
 "aus dem LDAP übernommen."
 
-#: apps/accounts/models/user.py:40
+#: apps/accounts/models/user.py:63
 msgid "language"
 msgstr "Sprache"
 
-#: apps/accounts/models/user.py:44
+#: apps/accounts/models/user.py:66
+msgid "email notifications"
+msgstr "E-Mail-Benachrichtigungen"
+
+#: apps/accounts/models/user.py:69
 msgid "user"
 msgstr "Benutzer"
 
-#: apps/accounts/models/user.py:45
+#: apps/accounts/models/user.py:70
 msgid "users"
 msgstr "Benutzer"
 
-#: apps/accounts/services/ldap.py:98
+#: apps/accounts/models/user.py:77
+msgid "A user with this username already exists."
+msgstr "Ein Benutzer mit diesem Benutzernamen existiert bereits."
+
+#: apps/accounts/services/ldap.py:99
 #, python-format
 msgid "%(name)s must be a number."
 msgstr "%(name)s muss eine Zahl sein."
 
-#: apps/accounts/services/ldap.py:136 apps/accounts/services/ldap.py:288
+#: apps/accounts/services/ldap.py:137 apps/accounts/services/ldap.py:326
 msgid "No LDAP server configured."
 msgstr "Kein LDAP-Server konfiguriert."
 
-#: apps/accounts/services/ldap.py:170
+#: apps/accounts/services/ldap.py:171
 #, python-format
 msgid "The service account could not sign in: %(error)s"
 msgstr "Das Dienstkonto konnte sich nicht anmelden: %(error)s"
 
-#: apps/accounts/services/ldap.py:172
+#: apps/accounts/services/ldap.py:173
 #, python-format
 msgid "LDAP server not reachable: %(error)s"
 msgstr "LDAP-Server nicht erreichbar: %(error)s"
 
-#: apps/accounts/services/ldap.py:203
+#: apps/accounts/services/ldap.py:204
 #, python-format
 msgid "LDAP search failed: %(error)s"
 msgstr "LDAP-Suche fehlgeschlagen: %(error)s"
 
-#: apps/accounts/services/ldap.py:290
+#: apps/accounts/services/ldap.py:328
 msgid "No user search base configured."
 msgstr "Keine Suchbasis für Benutzer konfiguriert."
 
-#: apps/accounts/services/ldap.py:297
+#: apps/accounts/services/ldap.py:335
 #, python-format
 msgid "Connected, but no unique entry found for “%(username)s”."
 msgstr "Verbunden, aber kein eindeutiger Eintrag für „%(username)s“ gefunden."
@@ -316,8 +364,8 @@ msgstr "Format"
 msgid "State"
 msgstr "Stand"
 
-#: apps/core/admin/number_sequence.py:17 apps/inventory/admin/asset.py:87
-#: apps/reservations/admin/reservation.py:74
+#: apps/core/admin/number_sequence.py:17 apps/inventory/admin/asset.py:96
+#: apps/reservations/admin/reservation.py:85
 msgid "History"
 msgstr "Verlauf"
 
@@ -325,9 +373,35 @@ msgstr "Verlauf"
 msgid "next number"
 msgstr "nächste Nummer"
 
-#: apps/core/api/crud.py:100
+#: apps/core/api/crud.py:100 config/api.py:75
 msgid "This record is still in use and cannot be deleted."
 msgstr "Dieser Eintrag wird noch verwendet und kann nicht gelöscht werden."
+
+#: apps/core/api/mail_settings.py:78
+msgid "Enter the SMTP server and the sender address to send emails."
+msgstr "Geben Sie SMTP-Server und Absenderadresse an, um E-Mails zu senden."
+
+#: apps/core/api/mail_settings.py:89
+msgid "Enter the SMTP server and the sender address first."
+msgstr "Geben Sie zuerst SMTP-Server und Absenderadresse an."
+
+#: apps/core/api/mail_settings.py:94
+msgid "Argus test email"
+msgstr "Argus-Testmail"
+
+#: apps/core/api/mail_settings.py:95
+msgid "If you can read this, Argus can send emails."
+msgstr "Wenn Sie das lesen können, kann Argus E-Mails senden."
+
+#: apps/core/api/mail_settings.py:98
+#, python-format
+msgid "Sending failed: %(error)s"
+msgstr "Senden fehlgeschlagen: %(error)s"
+
+#: apps/core/api/mail_settings.py:99
+#, python-format
+msgid "Test email sent to %(to)s."
+msgstr "Testmail an %(to)s gesendet."
 
 #: apps/core/api/security.py:23
 msgid "This action is reserved for the IT department."
@@ -345,17 +419,21 @@ msgstr "Diese Seite ist dem Abholterminal vorbehalten."
 msgid "This action is reserved for administrators."
 msgstr "Diese Aktion ist Administratoren vorbehalten."
 
-#: apps/core/api/session.py:25
+#: apps/core/api/session.py:26
 msgid "CSRF verification failed. Please reload the page."
 msgstr "CSRF-Prüfung fehlgeschlagen. Bitte laden Sie die Seite neu."
 
-#: apps/core/api/session.py:40
+#: apps/core/api/session.py:41
 msgid "Invalid username or password."
 msgstr "Benutzername oder Passwort ist falsch."
 
 #: apps/core/apps.py:8
 msgid "Core"
 msgstr "Basis"
+
+#: apps/core/middleware.py:16
+msgid "This module is switched off."
+msgstr "Dieses Modul ist ausgeschaltet."
 
 #: apps/core/models/base.py:19
 msgid "created at"
@@ -364,6 +442,89 @@ msgstr "angelegt am"
 #: apps/core/models/base.py:20
 msgid "updated at"
 msgstr "geändert am"
+
+#: apps/core/models/mail_settings.py:12
+msgid "STARTTLS"
+msgstr "STARTTLS"
+
+#: apps/core/models/mail_settings.py:13
+msgid "SSL/TLS"
+msgstr "SSL/TLS"
+
+#: apps/core/models/mail_settings.py:14
+msgid "None"
+msgstr "Keine"
+
+#: apps/core/models/mail_settings.py:16
+msgid "send emails"
+msgstr "E-Mails senden"
+
+#: apps/core/models/mail_settings.py:17
+msgid "SMTP server"
+msgstr "SMTP-Server"
+
+#: apps/core/models/mail_settings.py:18
+msgid "port"
+msgstr "Port"
+
+#: apps/core/models/mail_settings.py:20
+msgid "encryption"
+msgstr "Verschlüsselung"
+
+#: apps/core/models/mail_settings.py:22
+msgid "user name"
+msgstr "Benutzername"
+
+#: apps/core/models/mail_settings.py:23
+msgid "password"
+msgstr "Passwort"
+
+#: apps/core/models/mail_settings.py:24
+msgid "sender address"
+msgstr "Absenderadresse"
+
+#: apps/core/models/mail_settings.py:25
+msgid "sender name"
+msgstr "Absendername"
+
+#: apps/core/models/mail_settings.py:27
+msgid "app address"
+msgstr "App-Adresse"
+
+#: apps/core/models/mail_settings.py:29
+msgid "Address of Argus for links in emails, e.g. https://argus.example.com"
+msgstr ""
+"Adresse von Argus für Links in E-Mails, z. B. https://argus.example.com"
+
+#: apps/core/models/mail_settings.py:32
+msgid "notifications"
+msgstr "Benachrichtigungen"
+
+#: apps/core/models/mail_settings.py:35 apps/core/models/mail_settings.py:36
+#: apps/core/models/mail_settings.py:39
+msgid "mail settings"
+msgstr "E-Mail-Einstellungen"
+
+#: apps/core/models/mail_settings.py:50
+msgid "notification"
+msgstr "Benachrichtigung"
+
+#: apps/core/models/mail_settings.py:51
+msgid "key"
+msgstr "Schlüssel"
+
+#: apps/core/models/mail_settings.py:54
+#: apps/inventory/models/consumable_movement.py:35
+msgid "recipient"
+msgstr "Empfänger"
+
+#: apps/core/models/mail_settings.py:60
+msgid "sent notification"
+msgstr "gesendete Benachrichtigung"
+
+#: apps/core/models/mail_settings.py:61
+msgid "sent notifications"
+msgstr "gesendete Benachrichtigungen"
 
 #: apps/core/models/number_sequence.py:20
 msgid "Never"
@@ -401,8 +562,7 @@ msgstr "Neustart"
 msgid "current period"
 msgstr "aktueller Zeitraum"
 
-#: apps/core/models/number_sequence.py:36
-#: apps/masterdata/models/category.py:30
+#: apps/core/models/number_sequence.py:36 apps/masterdata/models/category.py:43
 msgid "number sequence"
 msgstr "Nummernserie"
 
@@ -420,7 +580,56 @@ msgstr "Das Muster muss den Platzhalter {seq} enthalten."
 msgid "Invalid placeholder: %(error)s"
 msgstr "Ungültiger Platzhalter: %(error)s"
 
-#: apps/dashboard/api/calendar.py:21
+#: apps/core/models/site_settings.py:10
+msgid "modules and features"
+msgstr "Module und Funktionen"
+
+#: apps/core/models/site_settings.py:14
+msgid "warranty warning (days)"
+msgstr "Garantie-Vorwarnung (Tage)"
+
+#: apps/core/models/site_settings.py:16
+msgid "Warranties ending within this many days count as ending soon."
+msgstr "Garantien, die innerhalb so vieler Tage enden, gelten als bald endend."
+
+#: apps/core/models/site_settings.py:19
+msgid "license warning (days)"
+msgstr "Lizenz-Vorwarnung (Tage)"
+
+#: apps/core/models/site_settings.py:21
+msgid "Licenses ending within this many days count as ending soon."
+msgstr "Lizenzen, die innerhalb so vieler Tage enden, gelten als bald endend."
+
+#: apps/core/models/site_settings.py:24
+msgid "default loan period (days)"
+msgstr "Standard-Ausleihdauer (Tage)"
+
+#: apps/core/models/site_settings.py:26
+msgid "Suggested length of a temporary request."
+msgstr "Vorgeschlagene Dauer einer Ausleihe."
+
+#: apps/core/models/site_settings.py:29
+msgid "maximum loan period (days)"
+msgstr "Maximale Ausleihdauer (Tage)"
+
+#: apps/core/models/site_settings.py:31
+msgid "Longest allowed temporary request; 0 = no limit."
+msgstr "Längste erlaubte Ausleihe; 0 = unbegrenzt."
+
+#: apps/core/models/site_settings.py:34
+msgid "return reminder (days before)"
+msgstr "Rückgabe-Erinnerung (Tage vorher)"
+
+#: apps/core/models/site_settings.py:36
+msgid "Employees are reminded this many days before a return is due."
+msgstr "Mitarbeiter werden so viele Tage vor der Rückgabe erinnert."
+
+#: apps/core/models/site_settings.py:40 apps/core/models/site_settings.py:41
+#: apps/core/models/site_settings.py:44
+msgid "site settings"
+msgstr "Website-Einstellungen"
+
+#: apps/dashboard/api/calendar.py:29
 #, python-format
 msgid "Choose a range of at most %(days)s days."
 msgstr "Wählen Sie einen Zeitraum von höchstens %(days)s Tagen."
@@ -437,15 +646,19 @@ msgstr "zugehöriges Gerät"
 msgid "attached devices"
 msgstr "zugehörige Geräte"
 
-#: apps/inventory/admin/asset.py:61
+#: apps/inventory/admin/asset.py:69
 msgid "Status & usage"
 msgstr "Status & Nutzung"
 
-#: apps/inventory/admin/asset.py:75
+#: apps/inventory/admin/asset.py:83
 msgid "Purchase & warranty"
 msgstr "Kauf & Garantie"
 
-#: apps/inventory/admin/asset.py:86 apps/reservations/admin/reservation.py:72
+#: apps/inventory/admin/asset.py:94
+msgid "Consumables"
+msgstr "Verbrauchsmaterial"
+
+#: apps/inventory/admin/asset.py:95 apps/reservations/admin/reservation.py:83
 msgid "Notes"
 msgstr "Notizen"
 
@@ -461,156 +674,191 @@ msgstr "Unter Mindestbestand"
 msgid "below minimum"
 msgstr "unter Mindestbestand"
 
+#: apps/inventory/admin/license.py:30
+msgid "seats used"
+msgstr "belegte Plätze"
+
+#: apps/inventory/api/assets.py:132
+msgid ""
+"The device appears in requests or orders and cannot be deleted. Set it to "
+"“Retired” instead."
+msgstr ""
+"Das Gerät kommt in Anforderungen oder Bestellungen vor und kann nicht "
+"gelöscht werden. Setzen Sie es stattdessen auf „Ausgemustert“."
+
+#: apps/inventory/api/licenses.py:97
+msgid "Remove all assignments before deleting the license."
+msgstr "Entfernen Sie alle Zuweisungen, bevor Sie die Lizenz löschen."
+
 #: apps/inventory/apps.py:8
 msgid "Inventory"
 msgstr "Inventar"
 
-#: apps/inventory/models/asset.py:12
+#: apps/inventory/models/asset.py:13
 msgid "In stock"
 msgstr "Im Lager"
 
-#: apps/inventory/models/asset.py:13 apps/inventory/models/asset_event.py:17
+#: apps/inventory/models/asset.py:14 apps/inventory/models/asset_event.py:17
 msgid "Reserved"
 msgstr "Reserviert"
 
-#: apps/inventory/models/asset.py:14
+#: apps/inventory/models/asset.py:15
 msgid "In use"
 msgstr "In Benutzung"
 
-#: apps/inventory/models/asset.py:15
+#: apps/inventory/models/asset.py:16
 msgid "In repair"
 msgstr "In Reparatur"
 
-#: apps/inventory/models/asset.py:16
+#: apps/inventory/models/asset.py:17
 msgid "Lost"
 msgstr "Verloren"
 
-#: apps/inventory/models/asset.py:17
+#: apps/inventory/models/asset.py:18
 msgid "Retired"
 msgstr "Ausgemustert"
 
-#: apps/inventory/models/asset.py:20
+#: apps/inventory/models/asset.py:21
 msgid "New"
 msgstr "Neu"
 
-#: apps/inventory/models/asset.py:21
+#: apps/inventory/models/asset.py:22
 msgid "Good"
 msgstr "Gut"
 
-#: apps/inventory/models/asset.py:22
+#: apps/inventory/models/asset.py:23
 msgid "Worn"
 msgstr "Gebraucht"
 
-#: apps/inventory/models/asset.py:23
+#: apps/inventory/models/asset.py:24
 msgid "Defective"
 msgstr "Defekt"
 
-#: apps/inventory/models/asset.py:25
+#: apps/inventory/models/asset.py:26
 msgid "inventory number"
 msgstr "Inventarnummer"
 
-#: apps/inventory/models/asset.py:28 apps/inventory/models/consumable.py:12
-#: apps/masterdata/models/asset_model.py:58
+#: apps/inventory/models/asset.py:29 apps/inventory/models/consumable.py:12
+#: apps/masterdata/models/asset_model.py:61
 #: apps/procurement/models/purchase_order_line.py:19
 #: apps/reservations/models/reservation_item.py:33
 msgid "model"
 msgstr "Modell"
 
-#: apps/inventory/models/asset.py:32
+#: apps/inventory/models/asset.py:33
 msgid "serial number"
 msgstr "Seriennummer"
 
-#: apps/inventory/models/asset.py:33
+#: apps/inventory/models/asset.py:34
 msgid "IMEI"
 msgstr "IMEI"
 
-#: apps/inventory/models/asset.py:34
+#: apps/inventory/models/asset.py:35
 msgid "MAC address"
 msgstr "MAC-Adresse"
 
-#: apps/inventory/models/asset.py:35
+#: apps/inventory/models/asset.py:36
 msgid "hostname"
 msgstr "Hostname"
 
-#: apps/inventory/models/asset.py:38
+#: apps/inventory/models/asset.py:39 apps/inventory/models/asset_issue.py:28
 #: apps/procurement/models/purchase_order.py:32
-#: apps/reservations/models/reservation.py:61
+#: apps/reservations/models/reservation.py:71
 msgid "status"
 msgstr "Status"
 
-#: apps/inventory/models/asset.py:41
+#: apps/inventory/models/asset.py:42
 msgid "condition"
 msgstr "Zustand"
 
-#: apps/inventory/models/asset.py:44
+#: apps/inventory/models/asset.py:45
 msgid "loanable"
 msgstr "verleihbar"
 
-#: apps/inventory/models/asset.py:44
+#: apps/inventory/models/asset.py:45
 msgid "Part of the pool employees can reserve from."
 msgstr "Teil des Pools, aus dem Mitarbeiter reservieren können."
 
-#: apps/inventory/models/asset.py:48 apps/inventory/models/consumable.py:18
+#: apps/inventory/models/asset.py:49 apps/inventory/models/consumable.py:18
 #: apps/masterdata/models/location.py:31
 msgid "location"
 msgstr "Standort"
 
-#: apps/inventory/models/asset.py:56
+#: apps/inventory/models/asset.py:57 apps/inventory/models/license.py:37
 msgid "assigned to"
 msgstr "zugewiesen an"
 
-#: apps/inventory/models/asset.py:62
+#: apps/inventory/models/asset.py:63
 msgid "assigned since"
 msgstr "zugewiesen seit"
 
-#: apps/inventory/models/asset.py:65
+#: apps/inventory/models/asset.py:66
 msgid "belongs to"
 msgstr "gehört zu"
 
-#: apps/inventory/models/asset.py:70
+#: apps/inventory/models/asset.py:71
 msgid "E.g. a docking station or handle that belongs to another device."
 msgstr ""
 "Z. B. eine Dockingstation oder ein Handgriff, der zu einem anderen Gerät "
 "gehört."
 
-#: apps/inventory/models/asset.py:75 apps/masterdata/models/supplier.py:19
+#: apps/inventory/models/asset.py:76 apps/inventory/models/license.py:45
+#: apps/masterdata/models/supplier.py:19
 #: apps/procurement/models/purchase_order.py:25
 msgid "supplier"
 msgstr "Lieferant"
 
-#: apps/inventory/models/asset.py:83
+#: apps/inventory/models/asset.py:84
 #: apps/inventory/models/consumable_movement.py:51
 msgid "purchase order line"
 msgstr "Bestellposition"
 
-#: apps/inventory/models/asset.py:89
+#: apps/inventory/models/asset.py:90 apps/inventory/models/license.py:51
 msgid "purchase date"
 msgstr "Kaufdatum"
 
-#: apps/inventory/models/asset.py:91
+#: apps/inventory/models/asset.py:92 apps/inventory/models/license.py:53
 msgid "purchase price"
 msgstr "Kaufpreis"
 
-#: apps/inventory/models/asset.py:93
+#: apps/inventory/models/asset.py:94
 msgid "warranty until"
 msgstr "Garantie bis"
 
-#: apps/inventory/models/asset.py:94 apps/masterdata/models/manufacturer.py:12
+#: apps/inventory/models/asset.py:97 apps/inventory/models/consumable.py:30
+msgid "consumables"
+msgstr "Verbrauchsmaterial"
+
+#: apps/inventory/models/asset.py:101
+msgid ""
+"Consumables for this device in addition to those compatible with its model."
+msgstr ""
+"Verbrauchsmaterial für dieses Gerät, zusätzlich zu dem, was zum Modell passt."
+
+#: apps/inventory/models/asset.py:103 apps/inventory/models/license.py:55
+#: apps/masterdata/models/manufacturer.py:12
 #: apps/masterdata/models/supplier.py:15
 #: apps/procurement/models/purchase_order.py:45
+#: apps/reservations/models/device_return.py:17
 #: apps/reservations/models/handover.py:42
-#: apps/reservations/models/reservation.py:54
+#: apps/reservations/models/reservation.py:62
 msgid "notes"
 msgstr "Notizen"
 
-#: apps/inventory/models/asset.py:97 apps/inventory/models/asset_event.py:36
-#: apps/reservations/models/allocation.py:20
+#: apps/inventory/models/asset.py:115 apps/inventory/models/asset_event.py:38
+#: apps/reservations/models/allocation.py:24
 msgid "asset"
 msgstr "Gerät"
 
-#: apps/inventory/models/asset.py:98
+#: apps/inventory/models/asset.py:116
 msgid "assets"
 msgstr "Geräte"
+
+#: apps/inventory/models/asset.py:134
+msgid "Only models tracked as individual devices can be added as devices."
+msgstr ""
+"Als Gerät können nur Modelle angelegt werden, die als Einzelgeräte geführt "
+"werden."
 
 #: apps/inventory/models/asset_event.py:13
 msgid "Created"
@@ -621,7 +869,7 @@ msgid "Status changed"
 msgstr "Status geändert"
 
 #: apps/inventory/models/asset_event.py:15
-#: apps/reservations/models/reservation.py:23
+#: apps/reservations/models/reservation.py:27
 msgid "Handed out"
 msgstr "Ausgegeben"
 
@@ -653,63 +901,131 @@ msgstr "Prüfung"
 msgid "Note"
 msgstr "Notiz"
 
-#: apps/inventory/models/asset_event.py:38
+#: apps/inventory/models/asset_event.py:24
+msgid "Problem reported"
+msgstr "Problem gemeldet"
+
+#: apps/inventory/models/asset_event.py:25
+msgid "Problem resolved"
+msgstr "Problem behoben"
+
+#: apps/inventory/models/asset_event.py:40
+#: apps/inventory/models/asset_issue.py:25
 #: apps/masterdata/models/location.py:16
 msgid "kind"
 msgstr "Art"
 
-#: apps/inventory/models/asset_event.py:39
+#: apps/inventory/models/asset_event.py:41
 msgid "occurred at"
 msgstr "Zeitpunkt"
 
-#: apps/inventory/models/asset_event.py:40
-#: apps/masterdata/models/asset_model.py:36
-#: apps/masterdata/models/category.py:26 apps/masterdata/models/location.py:25
+#: apps/inventory/models/asset_event.py:42
+#: apps/inventory/models/asset_issue.py:26
+#: apps/masterdata/models/asset_model.py:39
+#: apps/masterdata/models/category.py:39 apps/masterdata/models/location.py:25
 #: apps/procurement/models/purchase_order_line.py:25
 #: apps/reservations/models/reservation_item.py:40
 msgid "description"
 msgstr "Beschreibung"
 
-#: apps/inventory/models/asset_event.py:41
+#: apps/inventory/models/asset_event.py:43
 msgid "component"
 msgstr "Komponente"
 
-#: apps/inventory/models/asset_event.py:42
+#: apps/inventory/models/asset_event.py:44
 msgid "component serial number"
 msgstr "Seriennummer der Komponente"
 
-#: apps/inventory/models/asset_event.py:43
+#: apps/inventory/models/asset_event.py:45
 msgid "cost"
 msgstr "Kosten"
 
-#: apps/inventory/models/asset_event.py:46
+#: apps/inventory/models/asset_event.py:48
 #: apps/inventory/models/consumable_movement.py:27
 msgid "performed by"
 msgstr "durchgeführt von"
 
-#: apps/inventory/models/asset_event.py:54
+#: apps/inventory/models/asset_event.py:56 apps/inventory/models/license.py:87
 msgid "employee"
 msgstr "Mitarbeiter"
 
-#: apps/inventory/models/asset_event.py:62
+#: apps/inventory/models/asset_event.py:64
 #: apps/inventory/models/consumable_movement.py:43
+#: apps/reservations/models/device_return.py:13
 #: apps/reservations/models/handover.py:23
-#: apps/reservations/models/reservation.py:94
+#: apps/reservations/models/reservation.py:136
 #: apps/reservations/models/reservation_item.py:19
 msgid "reservation"
 msgstr "Reservierung"
 
-#: apps/inventory/models/asset_event.py:70
+#: apps/inventory/models/asset_event.py:72
 msgid "asset event"
 msgstr "Geräteereignis"
 
-#: apps/inventory/models/asset_event.py:71
+#: apps/inventory/models/asset_event.py:73
 msgid "asset events"
 msgstr "Geräteereignisse"
 
+#: apps/inventory/models/asset_issue.py:12
+msgid "Not working"
+msgstr "Funktioniert nicht"
+
+#: apps/inventory/models/asset_issue.py:13
+msgid "Damaged"
+msgstr "Beschädigt"
+
+#: apps/inventory/models/asset_issue.py:14
+msgid "Lost or stolen"
+msgstr "Verloren oder gestohlen"
+
+#: apps/inventory/models/asset_issue.py:15
+msgid "Other"
+msgstr "Sonstiges"
+
+#: apps/inventory/models/asset_issue.py:18
+msgid "Open"
+msgstr "Offen"
+
+#: apps/inventory/models/asset_issue.py:19
+msgid "In progress"
+msgstr "In Bearbeitung"
+
+#: apps/inventory/models/asset_issue.py:20
+msgid "Resolved"
+msgstr "Erledigt"
+
+#: apps/inventory/models/asset_issue.py:23 apps/inventory/models/license.py:95
+msgid "device"
+msgstr "Gerät"
+
+#: apps/inventory/models/asset_issue.py:32
+msgid "reported by"
+msgstr "gemeldet von"
+
+#: apps/inventory/models/asset_issue.py:39
+#: apps/reservations/models/reservation.py:98
+msgid "handled by"
+msgstr "bearbeitet von"
+
+#: apps/inventory/models/asset_issue.py:45
+msgid "resolution"
+msgstr "Lösung"
+
+#: apps/inventory/models/asset_issue.py:46
+msgid "resolved at"
+msgstr "erledigt am"
+
+#: apps/inventory/models/asset_issue.py:49
+msgid "problem report"
+msgstr "Problemmeldung"
+
+#: apps/inventory/models/asset_issue.py:50
+msgid "problem reports"
+msgstr "Problemmeldungen"
+
 #: apps/inventory/models/consumable.py:22
 #: apps/procurement/models/purchase_order_line.py:26
-#: apps/reservations/models/allocation.py:34
+#: apps/reservations/models/allocation.py:54
 msgid "quantity"
 msgstr "Menge"
 
@@ -727,12 +1043,8 @@ msgstr "Nachbestellen, wenn der Bestand darunter fällt."
 
 #: apps/inventory/models/consumable.py:29
 #: apps/inventory/models/consumable_movement.py:18
-#: apps/reservations/models/allocation.py:28
+#: apps/reservations/models/allocation.py:32
 msgid "consumable"
-msgstr "Verbrauchsmaterial"
-
-#: apps/inventory/models/consumable.py:30
-msgid "consumables"
 msgstr "Verbrauchsmaterial"
 
 #: apps/inventory/models/consumable_movement.py:10
@@ -764,13 +1076,10 @@ msgid "reason"
 msgstr "Grund"
 
 #: apps/inventory/models/consumable_movement.py:24
+#: apps/inventory/models/license.py:109
 #: apps/reservations/models/reservation_item.py:47
 msgid "note"
 msgstr "Notiz"
-
-#: apps/inventory/models/consumable_movement.py:35
-msgid "recipient"
-msgstr "Empfänger"
 
 #: apps/inventory/models/consumable_movement.py:59
 msgid "consumable movement"
@@ -780,11 +1089,93 @@ msgstr "Materialbewegung"
 msgid "consumable movements"
 msgstr "Materialbewegungen"
 
-#: apps/inventory/services/assets.py:68
+#: apps/inventory/models/license.py:18
+msgid "Employees"
+msgstr "Mitarbeiter"
+
+#: apps/inventory/models/license.py:19
+msgid "Devices"
+msgstr "Geräte"
+
+#: apps/inventory/models/license.py:23
+msgid "software"
+msgstr "Software"
+
+#: apps/inventory/models/license.py:29
+msgid "contract / reference"
+msgstr "Vertrag / Referenz"
+
+#: apps/inventory/models/license.py:32
+msgid "E.g. contract number or agreement, to tell several licenses apart."
+msgstr ""
+"Z. B. Vertragsnummer, um mehrere Lizenzen derselben Software zu "
+"unterscheiden."
+
+#: apps/inventory/models/license.py:34
+msgid "license key"
+msgstr "Lizenzschlüssel"
+
+#: apps/inventory/models/license.py:35
+msgid "seats"
+msgstr "Plätze"
+
+#: apps/inventory/models/license.py:39
+msgid "valid from"
+msgstr "gültig ab"
+
+#: apps/inventory/models/license.py:41
+msgid "valid until"
+msgstr "gültig bis"
+
+#: apps/inventory/models/license.py:41
+msgid "Leave empty for perpetual licenses."
+msgstr "Leer lassen für unbefristete Lizenzen."
+
+#: apps/inventory/models/license.py:58 apps/inventory/models/license.py:81
+#: apps/reservations/models/allocation.py:40
+msgid "license"
+msgstr "Lizenz"
+
+#: apps/inventory/models/license.py:59
+msgid "licenses"
+msgstr "Lizenzen"
+
+#: apps/inventory/models/license.py:67
+msgid "Choose a software model."
+msgstr "Wählen Sie eine Software aus."
+
+#: apps/inventory/models/license.py:69
+msgid "The end date is before the start date."
+msgstr "Das Enddatum liegt vor dem Startdatum."
+
+#: apps/inventory/models/license.py:103
+msgid "assigned by"
+msgstr "zugewiesen von"
+
+#: apps/inventory/models/license.py:112
+#: apps/reservations/models/allocation.py:48
+msgid "license assignment"
+msgstr "Lizenzzuweisung"
+
+#: apps/inventory/models/license.py:113
+msgid "license assignments"
+msgstr "Lizenzzuweisungen"
+
+#: apps/inventory/services/assets.py:26
+msgid "Only consumables can be assigned to a device."
+msgstr "Einem Gerät kann nur Verbrauchsmaterial zugeordnet werden."
+
+#: apps/inventory/services/assets.py:76
+#, python-format
+msgid "%(asset)s is set aside for %(number)s. Remove it there first."
+msgstr ""
+"%(asset)s ist für %(number)s zurückgelegt. Entfernen Sie es zuerst dort."
+
+#: apps/inventory/services/assets.py:122
 msgid "The list contains duplicate serial numbers."
 msgstr "Die Liste enthält doppelte Seriennummern."
 
-#: apps/inventory/services/assets.py:76
+#: apps/inventory/services/assets.py:130
 msgid "This kind of event is recorded automatically."
 msgstr "Diese Art von Ereignis wird automatisch erfasst."
 
@@ -797,6 +1188,85 @@ msgstr "Nicht genug Bestand für %(model)s (verfügbar: %(quantity)s)."
 #, python-format
 msgid "Only %(available)s units of %(model)s are available at %(location)s."
 msgstr "Nur %(available)s Stück von %(model)s sind in %(location)s verfügbar."
+
+#: apps/inventory/services/issues.py:18
+msgid "Describe the problem."
+msgstr "Beschreiben Sie das Problem."
+
+#: apps/inventory/services/issues.py:36
+msgid "Describe how the problem was solved."
+msgstr "Beschreiben Sie, wie das Problem gelöst wurde."
+
+#: apps/inventory/services/licenses.py:20
+#, python-format
+msgid ""
+"%(used)s seats are assigned; remove assignments before reducing the seats."
+msgstr ""
+"%(used)s Plätze sind zugewiesen. Entfernen Sie erst Zuweisungen, bevor Sie "
+"die Plätze reduzieren."
+
+#: apps/inventory/services/licenses.py:24
+msgid "Remove all assignments before changing whom the license is assigned to."
+msgstr ""
+"Entfernen Sie alle Zuweisungen, bevor Sie ändern, wem die Lizenz zugewiesen "
+"wird."
+
+#: apps/inventory/services/licenses.py:34
+msgid "This license is assigned to employees. Choose an employee."
+msgstr ""
+"Diese Lizenz wird Mitarbeitern zugewiesen. Wählen Sie einen Mitarbeiter."
+
+#: apps/inventory/services/licenses.py:36
+#: apps/reservations/services/workflow.py:284
+msgid "This license is assigned to devices. Choose a device."
+msgstr "Diese Lizenz wird Geräten zugewiesen. Wählen Sie ein Gerät."
+
+#: apps/inventory/services/licenses.py:38
+msgid "The license has expired."
+msgstr "Die Lizenz ist abgelaufen."
+
+#: apps/inventory/services/licenses.py:40
+#, python-format
+msgid "All %(seats)s seats of this license are in use."
+msgstr "Alle %(seats)s Plätze dieser Lizenz sind belegt."
+
+#: apps/inventory/services/licenses.py:44
+msgid "Already assigned."
+msgstr "Bereits zugewiesen."
+
+#: apps/inventory/services/licenses.py:46
+msgid "Device not found."
+msgstr "Gerät nicht gefunden."
+
+#: apps/inventory/services/notifications.py:12
+#, python-format
+msgid "Problem reported: %(device)s"
+msgstr "Problem gemeldet: %(device)s"
+
+#: apps/inventory/services/notifications.py:13
+#, python-format
+msgid "%(name)s reports for %(device)s (%(model)s): %(kind)s"
+msgstr "%(name)s meldet zu %(device)s (%(model)s): %(kind)s"
+
+#: apps/inventory/services/notifications.py:29
+#, python-format
+msgid "Your problem report for %(device)s was resolved"
+msgstr "Ihre Problemmeldung zu %(device)s ist erledigt"
+
+#: apps/inventory/services/notifications.py:32
+#, python-format
+msgid "IT resolved your report “%(description)s”."
+msgstr "Die IT hat Ihre Meldung „%(description)s“ erledigt."
+
+#: apps/inventory/services/notifications.py:40
+#, python-format
+msgid "License ends on %(date)s: %(name)s"
+msgstr "Lizenz endet am %(date)s: %(name)s"
+
+#: apps/inventory/services/notifications.py:44
+#, python-format
+msgid "The license %(name)s %(reference)s ends on %(date)s."
+msgstr "Die Lizenz %(name)s %(reference)s endet am %(date)s."
 
 #: apps/masterdata/admin/asset_model.py:25
 msgid "Identification"
@@ -818,119 +1288,165 @@ msgstr "Details"
 msgid "Master data"
 msgstr "Stammdaten"
 
-#: apps/masterdata/models/asset_model.py:15
+#: apps/masterdata/models/asset_model.py:17
 msgid "Individual devices"
 msgstr "Einzelgeräte"
 
-#: apps/masterdata/models/asset_model.py:16
+#: apps/masterdata/models/asset_model.py:18
 msgid "Consumable (quantity)"
 msgstr "Verbrauchsmaterial (Menge)"
 
-#: apps/masterdata/models/asset_model.py:21
+#: apps/masterdata/models/asset_model.py:19
+msgid "Software license"
+msgstr "Softwarelizenz"
+
+#: apps/masterdata/models/asset_model.py:24
 #: apps/masterdata/models/manufacturer.py:16
 msgid "manufacturer"
 msgstr "Hersteller"
 
-#: apps/masterdata/models/asset_model.py:27
-#: apps/masterdata/models/category.py:51
+#: apps/masterdata/models/asset_model.py:30
+#: apps/masterdata/models/category.py:64
 #: apps/reservations/models/reservation_item.py:25
 msgid "category"
 msgstr "Kategorie"
 
-#: apps/masterdata/models/asset_model.py:31
+#: apps/masterdata/models/asset_model.py:34
 msgid "part number"
 msgstr "Artikelnummer"
 
-#: apps/masterdata/models/asset_model.py:32
+#: apps/masterdata/models/asset_model.py:35
 msgid "EAN / GTIN"
 msgstr "EAN / GTIN"
 
-#: apps/masterdata/models/asset_model.py:34
+#: apps/masterdata/models/asset_model.py:37
 msgid "tracking"
 msgstr "Führung"
 
-#: apps/masterdata/models/asset_model.py:37
+#: apps/masterdata/models/asset_model.py:40
 msgid "specifications"
 msgstr "Technische Daten"
 
-#: apps/masterdata/models/asset_model.py:40
+#: apps/masterdata/models/asset_model.py:43
 msgid "default supplier"
 msgstr "Standardlieferant"
 
-#: apps/masterdata/models/asset_model.py:46
+#: apps/masterdata/models/asset_model.py:49
 msgid "list price"
 msgstr "Listenpreis"
 
-#: apps/masterdata/models/asset_model.py:47
+#: apps/masterdata/models/asset_model.py:50
 msgid "warranty (months)"
 msgstr "Garantie (Monate)"
 
-#: apps/masterdata/models/asset_model.py:50
+#: apps/masterdata/models/asset_model.py:53
 msgid "compatible with"
 msgstr "kompatibel mit"
 
-#: apps/masterdata/models/asset_model.py:52
+#: apps/masterdata/models/asset_model.py:55
 msgid "Accessories, spare parts and consumables that fit this model."
 msgstr ""
 "Zubehör, Ersatzteile und Verbrauchsmaterial, die zu diesem Modell passen."
 
-#: apps/masterdata/models/asset_model.py:54
-#: apps/masterdata/models/category.py:38
+#: apps/masterdata/models/asset_model.py:57
+#: apps/masterdata/models/category.py:51
 msgid "requestable"
 msgstr "anforderbar"
 
-#: apps/masterdata/models/asset_model.py:55
+#: apps/masterdata/models/asset_model.py:58
 #: apps/masterdata/models/manufacturer.py:13
 #: apps/masterdata/models/supplier.py:16
 msgid "active"
 msgstr "aktiv"
 
-#: apps/masterdata/models/asset_model.py:59
+#: apps/masterdata/models/asset_model.py:62
 msgid "models"
 msgstr "Modelle"
 
+#: apps/masterdata/models/asset_model.py:88
+msgid ""
+"Software categories only take licenses; licenses only belong to software "
+"categories."
+msgstr ""
+"Software-Kategorien enthalten nur Lizenzen, Lizenzen gehören nur in Software-"
+"Kategorien."
+
+#: apps/masterdata/models/category.py:19
+msgid "Hardware"
+msgstr "Hardware"
+
 #: apps/masterdata/models/category.py:20
+msgid "Software"
+msgstr "Software"
+
+#: apps/masterdata/models/category.py:23
+msgid "type"
+msgstr "Typ"
+
+#: apps/masterdata/models/category.py:25
+msgid "singular name"
+msgstr "Einzelbezeichnung"
+
+#: apps/masterdata/models/category.py:28
+msgid "Name of a single item, e.g. “Laptop”. Shown for “any model” requests."
+msgstr ""
+"Bezeichnung für ein einzelnes Stück, z. B. „Laptop“. Wird bei „beliebiges "
+"Modell“ angezeigt."
+
+#: apps/masterdata/models/category.py:33
 msgid "parent category"
 msgstr "übergeordnete Kategorie"
 
-#: apps/masterdata/models/category.py:27
+#: apps/masterdata/models/category.py:40
 msgid "icon"
 msgstr "Symbol"
 
-#: apps/masterdata/models/category.py:27
+#: apps/masterdata/models/category.py:40
 msgid "Icon name"
 msgstr "Name des Symbols"
 
-#: apps/masterdata/models/category.py:35
+#: apps/masterdata/models/category.py:48
 msgid "Inventory numbers for new assets. Falls back to the parent category."
 msgstr ""
 "Inventarnummern für neue Geräte. Ohne Angabe gilt die übergeordnete "
 "Kategorie."
 
-#: apps/masterdata/models/category.py:38
+#: apps/masterdata/models/category.py:51
 msgid "Shown in the employee portal."
 msgstr "Wird im Mitarbeiterportal angezeigt."
 
-#: apps/masterdata/models/category.py:41
+#: apps/masterdata/models/category.py:54
 msgid "any model requestable"
 msgstr "beliebiges Modell anforderbar"
 
-#: apps/masterdata/models/category.py:44
+#: apps/masterdata/models/category.py:57
 msgid ""
 "Employees may request “any device” of this group. Turn off where only a "
 "specific model makes sense, e.g. accessories or consumables."
 msgstr ""
-"Mitarbeiter dürfen „beliebig“ aus dieser Kategorie anfordern. Abschalten, wo"
-" nur ein bestimmtes Modell sinnvoll ist, z. B. bei Zubehör oder "
+"Mitarbeiter dürfen „beliebig“ aus dieser Kategorie anfordern. Abschalten, wo "
+"nur ein bestimmtes Modell sinnvoll ist, z. B. bei Zubehör oder "
 "Verbrauchsmaterial."
 
-#: apps/masterdata/models/category.py:48
-msgid "sort order"
-msgstr "Sortierung"
-
-#: apps/masterdata/models/category.py:52
+#: apps/masterdata/models/category.py:65
 msgid "categories"
 msgstr "Kategorien"
+
+#: apps/masterdata/models/category.py:78
+msgid "A subcategory must have the same type as its parent category."
+msgstr ""
+"Eine Unterkategorie muss denselben Typ haben wie ihre übergeordnete "
+"Kategorie."
+
+#: apps/masterdata/models/category.py:81
+msgid "Change the type of the subcategories first."
+msgstr "Ändern Sie zuerst den Typ der Unterkategorien."
+
+#: apps/masterdata/models/category.py:85
+msgid "The type cannot be changed while models belong to this category."
+msgstr ""
+"Der Typ kann nicht geändert werden, solange Modelle zu dieser Kategorie "
+"gehören."
 
 #: apps/masterdata/models/location.py:9
 msgid "Site"
@@ -1022,12 +1538,12 @@ msgid "Received"
 msgstr "Geliefert"
 
 #: apps/procurement/models/purchase_order.py:18
-#: apps/reservations/models/reservation.py:26
+#: apps/reservations/models/reservation.py:30
 msgid "Cancelled"
 msgstr "Storniert"
 
 #: apps/procurement/models/purchase_order.py:22
-#: apps/reservations/models/reservation.py:39
+#: apps/reservations/models/reservation.py:47
 msgid "number"
 msgstr "Nummer"
 
@@ -1048,7 +1564,7 @@ msgid "delivery location"
 msgstr "Lieferort"
 
 #: apps/procurement/models/purchase_order.py:48
-#: apps/reservations/models/reservation.py:48
+#: apps/reservations/models/reservation.py:56
 msgid "created by"
 msgstr "angelegt von"
 
@@ -1114,30 +1630,34 @@ msgstr "Von „%(line)s“ sind nur noch %(open)s Stück offen."
 msgid "Choose a storage location for consumables."
 msgstr "Wählen Sie einen Lagerort für das Verbrauchsmaterial."
 
-#: apps/reservations/admin/handover.py:45
+#: apps/reservations/admin/handover.py:46
 #: apps/reservations/admin/reservation.py:42
 #: apps/reservations/models/handover.py:41
 msgid "signature"
 msgstr "Unterschrift"
 
-#: apps/reservations/admin/reservation.py:70
+#: apps/reservations/admin/reservation.py:80
 msgid "Period"
 msgstr "Zeitraum"
 
-#: apps/reservations/admin/reservation.py:71
+#: apps/reservations/admin/reservation.py:81
 msgid "Pickup"
 msgstr "Abholung"
 
-#: apps/reservations/admin/reservation_item.py:33
+#: apps/reservations/admin/reservation.py:82
+msgid "Responsible"
+msgstr "Zuständig"
+
+#: apps/reservations/admin/reservation_item.py:36
 msgid "custom request"
 msgstr "Sonderwunsch"
 
-#: apps/reservations/api/allocations.py:61
+#: apps/reservations/api/allocations.py:71
 #, python-format
 msgid "No device found for “%(code)s”."
 msgstr "Kein Gerät gefunden für „%(code)s“."
 
-#: apps/reservations/api/allocations.py:69
+#: apps/reservations/api/allocations.py:83
 msgid "Choose a device or consumable."
 msgstr "Wählen Sie ein Gerät oder Verbrauchsmaterial."
 
@@ -1145,55 +1665,83 @@ msgstr "Wählen Sie ein Gerät oder Verbrauchsmaterial."
 msgid "Reservations"
 msgstr "Reservierungen"
 
-#: apps/reservations/models/allocation.py:14
+#: apps/reservations/models/allocation.py:18
 #: apps/reservations/models/reservation_item.py:52
 msgid "reservation item"
 msgstr "Reservierungsposition"
 
-#: apps/reservations/models/allocation.py:37
+#: apps/reservations/models/allocation.py:57
 msgid "allocated by"
 msgstr "zugewiesen von"
 
-#: apps/reservations/models/allocation.py:42
+#: apps/reservations/models/allocation.py:62
 msgid "allocated at"
 msgstr "zugewiesen am"
 
-#: apps/reservations/models/allocation.py:44
+#: apps/reservations/models/allocation.py:64
 msgid "hand-out note"
 msgstr "Hinweis bei Ausgabe"
 
-#: apps/reservations/models/allocation.py:44
+#: apps/reservations/models/allocation.py:64
 msgid "E.g. a scratch on the lid."
 msgstr "Z. B. ein Kratzer am Deckel."
 
-#: apps/reservations/models/allocation.py:46
-#: apps/reservations/models/handover.py:51
-#: apps/reservations/models/reservation.py:90
+#: apps/reservations/models/allocation.py:66
+#: apps/reservations/models/handover.py:62
+#: apps/reservations/models/reservation.py:132
 msgid "handed out at"
 msgstr "ausgegeben am"
 
-#: apps/reservations/models/allocation.py:47
+#: apps/reservations/models/allocation.py:67
+#: apps/reservations/models/device_return.py:25
 msgid "returned at"
 msgstr "zurückgegeben am"
 
-#: apps/reservations/models/allocation.py:50
+#: apps/reservations/models/allocation.py:70
+#: apps/reservations/models/device_return.py:28
+msgid "return"
+msgstr "Rücknahme"
+
+#: apps/reservations/models/allocation.py:76
+msgid "returned damaged"
+msgstr "defekt zurück"
+
+#: apps/reservations/models/allocation.py:78
+msgid "return note"
+msgstr "Rücknahmevermerk"
+
+#: apps/reservations/models/allocation.py:78
+msgid "E.g. the condition when it came back."
+msgstr "Z. B. der Zustand bei der Rückgabe."
+
+#: apps/reservations/models/allocation.py:82
 msgid "allocation"
 msgstr "Zuweisung"
 
-#: apps/reservations/models/allocation.py:51
+#: apps/reservations/models/allocation.py:83
 msgid "allocations"
 msgstr "Zuweisungen"
 
-#: apps/reservations/models/allocation.py:60
-msgid "Allocate either a device or a consumable quantity."
-msgstr "Weisen Sie entweder ein Gerät oder eine Menge Verbrauchsmaterial zu."
+#: apps/reservations/models/allocation.py:106
+msgid "Allocate either a device, a consumable quantity or a license seat."
+msgstr ""
+"Weisen Sie entweder ein Gerät, eine Menge Verbrauchsmaterial oder einen "
+"Lizenzplatz zu."
+
+#: apps/reservations/models/device_return.py:20
+msgid "taken back by"
+msgstr "zurückgenommen von"
+
+#: apps/reservations/models/device_return.py:29
+msgid "returns"
+msgstr "Rücknahmen"
 
 #: apps/reservations/models/handover.py:17
 msgid "Signed at pickup terminal"
 msgstr "Am Abholterminal unterschrieben"
 
 #: apps/reservations/models/handover.py:18
-#: apps/reservations/models/reservation.py:34
+#: apps/reservations/models/reservation.py:40
 msgid "Delivered by IT"
 msgstr "Durch IT geliefert"
 
@@ -1227,100 +1775,136 @@ msgstr "PNG-Bild als Data-URL."
 msgid "delivered to"
 msgstr "geliefert an"
 
-#: apps/reservations/models/handover.py:46
+#: apps/reservations/models/handover.py:48
 msgid "handed out by"
 msgstr "ausgegeben von"
 
-#: apps/reservations/models/handover.py:54
-#: apps/reservations/models/reservation.py:74
+#: apps/reservations/models/handover.py:55
+msgid "recorded by"
+msgstr "erfasst über"
+
+#: apps/reservations/models/handover.py:60
+msgid "The account the hand-out was recorded with, e.g. the pickup terminal."
+msgstr "Das Konto, mit dem die Ausgabe erfasst wurde, z. B. das Abholterminal."
+
+#: apps/reservations/models/handover.py:65
+#: apps/reservations/models/reservation.py:84
 msgid "handover"
 msgstr "Übergabe"
 
-#: apps/reservations/models/handover.py:55
+#: apps/reservations/models/handover.py:66
 msgid "handovers"
 msgstr "Übergaben"
 
-#: apps/reservations/models/reservation.py:20
+#: apps/reservations/models/reservation.py:24
 msgid "Submitted"
 msgstr "Eingereicht"
 
-#: apps/reservations/models/reservation.py:21
+#: apps/reservations/models/reservation.py:25
 msgid "Approved"
 msgstr "Bestätigt"
 
-#: apps/reservations/models/reservation.py:22
+#: apps/reservations/models/reservation.py:26
 msgid "Ready for pickup"
 msgstr "Abholbereit"
 
-#: apps/reservations/models/reservation.py:24
+#: apps/reservations/models/reservation.py:28
 msgid "Completed"
 msgstr "Abgeschlossen"
 
-#: apps/reservations/models/reservation.py:25
+#: apps/reservations/models/reservation.py:29
 msgid "Rejected"
 msgstr "Abgelehnt"
 
-#: apps/reservations/models/reservation.py:29
+#: apps/reservations/models/reservation.py:33
 msgid "Temporary"
 msgstr "Befristet"
 
-#: apps/reservations/models/reservation.py:30
+#: apps/reservations/models/reservation.py:34
 msgid "Permanent"
 msgstr "Dauerhaft"
 
-#: apps/reservations/models/reservation.py:33
+#: apps/reservations/models/reservation.py:37
 msgid "Pickup with signature"
 msgstr "Abholung mit Unterschrift"
 
-#: apps/reservations/models/reservation.py:42
+#: apps/reservations/models/reservation.py:39
+msgid "Simple pickup"
+msgstr "Einfache Abholung"
+
+#: apps/reservations/models/reservation.py:50
 msgid "requester"
 msgstr "Anforderer"
 
-#: apps/reservations/models/reservation.py:53
+#: apps/reservations/models/reservation.py:61
 msgid "purpose"
 msgstr "Zweck"
 
-#: apps/reservations/models/reservation.py:56
+#: apps/reservations/models/reservation.py:64
 msgid "duration"
 msgstr "Dauer"
 
-#: apps/reservations/models/reservation.py:58
+#: apps/reservations/models/reservation.py:66
 msgid "needed from"
 msgstr "benötigt ab"
 
-#: apps/reservations/models/reservation.py:59
+#: apps/reservations/models/reservation.py:68
+msgid "preferred pickup day"
+msgstr "gewünschter Abholtag"
+
+#: apps/reservations/models/reservation.py:69
 msgid "needed until"
 msgstr "benötigt bis"
 
-#: apps/reservations/models/reservation.py:64
+#: apps/reservations/models/reservation.py:74
 msgid "pickup at"
 msgstr "Abholung am"
 
-#: apps/reservations/models/reservation.py:67
+#: apps/reservations/models/reservation.py:77
 msgid "pickup location"
 msgstr "Abholort"
 
-#: apps/reservations/models/reservation.py:78
+#: apps/reservations/models/reservation.py:88
 msgid "Pickup requests appear on the pickup terminal once they are ready."
 msgstr "Abholungen erscheinen am Abholterminal, sobald sie abholbereit sind."
 
-#: apps/reservations/models/reservation.py:80
+#: apps/reservations/models/reservation.py:91
+msgid "skip device check"
+msgstr "Geräteprüfung überspringen"
+
+#: apps/reservations/models/reservation.py:93
+msgid ""
+"The pickup terminal starts with who collects, without checking the devices."
+msgstr "Das Abholterminal beginnt mit „Wer holt ab?“, ohne Geräteprüfung."
+
+#: apps/reservations/models/reservation.py:95
 msgid "IT comment"
 msgstr "Kommentar der IT"
 
-#: apps/reservations/models/reservation.py:83
-msgid "handled by"
-msgstr "bearbeitet von"
+#: apps/reservations/models/reservation.py:116
+msgid "assignee"
+msgstr "Bearbeiter"
 
-#: apps/reservations/models/reservation.py:89
+#: apps/reservations/models/reservation.py:124
+msgid "prepared by"
+msgstr "bereitgestellt von"
+
+#: apps/reservations/models/reservation.py:129
+msgid ""
+"Who marked the request ready; shown as handing out at the pickup terminal."
+msgstr ""
+"Wer die Anforderung bereitgemeldet hat; erscheint bei Abholung am Terminal "
+"als ausgebend."
+
+#: apps/reservations/models/reservation.py:131
 msgid "approved at"
 msgstr "bestätigt am"
 
-#: apps/reservations/models/reservation.py:91
+#: apps/reservations/models/reservation.py:133
 msgid "completed at"
 msgstr "abgeschlossen am"
 
-#: apps/reservations/models/reservation.py:95
+#: apps/reservations/models/reservation.py:137
 msgid "reservations"
 msgstr "Reservierungen"
 
@@ -1346,634 +1930,241 @@ msgstr ""
 "Wählen Sie eine Kategorie oder ein Modell, oder beschreiben Sie, was Sie "
 "brauchen."
 
-#: apps/reservations/services/workflow.py:25
-#, python-format
-msgid "This is not possible while the reservation is “%(status)s”."
-msgstr "Das ist nicht möglich, solange die Reservierung „%(status)s“ ist."
-
-#: apps/reservations/services/workflow.py:33
-msgid "Temporary reservations need an end date."
-msgstr "Befristete Reservierungen brauchen ein Enddatum."
-
-#: apps/reservations/services/workflow.py:35
-msgid "The end date must not be before the start date."
-msgstr "Das Enddatum darf nicht vor dem Startdatum liegen."
-
-#: apps/reservations/services/workflow.py:44
-msgid "Add at least one device to the request."
-msgstr "Fügen Sie der Anforderung mindestens ein Gerät hinzu."
-
-#: apps/reservations/services/workflow.py:65
-#, python-format
-msgid "Please choose a specific model for “%(category)s”."
-msgstr "Bitte wählen Sie für „%(category)s“ ein bestimmtes Modell."
-
-#: apps/reservations/services/workflow.py:98
-msgid "You cannot approve more devices than were requested."
-msgstr "Es können nicht mehr Geräte bestätigt werden als angefordert."
-
-#: apps/reservations/services/workflow.py:101
-#, python-format
-msgid "Remove allocated devices of “%(item)s” before lowering the quantity."
-msgstr ""
-"Entfernen Sie zugewiesene Geräte von „%(item)s“, bevor Sie die Menge "
-"reduzieren."
-
-#: apps/reservations/services/workflow.py:108
-msgid "Approve at least one device or reject the request."
-msgstr ""
-"Bestätigen Sie mindestens ein Gerät oder lehnen Sie die Anforderung ab."
-
-#: apps/reservations/services/workflow.py:155
-msgid "Remove allocated devices before changing the model."
-msgstr "Entfernen Sie zugewiesene Geräte, bevor Sie das Modell ändern."
-
-#: apps/reservations/services/workflow.py:168
-#, python-format
-msgid "“%(item)s” is free text. Create or assign a model first."
-msgstr ""
-"„%(item)s“ ist Freitext. Legen Sie zuerst ein Modell an oder ordnen Sie "
-"eines zu."
-
-#: apps/reservations/services/workflow.py:186
-#, python-format
-msgid "%(asset)s does not match “%(item)s”."
-msgstr "%(asset)s passt nicht zu „%(item)s“."
-
-#: apps/reservations/services/workflow.py:190
-#, python-format
-msgid "%(asset)s is not in stock (%(status)s)."
-msgstr "%(asset)s ist nicht im Lager (%(status)s)."
-
-#: apps/reservations/services/workflow.py:195
-#, python-format
-msgid "All approved devices for “%(item)s” are already allocated."
-msgstr "Alle bestätigten Geräte für „%(item)s“ sind bereits zugewiesen."
-
-#: apps/reservations/services/workflow.py:217
-#, python-format
-msgid "%(model)s does not match “%(item)s”."
-msgstr "%(model)s passt nicht zu „%(item)s“."
-
-#: apps/reservations/services/workflow.py:221
-#, python-format
-msgid "Only %(missing)s more units are needed for “%(item)s”."
-msgstr "Für „%(item)s“ werden nur noch %(missing)s Stück benötigt."
-
-#: apps/reservations/services/workflow.py:274
-#, python-format
-msgid "Released from %(number)s"
-msgstr "Freigegeben aus %(number)s"
-
-#: apps/reservations/services/workflow.py:294
-#, python-format
-msgid "Devices are still missing for: %(items)s"
-msgstr "Es fehlen noch Geräte für: %(items)s"
-
-#: apps/reservations/services/workflow.py:312
-msgid "Please sign in the signature field."
-msgstr "Bitte unterschreiben Sie im Unterschriftsfeld."
-
-#: apps/reservations/services/workflow.py:314
-msgid "Enter who is collecting the devices."
-msgstr "Geben Sie an, wer die Geräte abholt."
-
-#: apps/reservations/services/workflow.py:316
-msgid "Only pickups at the terminal are signed."
-msgstr "Nur Abholungen am Terminal werden unterschrieben."
-
-#: config/api.py:65
-msgid "Not found."
-msgstr "Nicht gefunden."
-
-msgid "Consumables"
-msgstr "Verbrauchsmaterial"
-
-msgid "Only consumables can be assigned to a device."
-msgstr "Einem Gerät kann nur Verbrauchsmaterial zugeordnet werden."
-
-msgid ""
-"Consumables for this device in addition to those compatible with its model."
-msgstr ""
-"Verbrauchsmaterial für dieses Gerät, zusätzlich zu dem, was zum Modell "
-"passt."
-
-msgid "Hardware"
-msgstr "Hardware"
-
-msgid "Software"
-msgstr "Software"
-
-msgid "type"
-msgstr "Typ"
-
-msgid "A subcategory must have the same type as its parent category."
-msgstr ""
-"Eine Unterkategorie muss denselben Typ haben wie ihre übergeordnete "
-"Kategorie."
-
-msgid "Change the type of the subcategories first."
-msgstr "Ändern Sie zuerst den Typ der Unterkategorien."
-
-msgid "The type cannot be changed while models belong to this category."
-msgstr ""
-"Der Typ kann nicht geändert werden, solange Modelle zu dieser Kategorie "
-"gehören."
-
-msgid "Software license"
-msgstr "Softwarelizenz"
-
-msgid ""
-"Software categories only take licenses; licenses only belong to software "
-"categories."
-msgstr ""
-"Software-Kategorien enthalten nur Lizenzen, Lizenzen gehören nur in "
-"Software-Kategorien."
-
-msgid "Only models tracked as individual devices can be added as devices."
-msgstr ""
-"Als Gerät können nur Modelle angelegt werden, die als Einzelgeräte geführt "
-"werden."
-
-msgid "Employees"
-msgstr "Mitarbeiter"
-
-msgid "Devices"
-msgstr "Geräte"
-
-msgid "software"
-msgstr "Software"
-
-msgid "contract / reference"
-msgstr "Vertrag / Referenz"
-
-msgid "E.g. contract number or agreement, to tell several licenses apart."
-msgstr ""
-"Z. B. Vertragsnummer, um mehrere Lizenzen derselben Software zu "
-"unterscheiden."
-
-msgid "license key"
-msgstr "Lizenzschlüssel"
-
-msgid "seats"
-msgstr "Plätze"
-
-msgid "valid from"
-msgstr "gültig ab"
-
-msgid "valid until"
-msgstr "gültig bis"
-
-msgid "Leave empty for perpetual licenses."
-msgstr "Leer lassen für unbefristete Lizenzen."
-
-msgid "license"
-msgstr "Lizenz"
-
-msgid "licenses"
-msgstr "Lizenzen"
-
-msgid "Choose a software model."
-msgstr "Wählen Sie eine Software aus."
-
-msgid "The end date is before the start date."
-msgstr "Das Enddatum liegt vor dem Startdatum."
-
-msgid "device"
-msgstr "Gerät"
-
-msgid "assigned by"
-msgstr "zugewiesen von"
-
-msgid "license assignment"
-msgstr "Lizenzzuweisung"
-
-msgid "license assignments"
-msgstr "Lizenzzuweisungen"
-
-msgid "seats used"
-msgstr "belegte Plätze"
-
-#, python-format
-msgid ""
-"%(used)s seats are assigned; remove assignments before reducing the seats."
-msgstr ""
-"%(used)s Plätze sind zugewiesen. Entfernen Sie erst Zuweisungen, bevor Sie "
-"die Plätze reduzieren."
-
-msgid ""
-"Remove all assignments before changing whom the license is assigned to."
-msgstr ""
-"Entfernen Sie alle Zuweisungen, bevor Sie ändern, wem die Lizenz zugewiesen "
-"wird."
-
-msgid "This license is assigned to employees. Choose an employee."
-msgstr ""
-"Diese Lizenz wird Mitarbeitern zugewiesen. Wählen Sie einen Mitarbeiter."
-
-msgid "This license is assigned to devices. Choose a device."
-msgstr "Diese Lizenz wird Geräten zugewiesen. Wählen Sie ein Gerät."
-
-msgid "The license has expired."
-msgstr "Die Lizenz ist abgelaufen."
-
-#, python-format
-msgid "All %(seats)s seats of this license are in use."
-msgstr "Alle %(seats)s Plätze dieser Lizenz sind belegt."
-
-msgid "Already assigned."
-msgstr "Bereits zugewiesen."
-
-msgid "Device not found."
-msgstr "Gerät nicht gefunden."
-
-msgid "Remove all assignments before deleting the license."
-msgstr "Entfernen Sie alle Zuweisungen, bevor Sie die Lizenz löschen."
-
-msgid "singular name"
-msgstr "Einzelbezeichnung"
-
-msgid "Name of a single item, e.g. “Laptop”. Shown for “any model” requests."
-msgstr ""
-"Bezeichnung für ein einzelnes Stück, z. B. „Laptop“. Wird bei „beliebiges "
-"Modell“ angezeigt."
-
-msgid "Not working"
-msgstr "Funktioniert nicht"
-
-msgid "Damaged"
-msgstr "Beschädigt"
-
-msgid "Lost or stolen"
-msgstr "Verloren oder gestohlen"
-
-msgid "Other"
-msgstr "Sonstiges"
-
-msgid "Open"
-msgstr "Offen"
-
-msgid "In progress"
-msgstr "In Bearbeitung"
-
-msgid "Resolved"
-msgstr "Erledigt"
-
-msgid "reported by"
-msgstr "gemeldet von"
-
-msgid "resolution"
-msgstr "Lösung"
-
-msgid "resolved at"
-msgstr "erledigt am"
-
-msgid "problem report"
-msgstr "Problemmeldung"
-
-msgid "problem reports"
-msgstr "Problemmeldungen"
-
-msgid "Problem reported"
-msgstr "Problem gemeldet"
-
-msgid "Problem resolved"
-msgstr "Problem behoben"
-
-msgid "Describe the problem."
-msgstr "Beschreiben Sie das Problem."
-
-msgid "Describe how the problem was solved."
-msgstr "Beschreiben Sie, wie das Problem gelöst wurde."
-
-msgid "modules and features"
-msgstr "Module und Funktionen"
-
-msgid "site settings"
-msgstr "Website-Einstellungen"
-
-msgid "This module is switched off."
-msgstr "Dieses Modul ist ausgeschaltet."
-
+#: apps/reservations/services/notifications.py:23
 #, python-format
 msgid "Pickup: %(when)s%(place)s"
 msgstr "Abholung: %(when)s%(place)s"
 
+#: apps/reservations/services/notifications.py:28
 #, python-format
 msgid "New request %(number)s from %(name)s"
 msgstr "Neue Anforderung %(number)s von %(name)s"
 
+#: apps/reservations/services/notifications.py:32
 #, python-format
 msgid "%(name)s requests for “%(title)s”:"
 msgstr "%(name)s fordert für „%(title)s“ an:"
 
+#: apps/reservations/services/notifications.py:51
 #, python-format
 msgid "Your request %(number)s was confirmed"
 msgstr "Ihre Anforderung %(number)s wurde bestätigt"
 
+#: apps/reservations/services/notifications.py:52
 #, python-format
 msgid "IT confirmed your request “%(title)s” and is preparing it."
 msgstr ""
 "Die IT hat Ihre Anforderung „%(title)s“ bestätigt und bereitet sie vor."
 
+#: apps/reservations/services/notifications.py:56
 #, python-format
 msgid "Your request %(number)s was declined"
 msgstr "Ihre Anforderung %(number)s wurde abgelehnt"
 
+#: apps/reservations/services/notifications.py:57
 #, python-format
 msgid "IT declined your request “%(title)s”."
 msgstr "Die IT hat Ihre Anforderung „%(title)s“ abgelehnt."
 
+#: apps/reservations/services/notifications.py:59
 #, python-format
 msgid "Comment from IT: %(comment)s"
 msgstr "Kommentar der IT: %(comment)s"
 
+#: apps/reservations/services/notifications.py:72
 #, python-format
 msgid "Ready for pickup: %(number)s"
 msgstr "Abholbereit: %(number)s"
 
+#: apps/reservations/services/notifications.py:73
 #, python-format
 msgid "Everything for “%(title)s” is ready."
 msgstr "Alles für „%(title)s“ liegt bereit."
 
+#: apps/reservations/services/notifications.py:82
 #, python-format
 msgid "Return due on %(date)s: %(number)s"
 msgstr "Rückgabe am %(date)s: %(number)s"
 
+#: apps/reservations/services/notifications.py:86
 #, python-format
 msgid "Please return the devices for “%(title)s” by %(date)s."
 msgstr "Bitte geben Sie die Geräte für „%(title)s“ bis zum %(date)s zurück."
 
+#: apps/reservations/services/notifications.py:103
 #, python-format
 msgid "Return overdue: %(number)s"
 msgstr "Rückgabe überfällig: %(number)s"
 
+#: apps/reservations/services/notifications.py:104
 #, python-format
 msgid ""
-"The devices for “%(title)s” were due back on %(date)s. Please return them to"
-" IT."
+"The devices for “%(title)s” were due back on %(date)s. Please return them to "
+"IT."
 msgstr ""
 "Die Geräte für „%(title)s“ waren am %(date)s zurückzugeben. Bitte bringen "
 "Sie sie zur IT."
 
+#: apps/reservations/services/workflow.py:34
 #, python-format
-msgid "Problem reported: %(device)s"
-msgstr "Problem gemeldet: %(device)s"
+msgid "This is not possible while the reservation is “%(status)s”."
+msgstr "Das ist nicht möglich, solange die Reservierung „%(status)s“ ist."
 
-#, python-format
-msgid "%(name)s reports for %(device)s (%(model)s): %(kind)s"
-msgstr "%(name)s meldet zu %(device)s (%(model)s): %(kind)s"
+#: apps/reservations/services/workflow.py:42
+msgid "Temporary reservations need an end date."
+msgstr "Befristete Reservierungen brauchen ein Enddatum."
 
-#, python-format
-msgid "Your problem report for %(device)s was resolved"
-msgstr "Ihre Problemmeldung zu %(device)s ist erledigt"
+#: apps/reservations/services/workflow.py:44
+msgid "The end date must not be before the start date."
+msgstr "Das Enddatum darf nicht vor dem Startdatum liegen."
 
-#, python-format
-msgid "IT resolved your report “%(description)s”."
-msgstr "Die IT hat Ihre Meldung „%(description)s“ erledigt."
-
-msgid "Answer from IT:"
-msgstr "Antwort der IT:"
-
-#, python-format
-msgid "License ends on %(date)s: %(name)s"
-msgstr "Lizenz endet am %(date)s: %(name)s"
-
-#, python-format
-msgid "The license %(name)s %(reference)s ends on %(date)s."
-msgstr "Die Lizenz %(name)s %(reference)s endet am %(date)s."
-
+#: apps/reservations/services/workflow.py:47
 #, python-format
 msgid "Temporary requests can last at most %(days)s days."
 msgstr "Ausleihen dürfen höchstens %(days)s Tage dauern."
 
-msgid "warranty warning (days)"
-msgstr "Garantie-Vorwarnung (Tage)"
-
-msgid "Warranties ending within this many days count as ending soon."
-msgstr ""
-"Garantien, die innerhalb so vieler Tage enden, gelten als bald endend."
-
-msgid "license warning (days)"
-msgstr "Lizenz-Vorwarnung (Tage)"
-
-msgid "Licenses ending within this many days count as ending soon."
-msgstr "Lizenzen, die innerhalb so vieler Tage enden, gelten als bald endend."
-
-msgid "default loan period (days)"
-msgstr "Standard-Ausleihdauer (Tage)"
-
-msgid "Suggested length of a temporary request."
-msgstr "Vorgeschlagene Dauer einer Ausleihe."
-
-msgid "maximum loan period (days)"
-msgstr "Maximale Ausleihdauer (Tage)"
-
-msgid "Longest allowed temporary request; 0 = no limit."
-msgstr "Längste erlaubte Ausleihe; 0 = unbegrenzt."
-
-msgid "return reminder (days before)"
-msgstr "Rückgabe-Erinnerung (Tage vorher)"
-
-msgid "Employees are reminded this many days before a return is due."
-msgstr "Mitarbeiter werden so viele Tage vor der Rückgabe erinnert."
-
-msgid "STARTTLS"
-msgstr "STARTTLS"
-
-msgid "SSL/TLS"
-msgstr "SSL/TLS"
-
-msgid "None"
-msgstr "Keine"
-
-msgid "send emails"
-msgstr "E-Mails senden"
-
-msgid "SMTP server"
-msgstr "SMTP-Server"
-
-msgid "port"
-msgstr "Port"
-
-msgid "encryption"
-msgstr "Verschlüsselung"
-
-msgid "user name"
-msgstr "Benutzername"
-
-msgid "password"
-msgstr "Passwort"
-
-msgid "sender address"
-msgstr "Absenderadresse"
-
-msgid "sender name"
-msgstr "Absendername"
-
-msgid "app address"
-msgstr "App-Adresse"
-
-msgid "Address of Argus for links in emails, e.g. https://argus.example.com"
-msgstr ""
-"Adresse von Argus für Links in E-Mails, z. B. https://argus.example.com"
-
-msgid "notifications"
-msgstr "Benachrichtigungen"
-
-msgid "mail settings"
-msgstr "E-Mail-Einstellungen"
-
-msgid "notification"
-msgstr "Benachrichtigung"
-
-msgid "key"
-msgstr "Schlüssel"
-
-msgid "sent notification"
-msgstr "gesendete Benachrichtigung"
-
-msgid "sent notifications"
-msgstr "gesendete Benachrichtigungen"
-
-msgid "email notifications"
-msgstr "E-Mail-Benachrichtigungen"
-
-msgid "Enter the SMTP server and the sender address to send emails."
-msgstr "Geben Sie SMTP-Server und Absenderadresse an, um E-Mails zu senden."
-
-msgid "Enter the SMTP server and the sender address first."
-msgstr "Geben Sie zuerst SMTP-Server und Absenderadresse an."
-
-msgid "Argus test email"
-msgstr "Argus-Testmail"
-
-msgid "If you can read this, Argus can send emails."
-msgstr "Wenn Sie das lesen können, kann Argus E-Mails senden."
-
-#, python-format
-msgid "Sending failed: %(error)s"
-msgstr "Senden fehlgeschlagen: %(error)s"
-
-#, python-format
-msgid "Test email sent to %(to)s."
-msgstr "Testmail an %(to)s gesendet."
-
-msgid "A user with this username already exists."
-msgstr "Ein Benutzer mit diesem Benutzernamen existiert bereits."
-
-msgid "Lower numbers come first; equal numbers by name."
-msgstr "Kleinere Zahlen zuerst, gleiche Zahlen nach Name."
-
-#: apps/reservations/models/reservation.py
-msgid "skip device check"
-msgstr "Geräteprüfung überspringen"
-
-#: apps/reservations/models/reservation.py
-msgid ""
-"The pickup terminal starts with who collects, without checking the devices."
-msgstr "Das Abholterminal beginnt mit „Wer holt ab?“, ohne Geräteprüfung."
-
-#: apps/reservations/models/reservation.py
-msgid "Simple pickup"
-msgstr "Einfache Abholung"
-
-#: apps/reservations/services/workflow.py
-msgid "preferred pickup day"
-msgstr "gewünschter Abholtag"
-
-#: apps/reservations/services/workflow.py
+#: apps/reservations/services/workflow.py:55
 msgid "The preferred pickup day must not be in the past."
 msgstr "Der gewünschte Abholtag darf nicht in der Vergangenheit liegen."
 
-#: apps/reservations/services/workflow.py
+#: apps/reservations/services/workflow.py:57
 msgid ""
 "The preferred pickup day must not be after the day the devices are needed."
 msgstr ""
 "Der gewünschte Abholtag darf nicht nach dem Tag liegen, ab dem die Geräte "
 "benötigt werden."
 
-msgid ""
-"The device appears in requests or orders and cannot be deleted. Set it to "
-"“Retired” instead."
-msgstr ""
-"Das Gerät kommt in Anforderungen oder Bestellungen vor und kann nicht "
-"gelöscht werden. Setzen Sie es stattdessen auf „Ausgemustert“."
+#: apps/reservations/services/workflow.py:69
+msgid "Add at least one device to the request."
+msgstr "Fügen Sie der Anforderung mindestens ein Gerät hinzu."
 
-#, python-format
-msgid "%(asset)s is set aside for %(number)s. Remove it there first."
-msgstr ""
-"%(asset)s ist für %(number)s zurückgelegt. Entfernen Sie es zuerst dort."
-
-msgid "terminal site"
-msgstr "Standort des Terminals"
-
-msgid ""
-"Pickup terminal only: lists pickups at this location and below; empty lists "
-"all."
-msgstr ""
-"Nur für das Abholterminal: zeigt Abholungen an diesem Standort und darunter; "
-"leer zeigt alle."
-
-msgid "return"
-msgstr "Rücknahme"
-
-msgid "returns"
-msgstr "Rücknahmen"
-
-msgid "returned damaged"
-msgstr "defekt zurück"
-
-msgid "return note"
-msgstr "Rücknahmevermerk"
-
-msgid "E.g. the condition when it came back."
-msgstr "Z. B. der Zustand bei der Rückgabe."
-
-msgid "Allocate either a device, a consumable quantity or a license seat."
-msgstr ""
-"Weisen Sie entweder ein Gerät, eine Menge Verbrauchsmaterial oder einen "
-"Lizenzplatz zu."
-
-msgid "taken back by"
-msgstr "zurückgenommen von"
-
-msgid "recorded by"
-msgstr "erfasst über"
-
-msgid "The account the hand-out was recorded with, e.g. the pickup terminal."
-msgstr "Das Konto, mit dem die Ausgabe erfasst wurde, z. B. das Abholterminal."
-
-msgid "prepared by"
-msgstr "bereitgestellt von"
-
-msgid ""
-"Who marked the request ready; shown as handing out at the pickup terminal."
-msgstr ""
-"Wer die Anforderung bereitgemeldet hat; erscheint bei Abholung am Terminal "
-"als ausgebend."
-
+#: apps/reservations/services/workflow.py:71
 msgid "The start date must not be in the past."
 msgstr "Das Startdatum darf nicht in der Vergangenheit liegen."
 
+#: apps/reservations/services/workflow.py:93
+#, python-format
+msgid "Please choose a specific model for “%(category)s”."
+msgstr "Bitte wählen Sie für „%(category)s“ ein bestimmtes Modell."
+
+#: apps/reservations/services/workflow.py:129
+msgid "You cannot approve more devices than were requested."
+msgstr "Es können nicht mehr Geräte bestätigt werden als angefordert."
+
+#: apps/reservations/services/workflow.py:132
+#, python-format
+msgid "Remove allocated devices of “%(item)s” before lowering the quantity."
+msgstr ""
+"Entfernen Sie zugewiesene Geräte von „%(item)s“, bevor Sie die Menge "
+"reduzieren."
+
+#: apps/reservations/services/workflow.py:139
+msgid "Approve at least one device or reject the request."
+msgstr ""
+"Bestätigen Sie mindestens ein Gerät oder lehnen Sie die Anforderung ab."
+
+#: apps/reservations/services/workflow.py:189
+msgid "Remove allocated devices before changing the model."
+msgstr "Entfernen Sie zugewiesene Geräte, bevor Sie das Modell ändern."
+
+#: apps/reservations/services/workflow.py:202
+#, python-format
+msgid "“%(item)s” is free text. Create or assign a model first."
+msgstr ""
+"„%(item)s“ ist Freitext. Legen Sie zuerst ein Modell an oder ordnen Sie "
+"eines zu."
+
+#: apps/reservations/services/workflow.py:223
+#, python-format
+msgid "%(asset)s does not match “%(item)s”."
+msgstr "%(asset)s passt nicht zu „%(item)s“."
+
+#: apps/reservations/services/workflow.py:227
+#, python-format
+msgid "%(asset)s is not in stock (%(status)s)."
+msgstr "%(asset)s ist nicht im Lager (%(status)s)."
+
+#: apps/reservations/services/workflow.py:232
+#, python-format
+msgid "All approved devices for “%(item)s” are already allocated."
+msgstr "Alle bestätigten Geräte für „%(item)s“ sind bereits zugewiesen."
+
+#: apps/reservations/services/workflow.py:254
+#: apps/reservations/services/workflow.py:276
+#, python-format
+msgid "%(model)s does not match “%(item)s”."
+msgstr "%(model)s passt nicht zu „%(item)s“."
+
+#: apps/reservations/services/workflow.py:258
+#, python-format
+msgid "Only %(missing)s more units are needed for “%(item)s”."
+msgstr "Für „%(item)s“ werden nur noch %(missing)s Stück benötigt."
+
+#: apps/reservations/services/workflow.py:280
 #, python-format
 msgid "All approved licenses for “%(item)s” are already allocated."
 msgstr "Alle bestätigten Lizenzen für „%(item)s“ sind bereits zugewiesen."
 
+#: apps/reservations/services/workflow.py:287
 #, python-format
 msgid "%(asset)s is not used by %(name)s."
 msgstr "%(asset)s wird nicht von %(name)s genutzt."
 
+#: apps/reservations/services/workflow.py:355
+#, python-format
+msgid "Released from %(number)s"
+msgstr "Freigegeben aus %(number)s"
+
+#: apps/reservations/services/workflow.py:385
+#, python-format
+msgid "Devices are still missing for: %(items)s"
+msgstr "Es fehlen noch Geräte für: %(items)s"
+
+#: apps/reservations/services/workflow.py:416
+msgid "Unknown team."
+msgstr "Unbekanntes Team."
+
+#: apps/reservations/services/workflow.py:419
+msgid "Requests can only be assigned to active IT staff."
+msgstr "Anfragen können nur aktiven IT-Mitarbeitern zugewiesen werden."
+
+#: apps/reservations/services/workflow.py:435
+msgid "Please sign in the signature field."
+msgstr "Bitte unterschreiben Sie im Unterschriftsfeld."
+
+#: apps/reservations/services/workflow.py:437
+msgid "Enter who is collecting the devices."
+msgstr "Geben Sie an, wer die Geräte abholt."
+
+#: apps/reservations/services/workflow.py:439
+msgid "Only pickups at the terminal are signed."
+msgstr "Nur Abholungen am Terminal werden unterschrieben."
+
+#: apps/reservations/services/workflow.py:468
 msgid "Choose a member of the IT department."
 msgstr "Wählen Sie jemanden aus der IT-Abteilung."
 
+#: apps/reservations/services/workflow.py:574
 msgid "Nothing is left to take back."
 msgstr "Es ist nichts mehr zurückzunehmen."
 
+#: apps/reservations/services/workflow.py:599
 #, python-format
 msgid "Returned damaged from %(number)s"
 msgstr "Defekt zurück aus %(number)s"
 
+#: apps/reservations/services/workflow.py:637
 #, python-format
 msgid "This is set aside for %(number)s. Remove it there first."
 msgstr "Das ist für %(number)s zurückgelegt. Entfernen Sie es zuerst dort."
+
+#: config/api.py:69
+msgid "Not found."
+msgstr "Nicht gefunden."
+
+#~ msgid "Allocate either a device or a consumable quantity."
+#~ msgstr ""
+#~ "Weisen Sie entweder ein Gerät oder eine Menge Verbrauchsmaterial zu."
+
+#~ msgid "Answer from IT:"
+#~ msgstr "Antwort der IT:"

@@ -8,6 +8,7 @@ export default {
     models: 'Modelle',
     locations: 'Standorte',
     departments: 'Abteilungen',
+    teams: 'Teams',
     users: 'Mitarbeiter',
     numberSequences: 'Nummernserien',
   },
@@ -18,6 +19,7 @@ export default {
     models: 'Modell',
     locations: 'Standort',
     departments: 'Abteilung',
+    teams: 'Team',
     users: 'Mitarbeiter',
     numberSequences: 'Nummernserie',
   },
@@ -66,6 +68,11 @@ export default {
     compatibleWith: 'Kompatibel mit',
     costCenter: 'Kostenstelle',
     members: 'Mitglieder',
+    usernameLdapHelp:
+      'Muss dem Anmeldenamen im Verzeichnis entsprechen (z. B. sAMAccountName). Darüber wird das Konto bei der ersten LDAP-Anmeldung mit dem Verzeichnis verknüpft.',
+    ldapGroup: 'LDAP-Gruppe',
+    ldapGroupHelp:
+      'DN einer Verzeichnisgruppe, z. B. CN=IT-Ledgerline,OU=Gruppen,DC=firma,DC=de. Die Mitglieder werden dann bei jeder Anmeldung mit dem Verzeichnis abgeglichen; leer: Mitglieder von Hand pflegen.',
     prefix: 'Präfix',
     pattern: 'Muster',
     patternHelp: "Platzhalter: {'{prefix}'} {'{year}'} {'{yy}'} {'{month}'} {'{seq}'}",

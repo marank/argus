@@ -20,6 +20,7 @@ import {
   Truck,
   UserRound,
   Users,
+  UsersRound,
   Wrench,
 } from '@lucide/vue'
 import type { Component } from 'vue'
@@ -193,6 +194,12 @@ export const NAVIGATION: NavSection[] = [
         label: 'masterdata.resources.departments',
         icon: Building2,
         to: { name: 'masterdata', params: { resource: 'departments' } },
+      },
+      {
+        key: 'md-teams',
+        label: 'masterdata.resources.teams',
+        icon: UsersRound,
+        to: { name: 'masterdata', params: { resource: 'teams' } },
       },
       {
         key: 'md-users',

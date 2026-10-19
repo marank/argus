@@ -20,7 +20,7 @@ import { useAction } from '@/composables/useAction'
 import { useFormat } from '@/composables/useFormat'
 import { CATEGORY_ICONS } from '@/utils/icons'
 
-import { sectionFields, type FieldDef, type ResourceDef } from './types'
+import { helpKey, isVisible, sectionFields, type FieldDef, type ResourceDef } from './types'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const props = defineProps<{ resource: ResourceDef<any>; row: any | null }>()
@@ -98,7 +98,7 @@ async function save() {
           <div v-if="section.title" class="eyebrow section-title">{{ t(section.title) }}</div>
           <NGrid :cols="2" :x-gap="12">
             <NFormItemGi
-              v-for="field in section.fields.filter((f) => f.type !== 'switch')"
+              v-for="field in section.fields.filter((f) => f.type !== 'switch' && isVisible(f))"
               :key="field.key"
               :span="span(field)"
             >
@@ -106,7 +106,7 @@ async function save() {
                 <FieldLabel
                   :label="t(field.label)"
                   :required="field.required"
-                  :help="field.help ? t(field.help) : undefined"
+                  :help="helpKey(field) ? t(helpKey(field)!) : undefined"
                 />
               </template>
               <NInput v-if="field.type === 'text'" v-model:value="form[field.key]" />
@@ -153,15 +153,18 @@ async function save() {
             </NFormItemGi>
           </NGrid>
           <!-- Switches as a list below the inputs: label and explanation left, switch right. -->
-          <div v-if="section.fields.some((f) => f.type === 'switch')" class="toggles">
+          <div
+            v-if="section.fields.some((f) => f.type === 'switch' && isVisible(f))"
+            class="toggles"
+          >
             <label
-              v-for="field in section.fields.filter((f) => f.type === 'switch')"
+              v-for="field in section.fields.filter((f) => f.type === 'switch' && isVisible(f))"
               :key="field.key"
               class="toggle"
             >
               <span class="toggle-text">
                 <span class="toggle-label">{{ t(field.label) }}</span>
-                <small v-if="field.help" class="muted">{{ t(field.help) }}</small>
+                <small v-if="helpKey(field)" class="muted">{{ t(helpKey(field)!) }}</small>
               </span>
               <NSwitch v-model:value="form[field.key]" />
             </label>

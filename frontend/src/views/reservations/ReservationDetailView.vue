@@ -21,6 +21,7 @@ import StatusTag from '@/components/common/StatusTag.vue'
 import CreateOrderModal, { type DraftLine } from '@/components/procurement/CreateOrderModal.vue'
 import AllocationPanel from '@/components/reservations/AllocationPanel.vue'
 import ApproveModal from '@/components/reservations/ApproveModal.vue'
+import AssignmentCard from '@/components/reservations/AssignmentCard.vue'
 import HandoverCard from '@/components/reservations/HandoverCard.vue'
 import HandOutModal from '@/components/reservations/HandOutModal.vue'
 import ReadyModal from '@/components/reservations/ReadyModal.vue'
@@ -234,6 +235,7 @@ async function cancel() {
             />
           </NCard>
           <div class="stack">
+            <AssignmentCard :reservation="reservation" @updated="(r) => (reservation = r)" />
             <!-- How the devices get to the employee, while that is still ahead. -->
             <NAlert
               v-if="status === 'ready'"

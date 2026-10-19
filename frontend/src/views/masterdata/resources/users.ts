@@ -6,6 +6,7 @@ import { locationsApi } from '@/api/masterdata'
 import { bool, mono, text } from '@/components/crud/cells'
 import { defineResource } from '@/components/crud/types'
 import { i18n } from '@/i18n'
+import { useFeaturesStore } from '@/stores/features'
 import type { User } from '@/types/accounts'
 import type { Location } from '@/types/masterdata'
 
@@ -110,7 +111,14 @@ export default defineResource<User>({
     {
       title: 'masterdata.sections.account',
       fields: [
-        { key: 'username', label: 'masterdata.fields.username', type: 'mono', required: true },
+        {
+          key: 'username',
+          label: 'masterdata.fields.username',
+          type: 'mono',
+          required: true,
+          help: () =>
+            useFeaturesStore().ldapEnabled ? 'masterdata.fields.usernameLdapHelp' : undefined,
+        },
         { key: 'is_active', label: 'common.active', type: 'switch' },
         {
           key: 'is_staff',
