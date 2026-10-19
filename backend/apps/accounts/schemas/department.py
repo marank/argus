@@ -8,7 +8,7 @@ class DepartmentOut(ModelSchema):
 
     class Meta:
         model = Department
-        fields = ["id", "name", "code", "cost_center"]
+        fields = ["id", "name", "code", "cost_center", "sort_order"]
 
     @staticmethod
     def resolve_member_count(obj: Department) -> int:
@@ -19,3 +19,4 @@ class DepartmentIn(Schema):
     name: str
     code: str = ""
     cost_center: str = ""
+    sort_order: int = 0

@@ -3,11 +3,14 @@ import { Check, Plus } from '@lucide/vue'
 import { NButton } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
 
+import type { AvailabilityCounts } from '@/types/reservations'
+
 /** A single requestable option with an add button and the quantity already in the request. */
 defineProps<{
   label: string
   hint?: string
-  available: number | null
+  /** Availability in the request period (IT only). */
+  counts: AvailabilityCounts | null
   inCart: number
   primary?: boolean
 }>()
@@ -20,15 +23,18 @@ const { t } = useI18n()
     <div class="text">
       <span class="label">{{ label }}</span>
       <!-- Hint and availability (IT only) as one quiet line under the name. -->
-      <span v-if="hint || available !== null" class="meta">
+      <span v-if="hint || counts" class="meta">
         <span v-if="hint" class="muted">{{ hint }}</span>
-        <span v-if="available !== null" class="avail" :class="{ none: !available }">
+        <span v-if="counts" class="avail" :class="{ none: !counts.available }">
           <span class="avail-dot" />
           {{
-            available
-              ? t('reservations.new.available', { count: available })
+            counts.available
+              ? t('reservations.new.available', { count: counts.available })
               : t('reservations.new.unavailable')
           }}
+        </span>
+        <span v-if="counts?.reserved" class="reserved">
+          {{ t('reservations.new.reserved', { count: counts.reserved }) }}
         </span>
       </span>
     </div>
@@ -85,6 +91,14 @@ const { t } = useI18n()
   gap: 5px;
   color: var(--ar-success);
   white-space: nowrap;
+}
+.reserved {
+  color: var(--ar-text-subtle);
+  white-space: nowrap;
+}
+.reserved::before {
+  content: '·';
+  margin-right: 8px;
 }
 .avail.none {
   color: var(--ar-text-subtle);

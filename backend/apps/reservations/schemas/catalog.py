@@ -14,6 +14,7 @@ class CatalogModelOut(Schema):
     description: str
     # Only filled for IT staff; employees do not see pool sizes.
     available: int | None
+    reserved: int | None
 
 
 class CatalogCategoryOut(Schema):
@@ -26,8 +27,22 @@ class CatalogCategoryOut(Schema):
     description: str
     parent_id: UUID | None
     allow_any_model: bool
+    # Own models only (not subcategories), including requests for "any" device.
     available: int | None
+    reserved: int | None
     models: list[CatalogModelOut]
+
+
+class CountsOut(Schema):
+    available: int
+    reserved: int
+
+
+class AvailabilityOut(Schema):
+    """Counts in a period, keyed by model and category id."""
+
+    models: dict[str, CountsOut]
+    categories: dict[str, CountsOut]
 
 
 class ConsumableDeviceOut(Schema):

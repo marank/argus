@@ -1854,3 +1854,9 @@ msgstr "Senden fehlgeschlagen: %(error)s"
 #, python-format
 msgid "Test email sent to %(to)s."
 msgstr "Testmail an %(to)s gesendet."
+
+msgid "A user with this username already exists."
+msgstr "Ein Benutzer mit diesem Benutzernamen existiert bereits."
+
+msgid "Lower numbers come first; equal numbers by name."
+msgstr "Kleinere Zahlen zuerst, gleiche Zahlen nach Name."

@@ -1,6 +1,7 @@
 import pytest
-from django.core.management import call_command
 from django.test import Client
+
+from apps.core.management.commands.seed_demo import Command
 
 
 @pytest.fixture(autouse=True)
@@ -11,7 +12,8 @@ def in_memory_mail(settings):
 
 @pytest.fixture
 def demo(db):
-    call_command("seed_demo", verbosity=0)
+    # Only the core part of the demo data: keeps the tests fast and their expectations stable.
+    Command().seed_base()
 
 
 @pytest.fixture

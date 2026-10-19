@@ -50,6 +50,8 @@ export default {
     requestable: 'Im Portal anforderbar',
     requestableShort: 'Anforderbar',
     sortOrder: 'Sortierung',
+    departmentSortHelp:
+      'Kleinere Zahlen stehen weiter oben, gleiche Zahlen nach Name. Gilt für Listen und Auswahlfelder.',
     kind: 'Art',
     pickupPoint: 'Abholort',
     manufacturer: 'Hersteller',

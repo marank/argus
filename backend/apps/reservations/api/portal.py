@@ -1,6 +1,6 @@
 """Endpoints for the employee self-service portal."""
 
-from datetime import timedelta
+from datetime import date, timedelta
 from uuid import UUID
 
 from django.db.models import Prefetch, Q
@@ -9,28 +9,52 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from ninja import Router, Status
 
-from apps.core.api.security import is_it_staff
+from apps.core.api.security import is_it_staff, it_staff_auth
 from apps.core.features import is_enabled
+from apps.core.models import SiteSettings
 from apps.inventory.models import Asset, AssetIssue, LicenseAssignment
 from apps.inventory.schemas.asset_issue import AssetIssueIn, OwnIssueOut, OwnIssueWithDeviceOut
 from apps.inventory.schemas.license import OwnLicenseOut
-from apps.inventory.services.availability import available_count
+from apps.inventory.services.availability import Counts, period_availability
 from apps.inventory.services.issues import report_issue
 from apps.masterdata.models import AssetModel, Category
 from apps.reservations.models import ReservationAllocation
-from apps.reservations.schemas.catalog import CatalogCategoryOut, MyAssetOut, MyConsumablesOut
+from apps.reservations.schemas.catalog import (
+    AvailabilityOut,
+    CatalogCategoryOut,
+    MyAssetOut,
+    MyConsumablesOut,
+)
 
 router = Router(tags=["portal"])
 
 
+def _period(start: date | None, end: date | None, permanent: bool) -> tuple[date, date | None]:
+    """The requested period; without dates the default loan period from today."""
+    start = start or timezone.localdate()
+    if permanent:
+        return start, None
+    return start, end or start + timedelta(days=SiteSettings.load().default_loan_days - 1)
+
+
+def _set_counts(target, counts: Counts | None) -> None:
+    target.available = counts.available if counts else None
+    target.reserved = counts.reserved if counts else None
+
+
 @router.get("/catalog", response=list[CatalogCategoryOut])
-def catalog(request: HttpRequest):
+def catalog(
+    request: HttpRequest, start: date | None = None, end: date | None = None, permanent: bool = False
+):
     """Requestable categories with their models.
 
-    Availability counts are only included for IT staff; employees request what
-    they need and IT decides what the pool can cover.
+    Availability for the period is only included for IT staff; employees request
+    what they need and IT decides what the pool can cover.
     """
     show_availability = is_it_staff(request.user)
+    model_counts, category_counts = (
+        period_availability(*_period(start, end, permanent)) if show_availability else ({}, {})
+    )
     categories = Category.objects.filter(is_requestable=True)
     models = AssetModel.objects.filter(is_requestable=True, is_active=True)
     if not is_enabled("software_requests"):
@@ -39,15 +63,25 @@ def catalog(request: HttpRequest):
         models = models.exclude(tracking=AssetModel.Tracking.LICENSE)
     models_by_category: dict[UUID, list] = {}
     for model in models.select_related("manufacturer"):
-        model.available = available_count(model_id=model.pk) if show_availability else None
+        _set_counts(model, model_counts.get(model.pk, Counts()) if show_availability else None)
         models_by_category.setdefault(model.category_id, []).append(model)
 
     result = []
     for category in categories:
-        category.available = available_count(category_id=category.pk) if show_availability else None
+        _set_counts(category, category_counts.get(category.pk, Counts()) if show_availability else None)
         category.models = models_by_category.get(category.pk, [])
         result.append(category)
     return result
+
+
+@router.get("/availability", response=AvailabilityOut, auth=it_staff_auth)
+def availability(request: HttpRequest, start: date, end: date | None = None, permanent: bool = False):
+    """Counts of all models and categories for a period; the request form refreshes with it."""
+    model_counts, category_counts = period_availability(*_period(start, end, permanent))
+    return {
+        "models": {str(k): vars(v) for k, v in model_counts.items()},
+        "categories": {str(k): vars(v) for k, v in category_counts.items()},
+    }
 
 
 @router.get("/my-consumables", response=list[MyConsumablesOut])

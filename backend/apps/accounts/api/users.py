@@ -27,6 +27,7 @@ router = build_crud_router(
             "first_name",
             "email",
             "employee_number",
+            "department__sort_order",
             "department__name",
         ),
         queryset=lambda: User.objects.select_related("department"),

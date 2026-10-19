@@ -8,7 +8,7 @@ import { anyModelLabel } from '@/utils/reservations'
 
 import CatalogOptionRow from './CatalogOptionRow.vue'
 import FreeTextOption from './FreeTextOption.vue'
-import { offersAnyModel, optionKey, ownAvailable } from './types'
+import { offersAnyModel, optionKey, optionCounts } from './types'
 
 /** Options of one device group: "any device" first, then specific models, then accessories. */
 const props = defineProps<{
@@ -45,7 +45,7 @@ const groups = computed(() => [props.category, ...props.children])
         v-if="offersAnyModel(group)"
         primary
         :label="anyModelLabel(group)"
-        :available="ownAvailable(group)"
+        :counts="optionCounts(group)"
         :in-cart="cartCounts[optionKey(group)] ?? 0"
         @add="emit('add', group)"
       />
@@ -59,7 +59,7 @@ const groups = computed(() => [props.category, ...props.children])
             :key="model.id"
             :label="model.full_name"
             :hint="model.description"
-            :available="model.available"
+            :counts="optionCounts(group, model)"
             :in-cart="cartCounts[optionKey(group, model)] ?? 0"
             @add="emit('add', group, model)"
           />

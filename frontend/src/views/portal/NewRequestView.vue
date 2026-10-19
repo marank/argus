@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { NSkeleton } from 'naive-ui'
-import { computed, onMounted, ref } from 'vue'
+import { watchDebounced } from '@vueuse/core'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
@@ -9,7 +10,13 @@ import PageHeader from '@/components/common/PageHeader.vue'
 import CatalogBrowser from '@/components/reservations/request/CatalogBrowser.vue'
 import ConsumableQuickPick from '@/components/reservations/request/ConsumableQuickPick.vue'
 import RequestCart from '@/components/reservations/request/RequestCart.vue'
-import { optionKey, ownAvailable, type CartLine } from '@/components/reservations/request/types'
+import RequestPeriodCard from '@/components/reservations/request/RequestPeriodCard.vue'
+import {
+  optionKey,
+  periodQuery,
+  type CartLine,
+  type RequestPeriod,
+} from '@/components/reservations/request/types'
 import { useAction } from '@/composables/useAction'
 import { useAuthStore } from '@/stores/auth'
 import { anyModelLabel } from '@/utils/reservations'
@@ -31,15 +38,53 @@ const catalog = ref<CatalogCategory[] | null>(null)
 const cart = ref<CartLine[]>([])
 const myConsumables = ref<MyConsumables[]>([])
 
+const today = new Date().setHours(0, 0, 0, 0)
+const period = reactive<RequestPeriod>({
+  duration: 'temporary',
+  // Suggested period from the site settings (default loan period, start day included).
+  range: [today, today + (features.rules.default_loan_days - 1) * 86400000],
+  start: today,
+})
+
 onMounted(async () => {
   // The quick pick can be switched off; its endpoint is gone then.
   const [entries, consumables] = await Promise.all([
-    portalApi.catalog(),
+    portalApi.catalog(periodQuery(period)),
     features.isOn('consumable_quick_pick') ? portalApi.myConsumables() : Promise.resolve([]),
   ])
   catalog.value = entries
   myConsumables.value = consumables
 })
+
+/** Lookup of what is free in the period, by cart/option key. */
+function availableFor(key: string): number | null {
+  for (const category of catalog.value ?? []) {
+    if (key === optionKey(category)) return category.available
+    const model = category.models.find((m) => key === optionKey(category, m))
+    if (model) return model.available
+  }
+  return null
+}
+
+// IT sees availability for the chosen period: refresh the counts when it changes.
+let latestQuery = 0
+watchDebounced(
+  () => periodQuery(period),
+  async (query) => {
+    if (!auth.isItStaff || !catalog.value) return
+    const current = ++latestQuery
+    const counts = await portalApi.availability(query)
+    if (current !== latestQuery) return // a newer period was chosen meanwhile
+    for (const category of catalog.value) {
+      Object.assign(category, counts.categories[category.id] ?? { available: 0, reserved: 0 })
+      for (const model of category.models) {
+        Object.assign(model, counts.models[model.id] ?? { available: 0, reserved: 0 })
+      }
+    }
+    for (const line of cart.value) line.available = availableFor(line.key)
+  },
+  { debounce: 250 },
+)
 
 const cartCounts = computed(() =>
   Object.fromEntries(cart.value.map((line) => [line.key, line.quantity])),
@@ -59,7 +104,7 @@ function add(category: CatalogCategory, model?: CatalogModel) {
     asset_model: model?.id,
     quantity: 1,
     note: '',
-    available: model ? model.available : ownAvailable(category),
+    available: model ? model.available : category.available,
   })
 }
 
@@ -104,13 +149,17 @@ async function submit(data: ReservationInput) {
           @add-free-text="addFreeText"
         />
       </div>
-      <RequestCart
-        v-model:lines="cart"
-        :busy="busy"
-        :can-choose-requester="auth.isItStaff"
-        :requester-placeholder="auth.user?.display_name"
-        @submit="submit"
-      />
+      <div class="side">
+        <RequestPeriodCard v-model="period" :shows-availability="auth.isItStaff" />
+        <RequestCart
+          v-model:lines="cart"
+          :period="period"
+          :busy="busy"
+          :can-choose-requester="auth.isItStaff"
+          :requester-placeholder="auth.user?.display_name"
+          @submit="submit"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -120,6 +169,12 @@ async function submit(data: ReservationInput) {
   display: grid;
   gap: 14px;
   min-width: 0;
+}
+.side {
+  position: sticky;
+  top: 16px;
+  display: grid;
+  gap: 14px;
 }
 .layout {
   display: grid;
@@ -131,7 +186,7 @@ async function submit(data: ReservationInput) {
   .layout {
     grid-template-columns: 1fr;
   }
-  .layout :deep(.cart) {
+  .side {
     position: static;
   }
 }

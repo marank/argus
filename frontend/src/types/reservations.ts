@@ -129,7 +129,10 @@ export interface CatalogModel {
   full_name: string
   tracking: string
   description: string
+  /** Free in the chosen period; IT staff only, otherwise null. */
   available: number | null
+  /** Promised to other requests in that period. */
+  reserved: number | null
 }
 
 export interface CatalogCategory {
@@ -142,8 +145,27 @@ export interface CatalogCategory {
   description: string
   parent_id: Id | null
   allow_any_model: boolean
+  /** Own models only, including requests for any device of the category. */
   available: number | null
+  reserved: number | null
   models: CatalogModel[]
+}
+
+export interface AvailabilityCounts {
+  available: number
+  reserved: number
+}
+
+export interface PeriodAvailability {
+  models: Record<Id, AvailabilityCounts>
+  categories: Record<Id, AvailabilityCounts>
+}
+
+/** The period of a request; availability in the catalog refers to it. */
+export type PeriodQuery = {
+  start: string
+  end?: string
+  permanent?: boolean
 }
 
 export interface MyAsset {

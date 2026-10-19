@@ -1,30 +1,20 @@
 <script setup lang="ts">
 import { MessageSquarePlus, Minus, PackageSearch, Plus, Send, Trash2 } from '@lucide/vue'
-import {
-  NButton,
-  NForm,
-  NFormItem,
-  NInput,
-  NInputNumber,
-  NRadioButton,
-  NRadioGroup,
-} from 'naive-ui'
+import { NButton, NForm, NFormItem, NInput, NInputNumber } from 'naive-ui'
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { usersApi } from '@/api/accounts'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import FieldLabel from '@/components/common/FieldLabel.vue'
-import DateField from '@/components/common/DateField.vue'
-import { toIsoDate } from '@/composables/useFormat'
 import type { Id } from '@/types/common'
-import type { Duration, ReservationInput } from '@/types/reservations'
-import { useFeaturesStore } from '@/stores/features'
+import type { ReservationInput } from '@/types/reservations'
 
-import type { CartLine } from './types'
+import { periodQuery, type CartLine, type RequestPeriod } from './types'
 
-/** The request being assembled: selected devices, then purpose and period. */
+/** The request being assembled: selected devices, then purpose; the period comes from the card above. */
 const props = defineProps<{
+  period: RequestPeriod
   busy: boolean
   canChooseRequester: boolean
   requesterPlaceholder?: string
@@ -33,15 +23,9 @@ const lines = defineModel<CartLine[]>('lines', { required: true })
 const emit = defineEmits<{ submit: [data: ReservationInput] }>()
 const { t } = useI18n()
 
-const features = useFeaturesStore()
-const today = new Date().setHours(0, 0, 0, 0)
 const form = reactive({
   title: '',
   notes: '',
-  duration: 'temporary' as Duration,
-  // Suggested period from the site settings (default loan period, start day included).
-  range: [today, today + (features.rules.default_loan_days - 1) * 86400000] as [number, number],
-  start: today,
   requester: null as Id | null,
 })
 const openNote = ref<string | null>(null)
@@ -50,13 +34,13 @@ const total = computed(() => lines.value.reduce((sum, line) => sum + line.quanti
 const canSubmit = computed(() => form.title.trim() && lines.value.length > 0)
 
 function submit() {
-  const temporary = form.duration === 'temporary'
+  const { start, end } = periodQuery(props.period)
   emit('submit', {
     title: form.title,
     notes: form.notes,
-    duration: form.duration,
-    start_date: toIsoDate(temporary ? form.range[0] : form.start)!,
-    end_date: temporary ? toIsoDate(form.range[1]) : null,
+    duration: props.period.duration,
+    start_date: start,
+    end_date: end ?? null,
     requester: form.requester,
     items: lines.value.map(({ category, asset_model, description, quantity, note }) => ({
       category: category ?? null,
@@ -143,34 +127,6 @@ function submit() {
           <template #label><FieldLabel :label="t('reservations.purpose')" required /></template>
           <NInput v-model:value="form.title" :placeholder="t('reservations.purposePlaceholder')" />
         </NFormItem>
-        <NFormItem>
-          <template #label>
-            <FieldLabel
-              :label="t('reservations.duration')"
-              :help="t('reservations.new.durationHelp')"
-            />
-          </template>
-          <NRadioGroup v-model:value="form.duration" class="duration">
-            <NRadioButton value="temporary">{{ t('enums.duration.temporary') }}</NRadioButton>
-            <NRadioButton value="permanent">{{ t('enums.duration.permanent') }}</NRadioButton>
-          </NRadioGroup>
-        </NFormItem>
-        <NFormItem v-if="form.duration === 'temporary'" :label="t('reservations.period')">
-          <DateField
-            v-model:value="form.range"
-            type="daterange"
-            :is-date-disabled="(ts: number) => ts < today"
-            style="width: 100%"
-          />
-        </NFormItem>
-        <NFormItem v-else :label="t('reservations.startDate')">
-          <DateField
-            v-model:value="form.start"
-            type="date"
-            :is-date-disabled="(ts: number) => ts < today"
-            style="width: 100%"
-          />
-        </NFormItem>
         <NFormItem v-if="props.canChooseRequester" :label="t('reservations.requestedFor')">
           <EntitySelect
             v-model="form.requester"
@@ -212,8 +168,6 @@ function submit() {
   transition: transform 0.2s ease;
 }
 .cart {
-  position: sticky;
-  top: 16px;
   display: grid;
   gap: 14px;
   padding: 16px 18px 18px;
@@ -325,13 +279,5 @@ h2 {
 }
 .details .eyebrow {
   margin-bottom: 10px;
-}
-.duration {
-  display: flex;
-  width: 100%;
-}
-.duration :deep(.n-radio-button) {
-  flex: 1;
-  text-align: center;
 }
 </style>

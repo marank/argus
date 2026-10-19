@@ -1,12 +1,26 @@
 import uuid
 
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
+from django.db.models.functions import Lower
 from django.utils.translation import gettext_lazy as _
+
+
+class CaseInsensitiveUserManager(UserManager):
+    """Usernames are compared without regard to case, like in Active Directory.
+
+    ``get_by_natural_key`` is what the login (``ModelBackend``) and management
+    commands use; the stored username keeps the spelling it was created with.
+    """
+
+    def get_by_natural_key(self, username):
+        return self.get(**{f"{self.model.USERNAME_FIELD}__iexact": username})
 
 
 class User(AbstractUser):
     """Employee account. ``is_staff`` marks members of the IT department."""
+
+    objects = CaseInsensitiveUserManager()
 
     class Language(models.TextChoices):
         ENGLISH = "en", _("English")
@@ -46,6 +60,14 @@ class User(AbstractUser):
         verbose_name = _("user")
         verbose_name_plural = _("users")
         ordering = ["last_name", "first_name", "username"]
+        constraints = [
+            # "Anna" and "anna" are the same person; only one of them may exist.
+            models.UniqueConstraint(
+                Lower("username"),
+                name="unique_username_ignoring_case",
+                violation_error_message=_("A user with this username already exists."),
+            ),
+        ]
 
     def __str__(self) -> str:
         return self.display_name

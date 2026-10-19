@@ -35,5 +35,6 @@ export interface Department {
   name: string
   code: string
   cost_center: string
+  sort_order: number
   member_count: number
 }

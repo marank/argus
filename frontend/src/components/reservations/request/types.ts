@@ -1,5 +1,12 @@
 import type { Id } from '@/types/common'
-import type { CatalogCategory, CatalogModel } from '@/types/reservations'
+import { toIsoDate } from '@/composables/useFormat'
+import type {
+  AvailabilityCounts,
+  CatalogCategory,
+  CatalogModel,
+  Duration,
+  PeriodQuery,
+} from '@/types/reservations'
 
 /** One line of the request being assembled. */
 export interface CartLine {
@@ -11,8 +18,20 @@ export interface CartLine {
   description?: string
   quantity: number
   note: string
-  /** Pool size, only known to IT staff. */
+  /** Free in the request period, only known to IT staff. */
   available: number | null
+}
+
+/** When the devices are needed; shared by the period card, the cart and the catalog. */
+export interface RequestPeriod {
+  duration: Duration
+  range: [number, number]
+  start: number
+}
+
+export function periodQuery(period: RequestPeriod): PeriodQuery {
+  if (period.duration === 'permanent') return { start: toIsoDate(period.start)!, permanent: true }
+  return { start: toIsoDate(period.range[0])!, end: toIsoDate(period.range[1])! }
 }
 
 /** Something that can be put into the request: a whole group ("any") or a model. */
@@ -30,8 +49,12 @@ export function offersAnyModel(category: CatalogCategory): boolean {
   return category.allow_any_model && category.models.length > 1
 }
 
-/** Sum of the group's own models; null when availability is hidden. */
-export function ownAvailable(category: CatalogCategory): number | null {
-  if (category.available === null) return null
-  return category.models.reduce((sum, m) => sum + (m.available ?? 0), 0)
+/** Counts of an option for display; null when availability is hidden. */
+export function optionCounts(
+  category: CatalogCategory,
+  model?: CatalogModel,
+): AvailabilityCounts | null {
+  const source = model ?? category
+  if (source.available === null || source.reserved === null) return null
+  return { available: source.available, reserved: source.reserved }
 }

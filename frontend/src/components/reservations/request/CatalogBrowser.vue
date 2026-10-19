@@ -13,7 +13,7 @@ import { anyModelLabel } from '@/utils/reservations'
 import CatalogOptionRow from './CatalogOptionRow.vue'
 import CategoryOptions from './CategoryOptions.vue'
 import CustomRequestCard from './CustomRequestCard.vue'
-import { offersAnyModel, optionKey, ownAvailable, type CatalogOption } from './types'
+import { offersAnyModel, optionKey, optionCounts, type CatalogOption } from './types'
 
 /**
  * Catalog with search: device groups as compact tiles, only the selected group
@@ -92,7 +92,7 @@ const results = computed<CatalogOption[]>(() => {
           :key="option.key"
           :label="option.model ? option.model.full_name : anyModelLabel(option.category)"
           :hint="option.model ? option.category.name : undefined"
-          :available="option.model ? option.model.available : ownAvailable(option.category)"
+          :counts="optionCounts(option.category, option.model)"
           :in-cart="cartCounts[option.key] ?? 0"
           @add="emit('add', option.category, option.model)"
         />

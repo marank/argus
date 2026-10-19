@@ -5,6 +5,8 @@ import type {
   CatalogCategory,
   MyAsset,
   MyConsumables,
+  PeriodAvailability,
+  PeriodQuery,
   Reservation,
   ReservationInput,
   ReservationListItem,
@@ -61,7 +63,9 @@ export const reservationsApi = {
 }
 
 export const portalApi = {
-  catalog: () => http.get<CatalogCategory[]>('/portal/catalog'),
+  catalog: (period?: PeriodQuery) => http.get<CatalogCategory[]>('/portal/catalog', period),
+  availability: (period: PeriodQuery) =>
+    http.get<PeriodAvailability>('/portal/availability', period),
   myAssets: () => http.get<MyAsset[]>('/portal/my-assets'),
   myAsset: (id: Id) => http.get<MyAsset>(`/portal/my-assets/${id}`),
   myIssues: () => http.get<OwnIssueWithDevice[]>('/portal/my-issues'),

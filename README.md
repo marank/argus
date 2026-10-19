@@ -36,7 +36,9 @@ e.g. **Dev: start all**, **Check: all**, **DB: seed demo data**, **Docker: build
 
 Demo accounts created by `seed_demo` (development only, password `argus-demo`):
 `admin` (superuser), `it` (IT department), `employee`, `sales`, `terminal`
-(shared pickup terminal).
+(shared pickup terminal). It also creates about 25 more employees (e.g. `jkoch`
+in IT), a second site, some 150 devices with history, requests in every step,
+purchase orders, licenses and problem reports.
 
 ## Docker
 

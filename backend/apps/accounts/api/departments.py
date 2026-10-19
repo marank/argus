@@ -10,7 +10,7 @@ router = build_crud_router(
         out_schema=DepartmentOut,
         in_schema=DepartmentIn,
         search_fields=("name", "code", "cost_center"),
-        ordering_fields=("name", "code", "cost_center"),
+        ordering_fields=("name", "code", "cost_center", "sort_order"),
         queryset=lambda: Department.objects.annotate(member_count=Count("members")),
     ),
     tags=["departments"],

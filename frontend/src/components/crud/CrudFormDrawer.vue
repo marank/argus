@@ -9,12 +9,12 @@ import {
   NInput,
   NInputNumber,
   NSelect,
+  NSwitch,
 } from 'naive-ui'
 import { computed, h, reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import EntitySelect from '@/components/common/EntitySelect.vue'
-import CheckField from '@/components/common/CheckField.vue'
 import FieldLabel from '@/components/common/FieldLabel.vue'
 import { useAction } from '@/composables/useAction'
 import { useFormat } from '@/composables/useFormat'
@@ -98,11 +98,9 @@ async function save() {
           <div v-if="section.title" class="eyebrow section-title">{{ t(section.title) }}</div>
           <NGrid :cols="2" :x-gap="12">
             <NFormItemGi
-              v-for="field in section.fields"
+              v-for="field in section.fields.filter((f) => f.type !== 'switch')"
               :key="field.key"
               :span="span(field)"
-              :show-label="field.type !== 'switch'"
-              :class="{ 'switch-item': field.type === 'switch' }"
             >
               <template #label>
                 <FieldLabel
@@ -111,13 +109,7 @@ async function save() {
                   :help="field.help ? t(field.help) : undefined"
                 />
               </template>
-              <CheckField
-                v-if="field.type === 'switch'"
-                v-model="form[field.key]"
-                :label="t(field.label)"
-                :help="field.help ? t(field.help) : undefined"
-              />
-              <NInput v-else-if="field.type === 'text'" v-model:value="form[field.key]" />
+              <NInput v-if="field.type === 'text'" v-model:value="form[field.key]" />
               <NInput
                 v-else-if="field.type === 'mono'"
                 v-model:value="form[field.key]"
@@ -160,6 +152,20 @@ async function save() {
               />
             </NFormItemGi>
           </NGrid>
+          <!-- Switches as a list below the inputs: label and explanation left, switch right. -->
+          <div v-if="section.fields.some((f) => f.type === 'switch')" class="toggles">
+            <label
+              v-for="field in section.fields.filter((f) => f.type === 'switch')"
+              :key="field.key"
+              class="toggle"
+            >
+              <span class="toggle-text">
+                <span class="toggle-label">{{ t(field.label) }}</span>
+                <small v-if="field.help" class="muted">{{ t(field.help) }}</small>
+              </span>
+              <NSwitch v-model:value="form[field.key]" />
+            </label>
+          </div>
           <component :is="section.extra" v-if="section.extra" :form="form" />
         </section>
       </NForm>
@@ -187,8 +193,33 @@ async function save() {
 .section-title {
   margin-bottom: 12px;
 }
-/* Checkboxes line up with the inputs next to them, not with their labels. */
-.switch-item {
-  align-self: end;
+.toggles {
+  display: grid;
+  margin-top: 4px;
+  border: 1px solid var(--ar-border);
+  border-radius: 3px;
+}
+.toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 9px 12px;
+  cursor: pointer;
+}
+.toggle + .toggle {
+  border-top: 1px solid var(--ar-border);
+}
+.toggle-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.toggle-label {
+  font-size: 13px;
+}
+.toggle small {
+  font-size: 11.5px;
+  line-height: 1.4;
 }
 </style>

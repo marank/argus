@@ -11,7 +11,7 @@ export default defineResource<User>({
   key: 'users',
   // Sections per department.
   groupBy: {
-    ordering: 'department__name',
+    ordering: 'department__sort_order,department__name',
     key: (u) => u.department?.id ?? 'none',
     label: (u) => [
       h(Building2, { size: 14 }),

@@ -154,3 +154,38 @@ def test_settings_api_is_superuser_only_and_hides_password(configured, it_client
         content_type="application/json",
     )
     assert response.status_code == 400
+
+
+def api_login(username: str, password: str):
+    return Client().post(
+        "/api/auth/login", {"username": username, "password": password}, content_type="application/json"
+    )
+
+
+def test_local_accounts_log_in_while_ldap_is_on(configured):
+    User.objects.create_user("local-admin", password="local-secret", is_superuser=True, is_staff=True)
+    User.objects.create_user("local-user", password="local-secret")
+    assert api_login("local-admin", "local-secret").status_code == 200
+    assert api_login("local-user", "local-secret").status_code == 200
+    # Directory accounts still work next to them.
+    assert api_login("ABerger", "anna-secret").status_code == 200
+
+
+def test_local_login_works_when_the_directory_is_down(configured, monkeypatch):
+    from ldap3.core.exceptions import LDAPSocketOpenError
+
+    def unreachable(config, user, password):
+        raise LDAPSocketOpenError("unable to open socket")
+
+    monkeypatch.setattr(ldap, "_connect", unreachable)
+    User.objects.create_user("local-user", password="local-secret")
+    assert api_login("local-user", "local-secret").status_code == 200
+    assert api_login("ABerger", "anna-secret").status_code == 401
+
+
+def test_local_password_of_a_linked_account_keeps_working(configured):
+    # A local account that also exists in the directory: both passwords work.
+    User.objects.create_user("ABerger", password="local-secret")
+    assert api_login("ABerger", "anna-secret").status_code == 200
+    assert User.objects.get(username="ABerger").ldap_dn == ANNA_DN
+    assert api_login("ABerger", "local-secret").status_code == 200

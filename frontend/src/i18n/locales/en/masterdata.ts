@@ -50,6 +50,8 @@ export default {
     requestable: 'Requestable in portal',
     requestableShort: 'Requestable',
     sortOrder: 'Sort order',
+    departmentSortHelp:
+      'Lower numbers come first, equal numbers by name. Applies to lists and selections.',
     kind: 'Kind',
     pickupPoint: 'Pickup point',
     manufacturer: 'Manufacturer',
