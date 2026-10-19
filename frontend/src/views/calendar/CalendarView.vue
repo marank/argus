@@ -227,7 +227,6 @@ const legend = computed(() =>
   display: flex;
   flex-direction: column;
   height: calc(100vh - var(--ar-header-height));
-  max-width: none;
   padding-bottom: 20px;
 }
 .toolbar {
