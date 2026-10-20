@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7
+# syntax=docker/dockerfile:1.28
 #
 # Argus: one image with nginx (static frontend + reverse proxy), gunicorn (Django)
 # and supervisord keeping both alive. Runs as an unprivileged user on port 8080.
@@ -19,7 +19,7 @@ RUN pnpm build
 
 # --- 2. Python dependencies ------------------------------------------------------
 FROM python:${PYTHON_VERSION}-slim-trixie AS backend
-COPY --from=ghcr.io/astral-sh/uv:0.12.18 /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.13.4 /uv /usr/local/bin/uv
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
     UV_PYTHON_DOWNLOADS=never \
