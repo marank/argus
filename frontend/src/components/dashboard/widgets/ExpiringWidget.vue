@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n'
 
 import { dashboardApi } from '@/api/dashboard'
 import { kindColor } from '@/components/calendar/kinds'
+import { useLive } from '@/composables/useLive'
 import { useFeaturesStore } from '@/stores/features'
 import type { ExpiringItem, WidgetProps } from '@/types/dashboard'
 
@@ -25,7 +26,9 @@ const { mode, setMode, when, other } = useDateMode(
   (options) => emit('update:options', options),
 )
 const items = ref<ExpiringItem[] | null>(null)
-onMounted(async () => (items.value = await dashboardApi.expiring()))
+const load = async () => (items.value = await dashboardApi.expiring())
+onMounted(load)
+useLive(['license', 'asset'], load)
 
 const shown = computed(() =>
   (items.value ?? []).filter((i) => i.kind !== 'license' || features.isOn('licenses')),

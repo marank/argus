@@ -10,6 +10,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import ReportIssueModal from '@/components/portal/ReportIssueModal.vue'
 import { useFormat } from '@/composables/useFormat'
+import { useLive } from '@/composables/useLive'
 import type { MyAsset } from '@/types/reservations'
 import { categoryIcon } from '@/utils/icons'
 import { useFeaturesStore } from '@/stores/features'
@@ -27,6 +28,7 @@ async function load() {
   assets.value = await portalApi.myAssets()
 }
 onMounted(load)
+useLive(['asset', 'reservation'], load, { paused: () => showReport.value })
 
 function report(asset: MyAsset) {
   reporting.value = asset

@@ -15,6 +15,7 @@ import SeatUsage from '@/components/inventory/SeatUsage.vue'
 import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
 import { useFormat } from '@/composables/useFormat'
+import { useLive } from '@/composables/useLive'
 import type { Id } from '@/types/common'
 import type { LicenseAssignment, LicenseDetail } from '@/types/inventory'
 import { categoryIcon } from '@/utils/icons'
@@ -38,6 +39,7 @@ async function load() {
   license.value = await licensesApi.get(props.id)
 }
 onMounted(load)
+useLive(['license'], load, { id: () => props.id, paused: () => showForm.value })
 
 const perDevice = computed(() => license.value?.assign_to === 'device')
 const full = computed(() => !!license.value && license.value.seats_used >= license.value.seats)

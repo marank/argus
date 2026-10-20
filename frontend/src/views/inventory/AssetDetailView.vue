@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useLive } from '@/composables/useLive'
 import type { Id } from '@/types/common'
 import { Pencil, Trash2, UserMinus, UserPlus, Wrench } from '@lucide/vue'
 import { NAlert, NButton, NCard, NModal, NSkeleton, useMessage } from 'naive-ui'
@@ -50,6 +51,10 @@ async function load() {
   ])
 }
 onMounted(load)
+useLive(['asset'], load, {
+  id: () => props.id,
+  paused: () => showForm.value || showEvent.value || showAssign.value,
+})
 
 const identification = computed<DetailEntry[]>(() => {
   const a = asset.value!

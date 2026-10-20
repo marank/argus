@@ -6,3 +6,8 @@ class ProcurementConfig(AppConfig):
     name = "apps.procurement"
     label = "procurement"
     verbose_name = _("Procurement")
+
+    def ready(self):
+        from . import live
+
+        live.connect()

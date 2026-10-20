@@ -2,16 +2,21 @@
 import { PanelLeftClose, PanelLeftOpen } from '@lucide/vue'
 import { useBreakpoints, useStorage } from '@vueuse/core'
 import { NButton, NLayout, NLayoutContent, NLayoutHeader, NLayoutSider } from 'naive-ui'
-import { ref, watch } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import GlobalScan from '@/components/layout/GlobalScan.vue'
 import UserMenu from '@/components/layout/UserMenu.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useLiveStore } from '@/stores/live'
 
 const { t } = useI18n()
 const auth = useAuthStore()
+// Live updates for the pages of the signed-in user; signing out leaves this layout.
+const live = useLiveStore()
+onMounted(live.start)
+onUnmounted(live.stop)
 const preferCollapsed = useStorage('argus.sidebar-collapsed', false)
 const small = useBreakpoints({ tablet: 960 }).smaller('tablet')
 // Small screens always start collapsed; the stored preference applies on wide screens.

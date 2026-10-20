@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 
 import { dashboardApi } from '@/api/dashboard'
 import StatusTag from '@/components/common/StatusTag.vue'
+import { useLive } from '@/composables/useLive'
 import type { UpcomingHandout, WidgetProps } from '@/types/dashboard'
 
 import { useDateMode } from './dateMode'
@@ -22,9 +23,9 @@ const { mode, setMode, when, other } = useDateMode(stored, save)
 const days = useOption<Period>(stored, save, 'days', 7, oneOf(PERIODS))
 
 const rows = ref<UpcomingHandout[] | null>(null)
-watch(days, async (value) => (rows.value = await dashboardApi.upcoming(value)), {
-  immediate: true,
-})
+const load = async () => (rows.value = await dashboardApi.upcoming(days.value))
+watch(days, load, { immediate: true })
+useLive(['reservation'], load)
 </script>
 
 <template>

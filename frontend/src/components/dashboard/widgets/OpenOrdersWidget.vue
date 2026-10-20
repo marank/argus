@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n'
 import { dashboardApi } from '@/api/dashboard'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { toIsoDate } from '@/composables/useFormat'
+import { useLive } from '@/composables/useLive'
 import type { OpenOrder, WidgetProps } from '@/types/dashboard'
 
 import { useDateMode } from './dateMode'
@@ -21,7 +22,9 @@ const { mode, setMode, when, other } = useDateMode(
   (options) => emit('update:options', options),
 )
 const orders = ref<OpenOrder[] | null>(null)
-onMounted(async () => (orders.value = await dashboardApi.openOrders()))
+const load = async () => (orders.value = await dashboardApi.openOrders())
+onMounted(load)
+useLive(['order'], load)
 
 const late = (order: OpenOrder) =>
   !!order.expected_date && order.expected_date < toIsoDate(Date.now())!

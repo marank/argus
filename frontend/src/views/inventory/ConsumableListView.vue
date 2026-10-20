@@ -33,6 +33,7 @@ const route = useRoute()
 const { dateTime, enumLabel } = useFormat()
 
 const list = useList(consumablesApi.list, {
+  live: ['consumable'],
   ordering: 'model__name',
   filters: {
     below_minimum: route.query.below_minimum ? true : null,

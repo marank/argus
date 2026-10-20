@@ -11,6 +11,7 @@ import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import CreateOrderModal, { type DraftLine } from '@/components/procurement/CreateOrderModal.vue'
 import { useFormat } from '@/composables/useFormat'
+import { useLive } from '@/composables/useLive'
 import type { Needs, ReservationNeed, ConsumableNeed } from '@/types/procurement'
 
 const { t } = useI18n()
@@ -33,6 +34,7 @@ async function load() {
   }
 }
 onMounted(load)
+useLive(['reservation', 'order'], load, { paused: () => showOrder.value })
 
 const num = (value: number, cls = '') => h('span', { class: `mono ${cls}` }, value)
 

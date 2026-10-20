@@ -11,6 +11,7 @@ import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useGroupedRows, withGroupHeaders } from '@/composables/useGroupedRows'
+import { useLive } from '@/composables/useLive'
 import type { OwnIssueWithDevice } from '@/types/inventory'
 import { categoryIcon } from '@/utils/icons'
 
@@ -21,7 +22,9 @@ const { date, enumLabel } = useFormat()
 
 /** Reports IT changed since the employee last opened them pulse until opened. */
 const issues = ref<OwnIssueWithDevice[] | null>(null)
-onMounted(async () => (issues.value = await portalApi.myIssues()))
+const load = async () => (issues.value = await portalApi.myIssues())
+onMounted(load)
+useLive(['issue'], load)
 
 const isDone = (i: OwnIssueWithDevice) => i.status === 'resolved'
 /** Open and in-progress reports first; newest first within each section (as delivered). */

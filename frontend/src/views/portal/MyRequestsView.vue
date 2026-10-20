@@ -10,6 +10,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { useFormat } from '@/composables/useFormat'
+import { useLive } from '@/composables/useLive'
 import type { ReservationListItem } from '@/types/reservations'
 
 /**
@@ -21,10 +22,12 @@ const { date, weekday, enumLabel } = useFormat()
 const sortBy = useStorage<'status' | 'date'>('argus.my-requests-sort', 'status')
 
 const requests = ref<ReservationListItem[] | null>(null)
-onMounted(async () => {
+async function load() {
   const page = await reservationsApi.list({ mine: true, page_size: 100, ordering: '-created_at' })
   requests.value = page.items
-})
+}
+onMounted(load)
+useLive(['reservation'], load)
 
 const STEPS = ['submitted', 'confirmed', 'ready', 'handed_out'] as const
 // Waiting for the department comes before the first step.

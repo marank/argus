@@ -7,13 +7,16 @@ import { useI18n } from 'vue-i18n'
 import { dashboardApi } from '@/api/dashboard'
 import StatCard from '@/components/common/StatCard.vue'
 import { useFormat } from '@/composables/useFormat'
+import { useLive } from '@/composables/useLive'
 import type { EmployeeOverview } from '@/types/dashboard'
 
 const { t } = useI18n()
 const { weekday } = useFormat()
 const data = ref<EmployeeOverview | null>(null)
 
-onMounted(async () => (data.value = await dashboardApi.me()))
+const load = async () => (data.value = await dashboardApi.me())
+onMounted(load)
+useLive(['reservation', 'issue', 'asset', 'license'], load)
 </script>
 
 <template>

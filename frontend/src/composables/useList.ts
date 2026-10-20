@@ -3,6 +3,7 @@ import type { DataTableSortState, PaginationProps } from 'naive-ui'
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import { useLive } from '@/composables/useLive'
 import type { ListParams, Page } from '@/types/common'
 
 /**
@@ -18,6 +19,8 @@ export function useList<T>(
     ordering?: string
     /** Ordering applied before the user's sort, e.g. to keep rows grouped by category. */
     groupOrdering?: () => string | undefined
+    /** Live update topics (see `useLive`) on which the current page is fetched again, silently. */
+    live?: string[]
   } = {},
 ) {
   const { t } = useI18n()
@@ -30,8 +33,12 @@ export function useList<T>(
   const page = ref(1)
   const pageSize = ref(options.pageSize ?? 25)
 
-  async function load() {
-    loading.value = true
+  // Only the latest request sets the rows; an older answer arriving late is dropped.
+  let latest = 0
+
+  async function fetchPage(silent: boolean) {
+    const request = ++latest
+    if (!silent) loading.value = true
     try {
       const result = await fetcher({
         page: page.value,
@@ -41,12 +48,17 @@ export function useList<T>(
           [options.groupOrdering?.(), ordering.value].filter(Boolean).join(',') || undefined,
         ...(filters as ListParams),
       })
+      if (request !== latest) return
       rows.value = result.items
       count.value = result.count
     } finally {
-      loading.value = false
+      if (request === latest) loading.value = false
     }
   }
+
+  const load = () => fetchPage(false)
+  /** For changes made by others: the current rows stay until the new ones are there. */
+  const refresh = () => fetchPage(true).catch(() => undefined)
 
   const reload = () => {
     page.value = 1
@@ -56,6 +68,7 @@ export function useList<T>(
 
   watch(search, debouncedReload)
   watch(filters, reload, { deep: true })
+  if (options.live) useLive(options.live, refresh)
 
   const pagination = computed<PaginationProps>(() => ({
     page: page.value,

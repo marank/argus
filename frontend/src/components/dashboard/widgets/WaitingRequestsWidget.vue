@@ -4,6 +4,7 @@ import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { dashboardApi } from '@/api/dashboard'
+import { useLive } from '@/composables/useLive'
 import type { WaitingRequest, WidgetProps } from '@/types/dashboard'
 
 import { useDateMode } from './dateMode'
@@ -19,7 +20,9 @@ const { mode, setMode, when, other } = useDateMode(
   (options) => emit('update:options', options),
 )
 const rows = ref<WaitingRequest[] | null>(null)
-onMounted(async () => (rows.value = await dashboardApi.waitingRequests()))
+const load = async () => (rows.value = await dashboardApi.waitingRequests())
+onMounted(load)
+useLive(['reservation'], load)
 </script>
 
 <template>

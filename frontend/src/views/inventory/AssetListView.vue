@@ -36,6 +36,7 @@ const queryId = (key: string) => (route.query[key] ? String(route.query[key]) : 
 const grouped = useStorage('argus.assets-grouped', true)
 
 const list = useList(assetsApi.list, {
+  live: ['asset'],
   ordering: 'inventory_number',
   groupOrdering: () =>
     grouped.value ? 'model__category__sort_order,model__category__name' : undefined,

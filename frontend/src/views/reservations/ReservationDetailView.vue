@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useLive } from '@/composables/useLive'
 import type { Id } from '@/types/common'
 import {
   Ban,
@@ -81,9 +82,22 @@ const showExtend = ref(false)
 
 const availability = ref<PeriodAvailability | null>(null)
 
-onMounted(async () => {
+async function load() {
   reservation.value = await reservationsApi.get(props.id)
   if (reservation.value.status === 'submitted') await loadAvailability(reservation.value)
+}
+onMounted(load)
+// A colleague's step shows up right away, but not underneath an open dialog.
+useLive(['reservation'], load, {
+  id: () => props.id,
+  paused: () =>
+    showConfirm.value ||
+    showReject.value ||
+    showOrder.value ||
+    showReady.value ||
+    showHandOut.value ||
+    showReturn.value ||
+    showExtend.value,
 })
 
 /** Before confirming: what the pool holds in the request's period, from the pickup day on. */

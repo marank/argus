@@ -1,4 +1,5 @@
 import { flushPromises, mount } from '@vue/test-utils'
+import { createPinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createI18n } from 'vue-i18n'
 
@@ -33,7 +34,10 @@ async function mountWidget() {
   const i18n = createI18n({ legacy: false, locale: 'en', missingWarn: false, fallbackWarn: false })
   const wrapper = mount(OverdueReturnsWidget, {
     props: { data: {} as ITOverview, options: {} },
-    global: { plugins: [i18n], stubs: { RouterLink: { template: '<a><slot /></a>' } } },
+    global: {
+      plugins: [i18n, createPinia()],
+      stubs: { RouterLink: { template: '<a><slot /></a>' } },
+    },
   })
   await flushPromises()
   return wrapper

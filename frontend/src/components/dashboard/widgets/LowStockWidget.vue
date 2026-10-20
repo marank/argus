@@ -4,6 +4,7 @@ import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { dashboardApi } from '@/api/dashboard'
+import { useLive } from '@/composables/useLive'
 import { useFeaturesStore } from '@/stores/features'
 import type { LowStockItem, WidgetProps } from '@/types/dashboard'
 
@@ -13,7 +14,9 @@ defineProps<WidgetProps>()
 const { t } = useI18n()
 const features = useFeaturesStore()
 const items = ref<LowStockItem[] | null>(null)
-onMounted(async () => (items.value = await dashboardApi.lowStock()))
+const load = async () => (items.value = await dashboardApi.lowStock())
+onMounted(load)
+useLive(['consumable', 'order'], load)
 </script>
 
 <template>

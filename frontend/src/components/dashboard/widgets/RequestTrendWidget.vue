@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n'
 
 import { dashboardApi } from '@/api/dashboard'
 import { useFormat } from '@/composables/useFormat'
+import { useLive } from '@/composables/useLive'
 import type { TrendWeek, WidgetProps } from '@/types/dashboard'
 
 import { isBoolean, useOption } from './options'
@@ -25,7 +26,9 @@ const asTable = useOption(
 )
 const active = ref<number | null>(null)
 
-onMounted(async () => (weeks.value = await dashboardApi.requestTrend()))
+const load = async () => (weeks.value = await dashboardApi.requestTrend())
+onMounted(load)
+useLive(['reservation'], load)
 
 const SERIES = [
   { key: 'created', label: 'dashboard.widgets.requestTrend.created', color: 'var(--ar-series-1)' },

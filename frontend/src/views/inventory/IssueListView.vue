@@ -26,6 +26,7 @@ const { date, enumLabel } = useFormat()
 const OPEN: IssueStatus[] = ['open', 'in_progress']
 const { assigned, param: assignedParam } = useAssigned('issues')
 const list = useList(issuesApi.list, {
+  live: ['issue'],
   ordering: '-created_at',
   filters: {
     status: [...OPEN],

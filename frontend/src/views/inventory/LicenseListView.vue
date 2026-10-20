@@ -33,6 +33,7 @@ const { date, enumLabel } = useFormat()
 const soonDate = () => toIsoDate(Date.now() + features.rules.license_warning_days * 86_400_000)
 
 const list = useList(licensesApi.list, {
+  live: ['license'],
   ordering: 'model__name',
   groupOrdering: () => 'model__category__sort_order,model__category__name',
   filters: {

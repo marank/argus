@@ -14,6 +14,7 @@ import IssueStatusCard from '@/components/issues/IssueStatusCard.vue'
 import OtherIssuesCard from '@/components/issues/OtherIssuesCard.vue'
 import { useAction } from '@/composables/useAction'
 import { useFormat } from '@/composables/useFormat'
+import { useLive } from '@/composables/useLive'
 import { useAuthStore } from '@/stores/auth'
 import { useMenuCountsStore } from '@/stores/menuCounts'
 import type { Id } from '@/types/common'
@@ -37,14 +38,22 @@ const canWrite = computed(() => !forIt.value || auth.can('issues', 'write'))
 const issue = ref<AssetIssueDetail | null>(null)
 const conversation = useTemplateRef('conversation')
 
-async function load() {
-  issue.value = null
+async function refresh() {
   issue.value = forIt.value ? await issuesApi.get(props.id) : await portalApi.myIssue(props.id)
   // Opening the report marks IT's updates seen: the menu stops pulsing.
   if (!forIt.value) menuCounts.refresh()
 }
 // Other reports on the device open on the same page.
-watch(() => props.id, load, { immediate: true })
+watch(
+  () => props.id,
+  () => {
+    issue.value = null
+    refresh()
+  },
+  { immediate: true },
+)
+// New messages and status changes of the other side appear while the page is open.
+useLive(['issue'], refresh, { id: () => props.id })
 
 async function send(text: string) {
   const updated = await run(

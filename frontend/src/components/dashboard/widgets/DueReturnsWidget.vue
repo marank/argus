@@ -7,6 +7,7 @@ import { useI18n } from 'vue-i18n'
 import { dashboardApi } from '@/api/dashboard'
 import ExtendModal from '@/components/reservations/ExtendModal.vue'
 import { useFormat } from '@/composables/useFormat'
+import { useLive } from '@/composables/useLive'
 import type { DueReturn, WidgetProps } from '@/types/dashboard'
 
 import { useDateMode } from './dateMode'
@@ -31,6 +32,7 @@ const days = useOption<(typeof PERIODS)[number]>(stored, save, 'days', 3, oneOf(
 const rows = ref<DueReturn[] | null>(null)
 const load = async () => (rows.value = await dashboardApi.dueReturns(days.value))
 watch(days, load, { immediate: true })
+useLive(['reservation'], load)
 const { remind, sending } = useRemind(load)
 
 const extending = ref<DueReturn | null>(null)

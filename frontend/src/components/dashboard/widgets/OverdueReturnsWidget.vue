@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n'
 
 import { dashboardApi } from '@/api/dashboard'
 import { useFormat } from '@/composables/useFormat'
+import { useLive } from '@/composables/useLive'
 import type { OverdueReturn, WidgetProps } from '@/types/dashboard'
 
 import { useDateMode } from './dateMode'
@@ -25,6 +26,7 @@ const rows = ref<OverdueReturn[] | null>(null)
 
 const load = async () => (rows.value = await dashboardApi.overdueReturns())
 onMounted(load)
+useLive(['reservation'], load)
 const { remind, sending } = useRemind(load)
 
 const daysOverdue = (row: OverdueReturn) =>

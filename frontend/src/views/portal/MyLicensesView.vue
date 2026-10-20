@@ -8,6 +8,7 @@ import { portalApi } from '@/api/reservations'
 import EmptyState from '@/components/common/EmptyState.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import { toIsoDate, useFormat } from '@/composables/useFormat'
+import { useLive } from '@/composables/useLive'
 import type { OwnLicense } from '@/types/inventory'
 import { categoryIcon } from '@/utils/icons'
 import { useFeaturesStore } from '@/stores/features'
@@ -18,7 +19,9 @@ const features = useFeaturesStore()
 const { date } = useFormat()
 
 const licenses = ref<OwnLicense[] | null>(null)
-onMounted(async () => (licenses.value = await portalApi.myLicenses()))
+const load = async () => (licenses.value = await portalApi.myLicenses())
+onMounted(load)
+useLive(['license', 'reservation'], load)
 
 const soon = toIsoDate(Date.now() + features.rules.license_warning_days * 86_400_000) ?? ''
 

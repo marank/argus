@@ -115,6 +115,8 @@ else:
 JOB_QUEUE = DATABASES["default"]["ENGINE"] == "django.db.backends.postgresql"
 if JOB_QUEUE:
     INSTALLED_APPS.append("procrastinate.contrib.django")
+# Live updates for open pages (apps/core/live.py) need PostgreSQL's LISTEN/NOTIFY too.
+LIVE_EVENTS = JOB_QUEUE
 
 AUTH_USER_MODEL = "accounts.User"
 

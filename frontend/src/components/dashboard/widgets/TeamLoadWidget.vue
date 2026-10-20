@@ -4,6 +4,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { dashboardApi } from '@/api/dashboard'
+import { useLive } from '@/composables/useLive'
 import { useFeaturesStore } from '@/stores/features'
 import type { TeamLoad, WidgetProps } from '@/types/dashboard'
 
@@ -16,7 +17,9 @@ const { t } = useI18n()
 const features = useFeaturesStore()
 const load = ref<TeamLoad | null>(null)
 
-onMounted(async () => (load.value = await dashboardApi.teamLoad()))
+const fetchLoad = async () => (load.value = await dashboardApi.teamLoad())
+onMounted(fetchLoad)
+useLive(['reservation', 'issue'], fetchLoad)
 
 const withIssues = computed(() => features.isOn('issues'))
 const rows = computed(() =>

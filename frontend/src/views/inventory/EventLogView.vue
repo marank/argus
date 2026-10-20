@@ -31,6 +31,7 @@ const ALL_KINDS: AssetEventKind[] = [
 ]
 
 const list = useList(eventsApi.list, {
+  live: ['asset'],
   filters: {
     kind: ['battery_replaced', 'component_replaced', 'repair', 'maintenance', 'inspection'],
     model: null,

@@ -39,6 +39,7 @@ const scope = ref<Scope>(route.query.overdue ? 'overdue' : route.query.status ? 
 const { assigned, param: assignedParam } = useAssigned('reservations')
 
 const list = useList(reservationsApi.list, {
+  live: ['reservation'],
   ordering: 'start_date',
   filters: {
     status: route.query.status ? [String(route.query.status)] : [],

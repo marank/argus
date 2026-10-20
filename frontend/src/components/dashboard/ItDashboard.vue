@@ -17,6 +17,7 @@ import {
   widgetType,
   type WidgetDef,
 } from '@/components/dashboard/widgets'
+import { useLive } from '@/composables/useLive'
 import { useAuthStore } from '@/stores/auth'
 import { useFeaturesStore } from '@/stores/features'
 import type { WidgetSettings } from '@/types/accounts'
@@ -31,7 +32,9 @@ const features = useFeaturesStore()
 const message = useMessage()
 const data = ref<ITOverview | null>(null)
 
-onMounted(async () => (data.value = await dashboardApi.it()))
+const load = async () => (data.value = await dashboardApi.it())
+onMounted(load)
+useLive(['reservation', 'issue', 'asset', 'license', 'consumable', 'order'], load)
 
 const defs = new Map(WIDGETS.map((def) => [def.id, def]))
 const def = (widget: WidgetSettings) => defs.get(widgetType(widget)) as WidgetDef

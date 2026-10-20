@@ -8,6 +8,7 @@ import { approvalsApi } from '@/api/reservations'
 import EmptyState from '@/components/common/EmptyState.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import { useFormat } from '@/composables/useFormat'
+import { useLive } from '@/composables/useLive'
 import type { ReservationListItem } from '@/types/reservations'
 
 /** Requests of the approver's departments waiting for a decision, oldest first. */
@@ -17,9 +18,11 @@ const { date } = useFormat()
 
 const requests = ref<ReservationListItem[] | null>(null)
 
-onMounted(async () => {
+async function load() {
   requests.value = (await approvalsApi.list({ page_size: 100 })).items
-})
+}
+onMounted(load)
+useLive(['reservation'], load)
 
 const period = (r: ReservationListItem) =>
   `${date(r.start_date)} → ${r.end_date ? date(r.end_date) : t('common.permanent')}`

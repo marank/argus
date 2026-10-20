@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useLive } from '@/composables/useLive'
 import type { Id } from '@/types/common'
 import { RotateCcw, X } from '@lucide/vue'
 import { NAlert, NButton, NCard, NDataTable, NSkeleton, type DataTableColumns } from 'naive-ui'
@@ -29,7 +30,9 @@ const { busy, run } = useAction()
 
 const reservation = ref<Reservation | null>(null)
 
-onMounted(async () => (reservation.value = await reservationsApi.get(props.id)))
+const load = async () => (reservation.value = await reservationsApi.get(props.id))
+onMounted(load)
+useLive(['reservation'], load, { id: () => props.id })
 
 /** Lent for a period: when it is due back, then what came back. */
 const showReturns = computed(() => {

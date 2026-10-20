@@ -25,6 +25,7 @@ const { date, money, enumLabel } = useFormat()
 const { busy, run } = useAction()
 
 const list = useList(ordersApi.list, {
+  live: ['order'],
   ordering: '-created_at',
   filters: {
     status: route.query.status

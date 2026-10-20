@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n'
 import { dashboardApi } from '@/api/dashboard'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { useFormat } from '@/composables/useFormat'
+import { useLive } from '@/composables/useLive'
 import { useFeaturesStore } from '@/stores/features'
 import type { MyTasks, WidgetProps } from '@/types/dashboard'
 
@@ -24,7 +25,9 @@ const { mode, setMode, when, other } = useDateMode(
 const features = useFeaturesStore()
 const tasks = ref<MyTasks | null>(null)
 
-onMounted(async () => (tasks.value = await dashboardApi.myTasks()))
+const load = async () => (tasks.value = await dashboardApi.myTasks())
+onMounted(load)
+useLive(['reservation', 'issue'], load)
 </script>
 
 <template>

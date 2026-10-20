@@ -43,8 +43,8 @@ purchase orders, licenses and problem reports.
 ## Docker
 
 One image runs nginx (serves the built frontend, proxies `/api` and `/admin`),
-gunicorn (Django), the background job worker and supervisord; docker compose adds
-PostgreSQL.
+gunicorn (Django), uvicorn for the live update stream (`/api/events`), the background
+job worker and supervisord; docker compose adds PostgreSQL.
 
 ```bash
 cp .env.example .env      # set APP_URLS, SECRET_KEY, ADMIN_PASSWORD, POSTGRES_PASSWORD
@@ -131,6 +131,12 @@ signs in through the app's login, so the second step applies there too.
   Queued, failed and finished jobs show up in the Django admin. Without PostgreSQL
   (local SQLite) mails go out directly, and `python manage.py send_reminders` sends
   reminders.
+- **Live updates** – lists, dashboards, detail pages and the menu counts reload by
+  themselves when someone else changes requests, problem reports, devices, licenses,
+  consumables or orders. The server only signals what changed (PostgreSQL
+  LISTEN/NOTIFY, sent to the browser as server-sent events); pages then load the data
+  through the normal API. A page waits while one of its dialogs is open. Without
+  PostgreSQL there are no signals and pages refresh as before.
 - **Site settings** – modules and features can be switched off; deadlines such as
   the default and maximum loan period and warning periods are configurable.
 - **Scanning** – keyboard-wedge barcode scanners work anywhere in the IT views:

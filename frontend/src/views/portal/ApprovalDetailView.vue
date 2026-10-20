@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useLive } from '@/composables/useLive'
 import type { Id } from '@/types/common'
 import { ArrowLeft, Check, X } from '@lucide/vue'
 import { NAlert, NButton, NInput, NModal, NSkeleton } from 'naive-ui'
@@ -28,12 +29,14 @@ const { enumLabel } = useFormat()
 const { busy, run } = useAction()
 
 const reservation = ref<Reservation | null>(null)
-onMounted(async () => (reservation.value = await reservationsApi.get(props.id)))
+const load = async () => (reservation.value = await reservationsApi.get(props.id))
+onMounted(load)
 
 // The kind stays while the dialog fades out, so its texts do not switch on closing.
 const decision = ref<'approve' | 'decline'>('approve')
 const deciding = ref(false)
 const comment = ref('')
+useLive(['reservation'], load, { id: () => props.id, paused: () => deciding.value })
 
 /** Why the earlier request ended: the department's or IT's comment. */
 const earlierReason = computed(() => {

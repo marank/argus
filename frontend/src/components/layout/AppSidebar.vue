@@ -6,8 +6,10 @@ import { computed, h, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
 
+import { useLive } from '@/composables/useLive'
 import { useAuthStore } from '@/stores/auth'
 import { useFeaturesStore } from '@/stores/features'
+import { useLiveStore } from '@/stores/live'
 import { useMenuCountsStore } from '@/stores/menuCounts'
 
 import { activeKey, NAVIGATION, type MenuBadge, type NavItem } from './navigation'
@@ -36,10 +38,17 @@ watch(
   { immediate: true },
 )
 
-/** Counts for the self-service entries, refreshed on every page change and every minute. */
+/**
+ * Counts for the self-service entries, refreshed on every page change and on live
+ * updates of requests and reports; every minute while live updates are unavailable.
+ */
 const menuCounts = useMenuCountsStore()
+const live = useLiveStore()
 watch(() => route.path, menuCounts.refresh, { immediate: true })
-useIntervalFn(menuCounts.refresh, 60_000)
+useLive(['reservation', 'issue'], menuCounts.refresh)
+useIntervalFn(() => {
+  if (!live.connected) menuCounts.refresh()
+}, 60_000)
 
 /**
  * The count of an entry and whether it waits for the user (then it pulses):
