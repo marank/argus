@@ -35,19 +35,29 @@ watch(
   { immediate: true },
 )
 
-/** Same heading as the other sections, plus an arrow that folds the entries away. */
-function foldableTitle(key: string, label: string) {
+/**
+ * A section heading; where sections fold, a button with an arrow that folds the
+ * entries away. Always the same wrapper: the menu must not swap a plain text
+ * label for an element when the sidebar collapses, or its update fails.
+ */
+function sectionTitle(key: string, label: string, canFold: boolean) {
   const open = !isFolded(key)
   return () =>
     h(
-      'button',
-      {
-        type: 'button',
-        class: 'section-toggle',
-        'aria-expanded': open,
-        onClick: () => toggle(key),
-      },
-      [h('span', label), h(ChevronDown, { size: 13, class: ['chevron', { open }] })],
+      'span',
+      { class: 'section-title' },
+      canFold
+        ? h(
+            'button',
+            {
+              type: 'button',
+              class: 'section-toggle',
+              'aria-expanded': open,
+              onClick: () => toggle(key),
+            },
+            [h('span', label), h(ChevronDown, { size: 13, class: ['chevron', { open }] })],
+          )
+        : label,
     )
 }
 
@@ -80,17 +90,26 @@ const options = computed<MenuOption[]>(() =>
     }))
     // Without a heading the entries stand alone; an empty group would still leave a gap.
     if (!section.label) return children
-    if (foldable.value) {
-      return {
-        type: 'group',
-        key: section.key,
-        label: foldableTitle(section.key, t(section.label)),
-        children: isFolded(section.key) ? [] : children,
-      }
+    return {
+      type: 'group',
+      key: section.key,
+      label: sectionTitle(section.key, t(section.label), foldable.value),
+      children,
     }
-    return { type: 'group', key: section.key, label: t(section.label), children }
   }),
 )
+
+/**
+ * Entries of a folded section stay in the menu and slide shut (see the styles),
+ * so folding and unfolding is animated.
+ */
+const sectionOf = computed(
+  () => new Map(sections.value.flatMap((s) => s.items.map((i) => [i.key, s.key] as const))),
+)
+const nodeProps = (option: MenuOption) => {
+  const section = sectionOf.value.get(String(option.key))
+  return foldable.value && section && isFolded(section) ? { class: 'folded' } : {}
+}
 </script>
 
 <template>
@@ -115,6 +134,7 @@ const options = computed<MenuOption[]>(() =>
       :collapsed-width="56"
       :collapsed-icon-size="18"
       :indent="16"
+      :node-props="nodeProps"
     />
   </nav>
 </template>
@@ -159,6 +179,41 @@ const options = computed<MenuOption[]>(() =>
   overflow: hidden;
   background: var(--ar-border);
   color: transparent !important;
+}
+/*
+ * Folding: entries slide shut and fade; once shut they are hidden, so the
+ * keyboard skips them. Unfolding reverses it, visible from the start.
+ */
+.sidebar :deep(.n-menu-item) {
+  overflow: hidden;
+  transition:
+    height 0.2s ease,
+    margin-top 0.2s ease,
+    opacity 0.15s ease,
+    visibility 0s linear 0s;
+}
+.sidebar :deep(.n-menu-item.folded) {
+  height: 0;
+  margin-top: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    height 0.2s ease,
+    margin-top 0.2s ease,
+    opacity 0.15s ease,
+    visibility 0s linear 0.2s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar :deep(.n-menu-item),
+  .sidebar :deep(.n-menu-item.folded) {
+    transition: none;
+  }
+}
+/* Fills the (flex) group title, so the toggle inside spans the width and its arrow sits on the right. */
+:deep(.section-title) {
+  display: block;
+  flex: 1;
+  min-width: 0;
 }
 :deep(.section-toggle) {
   display: flex;
