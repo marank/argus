@@ -10,7 +10,7 @@ import { fromIsoDate, toIsoDate, useFormat } from '@/composables/useFormat'
 import type { Reservation } from '@/types/reservations'
 
 /** Move the return date of handed-out devices. */
-const props = defineProps<{ reservation: Reservation }>()
+const props = defineProps<{ reservation: Pick<Reservation, 'id' | 'end_date'> }>()
 const show = defineModel<boolean>('show', { required: true })
 const emit = defineEmits<{ saved: [reservation: Reservation] }>()
 const { t } = useI18n()
@@ -31,9 +31,14 @@ const plusDays = (ts: number, days: number) => {
 }
 
 const end = ref<number | null>(null)
-watch(show, (visible) => {
-  if (visible) end.value = plusDays(base.value, 7)
-})
+// Immediate: the dashboard mounts the dialog already open.
+watch(
+  show,
+  (visible) => {
+    if (visible) end.value = plusDays(base.value, 7)
+  },
+  { immediate: true },
+)
 
 const disabled = (ts: number) => ts <= current.value || ts < today()
 

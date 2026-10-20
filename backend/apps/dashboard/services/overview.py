@@ -16,14 +16,6 @@ def it_overview(user) -> dict:
     reservations = Reservation.objects.all()
     open_requests = reservations.filter(status__in=Reservation.OPEN_STATUSES)
     open_issues = AssetIssue.objects.exclude(status=AssetIssue.Status.RESOLVED)
-    upcoming = (
-        reservations.filter(
-            status__in=(Reservation.Status.APPROVED, Reservation.Status.READY),
-            start_date__lte=today + timedelta(days=7),
-        )
-        .select_related("requester")
-        .order_by("start_date")[:10]
-    )
     return {
         "asset_status": {
             row["status"]: row["count"] for row in Asset.objects.values("status").annotate(count=Count("id"))
@@ -53,7 +45,6 @@ def it_overview(user) -> dict:
         "licenses_expiring": License.objects.filter(
             valid_until__range=(today, today + timedelta(days=rules.license_warning_days))
         ).count(),
-        "upcoming": list(upcoming),
         "recent_events": list(
             AssetEvent.objects.select_related("asset__model__manufacturer", "performed_by")[:10]
         ),

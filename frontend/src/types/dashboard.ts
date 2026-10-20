@@ -1,6 +1,7 @@
-import type { Id } from '@/types/common'
+import type { Id, Ref } from '@/types/common'
 import type { UserRef } from './accounts'
 import type { AssetEventWithAsset, AssetRef } from './inventory'
+import type { AssetModelRef, LocationRef } from './masterdata'
 
 export interface ITOverview {
   asset_status: Record<string, number>
@@ -19,15 +20,6 @@ export interface ITOverview {
   issues_mine: number
   warranty_expiring: number
   licenses_expiring: number
-  upcoming: {
-    id: Id
-    number: string
-    title: string
-    status: string
-    start_date: string
-    pickup_at: string | null
-    requester: UserRef
-  }[]
   recent_events: AssetEventWithAsset[]
 }
 
@@ -94,4 +86,53 @@ export interface TrendWeek {
   week_start: string
   created: number
   completed: number
+}
+
+export interface UpcomingHandout {
+  id: Id
+  number: string
+  title: string
+  status: string
+  start_date: string
+  pickup_at: string | null
+  requester: UserRef
+}
+
+/** A lending that ends soon; same fields as an overdue one. */
+export type DueReturn = OverdueReturn
+
+export interface ExpiringItem {
+  kind: 'license' | 'warranty'
+  /** The license, or the device whose warranty ends. */
+  id: Id
+  label: string
+  detail: string
+  ends_on: string
+}
+
+export interface LowStockItem {
+  id: Id
+  model: AssetModelRef
+  location: LocationRef
+  quantity: number
+  min_quantity: number
+}
+
+export interface OpenOrder {
+  id: Id
+  number: string
+  status: string
+  supplier: Ref | null
+  order_date: string | null
+  expected_date: string | null
+}
+
+export interface WaitingRequest {
+  id: Id
+  number: string
+  title: string
+  start_date: string
+  created_at: string
+  requester: UserRef
+  assignee: UserRef | null
 }

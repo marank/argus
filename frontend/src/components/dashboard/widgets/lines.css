@@ -32,23 +32,24 @@
 .lines.cols-3 {
   grid-template-columns: auto minmax(0, 1fr) auto;
 }
+.lines.cols-5 {
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+}
 .lines.cols-4 {
   grid-template-columns: auto minmax(0, 1fr) auto auto;
 }
-/* Number, title, how far away, date, status. */
+/* Number, title, date (relative or full, see dateMode.ts), status. */
 .lines.dated {
-  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
 }
 .when {
   white-space: nowrap;
 }
-/* Narrow widgets keep the relative day and drop the full date. */
-@container (max-width: 640px) {
-  .lines.dated {
-    grid-template-columns: auto minmax(0, 1fr) auto auto;
-  }
-  .lines.dated .date {
-    display: none;
+/* Narrow widgets put the time of a full date on a second line, leaving room for the title. */
+@container (max-width: 480px) {
+  .when.full {
+    width: 16ch;
+    white-space: normal;
   }
 }
 /* A heading inside a list, spanning all its columns so the columns stay shared. */

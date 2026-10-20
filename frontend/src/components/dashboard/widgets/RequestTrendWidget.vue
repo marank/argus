@@ -8,12 +8,21 @@ import { dashboardApi } from '@/api/dashboard'
 import { useFormat } from '@/composables/useFormat'
 import type { TrendWeek, WidgetProps } from '@/types/dashboard'
 
-defineProps<WidgetProps>()
+import { isBoolean, useOption } from './options'
+
+const props = defineProps<WidgetProps>()
+const emit = defineEmits<{ 'update:options': [options: Record<string, unknown>] }>()
 
 const { t } = useI18n()
 const { date } = useFormat()
 const weeks = ref<TrendWeek[] | null>(null)
-const asTable = ref(false)
+const asTable = useOption(
+  () => props.options,
+  (options) => emit('update:options', options),
+  'as_table',
+  false,
+  isBoolean,
+)
 const active = ref<number | null>(null)
 
 onMounted(async () => (weeks.value = await dashboardApi.requestTrend()))
@@ -160,6 +169,11 @@ const describe = (w: TrendWeek) =>
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  /* An entry wraps to the next line as a whole, never inside a word. */
+  white-space: nowrap;
+}
+.swatch {
+  flex: none;
 }
 .swatch {
   width: 10px;

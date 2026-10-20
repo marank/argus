@@ -73,6 +73,12 @@ const choose = (value: (string | number)[]) =>
   grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   gap: 8px;
 }
+/* A third of the page (at most ~470px) fits three cramped buttons; two read better. */
+@container (max-width: 480px) {
+  .shortcuts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 .shortcut {
   display: flex;
   align-items: center;

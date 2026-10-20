@@ -158,6 +158,15 @@ async function save() {
 }
 
 const reset = () => (draft.value = defaultLayout(WIDGETS))
+
+/** The editor's buttons sit in the page header (DashboardView). */
+defineExpose({
+  save,
+  reset,
+  saving,
+  canAdd: computed(() => addable.value.length > 0),
+  openPicker: () => (picking.value = true),
+})
 </script>
 
 <template>
@@ -165,20 +174,6 @@ const reset = () => (draft.value = defaultLayout(WIDGETS))
     <NSkeleton height="90px" :repeat="2" />
   </div>
   <div v-else class="stack">
-    <div v-if="editing" class="editor-bar">
-      <p class="muted">{{ t('dashboard.edit.hint') }}</p>
-      <div class="row">
-        <NButton size="small" :disabled="!addable.length" @click="picking = true">
-          <template #icon><Plus /></template>
-          {{ t('dashboard.edit.add') }}
-        </NButton>
-        <NButton size="small" quaternary @click="reset">{{ t('dashboard.edit.reset') }}</NButton>
-        <NButton size="small" @click="editing = false">{{ t('common.cancel') }}</NButton>
-        <NButton size="small" type="primary" :loading="saving" @click="save">
-          {{ t('dashboard.edit.done') }}
-        </NButton>
-      </div>
-    </div>
     <p v-if="!editing && !widgets.length" class="empty muted">{{ t('dashboard.edit.empty') }}</p>
     <TransitionGroup tag="div" name="widget" class="widget-grid">
       <DashboardWidget
@@ -225,7 +220,7 @@ const reset = () => (draft.value = defaultLayout(WIDGETS))
       preset="card"
       :title="t('dashboard.edit.add')"
       class="widget-picker"
-      style="width: min(560px, calc(100vw - 32px))"
+      style="width: min(880px, calc(100vw - 32px))"
       :auto-focus="false"
     >
       <ul class="picker-list">
@@ -258,28 +253,14 @@ const reset = () => (draft.value = defaultLayout(WIDGETS))
 .dragged {
   opacity: 0.5;
 }
-.editor-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px 16px;
-  padding: 10px 14px;
-  border: 1px solid var(--ar-primary);
-  border-radius: 3px;
-  background: color-mix(in srgb, var(--ar-primary) 8%, var(--ar-surface));
-}
-.editor-bar p {
-  margin: 0;
-}
-.editor-bar .row {
-  flex-wrap: wrap;
-}
 .empty {
   margin: 0;
 }
+/* Two columns of tiles; one on phones. */
 .picker-list {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -289,11 +270,14 @@ const reset = () => (draft.value = defaultLayout(WIDGETS))
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--ar-border);
+  padding: 10px 12px;
+  border: 1px solid var(--ar-border);
+  border-radius: 3px;
 }
-.picker-list li:last-child {
-  border-bottom: none;
+@media (max-width: 640px) {
+  .picker-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 .picker-icon {
   color: var(--ar-primary);

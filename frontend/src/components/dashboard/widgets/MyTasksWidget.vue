@@ -9,10 +9,18 @@ import { useFormat } from '@/composables/useFormat'
 import { useFeaturesStore } from '@/stores/features'
 import type { MyTasks, WidgetProps } from '@/types/dashboard'
 
-defineProps<WidgetProps>()
+import { useDateMode } from './dateMode'
+import DateModeToggle from './DateModeToggle.vue'
+
+const props = defineProps<WidgetProps>()
+const emit = defineEmits<{ 'update:options': [options: Record<string, unknown>] }>()
 
 const { t } = useI18n()
-const { dateWithWeekday, enumLabel, relativeDay } = useFormat()
+const { enumLabel } = useFormat()
+const { mode, setMode, when, other } = useDateMode(
+  () => props.options,
+  (options) => emit('update:options', options),
+)
 const features = useFeaturesStore()
 const tasks = ref<MyTasks | null>(null)
 
@@ -21,6 +29,9 @@ onMounted(async () => (tasks.value = await dashboardApi.myTasks()))
 
 <template>
   <NCard :title="t('dashboard.widgets.myTasks.title')" size="small">
+    <template #header-extra>
+      <DateModeToggle :model-value="mode" @update:model-value="setMode" />
+    </template>
     <NSkeleton v-if="!tasks" text :repeat="3" />
     <p v-else-if="!tasks.requests_total && !tasks.issues_total" class="muted">
       {{ t('dashboard.widgets.myTasks.empty') }}
@@ -43,8 +54,12 @@ onMounted(async () => (tasks.value = await dashboardApi.myTasks()))
           <span class="title"
             >{{ r.title }}<small class="muted"> · {{ r.requester.display_name }}</small></span
           >
-          <span class="when">{{ relativeDay(r.start_date) }}</span>
-          <span class="mono muted date">{{ dateWithWeekday(r.start_date) }}</span>
+          <span
+            class="when"
+            :class="{ 'mono muted full': mode === 'full' }"
+            :title="other(r.start_date)"
+            >{{ when(r.start_date) }}</span
+          >
           <StatusTag group="reservationStatus" :value="r.status" />
         </RouterLink>
       </template>
@@ -64,8 +79,12 @@ onMounted(async () => (tasks.value = await dashboardApi.myTasks()))
             >{{ enumLabel('issueKind', i.kind)
             }}<small class="muted"> · {{ i.asset.model.full_name }}</small></span
           >
-          <span class="when">{{ relativeDay(i.created_at.slice(0, 10)) }}</span>
-          <span class="mono muted date">{{ dateWithWeekday(i.created_at.slice(0, 10)) }}</span>
+          <span
+            class="when"
+            :class="{ 'mono muted full': mode === 'full' }"
+            :title="other(i.created_at.slice(0, 10))"
+            >{{ when(i.created_at.slice(0, 10)) }}</span
+          >
           <StatusTag group="issueStatus" :value="i.status" />
         </RouterLink>
       </template>

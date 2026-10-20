@@ -2,13 +2,15 @@
 
 from datetime import timedelta
 
-from django.db.models import Count, DateField
+from django.db.models import Count, DateField, F
 from django.db.models.functions import TruncWeek
 from django.utils import timezone
 
 from apps.accounts.services.assignment import assigned_q
+from apps.core.models import SiteSettings
 from apps.core.notifications import it_staff
-from apps.inventory.models import AssetIssue
+from apps.inventory.models import Asset, AssetIssue, Consumable, License
+from apps.procurement.models import PurchaseOrder
 from apps.reservations.models import Reservation
 
 LIST_LIMIT = 10
@@ -93,3 +95,88 @@ def request_trend(weeks: int = 12) -> list[dict]:
         {"week_start": start, "created": created.get(start, 0), "completed": completed.get(start, 0)}
         for start in (first + timedelta(weeks=i) for i in range(weeks))
     ]
+
+
+def upcoming(days: int) -> list[Reservation]:
+    """Approved and prepared requests to hand out within `days` days, the earliest first."""
+    return list(
+        Reservation.objects.filter(
+            status__in=(Reservation.Status.APPROVED, Reservation.Status.READY),
+            start_date__lte=timezone.localdate() + timedelta(days=days),
+        )
+        .select_related("requester")
+        .order_by("start_date", "pickup_at", "number")[:20]
+    )
+
+
+def due_returns(days: int) -> list[Reservation]:
+    """Lent devices due back within `days` days (not yet overdue), the soonest first."""
+    today = timezone.localdate()
+    return list(
+        Reservation.objects.filter(
+            status=Reservation.Status.HANDED_OUT,
+            duration=Reservation.Duration.TEMPORARY,
+            end_date__range=(today, today + timedelta(days=days)),
+        )
+        .select_related("requester", "reminded_by")
+        .order_by("end_date", "number")[:20]
+    )
+
+
+def expiring() -> list[dict]:
+    """Licenses and warranties ending within the warning periods of the site rules, the soonest first."""
+    today = timezone.localdate()
+    rules = SiteSettings.load()
+    licenses = License.objects.filter(
+        valid_until__range=(today, today + timedelta(days=rules.license_warning_days))
+    ).select_related("model__manufacturer")
+    assets = (
+        Asset.objects.filter(
+            warranty_until__range=(today, today + timedelta(days=rules.warranty_warning_days))
+        )
+        .exclude(status=Asset.Status.RETIRED)
+        .select_related("model__manufacturer")
+    )
+    rows = [
+        {"kind": "license", "id": lic.pk, "label": str(lic), "detail": "", "ends_on": lic.valid_until}
+        for lic in licenses
+    ] + [
+        {
+            "kind": "warranty",
+            "id": asset.pk,
+            "label": asset.inventory_number,
+            "detail": asset.model.full_name,
+            "ends_on": asset.warranty_until,
+        }
+        for asset in assets
+    ]
+    return sorted(rows, key=lambda row: (row["ends_on"], row["label"]))[:20]
+
+
+def low_stock() -> list[Consumable]:
+    """Consumables below their minimum, the largest shortfall first."""
+    return list(
+        Consumable.objects.filter(quantity__lt=F("min_quantity"))
+        .select_related("model__manufacturer", "location")
+        .order_by(F("quantity") - F("min_quantity"), "model__name")[:20]
+    )
+
+
+def open_orders() -> list[PurchaseOrder]:
+    """Placed orders not fully received, the earliest expected delivery first (undated last)."""
+    return list(
+        PurchaseOrder.objects.filter(
+            status__in=(PurchaseOrder.Status.ORDERED, PurchaseOrder.Status.PARTIALLY_RECEIVED)
+        )
+        .select_related("supplier")
+        .order_by(F("expected_date").asc(nulls_last=True), "number")[:20]
+    )
+
+
+def waiting_requests() -> list[Reservation]:
+    """Submitted requests waiting for approval, the longest waiting first."""
+    return list(
+        Reservation.objects.filter(status=Reservation.Status.SUBMITTED)
+        .select_related("requester", "assignee")
+        .order_by("created_at")[:20]
+    )

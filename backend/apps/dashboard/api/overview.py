@@ -1,25 +1,14 @@
-from datetime import date, datetime
+from datetime import datetime
 from uuid import UUID
 
 from django.http import HttpRequest
 from ninja import Router, Schema
 
-from apps.accounts.schemas import UserRefOut
 from apps.core.api.security import it_staff_auth
 from apps.dashboard.services.overview import employee_overview, it_overview
 from apps.inventory.schemas.asset_event import AssetEventWithAssetOut
 
 router = Router(tags=["dashboard"])
-
-
-class UpcomingOut(Schema):
-    id: UUID
-    number: str
-    title: str
-    status: str
-    start_date: date
-    pickup_at: datetime | None
-    requester: UserRefOut
 
 
 class ITOverviewOut(Schema):
@@ -38,7 +27,6 @@ class ITOverviewOut(Schema):
     issues_mine: int
     warranty_expiring: int
     licenses_expiring: int
-    upcoming: list[UpcomingOut]
     recent_events: list[AssetEventWithAssetOut]
 
 

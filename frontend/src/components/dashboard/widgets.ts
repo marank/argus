@@ -4,21 +4,25 @@ import {
   CalendarClock,
   CalendarDays,
   CalendarRange,
+  CalendarX,
   ChartBar,
   CircleAlert,
   ClipboardCheck,
   ClipboardList,
   Boxes,
+  Hourglass,
   KeyRound,
   ListTodo,
   MessageSquareWarning,
   NotebookPen,
   PackageCheck,
+  PackageMinus,
   PackageOpen,
   ShieldAlert,
   ShoppingCart,
   TrendingUp,
   Truck,
+  Undo2,
   UserRound,
   UserRoundX,
   UsersRound,
@@ -29,13 +33,18 @@ import type { RouteLocationRaw } from 'vue-router'
 
 import ActivityWidget from '@/components/dashboard/widgets/ActivityWidget.vue'
 import AssetStatusWidget from '@/components/dashboard/widgets/AssetStatusWidget.vue'
+import DueReturnsWidget from '@/components/dashboard/widgets/DueReturnsWidget.vue'
+import ExpiringWidget from '@/components/dashboard/widgets/ExpiringWidget.vue'
+import LowStockWidget from '@/components/dashboard/widgets/LowStockWidget.vue'
 import MyTasksWidget from '@/components/dashboard/widgets/MyTasksWidget.vue'
 import NotesWidget from '@/components/dashboard/widgets/NotesWidget.vue'
+import OpenOrdersWidget from '@/components/dashboard/widgets/OpenOrdersWidget.vue'
 import OverdueReturnsWidget from '@/components/dashboard/widgets/OverdueReturnsWidget.vue'
 import RequestTrendWidget from '@/components/dashboard/widgets/RequestTrendWidget.vue'
 import ShortcutsWidget from '@/components/dashboard/widgets/ShortcutsWidget.vue'
 import TeamLoadWidget from '@/components/dashboard/widgets/TeamLoadWidget.vue'
 import UpcomingWidget from '@/components/dashboard/widgets/UpcomingWidget.vue'
+import WaitingRequestsWidget from '@/components/dashboard/widgets/WaitingRequestsWidget.vue'
 import WeekWidget from '@/components/dashboard/widgets/WeekWidget.vue'
 import type { WidgetSettings, WidgetSize } from '@/types/accounts'
 import type { ITOverview } from '@/types/dashboard'
@@ -306,6 +315,53 @@ export const WIDGETS: WidgetDef[] = [
     size: 'medium',
     optional: true,
     component: RequestTrendWidget,
+  },
+  {
+    id: 'due_returns',
+    title: 'dashboard.widgets.dueReturns.title',
+    description: 'dashboard.widgets.dueReturns.description',
+    icon: Undo2,
+    size: 'medium',
+    optional: true,
+    component: DueReturnsWidget,
+  },
+  {
+    id: 'waiting',
+    title: 'dashboard.widgets.waiting.title',
+    description: 'dashboard.widgets.waiting.description',
+    icon: Hourglass,
+    size: 'medium',
+    optional: true,
+    component: WaitingRequestsWidget,
+  },
+  {
+    id: 'expiring',
+    title: 'dashboard.widgets.expiring.title',
+    description: 'dashboard.widgets.expiring.description',
+    icon: CalendarX,
+    size: 'medium',
+    optional: true,
+    component: ExpiringWidget,
+  },
+  {
+    id: 'low_stock',
+    title: 'dashboard.widgets.lowStock.title',
+    description: 'dashboard.widgets.lowStock.description',
+    icon: PackageMinus,
+    size: 'small',
+    optional: true,
+    flag: 'consumables',
+    component: LowStockWidget,
+  },
+  {
+    id: 'open_orders',
+    title: 'dashboard.widgets.openOrders.title',
+    description: 'dashboard.widgets.openOrders.description',
+    icon: Truck,
+    size: 'medium',
+    optional: true,
+    flag: 'procurement',
+    component: OpenOrdersWidget,
   },
   {
     id: 'shortcuts',
