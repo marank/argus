@@ -2,6 +2,8 @@ from uuid import UUID
 
 from ninja import Schema
 
+from apps.accounts.schemas import TeamRefOut
+from apps.core.api.security import context_is_it_staff
 from apps.core.schemas import RefOut
 from apps.masterdata.models import Category
 
@@ -20,6 +22,12 @@ class CategoryOut(Schema):
     allow_any_model: bool
     sort_order: int
     path: list[str]
+    # IT-internal: empty for employees.
+    team: TeamRefOut | None = None
+
+    @staticmethod
+    def resolve_team(obj, context):
+        return obj.team if context_is_it_staff(context) else None
 
     @staticmethod
     def resolve_path(obj) -> list[str]:
@@ -37,4 +45,5 @@ class CategoryIn(Schema):
     number_sequence: UUID | None = None
     is_requestable: bool = True
     allow_any_model: bool = True
+    team: UUID | None = None
     sort_order: int = 0

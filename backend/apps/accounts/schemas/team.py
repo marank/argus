@@ -14,6 +14,7 @@ class TeamRefOut(Schema):
 class TeamOut(TeamRefOut):
     sort_order: int
     ldap_group_dn: str
+    is_default: bool
     members: list[UserRefOut]
 
     @staticmethod
@@ -26,4 +27,5 @@ class TeamIn(Schema):
     code: str = ""
     sort_order: int = 0
     ldap_group_dn: str = ""
+    is_default: bool = False
     members: list[UUID] = []

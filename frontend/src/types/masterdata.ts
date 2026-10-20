@@ -1,3 +1,4 @@
+import type { TeamRef } from './accounts'
 import type { Id } from '@/types/common'
 import type { Ref } from './common'
 
@@ -62,6 +63,8 @@ export interface Category {
   description: string
   icon: string
   number_sequence: Ref | null
+  /** Gets new requests and reports; empty = as the parent. IT only. */
+  team: TeamRef | null
   is_requestable: boolean
   allow_any_model: boolean
   sort_order: number
@@ -94,6 +97,8 @@ export interface AssetModel {
   list_price: string | null
   warranty_months: number
   compatible_with: AssetModelRef[]
+  /** Gets new requests and reports; empty = as the category. IT only. */
+  team: TeamRef | null
   is_requestable: boolean
   is_active: boolean
 }

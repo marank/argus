@@ -54,6 +54,15 @@ class AssetModel(TimeStampedModel):
         blank=True,
         help_text=_("Accessories, spare parts and consumables that fit this model."),
     )
+    team = models.ForeignKey(
+        "accounts.Team",
+        verbose_name=_("responsible team"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="asset_models",
+        help_text=_("New requests and reports for this model go to this team. Empty: as the category."),
+    )
     is_requestable = models.BooleanField(_("requestable"), default=True)
     is_active = models.BooleanField(_("active"), default=True)
 
@@ -75,6 +84,10 @@ class AssetModel(TimeStampedModel):
     @property
     def is_bulk(self) -> bool:
         return self.tracking == self.Tracking.BULK
+
+    def effective_team(self):
+        """The responsible team: the model's own, otherwise the category's."""
+        return self.team if self.team_id else self.category.effective_team()
 
     @property
     def is_software(self) -> bool:

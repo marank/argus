@@ -13,6 +13,7 @@ from apps.core.api.querying import order, search
 from apps.core.api.security import it_staff_auth
 from apps.inventory.models import AssetIssue
 from apps.inventory.schemas.asset_issue import AssetIssueOut, AssetIssueUpdateIn, AssignIn
+from apps.inventory.services import notifications
 from apps.inventory.services.issues import update_issue
 
 router = Router(tags=["issues"], auth=it_staff_auth)
@@ -71,5 +72,7 @@ def update(request: HttpRequest, pk: UUID, payload: AssetIssueUpdateIn):
 
 @router.post("/{uuid:pk}/assign", response=AssetIssueOut)
 def assign(request: HttpRequest, pk: UUID, payload: AssignIn):
-    assignment.assign(get_object_or_404(AssetIssue, pk=pk), payload.team, payload.assignee)
+    issue = get_object_or_404(AssetIssue, pk=pk)
+    if assignment.assign(issue, payload.team, payload.assignee, request.user):
+        notifications.issue_assigned(issue)
     return issue_queryset().get(pk=pk)

@@ -3,6 +3,7 @@
 Models taking part have two optional foreign keys, ``assigned_team`` and ``assignee``.
 """
 
+from collections.abc import Iterable
 from typing import Literal
 from uuid import UUID
 
@@ -26,11 +27,39 @@ def resolve_assignment(team_id: UUID | None, assignee_id: UUID | None) -> tuple[
     return team, assignee
 
 
-def assign(obj, team_id: UUID | None, assignee_id: UUID | None):
-    """Set team and assignee of ``obj``; either may stay empty."""
+def assign(obj, team_id: UUID | None, assignee_id: UUID | None, by: User) -> bool:
+    """Set team and assignee of ``obj``; either may stay empty.
+
+    Returns whether someone else than ``by`` became the assignee (and should hear of it).
+    """
+    previous = obj.assignee_id
     obj.assigned_team, obj.assignee = resolve_assignment(team_id, assignee_id)
     obj.save(update_fields=["assigned_team", "assignee", "updated_at"])
-    return obj
+    return obj.assignee_id is not None and obj.assignee_id not in (previous, by.pk)
+
+
+def route(candidates: Iterable[Team | None]) -> Team | None:
+    """The team for something new: the first candidate (from its models or categories),
+    otherwise the default team."""
+    return next((team for team in candidates if team), None) or Team.objects.filter(is_default=True).first()
+
+
+def responsible_staff(obj):
+    """Who hears of something new: the assignee and the members of its team, or all of
+    IT while nobody is responsible (or the team has no active IT members)."""
+    from apps.core.notifications import it_staff
+
+    staff = it_staff()
+    responsible = Q()
+    if obj.assigned_team_id:
+        responsible |= Q(teams=obj.assigned_team_id)
+    if obj.assignee_id:
+        responsible |= Q(pk=obj.assignee_id)
+    if responsible:
+        people = staff.filter(responsible).distinct()
+        if people.exists():
+            return people
+    return staff
 
 
 def assigned_q(user: User, assigned: Assigned | None) -> Q:

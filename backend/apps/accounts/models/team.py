@@ -24,6 +24,11 @@ class Team(TimeStampedModel):
         blank=True,
         help_text=_("DN of a directory group; its members join the team when they sign in."),
     )
+    is_default = models.BooleanField(
+        _("default team"),
+        default=False,
+        help_text=_("Gets new requests and reports that no category or model routes elsewhere."),
+    )
     members = models.ManyToManyField(
         settings.AUTH_USER_MODEL, verbose_name=_("members"), blank=True, related_name="teams"
     )
@@ -35,3 +40,10 @@ class Team(TimeStampedModel):
 
     def __str__(self) -> str:
         return self.name
+
+    def save(self, *args, **kwargs):
+        # Only one default team: choosing a new one takes the mark from the old one.
+        # (No unique constraint: form validation would refuse the switch before this runs.)
+        if self.is_default:
+            Team.objects.filter(is_default=True).exclude(pk=self.pk).update(is_default=False)
+        super().save(*args, **kwargs)

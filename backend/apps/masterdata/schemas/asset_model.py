@@ -3,6 +3,8 @@ from uuid import UUID
 
 from ninja import Field, Schema
 
+from apps.accounts.schemas import TeamRefOut
+from apps.core.api.security import context_is_it_staff
 from apps.core.schemas import RefOut
 from apps.masterdata.models import AssetModel
 
@@ -26,6 +28,12 @@ class AssetModelOut(Schema):
     compatible_with: list[AssetModelRefOut]
     is_requestable: bool
     is_active: bool
+    # IT-internal: empty for employees.
+    team: TeamRefOut | None = None
+
+    @staticmethod
+    def resolve_team(obj, context):
+        return obj.team if context_is_it_staff(context) else None
 
     @staticmethod
     def resolve_compatible_with(obj: AssetModel):
@@ -47,3 +55,4 @@ class AssetModelIn(Schema):
     compatible_with: list[UUID] = []
     is_requestable: bool = True
     is_active: bool = True
+    team: UUID | None = None

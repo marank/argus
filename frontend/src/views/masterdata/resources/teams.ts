@@ -1,5 +1,5 @@
 import { teamsApi, usersApi } from '@/api/accounts'
-import { mono, text } from '@/components/crud/cells'
+import { bool, mono, text } from '@/components/crud/cells'
 import { defineResource } from '@/components/crud/types'
 import { useFeaturesStore } from '@/stores/features'
 import type { Team, UserRef } from '@/types/accounts'
@@ -19,6 +19,12 @@ export default defineResource<Team>({
       key: 'members',
       label: 'masterdata.fields.members',
       render: (t) => text(t.members.map((m) => m.display_name).join(', ')),
+    },
+    {
+      key: 'is_default',
+      label: 'masterdata.fields.defaultTeam',
+      width: 120,
+      render: (t) => bool(t.is_default),
     },
     {
       key: 'ldap_group_dn',
@@ -64,15 +70,29 @@ export default defineResource<Team>({
           help: 'masterdata.fields.ldapGroupHelp',
           visible: ldapEnabled,
         },
+        {
+          key: 'is_default',
+          label: 'masterdata.fields.defaultTeam',
+          type: 'switch',
+          help: 'masterdata.fields.defaultTeamHelp',
+        },
       ],
     },
   ],
-  defaults: () => ({ name: '', code: '', sort_order: 0, ldap_group_dn: '', members: [] }),
+  defaults: () => ({
+    name: '',
+    code: '',
+    sort_order: 0,
+    ldap_group_dn: '',
+    is_default: false,
+    members: [],
+  }),
   toForm: (t) => ({
     name: t.name,
     code: t.code,
     sort_order: t.sort_order,
     ldap_group_dn: t.ldap_group_dn,
+    is_default: t.is_default,
     members: t.members.map((m) => m.id),
   }),
 })

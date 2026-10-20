@@ -24,6 +24,7 @@ export default {
     numberSequences: 'Number sequence',
   },
   sections: {
+    responsibility: 'Responsibility',
     support: 'Web & support',
     contact: 'Contact',
     notes: 'Notes',
@@ -70,6 +71,14 @@ export default {
     members: 'Members',
     usernameLdapHelp:
       'Must match the login name in the directory (e.g. sAMAccountName). It links the account to the directory at the first LDAP sign-in.',
+    responsibleTeam: 'Responsible team',
+    defaultTeam: 'Default team',
+    defaultTeamHelp:
+      'Gets new requests and reports that no category or model routes to another team. There can only be one default team.',
+    categoryTeamHelp:
+      'New requests and reports for this category and its subcategories go to this team. Empty: as the parent category, otherwise the default team.',
+    modelTeamHelp:
+      'New requests and reports for this model go to this team, e.g. a Ledgerline license to the Ledgerline team. Empty: as the category.',
     ldapGroup: 'LDAP group',
     ldapGroupHelp:
       'DN of a directory group, e.g. CN=IT-Ledgerline,OU=Groups,DC=example,DC=com. Members then follow the directory at every sign-in; empty: maintain members by hand.',

@@ -1,9 +1,11 @@
 import { h } from 'vue'
 
+import { teamsApi } from '@/api/accounts'
 import { assetModelsApi, categoriesApi, manufacturersApi, suppliersApi } from '@/api/masterdata'
 import { bool, mono } from '@/components/crud/cells'
 import { defineResource } from '@/components/crud/types'
 import { i18n } from '@/i18n'
+import type { TeamRef } from '@/types/accounts'
 import type { AssetModel, Category } from '@/types/masterdata'
 import { categoryIcon } from '@/utils/icons'
 
@@ -155,6 +157,21 @@ export default defineResource<AssetModel>({
       ],
     },
     {
+      title: 'masterdata.sections.responsibility',
+      fields: [
+        {
+          key: 'team',
+          label: 'masterdata.fields.responsibleTeam',
+          type: 'entity',
+          span: 2,
+          help: 'masterdata.fields.modelTeamHelp',
+          fetcher: teamsApi.list,
+          display: (t: TeamRef) => t.name,
+          initial: (m: AssetModel) => m.team,
+        },
+      ],
+    },
+    {
       title: 'masterdata.sections.portal',
       fields: [
         { key: 'is_requestable', label: 'masterdata.fields.requestable', type: 'switch', span: 2 },
@@ -188,6 +205,7 @@ export default defineResource<AssetModel>({
     description: '',
     specifications: '',
     default_supplier: null,
+    team: null,
     list_price: null,
     warranty_months: 24,
     compatible_with: [],
@@ -204,6 +222,7 @@ export default defineResource<AssetModel>({
     description: m.description,
     specifications: m.specifications,
     default_supplier: m.default_supplier?.id ?? null,
+    team: m.team?.id ?? null,
     list_price: m.list_price ? Number(m.list_price) : null,
     warranty_months: m.warranty_months,
     compatible_with: m.compatible_with.map((c) => c.id),

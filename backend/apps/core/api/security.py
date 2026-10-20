@@ -8,6 +8,12 @@ def is_it_staff(user) -> bool:
     return bool(user and user.is_authenticated and (user.is_staff or user.is_superuser))
 
 
+def context_is_it_staff(context) -> bool:
+    """For schema resolvers: whether the response goes to IT staff (``context`` from ninja)."""
+    request = (context or {}).get("request")
+    return request is not None and is_it_staff(request.user)
+
+
 class ITStaffAuth(SessionAuth):
     """Session auth that only admits members of the IT department.
 

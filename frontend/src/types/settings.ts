@@ -77,6 +77,7 @@ export interface Rules {
 export type NotificationKey =
   | 'request_submitted'
   | 'issue_reported'
+  | 'assigned_to_me'
   | 'license_expiring'
   | 'request_approved'
   | 'request_rejected'

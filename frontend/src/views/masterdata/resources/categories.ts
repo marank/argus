@@ -1,10 +1,12 @@
 import { AppWindow, Cpu } from '@lucide/vue'
 import { h } from 'vue'
 
+import { teamsApi } from '@/api/accounts'
 import { categoriesApi, numberSequencesApi } from '@/api/masterdata'
 import { bool, mono, withIcon } from '@/components/crud/cells'
 import { defineResource } from '@/components/crud/types'
 import { i18n } from '@/i18n'
+import type { TeamRef } from '@/types/accounts'
 import { CATEGORY_KINDS, type Category } from '@/types/masterdata'
 
 const { t } = i18n.global
@@ -36,6 +38,12 @@ export default defineResource<Category>({
       label: 'masterdata.fields.numberSequence',
       width: 200,
       render: (c) => c.number_sequence?.name ?? '—',
+    },
+    {
+      key: 'team',
+      label: 'masterdata.fields.responsibleTeam',
+      width: 160,
+      render: (c) => c.team?.name ?? '—',
     },
     {
       key: 'is_requestable',
@@ -110,6 +118,21 @@ export default defineResource<Category>({
       ],
     },
     {
+      title: 'masterdata.sections.responsibility',
+      fields: [
+        {
+          key: 'team',
+          label: 'masterdata.fields.responsibleTeam',
+          type: 'entity',
+          span: 2,
+          help: 'masterdata.fields.categoryTeamHelp',
+          fetcher: teamsApi.list,
+          display: (t: TeamRef) => t.name,
+          initial: (c: Category) => c.team,
+        },
+      ],
+    },
+    {
       title: 'masterdata.sections.portal',
       fields: [
         { key: 'is_requestable', label: 'masterdata.fields.requestable', type: 'switch' },
@@ -132,6 +155,7 @@ export default defineResource<Category>({
     description: '',
     icon: '',
     number_sequence: null,
+    team: null,
     is_requestable: true,
     allow_any_model: true,
     sort_order: 0,
@@ -145,6 +169,7 @@ export default defineResource<Category>({
     description: c.description,
     icon: c.icon,
     number_sequence: c.number_sequence?.id ?? null,
+    team: c.team?.id ?? null,
     is_requestable: c.is_requestable,
     allow_any_model: c.allow_any_model,
     sort_order: c.sort_order,

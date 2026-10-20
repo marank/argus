@@ -47,6 +47,15 @@ class Category(TimeStampedModel):
         related_name="categories",
         help_text=_("Inventory numbers for new assets. Falls back to the parent category."),
     )
+    team = models.ForeignKey(
+        "accounts.Team",
+        verbose_name=_("responsible team"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="categories",
+        help_text=_("New requests and reports for this category go to this team. Falls back to the parent."),
+    )
     is_requestable = models.BooleanField(
         _("requestable"), default=True, help_text=_("Shown in the employee portal.")
     )
@@ -104,4 +113,11 @@ class Category(TimeStampedModel):
         for node in [self, *self.ancestors()]:
             if node.number_sequence_id:
                 return node.number_sequence
+        return None
+
+    def effective_team(self):
+        """The responsible team, inherited from the nearest parent that names one."""
+        for node in [self, *self.ancestors()]:
+            if node.team_id:
+                return node.team
         return None

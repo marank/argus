@@ -27,6 +27,7 @@ from apps.reservations.schemas.reservation import (
     ReservationOut,
     ScheduleIn,
 )
+from apps.reservations.services import notifications as reservation_notifications
 from apps.reservations.services import workflow
 
 from .queries import get_for_update, get_reservation, visible_reservations
@@ -163,7 +164,9 @@ def reopen(request: HttpRequest, pk: UUID):
 
 @router.post("/{uuid:pk}/assign", response=ReservationOut, auth=it_staff_auth)
 def assign(request: HttpRequest, pk: UUID, payload: AssignIn):
-    assignment.assign(get_for_update(pk), payload.team, payload.assignee)
+    reservation = get_for_update(pk)
+    if assignment.assign(reservation, payload.team, payload.assignee, request.user):
+        reservation_notifications.request_assigned(reservation)
     return get_reservation(request, pk)
 
 

@@ -2,6 +2,7 @@ from django.db import transaction
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
+from apps.accounts.services import assignment
 from apps.core.exceptions import BusinessError
 from apps.inventory.models import Asset, AssetEvent, AssetIssue
 from apps.inventory.services import notifications
@@ -16,7 +17,13 @@ def report_issue(asset: Asset, user, kind: str, description: str) -> AssetIssue:
     description = description.strip()
     if not description:
         raise BusinessError(_("Describe the problem."))
-    issue = AssetIssue.objects.create(asset=asset, kind=kind, description=description, reported_by=user)
+    issue = AssetIssue.objects.create(
+        asset=asset,
+        kind=kind,
+        description=description,
+        reported_by=user,
+        assigned_team=assignment.route([asset.model.effective_team()]),
+    )
     log_event(
         asset,
         AssetEvent.Kind.ISSUE_REPORTED,

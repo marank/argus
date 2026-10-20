@@ -53,5 +53,7 @@ export interface Team extends TeamRef {
   sort_order: number
   /** Members follow this directory group at sign-in; empty = maintained by hand. */
   ldap_group_dn: string
+  /** Gets what no category or model routes elsewhere; only one team at a time. */
+  is_default: boolean
   members: UserRef[]
 }

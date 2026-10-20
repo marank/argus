@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from apps.accounts.models import User
+from apps.accounts.services import assignment
 from apps.core.exceptions import BusinessError
 from apps.core.models import SiteSettings
 from apps.inventory.models import Asset, AssetEvent, Consumable, ConsumableMovement, License
@@ -93,8 +94,18 @@ def submit(
                     _("Please choose a specific model for “%(category)s”.") % {"category": line.category}
                 )
         line.save()
+    reservation.assigned_team = assignment.route(_item_team(item) for item in reservation.items.all())
+    if reservation.assigned_team:
+        reservation.save(update_fields=["assigned_team", "updated_at"])
     notifications.request_submitted(reservation)
     return reservation
+
+
+def _item_team(item: ReservationItem):
+    """The team a request line routes to: its model's, else its category's."""
+    if item.asset_model_id:
+        return item.asset_model.effective_team()
+    return item.category.effective_team() if item.category_id else None
 
 
 @transaction.atomic

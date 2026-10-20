@@ -1,8 +1,12 @@
 export default {
   request_submitted: 'Neue Anforderung',
-  request_submittedHelp: 'Ein Mitarbeiter hat etwas angefordert.',
+  request_submittedHelp:
+    'Ein Mitarbeiter hat etwas angefordert. Geht an das zuständige Team, sonst an die ganze IT.',
   issue_reported: 'Neue Problemmeldung',
-  issue_reportedHelp: 'Ein Mitarbeiter meldet ein Problem mit einem Gerät.',
+  issue_reportedHelp:
+    'Ein Mitarbeiter meldet ein Problem mit einem Gerät. Geht an das zuständige Team, sonst an die ganze IT.',
+  assigned_to_me: 'Mir zugewiesen',
+  assigned_to_meHelp: 'Jemand hat Ihnen eine Anforderung oder Meldung zugewiesen.',
   license_expiring: 'Lizenz läuft ab',
   license_expiringHelp:
     'Eine befristete Lizenz endet innerhalb der Vorwarnzeit (einmal pro Lizenz).',

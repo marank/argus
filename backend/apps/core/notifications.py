@@ -29,6 +29,7 @@ class Event:
 EVENTS: tuple[Event, ...] = (
     Event("request_submitted", "it"),
     Event("issue_reported", "it"),
+    Event("assigned_to_me", "it"),
     Event("license_expiring", "it"),
     Event("request_approved", "employee"),
     Event("request_rejected", "employee"),

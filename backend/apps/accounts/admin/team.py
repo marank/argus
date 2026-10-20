@@ -7,7 +7,7 @@ from apps.accounts.models import Team
 
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
-    list_display = ["name", "code", "ldap_group_dn", "member_count"]
+    list_display = ["name", "code", "is_default", "ldap_group_dn", "member_count"]
     search_fields = ["name", "code", "ldap_group_dn"]
     autocomplete_fields = ["members"]
 

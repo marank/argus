@@ -3,6 +3,7 @@
 from django.utils import formats
 from django.utils.translation import gettext as _
 
+from apps.accounts.services.assignment import responsible_staff
 from apps.core.notifications import it_staff, notify
 from apps.inventory.models import AssetIssue, License
 
@@ -18,7 +19,22 @@ def issue_reported(issue: AssetIssue) -> None:
         }
         return subject, f"{body}\n\n{issue.description}"
 
-    notify("issue_reported", it_staff(), render, path="/inventory/issues")
+    notify("issue_reported", responsible_staff(issue), render, path="/inventory/issues")
+
+
+def issue_assigned(issue: AssetIssue) -> None:
+    def render(user):
+        subject = _("Assigned to you: problem report for %(device)s") % {
+            "device": issue.asset.inventory_number
+        }
+        body = _("You are now responsible for this report on %(device)s (%(model)s): %(kind)s") % {
+            "device": issue.asset.inventory_number,
+            "model": issue.asset.model.full_name,
+            "kind": issue.get_kind_display(),
+        }
+        return subject, f"{body}\n\n{issue.description}"
+
+    notify("assigned_to_me", [issue.assignee], render, path="/inventory/issues")
 
 
 def issue_resolved(issue: AssetIssue) -> None:

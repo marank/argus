@@ -1,8 +1,12 @@
 export default {
   request_submitted: 'New request',
-  request_submittedHelp: 'An employee requested something.',
+  request_submittedHelp:
+    'An employee requested something. Goes to the responsible team, otherwise to all of IT.',
   issue_reported: 'New problem report',
-  issue_reportedHelp: 'An employee reports a problem with a device.',
+  issue_reportedHelp:
+    'An employee reports a problem with a device. Goes to the responsible team, otherwise to all of IT.',
+  assigned_to_me: 'Assigned to me',
+  assigned_to_meHelp: 'Someone assigned a request or report to you.',
   license_expiring: 'License ending',
   license_expiringHelp: 'A time-limited license ends within the warning period (once per license).',
   request_approved: 'Request confirmed',

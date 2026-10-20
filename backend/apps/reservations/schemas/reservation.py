@@ -5,7 +5,7 @@ from uuid import UUID
 from ninja import Field, Schema
 
 from apps.accounts.schemas import TeamRefOut, UserRefOut
-from apps.core.api.security import is_it_staff
+from apps.core.api.security import context_is_it_staff
 from apps.core.schemas import RefOut
 from apps.inventory.schemas.refs import AssetRefOut
 from apps.masterdata.schemas.refs import AssetModelRefOut, CategoryRefOut, LocationRefOut
@@ -78,11 +78,6 @@ class ReservationItemOut(Schema):
         return list(obj.allocations.all())
 
 
-def _for_it_staff(context) -> bool:
-    request = (context or {}).get("request")
-    return request is not None and is_it_staff(request.user)
-
-
 class ReservationListOut(Schema):
     id: UUID
     number: str
@@ -106,11 +101,11 @@ class ReservationListOut(Schema):
 
     @staticmethod
     def resolve_assigned_team(obj, context):
-        return obj.assigned_team if _for_it_staff(context) else None
+        return obj.assigned_team if context_is_it_staff(context) else None
 
     @staticmethod
     def resolve_assignee(obj, context):
-        return obj.assignee if _for_it_staff(context) else None
+        return obj.assignee if context_is_it_staff(context) else None
 
     @staticmethod
     def resolve_summary(obj) -> str:

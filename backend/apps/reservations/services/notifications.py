@@ -3,7 +3,8 @@
 from django.utils import formats, timezone
 from django.utils.translation import gettext as _
 
-from apps.core.notifications import it_staff, notify
+from apps.accounts.services.assignment import responsible_staff
+from apps.core.notifications import notify
 from apps.reservations.models import Reservation
 
 
@@ -37,10 +38,22 @@ def request_submitted(reservation: Reservation) -> None:
 
     notify(
         "request_submitted",
-        it_staff().exclude(pk=reservation.requester_id),
+        responsible_staff(reservation).exclude(pk=reservation.requester_id),
         render,
         path=f"/reservations/{reservation.pk}",
     )
+
+
+def request_assigned(reservation: Reservation) -> None:
+    def render(user):
+        subject = _("Assigned to you: request %(number)s") % {"number": reservation.number}
+        body = _("You are now responsible for “%(title)s” from %(name)s.") % {
+            "title": reservation.title,
+            "name": reservation.requester.display_name,
+        }
+        return subject, f"{body}\n\n{_items(reservation)}"
+
+    notify("assigned_to_me", [reservation.assignee], render, path=f"/reservations/{reservation.pk}")
 
 
 def request_decided(reservation: Reservation) -> None:

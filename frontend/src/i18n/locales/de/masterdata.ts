@@ -24,6 +24,7 @@ export default {
     numberSequences: 'Nummernserie',
   },
   sections: {
+    responsibility: 'Zuständigkeit',
     support: 'Web & Support',
     contact: 'Kontakt',
     notes: 'Notizen',
@@ -70,6 +71,14 @@ export default {
     members: 'Mitglieder',
     usernameLdapHelp:
       'Muss dem Anmeldenamen im Verzeichnis entsprechen (z. B. sAMAccountName). Darüber wird das Konto bei der ersten LDAP-Anmeldung mit dem Verzeichnis verknüpft.',
+    responsibleTeam: 'Zuständiges Team',
+    defaultTeam: 'Standard-Team',
+    defaultTeamHelp:
+      'Bekommt neue Anfragen und Meldungen, die keine Kategorie und kein Modell einem anderen Team zuordnet. Es kann nur ein Standard-Team geben.',
+    categoryTeamHelp:
+      'Neue Anfragen und Meldungen zu dieser Kategorie und ihren Unterkategorien gehen an dieses Team. Leer: wie die übergeordnete Kategorie, sonst das Standard-Team.',
+    modelTeamHelp:
+      'Neue Anfragen und Meldungen zu diesem Modell gehen an dieses Team, z. B. eine Ledgerline-Lizenz an das Ledgerline-Team. Leer: wie die Kategorie.',
     ldapGroup: 'LDAP-Gruppe',
     ldapGroupHelp:
       'DN einer Verzeichnisgruppe, z. B. CN=IT-Ledgerline,OU=Gruppen,DC=firma,DC=de. Die Mitglieder werden dann bei jeder Anmeldung mit dem Verzeichnis abgeglichen; leer: Mitglieder von Hand pflegen.',
