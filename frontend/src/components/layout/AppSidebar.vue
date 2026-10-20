@@ -69,7 +69,10 @@ const sections = computed(() =>
       ...section,
       items: section.items.filter(
         (item) =>
-          (!item.module || features.isOn(item.module)) && (!item.approver || auth.isApprover),
+          (!item.module || features.isOn(item.module)) &&
+          (!item.approver || auth.isApprover) &&
+          (!item.permission || auth.can(item.permission)) &&
+          (!item.superuser || auth.isSuperuser),
       ),
     }))
     // Sections whose modules are all switched off disappear.

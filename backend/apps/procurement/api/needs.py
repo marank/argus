@@ -1,11 +1,11 @@
 from django.http import HttpRequest
 from ninja import Router
 
-from apps.core.api.security import it_staff_auth
+from apps.core.api.security import permission_auth
 from apps.procurement.schemas.needs import NeedsOut
 from apps.procurement.services.needs import consumable_needs, reservation_needs
 
-router = Router(tags=["procurement"], auth=it_staff_auth)
+router = Router(tags=["procurement"], auth=permission_auth("procurement"))
 
 
 @router.get("", response=NeedsOut)

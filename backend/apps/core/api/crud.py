@@ -14,9 +14,11 @@ from ninja import FilterLookup, FilterSchema, Query, Router, Schema, Status
 from ninja.errors import HttpError
 from ninja.pagination import paginate
 
+from apps.accounts.permissions import WRITE
+
 from .pagination import Pagination
 from .querying import order, search
-from .security import it_staff_auth
+from .security import it_staff_auth, permission_auth
 
 
 class EmptyFilter(FilterSchema):
@@ -37,6 +39,11 @@ class CrudConfig:
     queryset: Callable[[], QuerySet] | None = None
     # Hook to translate/validate the input before saving (e.g. resolving FKs).
     prepare: Callable[[dict], dict] = field(default=lambda data: data)
+    # Area of the role rights (apps.accounts.permissions) that creating, changing
+    # and deleting needs; reading stays with the router's auth.
+    permission: str | None = None
+    # Instead of ``permission``: the auth for writing, e.g. administrators only.
+    write_auth: object | None = None
 
     def get_queryset(self) -> QuerySet:
         return self.queryset() if self.queryset else self.model._default_manager.all()
@@ -61,6 +68,9 @@ def apply_input(instance: models.Model, data: dict) -> models.Model:
 
 def build_crud_router(config: CrudConfig, *, tags: list[str]) -> Router:
     router = Router(tags=tags)
+    write_auth = config.write_auth or (
+        permission_auth(config.permission, WRITE) if config.permission else it_staff_auth
+    )
     Out, In, Filter = config.out_schema, config.in_schema, config.filter_schema
 
     def get_instance(pk: UUID):
@@ -82,17 +92,17 @@ def build_crud_router(config: CrudConfig, *, tags: list[str]) -> Router:
     def get_item(request: HttpRequest, pk: UUID):
         return get_instance(pk)
 
-    @router.post("", response={201: Out}, auth=it_staff_auth)
+    @router.post("", response={201: Out}, auth=write_auth)
     def create_item(request: HttpRequest, payload: In):
         instance = apply_input(config.model(), config.prepare(payload.dict()))
         return Status(201, get_instance(instance.pk))
 
-    @router.put("/{uuid:pk}", response=Out, auth=it_staff_auth)
+    @router.put("/{uuid:pk}", response=Out, auth=write_auth)
     def update_item(request: HttpRequest, pk: UUID, payload: In):
         instance = apply_input(get_instance(pk), config.prepare(payload.dict()))
         return get_instance(instance.pk)
 
-    @router.delete("/{uuid:pk}", response={204: None}, auth=it_staff_auth)
+    @router.delete("/{uuid:pk}", response={204: None}, auth=write_auth)
     def delete_item(request: HttpRequest, pk: UUID):
         try:
             get_instance(pk).delete()

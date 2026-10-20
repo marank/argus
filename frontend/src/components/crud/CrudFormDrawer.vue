@@ -23,7 +23,7 @@ import { CATEGORY_ICONS } from '@/utils/icons'
 import { helpKey, isVisible, sectionFields, type FieldDef, type ResourceDef } from './types'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const props = defineProps<{ resource: ResourceDef<any>; row: any | null }>()
+const props = defineProps<{ resource: ResourceDef<any>; row: any | null; readonly?: boolean }>()
 const show = defineModel<boolean>('show', { required: true })
 const emit = defineEmits<{ saved: [] }>()
 const { t } = useI18n()
@@ -88,6 +88,7 @@ async function save() {
         label-placement="top"
         size="small"
         :show-feedback="false"
+        :disabled="readonly"
         @submit.prevent="save"
       >
         <section
@@ -166,18 +167,31 @@ async function save() {
                 <span class="toggle-label">{{ t(field.label) }}</span>
                 <small v-if="helpKey(field)" class="muted">{{ t(helpKey(field)!) }}</small>
               </span>
-              <NSwitch v-model:value="form[field.key]" />
+              <NSwitch v-model:value="form[field.key]" :disabled="readonly" />
             </label>
           </div>
-          <component :is="section.extra" v-if="section.extra" :form="form" :row="row" />
+          <component
+            :is="section.extra"
+            v-if="section.extra"
+            :form="form"
+            :row="row"
+            :readonly="readonly"
+          />
         </section>
       </NForm>
       <template #footer>
         <div class="row">
-          <NButton @click="show = false">{{ t('common.cancel') }}</NButton>
-          <NButton type="primary" :loading="busy" :disabled="missingRequired" @click="save">{{
-            t('common.save')
+          <NButton @click="show = false">{{
+            readonly ? t('common.close') : t('common.cancel')
           }}</NButton>
+          <NButton
+            v-if="!readonly"
+            type="primary"
+            :loading="busy"
+            :disabled="missingRequired"
+            @click="save"
+            >{{ t('common.save') }}</NButton
+          >
         </div>
       </template>
     </NDrawerContent>

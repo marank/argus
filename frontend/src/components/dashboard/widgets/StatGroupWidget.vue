@@ -13,6 +13,7 @@ import {
   type StatCardDef,
   type WidgetDef,
 } from '@/components/dashboard/widgets'
+import { useAuthStore } from '@/stores/auth'
 import { useFeaturesStore } from '@/stores/features'
 import type { ITOverview } from '@/types/dashboard'
 
@@ -31,10 +32,11 @@ const emit = defineEmits<{ toggleCard: [key: string]; reorder: [order: string[]]
 
 const { t } = useI18n()
 const features = useFeaturesStore()
+const auth = useAuthStore()
 
 const isHidden = (card: StatCardDef) => props.hiddenCards.includes(card.key)
 const cards = computed(() =>
-  orderCards(availableCards(props.def, features.isOn), props.cardOrder).filter(
+  orderCards(availableCards(props.def, features.isOn, auth.can), props.cardOrder).filter(
     (card) => props.editing || !isHidden(card),
   ),
 )

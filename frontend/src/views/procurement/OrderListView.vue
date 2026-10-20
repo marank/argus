@@ -14,8 +14,11 @@ import { useAction } from '@/composables/useAction'
 import { useFormat } from '@/composables/useFormat'
 import { useList } from '@/composables/useList'
 import { ORDER_STATUSES, type OrderListItem } from '@/types/procurement'
+import { useAuthStore } from '@/stores/auth'
 
 const { t } = useI18n()
+// Without the right to change procurement, the page is for viewing only.
+const canWrite = computed(() => useAuthStore().can('procurement', 'write'))
 const route = useRoute()
 const router = useRouter()
 const { date, money, enumLabel } = useFormat()
@@ -113,7 +116,7 @@ async function createEmpty() {
 <template>
   <div class="page">
     <PageHeader :title="t('procurement.orders.title')" :subtitle="t('procurement.orders.subtitle')">
-      <template #actions>
+      <template v-if="canWrite" #actions>
         <NButton type="primary" :loading="busy" @click="createEmpty">
           <template #icon><Plus :size="16" /></template>
           {{ t('procurement.orders.new') }}

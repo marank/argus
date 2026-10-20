@@ -16,7 +16,8 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
-from apps.accounts.models import Department, Team, User
+from apps.accounts.models import Department, Role, Team, User
+from apps.accounts.permissions import READ, RESOURCE_KEYS, WRITE
 from apps.core.models import NumberSequence
 from apps.core.services.numbering import get_sequence
 from apps.inventory.models import (
@@ -132,6 +133,12 @@ class Command(BaseCommand):
         terminal = self._user("terminal", "Pickup", "Terminal", departments["IT"])
         terminal.is_terminal = True
         terminal.save()
+        full_access = Role.objects.create(
+            name="Full access",
+            description="Read and change everything.",
+            permissions=dict.fromkeys(RESOURCE_KEYS, WRITE),
+        )
+        full_access.members.add(it)
 
         hq = Location.objects.create(name="Headquarters", code="HQ", kind=Location.Kind.SITE)
         storage = Location.objects.create(
@@ -483,6 +490,16 @@ def seed_extra(base: dict, stdout) -> None:
     # Someone who does not want reminder mails.
     by_name["mschmidt"].notification_settings = {"return_reminder": False}
     by_name["mschmidt"].save()
+    # Support handles the daily work and only looks up the catalog; the rest is hidden.
+    support = Role.objects.create(
+        name="IT support",
+        description="Requests, devices and problem reports; master data read-only.",
+        permissions={
+            **dict.fromkeys(("reservations", "assets", "consumables", "licenses", "issues"), WRITE),
+            **dict.fromkeys(("models", "categories", "manufacturers", "locations", "procurement"), READ),
+        },
+    )
+    support.members.add(by_name["jkoch"])
 
     munich = Location.objects.create(name="Branch Munich", code="MUC", kind=Location.Kind.SITE)
     munich_storage = Location.objects.create(

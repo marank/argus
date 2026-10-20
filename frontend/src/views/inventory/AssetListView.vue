@@ -21,8 +21,11 @@ import { useGroupedRows, withGroupHeaders } from '@/composables/useGroupedRows'
 import { useList } from '@/composables/useList'
 import { ASSET_STATUSES, type Asset } from '@/types/inventory'
 import { categoryIcon } from '@/utils/icons'
+import { useAuthStore } from '@/stores/auth'
 
 const { t } = useI18n()
+// Without the right to change assets, the page is for viewing only.
+const canWrite = computed(() => useAuthStore().can('assets', 'write'))
 const route = useRoute()
 const router = useRouter()
 const { date, enumLabel } = useFormat()
@@ -137,7 +140,7 @@ function onSaved(asset: { id: Id }) {
 <template>
   <div class="page">
     <PageHeader :title="t('inventory.assets')" :subtitle="t('inventory.assetsSubtitle')">
-      <template #actions>
+      <template v-if="canWrite" #actions>
         <NButton @click="showBulk = true">
           <template #icon><ScanBarcode :size="16" /></template>
           {{ t('inventory.bulkCreate') }}

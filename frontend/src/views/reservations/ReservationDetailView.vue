@@ -54,9 +54,12 @@ import type {
   ReservationItem,
 } from '@/types/reservations'
 import { isReturnable } from '@/utils/reservations'
+import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps<{ id: Id }>()
 const { t } = useI18n()
+// Without the right to change reservations, the page is for viewing only.
+const canWrite = computed(() => useAuthStore().can('reservations', 'write'))
 const message = useMessage()
 const confirm = useConfirm()
 const { busy, run } = useAction()
@@ -243,7 +246,7 @@ async function cancel() {
         <template #badge
           ><StatusTag group="reservationStatus" :value="reservation.status"
         /></template>
-        <template #actions>
+        <template v-if="canWrite" #actions>
           <template v-if="status === 'submitted'">
             <NButton @click="showReject = true">
               <template #icon><X :size="15" /></template>

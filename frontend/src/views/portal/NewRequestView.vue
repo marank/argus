@@ -67,12 +67,12 @@ function availableFor(key: string): number | null {
   return null
 }
 
-// IT sees availability for the chosen period: refresh the counts when it changes.
+// IT handling requests sees availability for the chosen period: refresh the counts when it changes.
 let latestQuery = 0
 watchDebounced(
   () => periodQuery(period),
   async (query) => {
-    if (!auth.isItStaff || !catalog.value) return
+    if (!auth.can('reservations') || !catalog.value) return
     const current = ++latestQuery
     const counts = await portalApi.availability(query)
     if (current !== latestQuery) return // a newer period was chosen meanwhile
@@ -151,12 +151,12 @@ async function submit(data: ReservationInput) {
         />
       </CatalogBrowser>
       <div class="side">
-        <RequestPeriodCard v-model="period" :shows-availability="auth.isItStaff" />
+        <RequestPeriodCard v-model="period" :shows-availability="auth.can('reservations')" />
         <RequestCart
           v-model:lines="cart"
           :period="period"
           :busy="busy"
-          :can-choose-requester="auth.isItStaff"
+          :can-choose-requester="auth.can('reservations', 'write')"
           :requester-placeholder="auth.user?.display_name"
           @submit="submit"
         />

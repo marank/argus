@@ -28,6 +28,42 @@ export interface User extends UserRef {
   is_ldap_user: boolean
   /** Second sign-in step; only sent to IT staff and the user themself. */
   two_factor: TwoFactorMethod | null
+  /** Roles of IT staff; only sent to IT staff. */
+  roles: Ref[]
+}
+
+/** Areas of the app that roles grant rights on (see backend apps.accounts.permissions). */
+export type PermissionKey =
+  | 'models'
+  | 'categories'
+  | 'manufacturers'
+  | 'suppliers'
+  | 'locations'
+  | 'departments'
+  | 'teams'
+  | 'users'
+  | 'number_sequences'
+  | 'reservations'
+  | 'assets'
+  | 'consumables'
+  | 'licenses'
+  | 'issues'
+  | 'procurement'
+export type PermissionLevel = 'read' | 'write'
+
+/** A set of rights for IT staff; staff can hold several roles, their rights add up. */
+export interface Role {
+  id: Id
+  name: string
+  description: string
+  /** Areas left out are not accessible. */
+  permissions: Partial<Record<PermissionKey, PermissionLevel>>
+  members: UserRef[]
+}
+
+export interface PermissionResource {
+  key: PermissionKey
+  group: 'masterdata' | 'operations'
 }
 
 export type TwoFactorMethod = 'email' | 'totp'
@@ -68,6 +104,8 @@ export interface CurrentUser extends User {
   is_superuser: boolean
   /** Approves requests for at least one department. */
   is_approver: boolean
+  /** Rights from the user's roles; everything for administrators. */
+  permissions: Partial<Record<PermissionKey, PermissionLevel>>
 }
 
 export type WidgetSize = 'small' | 'medium' | 'large'

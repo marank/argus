@@ -14,6 +14,7 @@ router = build_crud_router(
         model=NumberSequence,
         out_schema=NumberSequenceOut,
         in_schema=NumberSequenceIn,
+        permission="number_sequences",
         search_fields=("code", "name", "prefix"),
         ordering_fields=("name", "code"),
     ),

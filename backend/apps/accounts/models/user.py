@@ -107,6 +107,13 @@ class User(AbstractUser):
         return self.is_staff or self.is_superuser
 
     @property
+    def permissions(self) -> dict[str, str]:
+        """Rights from the user's roles, per area (see apps.accounts.permissions)."""
+        from apps.accounts.permissions import effective_permissions
+
+        return effective_permissions(self)
+
+    @property
     def is_approver(self) -> bool:
         """Approves requests for at least one department."""
         return self.approving_departments.exists()

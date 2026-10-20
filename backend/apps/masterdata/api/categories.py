@@ -20,6 +20,7 @@ router = build_crud_router(
         out_schema=CategoryOut,
         in_schema=CategoryIn,
         filter_schema=CategoryFilter,
+        permission="categories",
         search_fields=("name", "code", "description"),
         ordering_fields=("name", "code", "sort_order", "kind"),
         queryset=lambda: Category.objects.select_related("parent__parent", "number_sequence", "team"),

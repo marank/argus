@@ -2470,3 +2470,19 @@ msgstr "%(name)s hat Ihre Anforderung „%(title)s“ nicht genehmigt."
 #, python-format
 msgid "Comment: %(comment)s"
 msgstr "Kommentar: %(comment)s"
+
+#: apps/accounts/models/role.py
+msgid "role"
+msgstr "Rolle"
+
+#: apps/accounts/models/role.py
+msgid "roles"
+msgstr "Rollen"
+
+#: apps/accounts/models/role.py
+msgid "permissions"
+msgstr "Rechte"
+
+#: apps/core/api/security.py
+msgid "Your roles do not allow this."
+msgstr "Ihre Rollen erlauben das nicht."

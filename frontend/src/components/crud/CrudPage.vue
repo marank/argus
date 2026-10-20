@@ -11,12 +11,20 @@ import { useConfirm } from '@/composables/useConfirm'
 import { useFormat } from '@/composables/useFormat'
 import { useGroupedRows, withGroupHeaders } from '@/composables/useGroupedRows'
 import { useList } from '@/composables/useList'
+import { useAuthStore } from '@/stores/auth'
 
 import CrudFormDrawer from './CrudFormDrawer.vue'
 import { isVisible, type ResourceDef } from './types'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const props = defineProps<{ resource: ResourceDef<any> }>()
+const auth = useAuthStore()
+/** Without the right to write, records open for viewing only. */
+const readonly = computed(() =>
+  props.resource.superuser
+    ? !auth.isSuperuser
+    : !!props.resource.permission && !auth.can(props.resource.permission, 'write'),
+)
 const { t } = useI18n()
 const confirm = useConfirm()
 const { enumLabel } = useFormat()
@@ -62,32 +70,34 @@ const baseColumns = computed<DataTableColumns<any>>(() => [
   {
     key: '_actions',
     title: '',
-    width: 84,
+    width: readonly.value ? 0 : 84,
     align: 'right' as const,
     render: (row: any) =>
-      h('div', { class: 'row row-actions', style: 'justify-content:flex-end' }, [
-        h(
-          NButton,
-          {
-            quaternary: true,
-            size: 'tiny',
-            title: t('common.edit'),
-            onClick: (e: Event) => (e.stopPropagation(), edit(row)),
-          },
-          { icon: () => h(Pencil, { size: 13 }) },
-        ),
-        h(
-          NButton,
-          {
-            quaternary: true,
-            size: 'tiny',
-            type: 'error',
-            title: t('common.delete'),
-            onClick: (e: Event) => (e.stopPropagation(), remove(row)),
-          },
-          { icon: () => h(Trash2, { size: 13 }) },
-        ),
-      ]),
+      readonly.value
+        ? null
+        : h('div', { class: 'row row-actions', style: 'justify-content:flex-end' }, [
+            h(
+              NButton,
+              {
+                quaternary: true,
+                size: 'tiny',
+                title: t('common.edit'),
+                onClick: (e: Event) => (e.stopPropagation(), edit(row)),
+              },
+              { icon: () => h(Pencil, { size: 13 }) },
+            ),
+            h(
+              NButton,
+              {
+                quaternary: true,
+                size: 'tiny',
+                type: 'error',
+                title: t('common.delete'),
+                onClick: (e: Event) => (e.stopPropagation(), remove(row)),
+              },
+              { icon: () => h(Trash2, { size: 13 }) },
+            ),
+          ]),
   },
 ])
 
@@ -120,7 +130,7 @@ const boolOptions = computed(() => [
   <div class="page">
     <PageHeader :title="t(`masterdata.resources.${resource.key}`)" :eyebrow="t('masterdata.title')">
       <template #actions>
-        <NButton type="primary" @click="edit(null)">
+        <NButton v-if="!readonly" type="primary" @click="edit(null)">
           <template #icon><Plus :size="16" /></template>
           {{ t(`masterdata.singular.${resource.key}`) }}
         </NButton>
@@ -182,6 +192,7 @@ const boolOptions = computed(() => [
       v-model:show="showForm"
       :resource="resource"
       :row="editing"
+      :readonly="readonly"
       @saved="list.load"
     />
   </div>

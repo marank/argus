@@ -9,7 +9,7 @@ from ninja.pagination import paginate
 
 from apps.core.api.pagination import Pagination
 from apps.core.api.querying import order, search
-from apps.core.api.security import it_staff_auth
+from apps.core.api.security import permission_auth
 from apps.procurement.models import PurchaseOrder, PurchaseOrderLine
 from apps.procurement.schemas.purchase_order import (
     MarkOrderedIn,
@@ -20,7 +20,7 @@ from apps.procurement.schemas.purchase_order import (
 )
 from apps.procurement.services import orders as order_service
 
-router = Router(tags=["procurement"], auth=it_staff_auth)
+router = Router(tags=["procurement"], auth=permission_auth("procurement"))
 
 
 class OrderFilter(FilterSchema):

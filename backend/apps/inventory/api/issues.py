@@ -10,13 +10,13 @@ from apps.accounts.services import assignment
 from apps.accounts.services.assignment import Assigned, assigned_q
 from apps.core.api.pagination import Pagination
 from apps.core.api.querying import order, search
-from apps.core.api.security import it_staff_auth
+from apps.core.api.security import permission_auth
 from apps.inventory.models import AssetIssue
 from apps.inventory.schemas.asset_issue import AssetIssueOut, AssetIssueUpdateIn, AssignIn
 from apps.inventory.services import notifications
 from apps.inventory.services.issues import update_issue
 
-router = Router(tags=["issues"], auth=it_staff_auth)
+router = Router(tags=["issues"], auth=permission_auth("issues"))
 
 
 class IssueFilter(FilterSchema):

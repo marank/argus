@@ -20,6 +20,7 @@ router = build_crud_router(
         out_schema=TeamOut,
         in_schema=TeamIn,
         filter_schema=TeamFilter,
+        permission="teams",
         search_fields=("name", "code"),
         ordering_fields=("name", "code", "sort_order"),
         queryset=lambda: Team.objects.prefetch_related("members"),

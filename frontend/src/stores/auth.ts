@@ -4,7 +4,12 @@ import { computed, ref } from 'vue'
 import { authApi, isChallenge } from '@/api/auth'
 import { ApiError } from '@/api/client'
 import { setLocale } from '@/i18n'
-import type { CurrentUser, TwoFactorChallenge } from '@/types/accounts'
+import type {
+  CurrentUser,
+  PermissionKey,
+  PermissionLevel,
+  TwoFactorChallenge,
+} from '@/types/accounts'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<CurrentUser | null>(null)
@@ -15,6 +20,12 @@ export const useAuthStore = defineStore('auth', () => {
   const isSuperuser = computed(() => user.value?.is_superuser ?? false)
   const isTerminal = computed(() => user.value?.is_terminal ?? false)
   const isApprover = computed(() => user.value?.is_approver ?? false)
+
+  /** Whether the user's roles allow reading (or with `write`, changing) an area. */
+  function can(resource: PermissionKey, level: PermissionLevel = 'read'): boolean {
+    const granted = user.value?.permissions?.[resource]
+    return level === 'read' ? !!granted : granted === 'write'
+  }
 
   function apply(current: CurrentUser | null) {
     user.value = current
@@ -72,6 +83,7 @@ export const useAuthStore = defineStore('auth', () => {
     isSuperuser,
     isTerminal,
     isApprover,
+    can,
     fetchCurrentUser,
     login,
     verifyLogin,

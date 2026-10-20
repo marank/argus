@@ -9,6 +9,7 @@ const ldapEnabled = () => useFeaturesStore().ldapEnabled
 
 export default defineResource<Team>({
   key: 'teams',
+  permission: 'teams',
   api: teamsApi,
   ordering: 'sort_order',
   title: (team) => team.name,

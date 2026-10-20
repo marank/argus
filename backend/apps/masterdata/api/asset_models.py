@@ -23,6 +23,7 @@ router = build_crud_router(
         out_schema=AssetModelOut,
         in_schema=AssetModelIn,
         filter_schema=AssetModelFilter,
+        permission="models",
         search_fields=("name", "manufacturer__name", "part_number", "ean", "category__name"),
         ordering_fields=(
             "name",

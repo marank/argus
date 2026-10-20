@@ -6,7 +6,7 @@ from ninja import Query, Router
 from ninja.errors import HttpError
 
 from apps.accounts.services.assignment import Assigned, assigned_q
-from apps.core.api.security import it_staff_auth
+from apps.core.api.security import permission_auth
 from apps.core.features import current_flags
 from apps.dashboard.schemas.calendar import CalendarEntryOut
 from apps.dashboard.services.calendar import KINDS, calendar_entries
@@ -18,7 +18,7 @@ KIND_FEATURES = {
     "delivery": "calendar_deliveries",
 }
 
-router = Router(tags=["calendar"], auth=it_staff_auth)
+router = Router(tags=["calendar"], auth=permission_auth("reservations"))
 
 MAX_DAYS = 400
 

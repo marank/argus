@@ -5,8 +5,9 @@ from uuid import UUID
 from django.http import HttpRequest
 from ninja import Field, Query, Router, Schema
 
+from apps.accounts.permissions import can
 from apps.accounts.schemas import UserRefOut
-from apps.core.api.security import it_staff_auth
+from apps.core.api.security import it_staff_auth, permission_auth
 from apps.core.schemas import RefOut
 from apps.dashboard.services import widgets
 from apps.inventory.schemas.refs import AssetRefOut
@@ -77,7 +78,7 @@ def my_tasks(request: HttpRequest):
     return widgets.my_tasks(request.user)
 
 
-@router.get("/overdue-returns", response=list[OverdueReturnOut])
+@router.get("/overdue-returns", response=list[OverdueReturnOut], auth=permission_auth("reservations"))
 def overdue_returns(request: HttpRequest):
     return widgets.overdue_returns()
 
@@ -87,7 +88,7 @@ def team_load(request: HttpRequest):
     return widgets.team_load()
 
 
-@router.get("/request-trend", response=list[TrendWeekOut])
+@router.get("/request-trend", response=list[TrendWeekOut], auth=permission_auth("reservations"))
 def request_trend(request: HttpRequest):
     return widgets.request_trend()
 
@@ -145,31 +146,33 @@ class WaitingRequestOut(Schema):
 Days = Annotated[int, Query(ge=1, le=31)]
 
 
-@router.get("/upcoming", response=list[UpcomingOut])
+@router.get("/upcoming", response=list[UpcomingOut], auth=permission_auth("reservations"))
 def upcoming(request: HttpRequest, days: Days = 7):
     return widgets.upcoming(days)
 
 
-@router.get("/due-returns", response=list[DueReturnOut])
+@router.get("/due-returns", response=list[DueReturnOut], auth=permission_auth("reservations"))
 def due_returns(request: HttpRequest, days: Days = 3):
     return widgets.due_returns(days)
 
 
 @router.get("/expiring", response=list[ExpiringOut])
 def expiring(request: HttpRequest):
-    return widgets.expiring()
+    """Only the licenses and devices the user may see."""
+    allowed = {"license": can(request.user, "licenses"), "warranty": can(request.user, "assets")}
+    return [row for row in widgets.expiring() if allowed.get(row["kind"], False)]
 
 
-@router.get("/low-stock", response=list[LowStockOut])
+@router.get("/low-stock", response=list[LowStockOut], auth=permission_auth("consumables"))
 def low_stock(request: HttpRequest):
     return widgets.low_stock()
 
 
-@router.get("/open-orders", response=list[OpenOrderOut])
+@router.get("/open-orders", response=list[OpenOrderOut], auth=permission_auth("procurement"))
 def open_orders(request: HttpRequest):
     return widgets.open_orders()
 
 
-@router.get("/waiting-requests", response=list[WaitingRequestOut])
+@router.get("/waiting-requests", response=list[WaitingRequestOut], auth=permission_auth("reservations"))
 def waiting_requests(request: HttpRequest):
     return widgets.waiting_requests()

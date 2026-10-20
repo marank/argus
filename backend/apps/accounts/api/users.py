@@ -9,10 +9,11 @@ from ninja import FilterLookup, FilterSchema
 from ninja.errors import HttpError
 
 from apps.accounts.models import User
+from apps.accounts.permissions import WRITE
 from apps.accounts.schemas import UserIn, UserOut
 from apps.accounts.services import two_factor
 from apps.core.api.crud import CrudConfig, build_crud_router
-from apps.core.api.security import it_staff_auth
+from apps.core.api.security import permission_auth
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +30,7 @@ router = build_crud_router(
         out_schema=UserOut,
         in_schema=UserIn,
         filter_schema=UserFilter,
+        permission="users",
         search_fields=("username", "first_name", "last_name", "email", "employee_number"),
         ordering_fields=(
             "username",
@@ -39,13 +41,15 @@ router = build_crud_router(
             "department__sort_order",
             "department__name",
         ),
-        queryset=lambda: User.objects.select_related("department", "terminal_location__parent", "two_factor"),
+        queryset=lambda: User.objects.select_related(
+            "department", "terminal_location__parent", "two_factor"
+        ).prefetch_related("roles"),
     ),
     tags=["users"],
 )
 
 
-@router.post("/{uuid:pk}/two-factor/reset", response=UserOut, auth=it_staff_auth)
+@router.post("/{uuid:pk}/two-factor/reset", response=UserOut, auth=permission_auth("users", WRITE))
 def reset_two_factor(request: HttpRequest, pk: UUID):
     """For users who lost their phone and backup codes: they sign in with the password alone again."""
     user = get_object_or_404(User.objects.select_related("department", "terminal_location__parent"), pk=pk)

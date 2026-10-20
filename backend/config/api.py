@@ -7,9 +7,9 @@ from django.http import Http404
 from django.utils.translation import gettext as _
 from ninja import NinjaAPI, Status
 
-from apps.accounts.api import departments, ldap, teams, two_factor, users
+from apps.accounts.api import departments, ldap, roles, teams, two_factor, users
 from apps.core.api import mail_settings, number_sequences, session, site_settings
-from apps.core.api.security import employee_auth, it_staff_auth
+from apps.core.api.security import employee_auth, it_staff_auth, superuser_auth
 from apps.core.exceptions import BusinessError
 from apps.dashboard.api import calendar, overview, widgets
 from apps.inventory.api import router as inventory_router
@@ -27,6 +27,7 @@ api.add_router("/calendar", calendar.router)
 api.add_router("/accounts/users", users.router)
 api.add_router("/accounts/departments", departments.router)
 api.add_router("/accounts/teams", teams.router, auth=it_staff_auth)
+api.add_router("/accounts/roles", roles.router, auth=superuser_auth)
 api.add_router("/settings/ldap", ldap.router)
 api.add_router("/settings/site", site_settings.router)
 api.add_router("/settings/mail", mail_settings.router)

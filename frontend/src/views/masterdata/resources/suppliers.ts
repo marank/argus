@@ -5,6 +5,7 @@ import type { Supplier } from '@/types/masterdata'
 
 export default defineResource<Supplier>({
   key: 'suppliers',
+  permission: 'suppliers',
   api: suppliersApi,
   ordering: 'name',
   title: (s) => s.name,

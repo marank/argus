@@ -46,7 +46,7 @@ import TeamLoadWidget from '@/components/dashboard/widgets/TeamLoadWidget.vue'
 import UpcomingWidget from '@/components/dashboard/widgets/UpcomingWidget.vue'
 import WaitingRequestsWidget from '@/components/dashboard/widgets/WaitingRequestsWidget.vue'
 import WeekWidget from '@/components/dashboard/widgets/WeekWidget.vue'
-import type { WidgetSettings, WidgetSize } from '@/types/accounts'
+import type { PermissionKey, WidgetSettings, WidgetSize } from '@/types/accounts'
 import type { ITOverview } from '@/types/dashboard'
 import type { FlagKey, Rules } from '@/types/settings'
 import type { Tone } from '@/utils/status'
@@ -63,6 +63,8 @@ export interface StatCardDef {
   to?: RouteLocationRaw
   /** Shown only while this module or feature is on. */
   flag?: FlagKey
+  /** Shown only while the user's roles allow reading this area. */
+  permission?: PermissionKey
 }
 
 /**
@@ -86,6 +88,8 @@ export interface WidgetDef {
   multiple?: boolean
   /** Only offered while this module or feature is on. */
   flag?: FlagKey
+  /** Only offered while the user's roles allow reading this area. */
+  permission?: PermissionKey
   cards?: StatCardDef[]
   component?: Component
 }
@@ -104,6 +108,7 @@ export const WIDGETS: WidgetDef[] = [
     cards: [
       {
         key: 'assigned_to_me',
+        permission: 'reservations',
         label: 'dashboard.assignedToMe',
         icon: UserRound,
         value: (d) => d.requests_mine,
@@ -112,6 +117,7 @@ export const WIDGETS: WidgetDef[] = [
       },
       {
         key: 'my_teams',
+        permission: 'reservations',
         label: 'dashboard.myTeams',
         icon: UsersRound,
         value: (d) => d.requests_my_teams,
@@ -120,6 +126,7 @@ export const WIDGETS: WidgetDef[] = [
       },
       {
         key: 'unassigned',
+        permission: 'reservations',
         label: 'dashboard.unassigned',
         icon: UserRoundX,
         value: (d) => d.requests_unassigned,
@@ -128,6 +135,7 @@ export const WIDGETS: WidgetDef[] = [
       },
       {
         key: 'issues_mine',
+        permission: 'issues',
         label: 'dashboard.issuesMine',
         icon: MessageSquareWarning,
         value: (d) => d.issues_mine,
@@ -146,6 +154,7 @@ export const WIDGETS: WidgetDef[] = [
     cards: [
       {
         key: 'to_confirm',
+        permission: 'reservations',
         label: 'dashboard.toConfirm',
         icon: ClipboardCheck,
         value: (d) => d.reservations_submitted,
@@ -155,6 +164,7 @@ export const WIDGETS: WidgetDef[] = [
       },
       {
         key: 'to_prepare',
+        permission: 'reservations',
         label: 'dashboard.toPrepare',
         icon: PackageOpen,
         value: (d) => d.reservations_to_prepare,
@@ -163,6 +173,7 @@ export const WIDGETS: WidgetDef[] = [
       },
       {
         key: 'ready',
+        permission: 'reservations',
         label: 'dashboard.readyForPickup',
         icon: PackageCheck,
         value: (d) => d.reservations_ready,
@@ -171,6 +182,7 @@ export const WIDGETS: WidgetDef[] = [
       },
       {
         key: 'overdue',
+        permission: 'reservations',
         label: 'dashboard.overdue',
         icon: AlarmClock,
         value: (d) => d.reservations_overdue,
@@ -189,6 +201,7 @@ export const WIDGETS: WidgetDef[] = [
     cards: [
       {
         key: 'orders_to_place',
+        permission: 'procurement',
         label: 'dashboard.ordersToPlace',
         icon: ShoppingCart,
         value: (d) => d.orders_to_place,
@@ -197,6 +210,7 @@ export const WIDGETS: WidgetDef[] = [
       },
       {
         key: 'orders_in_transit',
+        permission: 'procurement',
         label: 'dashboard.ordersInTransit',
         icon: Truck,
         value: (d) => d.orders_in_transit,
@@ -206,6 +220,7 @@ export const WIDGETS: WidgetDef[] = [
       },
       {
         key: 'below_minimum',
+        permission: 'consumables',
         label: 'dashboard.belowMinimum',
         icon: CircleAlert,
         value: (d) => d.low_consumables,
@@ -225,6 +240,7 @@ export const WIDGETS: WidgetDef[] = [
     cards: [
       {
         key: 'open_issues',
+        permission: 'issues',
         label: 'dashboard.openIssues',
         icon: MessageSquareWarning,
         value: (d) => d.open_issues,
@@ -235,6 +251,7 @@ export const WIDGETS: WidgetDef[] = [
       },
       {
         key: 'licenses_expiring',
+        permission: 'licenses',
         label: 'dashboard.licensesExpiring',
         labelArgs: (rules) => ({ days: rules.license_warning_days }),
         icon: KeyRound,
@@ -245,6 +262,7 @@ export const WIDGETS: WidgetDef[] = [
       },
       {
         key: 'warranty_expiring',
+        permission: 'assets',
         label: 'dashboard.warrantyExpiring',
         labelArgs: (rules) => ({ days: rules.warranty_warning_days }),
         icon: ShieldAlert,
@@ -254,6 +272,7 @@ export const WIDGETS: WidgetDef[] = [
   },
   {
     id: 'asset_status',
+    permission: 'assets',
     description: 'dashboard.widgets.assetStatus',
     title: 'dashboard.devicesByStatus',
     icon: ChartBar,
@@ -262,6 +281,7 @@ export const WIDGETS: WidgetDef[] = [
   },
   {
     id: 'upcoming',
+    permission: 'reservations',
     description: 'dashboard.widgets.upcoming',
     title: 'dashboard.upcoming',
     icon: CalendarDays,
@@ -271,6 +291,7 @@ export const WIDGETS: WidgetDef[] = [
   },
   {
     id: 'activity',
+    permission: 'assets',
     description: 'dashboard.widgets.activity',
     title: 'dashboard.recentActivity',
     icon: Activity,
@@ -288,6 +309,7 @@ export const WIDGETS: WidgetDef[] = [
   },
   {
     id: 'overdue_returns',
+    permission: 'reservations',
     title: 'dashboard.widgets.overdueReturns.title',
     description: 'dashboard.widgets.overdueReturns.description',
     icon: AlarmClock,
@@ -297,6 +319,7 @@ export const WIDGETS: WidgetDef[] = [
   },
   {
     id: 'week',
+    permission: 'reservations',
     title: 'dashboard.widgets.week.title',
     description: 'dashboard.widgets.week.description',
     icon: CalendarRange,
@@ -316,6 +339,7 @@ export const WIDGETS: WidgetDef[] = [
   },
   {
     id: 'request_trend',
+    permission: 'reservations',
     title: 'dashboard.widgets.requestTrend.title',
     description: 'dashboard.widgets.requestTrend.description',
     icon: TrendingUp,
@@ -325,6 +349,7 @@ export const WIDGETS: WidgetDef[] = [
   },
   {
     id: 'due_returns',
+    permission: 'reservations',
     title: 'dashboard.widgets.dueReturns.title',
     description: 'dashboard.widgets.dueReturns.description',
     icon: Undo2,
@@ -335,6 +360,7 @@ export const WIDGETS: WidgetDef[] = [
   },
   {
     id: 'waiting',
+    permission: 'reservations',
     title: 'dashboard.widgets.waiting.title',
     description: 'dashboard.widgets.waiting.description',
     icon: Hourglass,
@@ -353,6 +379,7 @@ export const WIDGETS: WidgetDef[] = [
   },
   {
     id: 'low_stock',
+    permission: 'consumables',
     title: 'dashboard.widgets.lowStock.title',
     description: 'dashboard.widgets.lowStock.description',
     icon: PackageMinus,
@@ -363,6 +390,7 @@ export const WIDGETS: WidgetDef[] = [
   },
   {
     id: 'open_orders',
+    permission: 'procurement',
     title: 'dashboard.widgets.openOrders.title',
     description: 'dashboard.widgets.openOrders.description',
     icon: Truck,
@@ -393,9 +421,15 @@ export const WIDGETS: WidgetDef[] = [
   },
 ]
 
-/** Cards whose module or feature is on. */
-export const availableCards = (def: WidgetDef, isOn: (flag: FlagKey) => boolean) =>
-  (def.cards ?? []).filter((card) => !card.flag || isOn(card.flag))
+/** Cards whose module or feature is on and whose area the user may read. */
+export const availableCards = (
+  def: WidgetDef,
+  isOn: (flag: FlagKey) => boolean,
+  can: (permission: PermissionKey) => boolean,
+) =>
+  (def.cards ?? []).filter(
+    (card) => (!card.flag || isOn(card.flag)) && (!card.permission || can(card.permission)),
+  )
 
 /** What the layout functions need to know of a widget. */
 type LayoutDef = Pick<WidgetDef, 'id' | 'size' | 'optional' | 'multiple'>

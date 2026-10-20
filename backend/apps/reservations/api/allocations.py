@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from ninja import Router, Schema
 
-from apps.core.api.security import it_staff_auth
+from apps.core.api.security import permission_auth
 from apps.core.exceptions import BusinessError
 from apps.inventory.models import Asset, Consumable, License
 from apps.inventory.services.availability import pool_assets, pool_consumables, pool_licenses
@@ -23,7 +23,7 @@ from apps.reservations.services import workflow
 
 from .queries import get_for_update, get_reservation
 
-router = Router(tags=["reservation preparation"], auth=it_staff_auth)
+router = Router(tags=["reservation preparation"], auth=permission_auth("reservations"))
 
 
 class AutoAllocateOut(Schema):

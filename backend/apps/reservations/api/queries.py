@@ -5,7 +5,7 @@ from django.db.models.functions import Coalesce
 from django.http import Http404, HttpRequest
 from django.shortcuts import get_object_or_404
 
-from apps.core.api.security import is_it_staff
+from apps.accounts.permissions import can
 from apps.reservations.models import DeviceReturn, Reservation, ReservationAllocation, ReservationItem
 
 
@@ -48,7 +48,7 @@ def reservation_queryset() -> QuerySet[Reservation]:
 
 def visible_reservations(request: HttpRequest) -> QuerySet[Reservation]:
     queryset = reservation_queryset()
-    if is_it_staff(request.user):
+    if can(request.user, "reservations"):
         return queryset
     return queryset.filter(requester=request.user)
 

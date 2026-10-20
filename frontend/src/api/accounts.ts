@@ -1,4 +1,4 @@
-import type { Department, Team, User } from '@/types/accounts'
+import type { Department, PermissionResource, Role, Team, User } from '@/types/accounts'
 
 import type { Id } from '@/types/common'
 
@@ -12,3 +12,8 @@ export const usersApi = {
 }
 export const departmentsApi = createResource<Department>('/accounts/departments')
 export const teamsApi = createResource<Team>('/accounts/teams')
+export const rolesApi = {
+  ...createResource<Role>('/accounts/roles'),
+  /** The areas a role can grant, in the order of the role editor. */
+  resources: () => http.get<PermissionResource[]>('/accounts/roles/resources'),
+}

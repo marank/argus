@@ -11,14 +11,14 @@ from ninja.pagination import paginate
 
 from apps.core.api.pagination import Pagination
 from apps.core.api.querying import order, search
-from apps.core.api.security import it_staff_auth
+from apps.core.api.security import permission_auth
 from apps.core.exceptions import BusinessError
 from apps.inventory.models import Asset
 from apps.inventory.schemas.asset import AssetBulkIn, AssetDetailOut, AssetIn, AssetOut, AssignIn
 from apps.inventory.services import assets as asset_service
 from apps.masterdata.models import Category
 
-router = Router(tags=["assets"], auth=it_staff_auth)
+router = Router(tags=["assets"], auth=permission_auth("assets"))
 
 SEARCH_FIELDS = (
     "inventory_number",

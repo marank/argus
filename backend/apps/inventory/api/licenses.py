@@ -11,14 +11,14 @@ from ninja.pagination import paginate
 
 from apps.core.api.pagination import Pagination
 from apps.core.api.querying import order, search
-from apps.core.api.security import it_staff_auth
+from apps.core.api.security import permission_auth
 from apps.core.exceptions import BusinessError
 from apps.inventory.models import License
 from apps.inventory.schemas.license import LicenseAssignIn, LicenseDetailOut, LicenseIn, LicenseOut
 from apps.inventory.services import licenses as license_service
 from apps.masterdata.models import Category
 
-router = Router(tags=["licenses"], auth=it_staff_auth)
+router = Router(tags=["licenses"], auth=permission_auth("licenses"))
 
 SEARCH_FIELDS = (
     "model__name",

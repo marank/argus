@@ -1,6 +1,34 @@
 export default {
   title: 'Stammdaten',
   noDepartment: 'Ohne Abteilung',
+  noAccess: 'Ihre Rollen erlauben keinen Zugriff auf diesen Bereich.',
+  roles: {
+    permissions: 'Rechte',
+    permissionsHelp:
+      'Lesen zeigt den Bereich, Schreiben erlaubt Änderungen. Ohne Recht ist der Bereich ausgeblendet; Auswahllisten in Formularen bleiben nutzbar. Rechte mehrerer Rollen addieren sich.',
+    membersHelp: 'IT-Mitarbeiter mit dieser Rolle. Administratoren dürfen ohnehin alles.',
+    summary: '{write} schreiben · {read} lesen',
+    groups: { masterdata: 'Stammdaten', operations: 'IT-Betrieb' },
+    all: { none: 'alle keins', read: 'alle lesen', write: 'alle schreiben' },
+    levels: { none: 'Keins', read: 'Lesen', write: 'Schreiben' },
+    areas: {
+      models: 'Modelle',
+      categories: 'Kategorien',
+      manufacturers: 'Hersteller',
+      suppliers: 'Lieferanten',
+      locations: 'Standorte',
+      departments: 'Abteilungen',
+      teams: 'Teams',
+      users: 'Mitarbeiter',
+      number_sequences: 'Nummernserien',
+      reservations: 'Reservierungen & Kalender',
+      assets: 'Geräte & Servicebuch',
+      consumables: 'Verbrauchsmaterial',
+      licenses: 'Lizenzen',
+      issues: 'Meldungen',
+      procurement: 'Beschaffung',
+    },
+  },
   resources: {
     manufacturers: 'Hersteller',
     suppliers: 'Lieferanten',
@@ -11,6 +39,7 @@ export default {
     teams: 'Teams',
     users: 'Mitarbeiter',
     numberSequences: 'Nummernserien',
+    roles: 'Rollen',
   },
   singular: {
     manufacturers: 'Hersteller',
@@ -22,6 +51,7 @@ export default {
     teams: 'Team',
     users: 'Mitarbeiter',
     numberSequences: 'Nummernserie',
+    roles: 'Rolle',
   },
   sections: {
     responsibility: 'Zuständigkeit',

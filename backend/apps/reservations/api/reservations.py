@@ -10,11 +10,12 @@ from ninja import FilterLookup, FilterSchema, Query, Router, Status
 from ninja.pagination import paginate
 
 from apps.accounts.models import User
+from apps.accounts.permissions import WRITE, can
 from apps.accounts.services import assignment
 from apps.accounts.services.assignment import Assigned, assigned_q
 from apps.core.api.pagination import Pagination
 from apps.core.api.querying import order, search
-from apps.core.api.security import is_it_staff, it_staff_auth
+from apps.core.api.security import permission_auth
 from apps.reservations.models import Reservation
 from apps.reservations.schemas.reservation import (
     AssignIn,
@@ -34,6 +35,8 @@ from apps.reservations.services import workflow
 from .queries import get_for_update, get_reservation, visible_reservations
 
 router = Router(tags=["reservations"])
+# IT's decisions on requests; employees only list, create and cancel their own.
+reservations_write = permission_auth("reservations", WRITE)
 
 
 class ReservationFilter(FilterSchema):
@@ -67,7 +70,7 @@ def list_reservations(
     mine: bool = False,
     assigned: Assigned | None = None,
 ):
-    """IT staff see every reservation, employees only their own.
+    """IT staff with the right to see requests see all of them, everyone else their own.
 
     ``assigned``: ``me`` – assigned to the current user; ``my_teams`` – to one of
     their teams or to them; ``nobody`` – neither a team nor a person set.
@@ -92,7 +95,7 @@ def list_reservations(
 def create_reservation(request: HttpRequest, payload: ReservationIn):
     data = payload.dict(exclude={"items", "requester"})
     requester = request.user
-    if payload.requester and is_it_staff(request.user):
+    if payload.requester and can(request.user, "reservations", WRITE):
         requester = User.objects.get(pk=payload.requester)
     items = [item.dict() for item in payload.items]
     reservation = workflow.submit(requester, data, items, created_by=request.user)
@@ -111,7 +114,7 @@ def cancel(request: HttpRequest, pk: UUID):
     return get_reservation(request, pk)
 
 
-@router.post("/{uuid:pk}/confirm", response=ReservationOut, auth=it_staff_auth)
+@router.post("/{uuid:pk}/confirm", response=ReservationOut, auth=reservations_write)
 def confirm(request: HttpRequest, pk: UUID, payload: ConfirmIn):
     quantities = {item.id: item.quantity_confirmed for item in payload.items}
     workflow.confirm(
@@ -125,13 +128,13 @@ def confirm(request: HttpRequest, pk: UUID, payload: ConfirmIn):
     return get_reservation(request, pk)
 
 
-@router.post("/{uuid:pk}/reject", response=ReservationOut, auth=it_staff_auth)
+@router.post("/{uuid:pk}/reject", response=ReservationOut, auth=reservations_write)
 def reject(request: HttpRequest, pk: UUID, payload: RejectIn):
     workflow.reject(get_for_update(pk), request.user, payload.comment)
     return get_reservation(request, pk)
 
 
-@router.post("/{uuid:pk}/schedule", response=ReservationOut, auth=it_staff_auth)
+@router.post("/{uuid:pk}/schedule", response=ReservationOut, auth=reservations_write)
 def schedule(request: HttpRequest, pk: UUID, payload: ScheduleIn):
     workflow.reschedule(
         get_for_update(pk), request.user, payload.pickup_at, payload.pickup_location, payload.handover_mode
@@ -139,7 +142,7 @@ def schedule(request: HttpRequest, pk: UUID, payload: ScheduleIn):
     return get_reservation(request, pk)
 
 
-@router.post("/{uuid:pk}/ready", response=ReservationOut, auth=it_staff_auth)
+@router.post("/{uuid:pk}/ready", response=ReservationOut, auth=reservations_write)
 @transaction.atomic
 def mark_ready(request: HttpRequest, pk: UUID, payload: ReadyIn):
     reservation = get_for_update(pk)
@@ -156,28 +159,28 @@ def mark_ready(request: HttpRequest, pk: UUID, payload: ReadyIn):
     return get_reservation(request, pk)
 
 
-@router.post("/{uuid:pk}/reopen", response=ReservationOut, auth=it_staff_auth)
+@router.post("/{uuid:pk}/reopen", response=ReservationOut, auth=reservations_write)
 def reopen(request: HttpRequest, pk: UUID):
     """Take a ready request back into preparation."""
     workflow.reopen(get_for_update(pk), request.user)
     return get_reservation(request, pk)
 
 
-@router.post("/{uuid:pk}/extend", response=ReservationOut, auth=it_staff_auth)
+@router.post("/{uuid:pk}/extend", response=ReservationOut, auth=reservations_write)
 def extend(request: HttpRequest, pk: UUID, payload: ExtendIn):
     """Move the return date of a handed-out request."""
     workflow.extend(get_for_update(pk), request.user, payload.end_date)
     return get_reservation(request, pk)
 
 
-@router.post("/{uuid:pk}/remind", response=ReservationOut, auth=it_staff_auth)
+@router.post("/{uuid:pk}/remind", response=ReservationOut, auth=reservations_write)
 def remind(request: HttpRequest, pk: UUID):
     """Email the employee to return the devices."""
     workflow.remind(get_for_update(pk), request.user)
     return get_reservation(request, pk)
 
 
-@router.post("/{uuid:pk}/assign", response=ReservationOut, auth=it_staff_auth)
+@router.post("/{uuid:pk}/assign", response=ReservationOut, auth=reservations_write)
 def assign(request: HttpRequest, pk: UUID, payload: AssignIn):
     reservation = get_for_update(pk)
     if assignment.assign(reservation, payload.team, payload.assignee, request.user):
@@ -185,7 +188,7 @@ def assign(request: HttpRequest, pk: UUID, payload: AssignIn):
     return get_reservation(request, pk)
 
 
-@router.post("/{uuid:pk}/hand-out", response=ReservationOut, auth=it_staff_auth)
+@router.post("/{uuid:pk}/hand-out", response=ReservationOut, auth=reservations_write)
 def hand_out(request: HttpRequest, pk: UUID, payload: HandOutIn):
     """Hand out without the pickup terminal; documented by the IT staff member."""
     workflow.hand_out(

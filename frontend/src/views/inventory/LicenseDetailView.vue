@@ -18,9 +18,12 @@ import { useFormat } from '@/composables/useFormat'
 import type { Id } from '@/types/common'
 import type { LicenseAssignment, LicenseDetail } from '@/types/inventory'
 import { categoryIcon } from '@/utils/icons'
+import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps<{ id: Id }>()
 const { t } = useI18n()
+// Without the right to change licenses, the page is for viewing only.
+const canWrite = computed(() => useAuthStore().can('licenses', 'write'))
 const router = useRouter()
 const confirm = useConfirm()
 const { date, money, enumLabel } = useFormat()
@@ -108,7 +111,7 @@ async function remove() {
             }}</NTag>
           </span>
         </template>
-        <template #actions>
+        <template v-if="canWrite" #actions>
           <NButton @click="showForm = true">
             <template #icon><Pencil :size="15" /></template>
             {{ t('common.edit') }}

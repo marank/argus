@@ -15,6 +15,7 @@ router = build_crud_router(
         out_schema=ManufacturerOut,
         in_schema=ManufacturerIn,
         filter_schema=ManufacturerFilter,
+        permission="manufacturers",
         search_fields=("name", "website"),
     ),
     tags=["manufacturers"],

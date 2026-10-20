@@ -21,9 +21,12 @@ import { useFormat } from '@/composables/useFormat'
 import type { AssetDetail, AssetEvent } from '@/types/inventory'
 import { categoryIcon } from '@/utils/icons'
 import { useFeaturesStore } from '@/stores/features'
+import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps<{ id: Id }>()
 const { t } = useI18n()
+// Without the right to change assets, the page is for viewing only.
+const canWrite = computed(() => useAuthStore().can('assets', 'write'))
 const features = useFeaturesStore()
 const router = useRouter()
 const message = useMessage()
@@ -134,7 +137,7 @@ async function removeEvent(event: AssetEvent) {
         <template #badge>
           <StatusTag group="assetStatus" :value="asset.status" />
         </template>
-        <template #actions>
+        <template v-if="canWrite" #actions>
           <NButton v-if="asset.assigned_to" :loading="busy" @click="assign(null)">
             <template #icon><UserMinus :size="15" /></template>
             {{ t('inventory.unassign') }}

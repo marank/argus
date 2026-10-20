@@ -13,6 +13,7 @@ const { t } = i18n.global
 
 export default defineResource<Category>({
   key: 'categories',
+  permission: 'categories',
   api: categoriesApi,
   ordering: 'sort_order',
   // Hardware first, then software (alphabetical order of the stored values).

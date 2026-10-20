@@ -1,5 +1,6 @@
 import type { RouteRecordRaw } from 'vue-router'
 
+import type { PermissionKey } from '@/types/accounts'
 import type { ModuleKey } from '@/types/settings'
 
 declare module 'vue-router' {
@@ -12,6 +13,8 @@ declare module 'vue-router' {
     superuser?: boolean
     /** Restricted to department approvers. */
     approver?: boolean
+    /** Area the user's roles must allow reading. */
+    permission?: PermissionKey
     /** Pickup terminal pages (terminal account and IT staff). */
     terminal?: boolean
     /** i18n key of the page title. */
@@ -140,46 +143,51 @@ export const routes: RouteRecordRaw[] = [
         path: 'calendar',
         name: 'calendar',
         component: () => import('@/views/calendar/CalendarView.vue'),
-        meta: { module: 'calendar', it: true, title: 'nav.calendar' },
+        meta: { permission: 'reservations', module: 'calendar', it: true, title: 'nav.calendar' },
       },
       // IT: inventory
       {
         path: 'inventory/assets',
         name: 'assets',
         component: () => import('@/views/inventory/AssetListView.vue'),
-        meta: { it: true, title: 'nav.assets' },
+        meta: { permission: 'assets', it: true, title: 'nav.assets' },
       },
       {
         path: 'inventory/assets/:id([0-9a-f-]{36})',
         name: 'asset',
         component: () => import('@/views/inventory/AssetDetailView.vue'),
         props: (route) => ({ id: String(route.params.id) }),
-        meta: { it: true, title: 'nav.assets' },
+        meta: { permission: 'assets', it: true, title: 'nav.assets' },
       },
       {
         path: 'inventory/consumables',
         name: 'consumables',
         component: () => import('@/views/inventory/ConsumableListView.vue'),
-        meta: { module: 'consumables', it: true, title: 'nav.consumables' },
+        meta: {
+          permission: 'consumables',
+          module: 'consumables',
+          it: true,
+          title: 'nav.consumables',
+        },
       },
       {
         path: 'inventory/licenses',
         name: 'licenses',
         component: () => import('@/views/inventory/LicenseListView.vue'),
-        meta: { module: 'licenses', it: true, title: 'nav.licenses' },
+        meta: { permission: 'licenses', module: 'licenses', it: true, title: 'nav.licenses' },
       },
       {
         path: 'inventory/licenses/:id([0-9a-f-]{36})',
         name: 'license',
         component: () => import('@/views/inventory/LicenseDetailView.vue'),
         props: (route) => ({ id: String(route.params.id) }),
-        meta: { module: 'licenses', it: true, title: 'nav.licenses' },
+        meta: { permission: 'licenses', module: 'licenses', it: true, title: 'nav.licenses' },
       },
       {
         path: 'inventory/issues',
         name: 'issues',
         component: () => import('@/views/inventory/IssueListView.vue'),
-        meta: { module: 'issues', it: true, title: 'nav.issues' },
+        meta: { permission: 'issues', module: 'issues', it: true, title: 'nav.issues' },
       },
       // Former name of the consumables page; keeps old bookmarks working.
       { path: 'inventory/stock', redirect: (to) => ({ name: 'consumables', query: to.query }) },
@@ -187,41 +195,41 @@ export const routes: RouteRecordRaw[] = [
         path: 'inventory/log',
         name: 'event-log',
         component: () => import('@/views/inventory/EventLogView.vue'),
-        meta: { it: true, title: 'nav.eventLog' },
+        meta: { permission: 'assets', it: true, title: 'nav.eventLog' },
       },
       // IT: reservations
       {
         path: 'reservations',
         name: 'reservations',
         component: () => import('@/views/reservations/ReservationListView.vue'),
-        meta: { it: true, title: 'nav.reservations' },
+        meta: { permission: 'reservations', it: true, title: 'nav.reservations' },
       },
       {
         path: 'reservations/:id([0-9a-f-]{36})',
         name: 'reservation',
         component: () => import('@/views/reservations/ReservationDetailView.vue'),
         props: (route) => ({ id: String(route.params.id) }),
-        meta: { it: true, title: 'nav.reservations' },
+        meta: { permission: 'reservations', it: true, title: 'nav.reservations' },
       },
       // IT: procurement
       {
         path: 'procurement/needs',
         name: 'needs',
         component: () => import('@/views/procurement/NeedsView.vue'),
-        meta: { module: 'procurement', it: true, title: 'nav.needs' },
+        meta: { permission: 'procurement', module: 'procurement', it: true, title: 'nav.needs' },
       },
       {
         path: 'procurement/orders',
         name: 'orders',
         component: () => import('@/views/procurement/OrderListView.vue'),
-        meta: { module: 'procurement', it: true, title: 'nav.orders' },
+        meta: { permission: 'procurement', module: 'procurement', it: true, title: 'nav.orders' },
       },
       {
         path: 'procurement/orders/:id([0-9a-f-]{36})',
         name: 'order',
         component: () => import('@/views/procurement/OrderDetailView.vue'),
         props: (route) => ({ id: String(route.params.id) }),
-        meta: { module: 'procurement', it: true, title: 'nav.orders' },
+        meta: { permission: 'procurement', module: 'procurement', it: true, title: 'nav.orders' },
       },
       // IT: master data
       {

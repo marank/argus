@@ -12,6 +12,7 @@ const siteOf = (l: Location) => l.full_name.split(' / ')[0] ?? l.name
 
 export default defineResource<Location>({
   key: 'locations',
+  permission: 'locations',
   // Sections per site (the top-level location).
   groupBy: {
     ordering: 'site',

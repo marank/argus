@@ -44,7 +44,7 @@ function toggleSidebar() {
             <component :is="collapsed ? PanelLeftOpen : PanelLeftClose" :size="16" />
           </template>
         </NButton>
-        <GlobalScan v-if="auth.isItStaff" />
+        <GlobalScan v-if="auth.can('assets')" />
         <div class="spacer" />
         <UserMenu />
       </NLayoutHeader>

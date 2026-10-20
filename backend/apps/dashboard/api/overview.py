@@ -4,6 +4,7 @@ from uuid import UUID
 from django.http import HttpRequest
 from ninja import Router, Schema
 
+from apps.accounts.permissions import can
 from apps.core.api.security import it_staff_auth
 from apps.dashboard.services.overview import employee_overview, it_overview
 from apps.inventory.schemas.asset_event import AssetEventWithAssetOut
@@ -43,9 +44,32 @@ class EmployeeOverviewOut(Schema):
     assigned_assets: int
 
 
+# Figures each area contributes; they stay empty without the right to read the area.
+AREA_FIELDS = {
+    "assets": {"asset_status": {}, "warranty_expiring": 0, "recent_events": []},
+    "reservations": {
+        "reservations_submitted": 0,
+        "reservations_to_prepare": 0,
+        "reservations_ready": 0,
+        "reservations_overdue": 0,
+        "requests_mine": 0,
+        "requests_my_teams": 0,
+        "requests_unassigned": 0,
+    },
+    "procurement": {"orders_to_place": 0, "orders_in_transit": 0},
+    "consumables": {"low_consumables": 0},
+    "issues": {"open_issues": 0, "issues_mine": 0},
+    "licenses": {"licenses_expiring": 0},
+}
+
+
 @router.get("/it", response=ITOverviewOut, auth=it_staff_auth)
 def it(request: HttpRequest):
-    return it_overview(request.user)
+    overview = it_overview(request.user)
+    for area, empty in AREA_FIELDS.items():
+        if not can(request.user, area):
+            overview.update(empty)
+    return overview
 
 
 @router.get("/me", response=EmployeeOverviewOut)

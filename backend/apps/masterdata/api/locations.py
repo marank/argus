@@ -31,6 +31,7 @@ router = build_crud_router(
         out_schema=LocationOut,
         in_schema=LocationIn,
         filter_schema=LocationFilter,
+        permission="locations",
         search_fields=("name", "code", "parent__name"),
         ordering_fields=("name", "code", "kind", "site"),
         queryset=location_queryset,

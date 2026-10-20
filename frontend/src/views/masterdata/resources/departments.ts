@@ -5,6 +5,7 @@ import type { Department, UserRef } from '@/types/accounts'
 
 export default defineResource<Department>({
   key: 'departments',
+  permission: 'departments',
   api: departmentsApi,
   ordering: 'sort_order',
   title: (d) => d.name,

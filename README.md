@@ -137,6 +137,12 @@ signs in through the app's login, so the second step applies there too.
 - **Self-service portal** – employees request devices by group ("any headset") or
   model, for a period or permanently, and follow status, pickup time and their
   assigned devices. Consumables that fit their own devices are offered as a quick pick.
+- **Roles for IT staff** – administrators define roles (master data → Roles) that
+  grant *read* or *write* per area: each master data type, reservations & calendar,
+  devices & service log, consumables, licenses, problem reports and procurement.
+  Staff can hold several roles; rights add up. Areas without a right are hidden and
+  refused by the API, though selection lists in forms keep working. Administrators
+  may do everything. The areas are listed in `apps/accounts/permissions.py`.
 - **Department approval** – categories can require approval (inherited by
   subcategories). Such requests wait as *awaiting approval* until an approver of the
   requester's department approves them under *Approvals* in the portal; only then

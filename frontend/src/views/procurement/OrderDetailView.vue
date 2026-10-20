@@ -28,9 +28,12 @@ import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
 import { fromIsoDate, toIsoDate, useFormat } from '@/composables/useFormat'
 import type { Order, OrderLineInput } from '@/types/procurement'
+import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps<{ id: Id }>()
 const { t } = useI18n()
+// Without the right to change procurement, the page is for viewing only.
+const canWrite = computed(() => useAuthStore().can('procurement', 'write'))
 const router = useRouter()
 const confirm = useConfirm()
 const { date, money } = useFormat()
@@ -145,7 +148,7 @@ function openOrdered() {
           ><span class="mono id">{{ order.number }}</span></template
         >
         <template #badge><StatusTag group="orderStatus" :value="order.status" /></template>
-        <template #actions>
+        <template v-if="canWrite" #actions>
           <NButton v-if="editable" :loading="busy" @click="save">
             <template #icon><Save :size="15" /></template>
             {{ t('common.save') }}

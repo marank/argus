@@ -9,12 +9,12 @@ from ninja.pagination import paginate
 
 from apps.core.api.pagination import Pagination
 from apps.core.api.querying import search
-from apps.core.api.security import it_staff_auth
+from apps.core.api.security import permission_auth
 from apps.inventory.models import Asset, AssetEvent
 from apps.inventory.schemas.asset_event import AssetEventIn, AssetEventOut, AssetEventWithAssetOut
 from apps.inventory.services import assets as asset_service
 
-router = Router(tags=["asset events"], auth=it_staff_auth)
+router = Router(tags=["asset events"], auth=permission_auth("assets"))
 
 
 class EventFilter(FilterSchema):

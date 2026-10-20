@@ -9,6 +9,7 @@ export default {
   },
   save: 'Speichern',
   cancel: 'Abbrechen',
+  close: 'Schließen',
   delete: 'Löschen',
   edit: 'Bearbeiten',
   create: 'Anlegen',

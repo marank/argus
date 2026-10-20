@@ -9,7 +9,7 @@ from ninja.pagination import paginate
 
 from apps.core.api.pagination import Pagination
 from apps.core.api.querying import order, search
-from apps.core.api.security import it_staff_auth
+from apps.core.api.security import permission_auth
 from apps.inventory.models import Consumable
 from apps.inventory.schemas.consumable import (
     ConsumableIn,
@@ -20,7 +20,7 @@ from apps.inventory.schemas.consumable import (
 )
 from apps.inventory.services.consumables import get_consumable, move_consumable
 
-router = Router(tags=["consumables"], auth=it_staff_auth)
+router = Router(tags=["consumables"], auth=permission_auth("consumables"))
 
 
 class ConsumableFilter(FilterSchema):

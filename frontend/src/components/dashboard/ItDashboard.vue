@@ -53,12 +53,16 @@ const layout = computed(() => draft.value ?? saved.value)
 
 /** Widgets of a switched-off module, and panels whose modules are all off, do not exist for this site. */
 const isAvailable = (d: WidgetDef) =>
-  (!d.flag || features.isOn(d.flag)) && (!d.cards || availableCards(d, features.isOn).length > 0)
+  (!d.flag || features.isOn(d.flag)) &&
+  (!d.permission || auth.can(d.permission)) &&
+  (!d.cards || availableCards(d, features.isOn, auth.can).length > 0)
 const available = (widget: WidgetSettings) => isAvailable(def(widget))
 /** A panel with every card hidden is left out like a hidden widget. */
 const hasContent = (widget: WidgetSettings) =>
   !def(widget).cards ||
-  availableCards(def(widget), features.isOn).some((c) => !widget.hidden_cards.includes(c.key))
+  availableCards(def(widget), features.isOn, auth.can).some(
+    (c) => !widget.hidden_cards.includes(c.key),
+  )
 
 const widgets = computed(() =>
   layout.value.filter((w) => available(w) && w.visible && (editing.value || hasContent(w))),

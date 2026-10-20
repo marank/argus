@@ -19,8 +19,11 @@ import type { Id } from '@/types/common'
 import type { License } from '@/types/inventory'
 import { categoryIcon } from '@/utils/icons'
 import { useFeaturesStore } from '@/stores/features'
+import { useAuthStore } from '@/stores/auth'
 
 const { t } = useI18n()
+// Without the right to change licenses, the page is for viewing only.
+const canWrite = computed(() => useAuthStore().can('licenses', 'write'))
 const features = useFeaturesStore()
 const router = useRouter()
 const route = useRoute()
@@ -125,7 +128,7 @@ function open(id: Id) {
 <template>
   <div class="page">
     <PageHeader :title="t('inventory.licenses.title')" :subtitle="t('inventory.licenses.subtitle')">
-      <template #actions>
+      <template v-if="canWrite" #actions>
         <NButton type="primary" @click="showForm = true">
           <template #icon><Plus :size="16" /></template>
           {{ t('inventory.licenses.newLicense') }}

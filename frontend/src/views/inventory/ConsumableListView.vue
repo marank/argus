@@ -24,8 +24,11 @@ import ConsumableMoveModal from '@/components/inventory/ConsumableMoveModal.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useList } from '@/composables/useList'
 import type { Consumable, ConsumableMovement } from '@/types/inventory'
+import { useAuthStore } from '@/stores/auth'
 
 const { t } = useI18n()
+// Without the right to change consumables, the page is for viewing only.
+const canWrite = computed(() => useAuthStore().can('consumables', 'write'))
 const route = useRoute()
 const { dateTime, enumLabel } = useFormat()
 
@@ -195,7 +198,7 @@ const movementColumns = computed<DataTableColumns<ConsumableMovement>>(() => [
       :title="t('inventory.consumables.title')"
       :subtitle="t('inventory.consumables.subtitle')"
     >
-      <template #actions>
+      <template v-if="canWrite" #actions>
         <NButton type="primary" @click="openItem(null)">
           <template #icon><Plus :size="16" /></template>
           {{ t('inventory.consumables.newItem') }}

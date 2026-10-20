@@ -11,7 +11,11 @@ import { useAuthStore } from '@/stores/auth'
 import type { User } from '@/types/accounts'
 
 /** Two-factor state of an employee in the edit drawer; IT resets it when the phone is lost. */
-const props = defineProps<{ form: Record<string, unknown>; row?: User | null }>()
+const props = defineProps<{
+  form: Record<string, unknown>
+  row?: User | null
+  readonly?: boolean
+}>()
 const { t } = useI18n()
 const auth = useAuthStore()
 const confirm = useConfirm()
@@ -24,7 +28,7 @@ watch(
 )
 
 // Own 2FA is switched off in the profile (with the password); the server checks the rest.
-const canReset = () => !!props.row && props.row.id !== auth.user?.id
+const canReset = () => !props.readonly && !!props.row && props.row.id !== auth.user?.id
 
 async function reset() {
   if (!props.row || !(await confirm(t('masterdata.twoFactor.confirmReset'), { danger: true })))

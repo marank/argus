@@ -6,6 +6,7 @@ import locations from './locations'
 import manufacturers from './manufacturers'
 import models from './models'
 import numberSequences from './numberSequences'
+import roles from './roles'
 import suppliers from './suppliers'
 import teams from './teams'
 import users from './users'
@@ -21,4 +22,5 @@ export const RESOURCES: Record<string, ResourceDef<any>> = {
   teams,
   users,
   numberSequences,
+  roles,
 }

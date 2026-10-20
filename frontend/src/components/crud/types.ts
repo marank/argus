@@ -1,5 +1,6 @@
 import type { Component, VNodeChild } from 'vue'
 
+import type { PermissionKey } from '@/types/accounts'
 import type { Id, ListParams, Page } from '@/types/common'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -85,6 +86,10 @@ export interface ResourceDef<T extends { id: Id }> {
   toForm: (row: T) => Record<string, unknown>
   /** Primary label of a record, used in titles and confirmations. */
   title: (row: T) => string
+  /** Area of the role rights: reading shows the page, writing allows changes. */
+  permission?: PermissionKey
+  /** Only administrators see and change these records (e.g. roles). */
+  superuser?: boolean
 }
 
 export const isVisible = (def: { visible?: () => boolean }) => def.visible?.() ?? true

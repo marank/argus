@@ -1,6 +1,34 @@
 export default {
   title: 'Master data',
   noDepartment: 'No department',
+  noAccess: 'Your roles do not give access to this area.',
+  roles: {
+    permissions: 'Rights',
+    permissionsHelp:
+      'Read shows the area, write allows changes. Without a right the area is hidden; selection lists in forms keep working. Rights of several roles add up.',
+    membersHelp: 'IT staff with this role. Administrators may do everything anyway.',
+    summary: '{write} write · {read} read',
+    groups: { masterdata: 'Master data', operations: 'IT operations' },
+    all: { none: 'all none', read: 'all read', write: 'all write' },
+    levels: { none: 'None', read: 'Read', write: 'Write' },
+    areas: {
+      models: 'Models',
+      categories: 'Categories',
+      manufacturers: 'Manufacturers',
+      suppliers: 'Suppliers',
+      locations: 'Locations',
+      departments: 'Departments',
+      teams: 'Teams',
+      users: 'Employees',
+      number_sequences: 'Number sequences',
+      reservations: 'Reservations & calendar',
+      assets: 'Devices & service log',
+      consumables: 'Consumables',
+      licenses: 'Licenses',
+      issues: 'Problem reports',
+      procurement: 'Procurement',
+    },
+  },
   resources: {
     manufacturers: 'Manufacturers',
     suppliers: 'Suppliers',
@@ -11,6 +39,7 @@ export default {
     teams: 'Teams',
     users: 'Employees',
     numberSequences: 'Number sequences',
+    roles: 'Roles',
   },
   singular: {
     manufacturers: 'Manufacturer',
@@ -22,6 +51,7 @@ export default {
     teams: 'Team',
     users: 'Employee',
     numberSequences: 'Number sequence',
+    roles: 'Role',
   },
   sections: {
     responsibility: 'Responsibility',

@@ -9,7 +9,8 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from ninja import Router, Status
 
-from apps.core.api.security import is_it_staff, it_staff_auth
+from apps.accounts.permissions import can
+from apps.core.api.security import permission_auth
 from apps.core.features import is_enabled
 from apps.core.models import SiteSettings
 from apps.inventory.models import Asset, AssetIssue, LicenseAssignment
@@ -48,10 +49,10 @@ def catalog(
 ):
     """Requestable categories with their models.
 
-    Availability for the period is only included for IT staff; employees request
+    Availability for the period is only included for IT staff who handle requests; employees request
     what they need and IT decides what the pool can cover.
     """
-    show_availability = is_it_staff(request.user)
+    show_availability = can(request.user, "reservations")
     model_counts, category_counts = (
         period_availability(*_period(start, end, permanent)) if show_availability else ({}, {})
     )
@@ -74,7 +75,7 @@ def catalog(
     return result
 
 
-@router.get("/availability", response=AvailabilityOut, auth=it_staff_auth)
+@router.get("/availability", response=AvailabilityOut, auth=permission_auth("reservations"))
 def availability(request: HttpRequest, start: date, end: date | None = None, permanent: bool = False):
     """Counts of all models and categories for a period; the request form refreshes with it."""
     model_counts, category_counts = period_availability(*_period(start, end, permanent))

@@ -33,6 +33,12 @@ class UserOut(Schema):
     approval_exempt: bool
     # Method of the second sign-in step ("email", "totp") or None; only for IT and the user.
     two_factor: str | None = None
+    # IT staff's roles; only sent to IT staff.
+    roles: list[RefOut] = []
+
+    @staticmethod
+    def resolve_roles(obj: User, context) -> list:
+        return list(obj.roles.all()) if context_is_it_staff(context) else []
 
     @staticmethod
     def resolve_two_factor(obj: User, context):
@@ -44,6 +50,8 @@ class UserOut(Schema):
 
 
 class CurrentUserOut(UserOut):
+    # Area → "read" or "write" from the user's roles (everything for administrators).
+    permissions: dict[str, str]
     language: str
     notification_settings: dict[str, bool]
     dashboard_settings: dict

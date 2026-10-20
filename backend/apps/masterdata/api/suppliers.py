@@ -15,6 +15,7 @@ router = build_crud_router(
         out_schema=SupplierOut,
         in_schema=SupplierIn,
         filter_schema=SupplierFilter,
+        permission="suppliers",
         search_fields=("name", "customer_number", "contact_person", "email"),
         ordering_fields=("name", "customer_number", "contact_person"),
     ),

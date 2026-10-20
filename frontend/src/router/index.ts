@@ -35,6 +35,9 @@ router.beforeEach(async (to) => {
   if ((to.meta.it || to.meta.terminal) && !auth.isItStaff) {
     return { name: 'dashboard' }
   }
+  if (to.meta.permission && !auth.can(to.meta.permission)) {
+    return { name: 'dashboard' }
+  }
   if (to.meta.approver && !auth.isApprover) {
     return { name: 'dashboard' }
   }

@@ -5,6 +5,7 @@ import type { Manufacturer } from '@/types/masterdata'
 
 export default defineResource<Manufacturer>({
   key: 'manufacturers',
+  permission: 'manufacturers',
   api: manufacturersApi,
   ordering: 'name',
   title: (m) => m.name,

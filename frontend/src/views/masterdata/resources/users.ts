@@ -7,12 +7,14 @@ import { bool, mono, text } from '@/components/crud/cells'
 import TwoFactorReset from '@/components/masterdata/TwoFactorReset.vue'
 import { defineResource } from '@/components/crud/types'
 import { i18n } from '@/i18n'
+import { useAuthStore } from '@/stores/auth'
 import { useFeaturesStore } from '@/stores/features'
 import type { User } from '@/types/accounts'
 import type { Location } from '@/types/masterdata'
 
 export default defineResource<User>({
   key: 'users',
+  permission: 'users',
   // Sections per department.
   groupBy: {
     ordering: 'department__sort_order,department__name',
@@ -58,6 +60,13 @@ export default defineResource<User>({
       label: 'masterdata.fields.itStaff',
       width: 100,
       render: (u) => bool(u.is_it_staff),
+    },
+    {
+      key: 'roles',
+      label: 'masterdata.resources.roles',
+      width: 160,
+      render: (u) => text(u.roles.map((r) => r.name).join(', ')),
+      visible: () => useAuthStore().isItStaff,
     },
     {
       key: 'is_terminal',

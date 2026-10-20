@@ -16,6 +16,7 @@ import {
   MonitorSmartphone,
   PackagePlus,
   Shapes,
+  ShieldCheck,
   ShoppingCart,
   SlidersHorizontal,
   Truck,
@@ -27,6 +28,7 @@ import {
 import type { Component } from 'vue'
 import type { RouteLocationRaw } from 'vue-router'
 
+import type { PermissionKey } from '@/types/accounts'
 import type { ModuleKey } from '@/types/settings'
 
 export interface NavItem {
@@ -35,6 +37,10 @@ export interface NavItem {
   module?: ModuleKey
   /** Only for department approvers. */
   approver?: boolean
+  /** Hidden unless the user's roles allow reading this area. */
+  permission?: PermissionKey
+  /** Only for administrators. */
+  superuser?: boolean
   label: string
   icon: Component
   to: RouteLocationRaw
@@ -107,20 +113,29 @@ export const NAVIGATION: NavSection[] = [
     items: [
       {
         key: 'reservations',
+        permission: 'reservations',
         label: 'nav.reservations',
         icon: ListChecks,
         to: { name: 'reservations' },
       },
       {
         key: 'calendar',
+        permission: 'reservations',
         module: 'calendar',
         label: 'nav.calendar',
         icon: CalendarDays,
         to: { name: 'calendar' },
       },
-      { key: 'assets', label: 'nav.assets', icon: MonitorSmartphone, to: { name: 'assets' } },
+      {
+        key: 'assets',
+        permission: 'assets',
+        label: 'nav.assets',
+        icon: MonitorSmartphone,
+        to: { name: 'assets' },
+      },
       {
         key: 'consumables',
+        permission: 'consumables',
         module: 'consumables',
         label: 'nav.consumables',
         icon: Boxes,
@@ -128,6 +143,7 @@ export const NAVIGATION: NavSection[] = [
       },
       {
         key: 'licenses',
+        permission: 'licenses',
         module: 'licenses',
         label: 'nav.licenses',
         icon: KeyRound,
@@ -135,12 +151,19 @@ export const NAVIGATION: NavSection[] = [
       },
       {
         key: 'issues',
+        permission: 'issues',
         module: 'issues',
         label: 'nav.issues',
         icon: MessageSquareWarning,
         to: { name: 'issues' },
       },
-      { key: 'event-log', label: 'nav.eventLog', icon: Wrench, to: { name: 'event-log' } },
+      {
+        key: 'event-log',
+        permission: 'assets',
+        label: 'nav.eventLog',
+        icon: Wrench,
+        to: { name: 'event-log' },
+      },
     ],
   },
   {
@@ -150,6 +173,7 @@ export const NAVIGATION: NavSection[] = [
     items: [
       {
         key: 'needs',
+        permission: 'procurement',
         module: 'procurement',
         label: 'nav.needs',
         icon: ShoppingCart,
@@ -157,6 +181,7 @@ export const NAVIGATION: NavSection[] = [
       },
       {
         key: 'orders',
+        permission: 'procurement',
         module: 'procurement',
         label: 'nav.orders',
         icon: Truck,
@@ -171,54 +196,70 @@ export const NAVIGATION: NavSection[] = [
     items: [
       {
         key: 'md-models',
+        permission: 'models',
         label: 'masterdata.resources.models',
         icon: Shapes,
         to: { name: 'masterdata', params: { resource: 'models' } },
       },
       {
         key: 'md-categories',
+        permission: 'categories',
         label: 'masterdata.resources.categories',
         icon: FolderTree,
         to: { name: 'masterdata', params: { resource: 'categories' } },
       },
       {
         key: 'md-manufacturers',
+        permission: 'manufacturers',
         label: 'masterdata.resources.manufacturers',
         icon: Factory,
         to: { name: 'masterdata', params: { resource: 'manufacturers' } },
       },
       {
         key: 'md-suppliers',
+        permission: 'suppliers',
         label: 'masterdata.resources.suppliers',
         icon: Truck,
         to: { name: 'masterdata', params: { resource: 'suppliers' } },
       },
       {
         key: 'md-locations',
+        permission: 'locations',
         label: 'masterdata.resources.locations',
         icon: MapPin,
         to: { name: 'masterdata', params: { resource: 'locations' } },
       },
       {
         key: 'md-departments',
+        permission: 'departments',
         label: 'masterdata.resources.departments',
         icon: Building2,
         to: { name: 'masterdata', params: { resource: 'departments' } },
       },
       {
         key: 'md-teams',
+        permission: 'teams',
         label: 'masterdata.resources.teams',
         icon: UsersRound,
         to: { name: 'masterdata', params: { resource: 'teams' } },
       },
       {
         key: 'md-users',
+        permission: 'users',
         label: 'masterdata.resources.users',
         icon: Users,
         to: { name: 'masterdata', params: { resource: 'users' } },
       },
       {
+        key: 'md-roles',
+        superuser: true,
+        label: 'masterdata.resources.roles',
+        icon: ShieldCheck,
+        to: { name: 'masterdata', params: { resource: 'roles' } },
+      },
+      {
         key: 'md-numberSequences',
+        permission: 'number_sequences',
         label: 'masterdata.resources.numberSequences',
         icon: Hash,
         to: { name: 'masterdata', params: { resource: 'numberSequences' } },

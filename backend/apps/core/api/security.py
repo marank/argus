@@ -30,6 +30,36 @@ class ITStaffAuth(SessionAuth):
         return user
 
 
+class PermissionAuth(SessionAuth):
+    """IT staff whose roles grant ``resource``: reading for GET, writing otherwise.
+
+    With ``level`` the check is fixed, e.g. "write" for a router-wide action set
+    or "read" for a lookup that is sent by POST.
+    """
+
+    def __init__(self, resource: str, level: str | None = None):
+        super().__init__()
+        self.resource = resource
+        self.level = level
+
+    def authenticate(self, request: HttpRequest, key: str | None):
+        from apps.accounts.permissions import READ, WRITE, can
+
+        user = super().authenticate(request, key)
+        if user is None:
+            return None
+        if not is_it_staff(user):
+            raise HttpError(403, _("This action is reserved for the IT department."))
+        level = self.level or (READ if request.method in ("GET", "HEAD") else WRITE)
+        if not can(user, self.resource, level):
+            raise HttpError(403, _("Your roles do not allow this."))
+        return user
+
+
+def permission_auth(resource: str, level: str | None = None) -> PermissionAuth:
+    return PermissionAuth(resource, level)
+
+
 class EmployeeAuth(SessionAuth):
     """Default API auth: any employee, but not the shared pickup terminal account."""
 

@@ -9,6 +9,7 @@ import type { NumberSequence } from '@/types/masterdata'
 
 export default defineResource<NumberSequence>({
   key: 'numberSequences',
+  permission: 'number_sequences',
   api: numberSequencesApi,
   ordering: 'name',
   title: (s) => s.name,

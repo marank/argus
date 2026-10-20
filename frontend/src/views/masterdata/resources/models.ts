@@ -13,6 +13,7 @@ const { n, t } = i18n.global
 
 export default defineResource<AssetModel>({
   key: 'models',
+  permission: 'models',
   // Sections per category, hardware before software.
   groupBy: {
     ordering: 'category__kind,category__sort_order,category__name',
