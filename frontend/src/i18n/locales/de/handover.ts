@@ -9,9 +9,9 @@ export default {
     delivery: 'Lieferung durch IT',
   },
   modeHint: {
-    pickup: 'Mitarbeiter unterschreibt am Abholterminal',
-    collect: 'Ohne Unterschrift, IT erfasst danach, wer abgeholt hat',
-    delivery: 'IT bringt die Geräte, ohne Unterschrift',
+    pickup: 'Am Abholterminal',
+    collect: 'Ohne Unterschrift; die IT erfasst anschließend den Empfänger',
+    delivery: 'Ohne Unterschrift',
   },
   deliveryAt: 'Lieferung am',
   readyHint: 'Wie kommen die Geräte zum Mitarbeiter?',
@@ -20,8 +20,8 @@ export default {
   checkSkipped: 'Die Geräteprüfung wird übersprungen.',
   withoutCheck: 'ohne Geräteprüfung',
   collectPending:
-    'Der Mitarbeiter holt die Geräte ohne Unterschrift ab. Danach unter „Ausgeben“ erfassen, wer sie bekommen hat.',
-  deliveryPending: 'Die IT bringt die Geräte vorbei und erfasst danach die Ausgabe.',
+    'Der Mitarbeiter holt die Geräte ohne Unterschrift ab. Anschließend unter „Ausgeben“ den Empfänger erfassen.',
+  deliveryPending: 'Die IT liefert die Geräte aus und erfasst anschließend die Ausgabe.',
   waitingAtTerminal: 'Kann am Abholterminal abgeschlossen werden.',
   receivedBy: 'Entgegengenommen von',
   deliveredTo: 'Geliefert an',

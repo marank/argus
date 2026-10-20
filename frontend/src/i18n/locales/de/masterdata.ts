@@ -53,8 +53,7 @@ export default {
     requestable: 'Im Portal anforderbar',
     requestableShort: 'Anforderbar',
     sortOrder: 'Sortierung',
-    departmentSortHelp:
-      'Kleinere Zahlen stehen weiter oben, gleiche Zahlen nach Name. Gilt für Listen und Auswahlfelder.',
+    departmentSortHelp: 'Aufsteigend sortiert, bei gleichem Wert nach Name.',
     kind: 'Art',
     pickupPoint: 'Abholort',
     manufacturer: 'Hersteller',
@@ -69,19 +68,18 @@ export default {
     compatibleWith: 'Kompatibel mit',
     costCenter: 'Kostenstelle',
     members: 'Mitglieder',
-    usernameLdapHelp:
-      'Muss dem Anmeldenamen im Verzeichnis entsprechen (z. B. sAMAccountName). Darüber wird das Konto bei der ersten LDAP-Anmeldung mit dem Verzeichnis verknüpft.',
+    usernameLdapHelp: 'Muss dem Anmeldenamen im Verzeichnis entsprechen (z. B. sAMAccountName).',
     responsibleTeam: 'Zuständiges Team',
     defaultTeam: 'Standard-Team',
     defaultTeamHelp:
-      'Bekommt neue Anfragen und Meldungen, die keine Kategorie und kein Modell einem anderen Team zuordnet. Es kann nur ein Standard-Team geben.',
+      'Erhält neue Anforderungen und Meldungen, die weder über die Kategorie noch über das Modell einem anderen Team zugeordnet sind. Es kann nur ein Standard-Team geben.',
     categoryTeamHelp:
-      'Neue Anfragen und Meldungen zu dieser Kategorie und ihren Unterkategorien gehen an dieses Team. Leer: wie die übergeordnete Kategorie, sonst das Standard-Team.',
+      'Neue Anforderungen und Meldungen zu dieser Kategorie und ihren Unterkategorien werden diesem Team zugeordnet. Leer: Es gilt die übergeordnete Kategorie, ersatzweise das Standard-Team.',
     modelTeamHelp:
-      'Neue Anfragen und Meldungen zu diesem Modell gehen an dieses Team, z. B. eine Ledgerline-Lizenz an das Ledgerline-Team. Leer: wie die Kategorie.',
+      'Neue Anforderungen und Meldungen zu diesem Modell werden diesem Team zugeordnet, z. B. eine Ledgerline-Lizenz dem Ledgerline-Team. Leer: Es gilt die Kategorie.',
     ldapGroup: 'LDAP-Gruppe',
     ldapGroupHelp:
-      'DN einer Verzeichnisgruppe, z. B. CN=IT-Ledgerline,OU=Gruppen,DC=firma,DC=de. Die Mitglieder werden dann bei jeder Anmeldung mit dem Verzeichnis abgeglichen; leer: Mitglieder von Hand pflegen.',
+      'DN einer Verzeichnisgruppe, z. B. CN=IT-Ledgerline,OU=Gruppen,DC=example,DC=com. Die Mitglieder werden dann bei jeder Anmeldung mit dem Verzeichnis abgeglichen; leer: Mitglieder manuell pflegen.',
     prefix: 'Präfix',
     pattern: 'Muster',
     patternHelp: "Platzhalter: {'{prefix}'} {'{year}'} {'{yy}'} {'{month}'} {'{seq}'}",
@@ -99,25 +97,34 @@ export default {
     numberSequenceHelp:
       'Neue Geräte dieser Kategorie erhalten ihre Inventarnummer aus dieser Serie. Leer: Es gilt die Serie der übergeordneten Kategorie.',
     trackingHelp:
-      'Einzelgeräte haben Seriennummer und Historie. Verbrauchsmaterial wie Tinte oder Kabel wird über Mengen geführt. Software gehört in Software-Kategorien und wird über Lizenzen geführt.',
+      'Einzelgeräte: mit Seriennummer und Historie. Verbrauchsmaterial: nach Menge. Software: über Lizenzen.',
     categoryKind: 'Typ',
     itemName: 'Einzelbezeichnung',
     itemNameHelp:
       'Bezeichnung für ein einzelnes Stück, z. B. „Laptop“. Wird im Portal als „Laptop · beliebiges Modell“ angezeigt.',
-    categoryKindHelp:
-      'Hardware oder Software. Unterkategorien haben denselben Typ wie ihre übergeordnete Kategorie.',
+    categoryKindHelp: 'Unterkategorien haben denselben Typ wie ihre übergeordnete Kategorie.',
     compatibleWithHelp: 'Zubehör, Ersatzteile und Verbrauchsmaterial, die zu diesem Modell passen.',
-    pickupPointHelp: 'Mitarbeiter können hier Geräte abholen; wird bei der Abholplanung angeboten.',
+    pickupPointHelp: 'Wird bei der Abholplanung angeboten.',
     itStaffHelp: 'Zugriff auf Inventar, Reservierungen, Beschaffung und Stammdaten.',
     sequenceCodeHelp: 'Technischer Schlüssel. Reserviert: asset, reservation, purchase-order.',
     allowAnyModel: '„Beliebiges Modell“ anforderbar',
     allowAnyModelHelp:
-      'Mitarbeiter dürfen „beliebig“ aus dieser Kategorie anfordern. Für Zubehör oder Verbrauchsmaterial abschalten, wo nur ein bestimmtes Modell sinnvoll ist. Bei nur einem Modell ohnehin ausgeblendet.',
+      'Mitarbeiter dürfen „beliebig“ aus dieser Kategorie anfordern. Für Zubehör oder Verbrauchsmaterial deaktivieren, wenn nur ein bestimmtes Modell sinnvoll ist.',
     terminal: 'Abholterminal',
-    terminalHelp: 'Gemeinsames Konto für das Touch-Terminal; sieht nur vorbereitete Abholungen.',
+    terminalHelp:
+      'Gemeinsames Konto für das Touch-Terminal; Zugriff nur auf vorbereitete Abholungen.',
     terminalLocation: 'Standort des Terminals',
     terminalLocationHelp:
       'Nur für Terminal-Konten: zeigt nur Abholungen an diesem Standort und darunter. Leer: alle.',
     itStaff: 'IT-Mitarbeiter',
+  },
+  twoFactor: {
+    column: '2FA',
+    label: 'Zwei-Faktor-Authentifizierung',
+    off: 'inaktiv',
+    reset: 'Zurücksetzen',
+    confirmReset:
+      '2FA und Backup-Codes dieses Kontos löschen? Identität der anfragenden Person vorher prüfen.',
+    wasReset: 'Zwei-Faktor-Authentifizierung zurückgesetzt',
   },
 }

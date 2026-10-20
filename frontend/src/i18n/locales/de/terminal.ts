@@ -29,7 +29,7 @@ export default {
   signHere: 'Hier unterschreiben',
   cancelPickup: 'Abholung abbrechen? Ihre Eingaben gehen verloren.',
   cancelConfirm: 'Ja, abbrechen',
-  cancelKeep: 'Weiter abholen',
+  cancelKeep: 'Abholung fortsetzen',
   clear: 'Löschen',
   confirm: 'Unterschreiben und abschließen',
   doneTitle: 'Vielen Dank!',

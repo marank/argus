@@ -53,8 +53,7 @@ export default {
     requestable: 'Requestable in portal',
     requestableShort: 'Requestable',
     sortOrder: 'Sort order',
-    departmentSortHelp:
-      'Lower numbers come first, equal numbers by name. Applies to lists and selections.',
+    departmentSortHelp: 'Sorted ascending, then by name.',
     kind: 'Kind',
     pickupPoint: 'Pickup point',
     manufacturer: 'Manufacturer',
@@ -69,19 +68,18 @@ export default {
     compatibleWith: 'Compatible with',
     costCenter: 'Cost center',
     members: 'Members',
-    usernameLdapHelp:
-      'Must match the login name in the directory (e.g. sAMAccountName). It links the account to the directory at the first LDAP sign-in.',
+    usernameLdapHelp: 'Must match the login name in the directory (e.g. sAMAccountName).',
     responsibleTeam: 'Responsible team',
     defaultTeam: 'Default team',
     defaultTeamHelp:
-      'Gets new requests and reports that no category or model routes to another team. There can only be one default team.',
+      'Receives new requests and reports that are not routed to another team by category or model. There can only be one default team.',
     categoryTeamHelp:
-      'New requests and reports for this category and its subcategories go to this team. Empty: as the parent category, otherwise the default team.',
+      'New requests and reports for this category and its subcategories go to this team. Empty: inherits from the parent category, otherwise the default team.',
     modelTeamHelp:
-      'New requests and reports for this model go to this team, e.g. a Ledgerline license to the Ledgerline team. Empty: as the category.',
+      'New requests and reports for this model go to this team, e.g. a Ledgerline license to the Ledgerline team. Empty: inherits from the category.',
     ldapGroup: 'LDAP group',
     ldapGroupHelp:
-      'DN of a directory group, e.g. CN=IT-Ledgerline,OU=Groups,DC=example,DC=com. Members then follow the directory at every sign-in; empty: maintain members by hand.',
+      'DN of a directory group, e.g. CN=IT-Ledgerline,OU=Groups,DC=example,DC=com. Members then follow the directory at every sign-in; empty: maintain members manually.',
     prefix: 'Prefix',
     pattern: 'Pattern',
     patternHelp: "Placeholders: {'{prefix}'} {'{year}'} {'{yy}'} {'{month}'} {'{seq}'}",
@@ -99,25 +97,33 @@ export default {
     numberSequenceHelp:
       'New devices of this category draw their inventory number from this sequence. Empty: the parent category’s sequence applies.',
     trackingHelp:
-      'Individual devices have serial numbers and a history. Consumables such as ink or cables are tracked by quantity. Software belongs in software categories and is tracked as licenses.',
+      'Individual devices: with serial number and history. Consumables: by quantity. Software: as licenses.',
     categoryKind: 'Type',
     itemName: 'Singular name',
     itemNameHelp:
       'Name of a single item, e.g. “Laptop”. Shown in the portal as “Laptop · any model”.',
-    categoryKindHelp:
-      'Hardware or software. Subcategories have the same type as their parent category.',
+    categoryKindHelp: 'Subcategories have the same type as their parent category.',
     compatibleWithHelp: 'Accessories, spare parts and consumables that fit this model.',
-    pickupPointHelp: 'Employees can collect devices here; offered when scheduling a pickup.',
+    pickupPointHelp: 'Offered when scheduling a pickup.',
     itStaffHelp: 'Access to inventory, reservations, procurement and master data.',
     sequenceCodeHelp: 'Technical key. Reserved: asset, reservation, purchase-order.',
     allowAnyModel: '“Any model” requestable',
     allowAnyModelHelp:
-      'Employees may ask for “any” of this category. Turn off for accessories or consumables where only a specific model makes sense. Hidden anyway when the category has only one model.',
+      'Employees may request “any” model of this category. Disable for accessories or consumables where only a specific model makes sense.',
     terminal: 'Pickup terminal',
-    terminalHelp: 'Shared account for the touch terminal; only sees prepared pickups.',
+    terminalHelp: 'Shared account for the touch terminal; access to prepared pickups only.',
     terminalLocation: 'Terminal site',
     terminalLocationHelp:
       'Pickup terminal accounts only: lists pickups at this location and below. Empty: all.',
     itStaff: 'IT staff',
+  },
+  twoFactor: {
+    column: '2FA',
+    label: 'Two-factor authentication',
+    off: 'inactive',
+    reset: 'Reset',
+    confirmReset:
+      'Delete 2FA and backup codes of this account? Verify the identity of the requesting person first.',
+    wasReset: 'Two-factor authentication reset',
   },
 }

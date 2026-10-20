@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
-import { authApi } from '@/api/auth'
+import { authApi, isChallenge } from '@/api/auth'
 import { ApiError } from '@/api/client'
 import { setLocale } from '@/i18n'
-import type { CurrentUser } from '@/types/accounts'
+import type { CurrentUser, TwoFactorChallenge } from '@/types/accounts'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<CurrentUser | null>(null)
@@ -32,8 +32,16 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function login(username: string, password: string) {
-    apply(await authApi.login(username, password))
+  /** Returns the challenge when the second sign-in step is due, else null. */
+  async function login(username: string, password: string): Promise<TwoFactorChallenge | null> {
+    const result = await authApi.login(username, password)
+    if (isChallenge(result)) return result
+    apply(result)
+    return null
+  }
+
+  async function verifyLogin(code: string) {
+    apply(await authApi.verifyLogin(code))
   }
 
   async function logout() {
@@ -64,6 +72,7 @@ export const useAuthStore = defineStore('auth', () => {
     isTerminal,
     fetchCurrentUser,
     login,
+    verifyLogin,
     logout,
     changeLanguage,
     changeNotifications,

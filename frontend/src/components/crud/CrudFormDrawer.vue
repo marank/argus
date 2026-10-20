@@ -169,7 +169,7 @@ async function save() {
               <NSwitch v-model:value="form[field.key]" />
             </label>
           </div>
-          <component :is="section.extra" v-if="section.extra" :form="form" />
+          <component :is="section.extra" v-if="section.extra" :form="form" :row="row" />
         </section>
       </NForm>
       <template #footer>

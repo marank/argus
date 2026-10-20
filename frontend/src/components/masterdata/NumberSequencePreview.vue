@@ -8,7 +8,7 @@ import { ApiError } from '@/api/client'
 import type { NumberSequence } from '@/types/masterdata'
 
 /** Live preview of the next numbers while the pattern is being edited. */
-const props = defineProps<{ form: Partial<NumberSequence> }>()
+const props = defineProps<{ form: Partial<NumberSequence>; row?: NumberSequence | null }>()
 const { t } = useI18n()
 
 const examples = ref<string[]>([])

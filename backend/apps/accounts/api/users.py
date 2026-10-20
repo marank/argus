@@ -1,11 +1,20 @@
+import logging
 from typing import Annotated
 from uuid import UUID
 
+from django.http import HttpRequest
+from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext as _
 from ninja import FilterLookup, FilterSchema
+from ninja.errors import HttpError
 
 from apps.accounts.models import User
 from apps.accounts.schemas import UserIn, UserOut
+from apps.accounts.services import two_factor
 from apps.core.api.crud import CrudConfig, build_crud_router
+from apps.core.api.security import it_staff_auth
+
+logger = logging.getLogger(__name__)
 
 
 class UserFilter(FilterSchema):
@@ -30,7 +39,20 @@ router = build_crud_router(
             "department__sort_order",
             "department__name",
         ),
-        queryset=lambda: User.objects.select_related("department", "terminal_location__parent"),
+        queryset=lambda: User.objects.select_related("department", "terminal_location__parent", "two_factor"),
     ),
     tags=["users"],
 )
+
+
+@router.post("/{uuid:pk}/two-factor/reset", response=UserOut, auth=it_staff_auth)
+def reset_two_factor(request: HttpRequest, pk: UUID):
+    """For users who lost their phone and backup codes: they sign in with the password alone again."""
+    user = get_object_or_404(User.objects.select_related("department", "terminal_location__parent"), pk=pk)
+    if user.pk == request.user.pk:
+        raise HttpError(409, _("Disable your own two-factor authentication in your profile."))
+    if user.is_superuser and not request.user.is_superuser:
+        raise HttpError(403, _("Only administrators can reset the sign-in of an administrator."))
+    two_factor.disable(user)
+    logger.info("%s reset the two-factor sign-in of %s", request.user, user)
+    return user

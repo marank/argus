@@ -4,6 +4,20 @@ export default {
   username: 'Benutzername',
   password: 'Passwort',
   signIn: 'Anmelden',
-  signedOut: 'Sie wurden abgemeldet.',
   sessionExpired: 'Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.',
+  twoFactor: {
+    title: 'Anmeldung bestätigen',
+    code: 'Code',
+    backupCode: 'Backup-Code',
+    totpHint: 'Geben Sie den 6-stelligen Code aus Ihrer Authenticator-App ein.',
+    emailHint: 'Ein 6-stelliger Code wurde an {email} gesendet.',
+    backupHint: 'Geben Sie einen Ihrer Backup-Codes ein. Jeder Code ist nur einmal gültig.',
+    emailFailed:
+      'Der Code konnte nicht per E-Mail gesendet werden. Fordern Sie ihn erneut an oder melden Sie sich mit einem Backup-Code an.',
+    verify: 'Bestätigen',
+    resend: 'Code erneut senden',
+    resendIn: 'Erneut senden in {seconds} s',
+    useBackup: 'Backup-Code verwenden',
+    useCode: 'Code verwenden',
+  },
 }

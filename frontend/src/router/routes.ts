@@ -90,6 +90,12 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: 'profile.notifications.title' },
       },
       {
+        path: 'profile/security',
+        name: 'profile-security',
+        component: () => import('@/views/profile/SecuritySettingsView.vue'),
+        meta: { title: 'profile.security.title' },
+      },
+      {
         path: 'portal/devices',
         name: 'portal-devices',
         component: () => import('@/views/portal/MyDevicesView.vue'),

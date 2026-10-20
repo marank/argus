@@ -1,5 +1,5 @@
 export default {
-  greeting: 'Hallo, {name}',
+  greeting: 'Willkommen, {name}',
   itSubtitle: 'Aktueller Stand von Inventar, Reservierungen und Beschaffung.',
   employeeSubtitle: 'Ihre Anforderungen und Geräte auf einen Blick.',
   toApprove: 'Zu bestätigen',
@@ -20,8 +20,8 @@ export default {
   assignedDevices: 'Zugewiesene Geräte',
   pickupReady: 'Zur Abholung bereit',
   pickupAt: 'Abholung {date}',
-  noUpcoming: 'Nichts geplant.',
-  requestCta: 'Etwas benötigt? Neue Anforderung stellen',
+  noUpcoming: 'Keine Ausgaben geplant.',
+  requestCta: 'Neue Anforderung stellen',
   assignedToMe: 'Mir zugewiesen',
   myTeams: 'Meine Teams',
   unassigned: 'Nicht zugewiesen',
@@ -29,7 +29,7 @@ export default {
   edit: {
     open: 'Dashboard anpassen',
     eyebrow: 'Bearbeitungsmodus',
-    hint: 'Widgets ziehen, Größe wählen, Kennzahlen über das Auge ausblenden.',
+    hint: 'Widgets per Drag & Drop anordnen, Größe festlegen, Kennzahlen über das Augensymbol ausblenden.',
     done: 'Fertig',
     add: 'Widget hinzufügen',
     addOne: 'Hinzufügen',
@@ -58,17 +58,17 @@ export default {
     stock:
       'Zu bestellende und unterwegs befindliche Bestellungen, Verbrauchsmaterial unter Mindestbestand.',
     attention: 'Offene Meldungen sowie bald endende Lizenzen und Garantien.',
-    assetStatus: 'Alle Geräte als Balken nach Status.',
+    assetStatus: 'Verteilung aller Geräte nach Status.',
     upcoming: 'Ausgaben der nächsten 3, 7 oder 14 Tage.',
     activity: 'Die letzten Ereignisse an Geräten.',
-    showAll: 'Alle',
     settings: 'Einstellungen',
     period: 'Zeitraum',
     days: '{count} Tag | {count} Tage',
     dueReturns: {
       title: 'Bald fällige Rückgaben',
-      description: 'Leihen, die in den nächsten Tagen enden, mit Verlängern und Erinnern.',
-      empty: 'In den nächsten {count} Tagen endet keine Leihe.',
+      description:
+        'Ausleihen, die in den nächsten Tagen enden, mit Optionen zum Verlängern und Erinnern.',
+      empty: 'In den nächsten {count} Tagen endet keine Ausleihe.',
     },
     waiting: {
       title: 'Wartende Anforderungen',
@@ -77,13 +77,13 @@ export default {
     },
     expiring: {
       title: 'Ablaufende Lizenzen & Garantien',
-      description: 'Lizenzen und Garantien, die innerhalb der Warnfrist enden.',
-      empty: 'Innerhalb der Warnfristen endet nichts.',
+      description: 'Lizenzen und Garantien, die innerhalb der Vorwarnzeit enden.',
+      empty: 'Innerhalb der Vorwarnzeiten enden keine Lizenzen oder Garantien.',
     },
     lowStock: {
       title: 'Verbrauchsmaterial knapp',
       description: 'Verbrauchsmaterial unter Mindestbestand, größte Fehlmenge zuerst.',
-      empty: 'Alles über Mindestbestand.',
+      empty: 'Kein Verbrauchsmaterial unter Mindestbestand.',
       missing: 'Es fehlt {count} | Es fehlen {count}',
     },
     openOrders: {
@@ -99,7 +99,7 @@ export default {
     myTasks: {
       title: 'Meine Aufgaben',
       description: 'Anforderungen und Meldungen, die Ihnen persönlich zugewiesen sind, als Liste.',
-      empty: 'Ihnen ist gerade nichts zugewiesen.',
+      empty: 'Ihnen sind derzeit keine Aufgaben zugewiesen.',
       requests: 'Anforderungen ({count})',
       issues: 'Meldungen ({count})',
     },
@@ -116,7 +116,7 @@ export default {
     week: {
       title: 'Diese Woche',
       description: 'Abholungen, Rückgaben, Lieferungen und Fristen der nächsten sieben Tage.',
-      empty: 'In den nächsten sieben Tagen steht nichts an.',
+      empty: 'In den nächsten sieben Tagen sind keine Termine geplant.',
       today: 'Heute',
       tomorrow: 'Morgen',
       kinds: 'Anzeigen',
@@ -144,7 +144,7 @@ export default {
       title: 'Schnellzugriff',
       description: 'Ihre häufig genutzten Seiten als Schaltflächen.',
       choose: 'Seiten auswählen',
-      empty: 'Über das Zahnrad Seiten auswählen.',
+      empty: 'Seiten über das Zahnradsymbol auswählen.',
     },
     notes: {
       title: 'Notizen',

@@ -4,6 +4,7 @@ import { h } from 'vue'
 import { departmentsApi, usersApi } from '@/api/accounts'
 import { locationsApi } from '@/api/masterdata'
 import { bool, mono, text } from '@/components/crud/cells'
+import TwoFactorReset from '@/components/masterdata/TwoFactorReset.vue'
 import { defineResource } from '@/components/crud/types'
 import { i18n } from '@/i18n'
 import { useFeaturesStore } from '@/stores/features'
@@ -69,6 +70,12 @@ export default defineResource<User>({
       label: 'masterdata.fields.ldap',
       width: 80,
       render: (u) => bool(u.is_ldap_user),
+    },
+    {
+      key: 'two_factor',
+      label: 'masterdata.twoFactor.column',
+      width: 80,
+      render: (u) => bool(!!u.two_factor),
     },
     { key: 'is_active', label: 'common.active', width: 80, render: (u) => bool(u.is_active) },
   ],
@@ -142,6 +149,7 @@ export default defineResource<User>({
           help: 'masterdata.fields.terminalLocationHelp',
         },
       ],
+      extra: TwoFactorReset,
     },
   ],
   defaults: () => ({

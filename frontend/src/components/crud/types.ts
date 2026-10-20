@@ -40,7 +40,7 @@ export interface FormSection {
   /** i18n key of the section title; omit for the first, untitled block. */
   title?: string
   fields: FieldDef[]
-  /** Optional component rendered below the fields; receives the live `form`. */
+  /** Optional component rendered below the fields; receives the live `form` and the edited `row`. */
   extra?: Component
 }
 

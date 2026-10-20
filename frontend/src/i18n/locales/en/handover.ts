@@ -9,9 +9,9 @@ export default {
     delivery: 'Delivered by IT',
   },
   modeHint: {
-    pickup: 'Employee signs at the pickup terminal',
-    collect: 'No signature, IT records afterwards who collected',
-    delivery: 'IT brings the devices, no signature',
+    pickup: 'At the pickup terminal',
+    collect: 'No signature; IT records the recipient afterwards',
+    delivery: 'No signature',
   },
   deliveryAt: 'Delivery on',
   readyHint: 'How will the devices reach the employee?',
@@ -21,7 +21,7 @@ export default {
   withoutCheck: 'without device check',
   collectPending:
     'The employee collects the devices without signing. Afterwards record under “Hand out” who received them.',
-  deliveryPending: 'IT brings the devices and then records the hand-out.',
+  deliveryPending: 'IT delivers the devices and then records the hand-out.',
   waitingAtTerminal: 'Can be completed at the pickup terminal.',
   receivedBy: 'Received by',
   deliveredTo: 'Delivered to',

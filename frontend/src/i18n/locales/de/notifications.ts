@@ -1,25 +1,23 @@
 export default {
   request_submitted: 'Neue Anforderung',
-  request_submittedHelp:
-    'Ein Mitarbeiter hat etwas angefordert. Geht an das zuständige Team, sonst an die ganze IT.',
+  request_submittedHelp: 'An das zuständige Team, ersatzweise an die gesamte IT.',
   issue_reported: 'Neue Problemmeldung',
-  issue_reportedHelp:
-    'Ein Mitarbeiter meldet ein Problem mit einem Gerät. Geht an das zuständige Team, sonst an die ganze IT.',
+  issue_reportedHelp: 'An das zuständige Team, ersatzweise an die gesamte IT.',
   assigned_to_me: 'Mir zugewiesen',
   assigned_to_meHelp: 'Jemand hat Ihnen eine Anforderung oder Meldung zugewiesen.',
   license_expiring: 'Lizenz läuft ab',
   license_expiringHelp:
     'Eine befristete Lizenz endet innerhalb der Vorwarnzeit (einmal pro Lizenz).',
   request_approved: 'Anforderung bestätigt',
-  request_approvedHelp: 'Die IT hat eine Anforderung bestätigt.',
+  request_approvedHelp: 'Mit Kommentar der IT, falls vorhanden.',
   request_rejected: 'Anforderung abgelehnt',
-  request_rejectedHelp: 'Die IT hat eine Anforderung abgelehnt.',
+  request_rejectedHelp: 'Mit Begründung der IT, falls vorhanden.',
   request_ready: 'Abholbereit',
-  request_readyHelp: 'Alles ist vorbereitet, mit Abholzeit und -ort.',
+  request_readyHelp: 'Mit Abholtermin und -ort.',
   return_reminder: 'Rückgabe-Erinnerung',
-  return_reminderHelp: 'Einige Tage bevor ausgeliehene Geräte zurückzugeben sind.',
+  return_reminderHelp: 'Einige Tage vor dem Rückgabetermin.',
   return_overdue: 'Rückgabe überfällig',
-  return_overdueHelp: 'Ausgeliehene Geräte sind nicht rechtzeitig zurückgekommen.',
+  return_overdueHelp: 'Einmalig, sobald der Rückgabetermin überschritten ist.',
   issue_resolved: 'Problemmeldung erledigt',
-  issue_resolvedHelp: 'Die IT hat eine Problemmeldung erledigt, mit ihrer Antwort.',
+  issue_resolvedHelp: 'Mit Lösungsbeschreibung der IT.',
 }

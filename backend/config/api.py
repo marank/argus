@@ -7,7 +7,7 @@ from django.http import Http404
 from django.utils.translation import gettext as _
 from ninja import NinjaAPI, Status
 
-from apps.accounts.api import departments, ldap, teams, users
+from apps.accounts.api import departments, ldap, teams, two_factor, users
 from apps.core.api import mail_settings, number_sequences, session, site_settings
 from apps.core.api.security import employee_auth, it_staff_auth
 from apps.core.exceptions import BusinessError
@@ -20,6 +20,7 @@ from apps.reservations.api import router as reservations_router
 api = NinjaAPI(title="Argus API", version="1.0.0", auth=employee_auth, urls_namespace="api")
 
 api.add_router("/auth", session.router)
+api.add_router("/auth/two-factor", two_factor.router)
 api.add_router("/dashboard", overview.router)
 api.add_router("/dashboard/widgets", widgets.router)
 api.add_router("/calendar", calendar.router)

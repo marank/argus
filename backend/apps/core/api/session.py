@@ -10,7 +10,9 @@ from ninja import Router, Schema, Status
 from ninja.errors import HttpError
 from ninja.utils import check_csrf
 
-from apps.accounts.schemas import CurrentUserOut, PreferencesIn
+from apps.accounts.models import TwoFactor
+from apps.accounts.schemas import CodeIn, CurrentUserOut, PreferencesIn, TwoFactorChallengeOut
+from apps.accounts.services import two_factor
 from apps.core.api.security import session_auth
 from apps.core.notifications import EVENT_KEYS
 
@@ -35,14 +37,57 @@ def csrf(request: HttpRequest):
     return Status(204, None)
 
 
-@router.post("/login", auth=None, response=CurrentUserOut)
+@router.post("/login", auth=None, response={200: CurrentUserOut, 202: TwoFactorChallengeOut})
 def login_view(request: HttpRequest, payload: LoginIn):
+    """Signs in, or (202) asks for the second step when the user switched it on."""
     require_csrf(request)
+    request.session.pop(two_factor.PENDING_LOGIN, None)
     user = authenticate(request, username=payload.username, password=payload.password)
     if user is None or not user.is_active:
         raise HttpError(401, _("Invalid username or password."))
+    second = TwoFactor.objects.filter(user=user).first()
+    if second is not None:
+        return Status(202, two_factor.start_login(request.session, user, second))
     login(request, user)
     return user
+
+
+def pending_or_401(request: HttpRequest):
+    pending = two_factor.pending_login(request.session)
+    if pending is None:
+        raise HttpError(401, _("The sign-in has expired. Please enter your password again."))
+    return pending
+
+
+@router.post("/login/verify", auth=None, response=CurrentUserOut)
+def verify_login(request: HttpRequest, payload: CodeIn):
+    """Second step: the app or email code, or a backup code."""
+    require_csrf(request)
+    state, user = pending_or_401(request)
+    if not two_factor.check_login_code(user, state, payload.code):
+        state["attempts"] += 1
+        if state["attempts"] >= two_factor.MAX_ATTEMPTS:
+            request.session.pop(two_factor.PENDING_LOGIN, None)
+            raise HttpError(401, _("Too many wrong codes. Please enter your password again."))
+        request.session[two_factor.PENDING_LOGIN] = state
+        raise HttpError(400, _("The code is not correct or has expired."))
+    request.session.pop(two_factor.PENDING_LOGIN, None)
+    login(request, user, backend=state["backend"])
+    return user
+
+
+@router.post("/login/resend", auth=None, response=TwoFactorChallengeOut)
+def resend_login_code(request: HttpRequest):
+    """Sends a new email code for the pending sign-in."""
+    require_csrf(request)
+    state, user = pending_or_401(request)
+    if user.two_factor.method != TwoFactor.Method.EMAIL:
+        raise HttpError(409, _("This sign-in uses an authenticator app."))
+    if not two_factor.can_resend(state):
+        raise HttpError(429, _("Please wait a moment before requesting another code."))
+    sent = two_factor.issue_email_code(state, user)
+    request.session[two_factor.PENDING_LOGIN] = state
+    return {"two_factor": "email", "email_hint": two_factor.email_hint(user.email), "code_sent": sent}
 
 
 @router.post("/logout", response={204: None})

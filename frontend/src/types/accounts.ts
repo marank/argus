@@ -24,6 +24,37 @@ export interface User extends UserRef {
   is_active: boolean
   /** Directory account; synced fields are overwritten at every login. */
   is_ldap_user: boolean
+  /** Second sign-in step; only sent to IT staff and the user themself. */
+  two_factor: TwoFactorMethod | null
+}
+
+export type TwoFactorMethod = 'email' | 'totp'
+
+/** Answer of the login when the second sign-in step is due. */
+export interface TwoFactorChallenge {
+  two_factor: TwoFactorMethod
+  /** Email method: where the code went (`m***@example.com`) and whether it went out. */
+  email_hint: string
+  code_sent: boolean
+}
+
+export interface TwoFactorStatus {
+  method: TwoFactorMethod | null
+  backup_codes_left: number
+  /** Codes by email can reach the user (address set, mail sending configured). */
+  email_available: boolean
+  email_hint: string
+}
+
+export interface TwoFactorSetup {
+  method: TwoFactorMethod
+  /** Authenticator app: the secret, the otpauth link and it as QR code (SVG data URI). */
+  secret: string
+  uri: string
+  qr_svg: string
+  /** Email: where the confirmation code went. */
+  email_hint: string
+  code_sent: boolean
 }
 
 export interface CurrentUser extends User {

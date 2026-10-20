@@ -93,6 +93,24 @@ read-only.
 - Several servers (comma separated) are tried in order. For an internal CA, mount the
   PEM file into the container and set `LDAP_CA_CERT_FILE`.
 
+## Two-factor sign-in
+
+Every user (local or LDAP) can switch on a second sign-in step under
+*user menu → Sign-in & security*:
+
+- **Authenticator app** (TOTP, RFC 6238: 6 digits, 30 s) – set up by scanning a QR
+  code; a code is accepted only once.
+- **Code by email** – a 6-digit code valid for 10 minutes; offered only when the user
+  has an email address and mail sending is configured.
+- **Backup codes** – ten one-time codes shown once at setup (copy or save as text
+  file) and renewable at any time; only salted hashes are stored.
+
+Setting up, renewing codes and switching off need the password. After five wrong
+codes the password has to be entered again. IT resets the second step of a user who
+lost phone and codes in the employee drawer (*Master data → Employees*) or with the
+Django admin action; only administrators can reset administrators. The Django admin
+signs in through the app's login, so the second step applies there too.
+
 ## Features
 
 - **Inventory** – individually tracked devices (laptops, phones, headsets, MDEs, …)
@@ -141,7 +159,7 @@ backend/
   config/            settings, URLs, API assembly (config/api.py)
   apps/
     core/            base models, number sequences, auth/session API, CRUD helpers
-    accounts/        users and departments
+    accounts/        users, departments, teams, LDAP and two-factor sign-in
     masterdata/      manufacturers, suppliers, categories, models, locations
     inventory/       assets, asset events, consumables and their movements
     reservations/    reservations, items, allocations, workflow, employee portal

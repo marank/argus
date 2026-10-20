@@ -1,5 +1,5 @@
 export default {
-  greeting: 'Hello, {name}',
+  greeting: 'Welcome, {name}',
   itSubtitle: 'Current state of inventory, reservations and procurement.',
   employeeSubtitle: 'Your requests and devices at a glance.',
   toApprove: 'To approve',
@@ -20,8 +20,8 @@ export default {
   assignedDevices: 'Assigned devices',
   pickupReady: 'Ready to collect',
   pickupAt: 'Pickup {date}',
-  noUpcoming: 'Nothing scheduled.',
-  requestCta: 'Need something? Create a request',
+  noUpcoming: 'No hand-outs scheduled.',
+  requestCta: 'Create a new request',
   assignedToMe: 'Assigned to me',
   myTeams: 'My teams',
   unassigned: 'Unassigned',
@@ -29,7 +29,7 @@ export default {
   edit: {
     open: 'Customize dashboard',
     eyebrow: 'Editing',
-    hint: 'Drag widgets, pick a size, hide key figures with the eye.',
+    hint: 'Drag and drop widgets, set their size, hide key figures via the eye icon.',
     done: 'Done',
     add: 'Add widget',
     addOne: 'Add',
@@ -57,17 +57,16 @@ export default {
     requests: 'Requests by stage, with overdue returns.',
     stock: 'Orders to place and in transit, consumables below minimum.',
     attention: 'Open problem reports and licenses and warranties ending soon.',
-    assetStatus: 'All devices as a bar by status.',
+    assetStatus: 'Distribution of all devices by status.',
     upcoming: 'Hand-outs of the next 3, 7 or 14 days.',
     activity: 'The latest device events.',
-    showAll: 'All',
     settings: 'Settings',
     period: 'Period',
     days: '{count} day | {count} days',
     dueReturns: {
       title: 'Returns due soon',
-      description: 'Lendings ending in the next few days, with extend and remind.',
-      empty: 'No lending ends in the next {count} days.',
+      description: 'Loans ending in the next few days, with options to extend and remind.',
+      empty: 'No loans end in the next {count} days.',
     },
     waiting: {
       title: 'Waiting requests',
@@ -77,12 +76,12 @@ export default {
     expiring: {
       title: 'Expiring licenses & warranties',
       description: 'Licenses and warranties ending within the warning period.',
-      empty: 'Nothing ends within the warning periods.',
+      empty: 'No licenses or warranties end within the warning periods.',
     },
     lowStock: {
       title: 'Consumables running low',
       description: 'Consumables below their minimum, the largest shortfall first.',
-      empty: 'Everything is above its minimum.',
+      empty: 'No consumables below minimum stock.',
       missing: '{count} missing',
     },
     openOrders: {
@@ -98,7 +97,7 @@ export default {
     myTasks: {
       title: 'My tasks',
       description: 'Requests and problem reports assigned to you personally, as a list.',
-      empty: 'Nothing is assigned to you right now.',
+      empty: 'No tasks are currently assigned to you.',
       requests: 'Requests ({count})',
       issues: 'Problem reports ({count})',
     },
@@ -115,7 +114,7 @@ export default {
     week: {
       title: 'This week',
       description: 'Pickups, returns, deliveries and deadlines of the next seven days.',
-      empty: 'Nothing due in the next seven days.',
+      empty: 'No appointments in the next seven days.',
       today: 'Today',
       tomorrow: 'Tomorrow',
       kinds: 'Show',
@@ -143,7 +142,7 @@ export default {
       title: 'Shortcuts',
       description: 'Your most used pages as buttons.',
       choose: 'Choose pages',
-      empty: 'Choose pages with the gear.',
+      empty: 'Choose pages via the gear icon.',
     },
     notes: {
       title: 'Notes',

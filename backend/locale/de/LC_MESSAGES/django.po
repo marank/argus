@@ -208,8 +208,8 @@ msgstr "Benutzer bei erster Anmeldung anlegen"
 msgid ""
 "Otherwise only employees that already exist in Argus can sign in via LDAP."
 msgstr ""
-"Sonst können sich nur Mitarbeitende per LDAP anmelden, die in Argus bereits "
-"angelegt sind."
+"Andernfalls können sich per LDAP nur Mitarbeiter anmelden, die in Argus "
+"bereits angelegt sind."
 
 #: apps/accounts/models/ldap_settings.py:73
 #: apps/accounts/models/ldap_settings.py:74
@@ -224,7 +224,8 @@ msgstr "LDAP-Gruppe"
 #: apps/accounts/models/team.py:25
 msgid "DN of a directory group; its members join the team when they sign in."
 msgstr ""
-"DN einer Verzeichnisgruppe; ihre Mitglieder kommen beim Anmelden ins Team."
+"DN einer Verzeichnisgruppe; deren Mitglieder werden bei der Anmeldung dem "
+"Team zugeordnet."
 
 #: apps/accounts/models/team.py:28
 msgid "default team"
@@ -234,8 +235,8 @@ msgstr "Standard-Team"
 msgid ""
 "Gets new requests and reports that no category or model routes elsewhere."
 msgstr ""
-"Bekommt neue Anfragen und Meldungen, die keine Kategorie und kein Modell "
-"einem anderen Team zuordnet."
+"Erhält neue Anforderungen und Meldungen, die weder über die Kategorie noch "
+"über das Modell einem anderen Team zugeordnet sind."
 
 #: apps/accounts/models/team.py:37 apps/inventory/models/asset_issue.py:48
 #: apps/reservations/models/reservation.py:108
@@ -278,7 +279,8 @@ msgstr "Abholterminal"
 msgid ""
 "Shared account for the pickup terminal; it only sees prepared hand-outs."
 msgstr ""
-"Gemeinsames Konto für das Abholterminal; es sieht nur vorbereitete Ausgaben."
+"Gemeinsames Konto für das Abholterminal; Zugriff nur auf vorbereitete "
+"Ausgaben."
 
 #: apps/accounts/models/user.py:48
 msgid "terminal site"
@@ -415,8 +417,8 @@ msgid "Argus test email"
 msgstr "Argus-Testmail"
 
 #: apps/core/api/mail_settings.py:95
-msgid "If you can read this, Argus can send emails."
-msgstr "Wenn Sie das lesen können, kann Argus E-Mails senden."
+msgid "This test message confirms that Argus can send emails."
+msgstr "Diese Testnachricht bestätigt, dass Argus E-Mails versenden kann."
 
 #: apps/core/api/mail_settings.py:98
 #, python-format
@@ -458,7 +460,7 @@ msgstr "Basis"
 
 #: apps/core/middleware.py:16
 msgid "This module is switched off."
-msgstr "Dieses Modul ist ausgeschaltet."
+msgstr "Dieses Modul ist deaktiviert."
 
 #: apps/core/models/base.py:19
 msgid "created at"
@@ -824,7 +826,7 @@ msgstr "gehört zu"
 #: apps/inventory/models/asset.py:71
 msgid "E.g. a docking station or handle that belongs to another device."
 msgstr ""
-"Z. B. eine Dockingstation oder ein Handgriff, der zu einem anderen Gerät "
+"Z. B. eine Dockingstation oder ein Pistolengriff, der zu einem anderen Gerät "
 "gehört."
 
 #: apps/inventory/models/asset.py:76 apps/inventory/models/license.py:45
@@ -1401,8 +1403,8 @@ msgid ""
 "New requests and reports for this model go to this team. Empty: as the "
 "category."
 msgstr ""
-"Neue Anfragen und Meldungen zu diesem Modell gehen an dieses Team. Leer: wie "
-"die Kategorie."
+"Neue Anforderungen und Meldungen zu diesem Modell werden diesem Team "
+"zugeordnet. Leer: Es gilt die Kategorie."
 
 #: apps/masterdata/models/asset_model.py:66
 #: apps/masterdata/models/category.py:60
@@ -1472,8 +1474,8 @@ msgid ""
 "New requests and reports for this category go to this team. Falls back to "
 "the parent."
 msgstr ""
-"Neue Anfragen und Meldungen zu dieser Kategorie gehen an dieses Team. Leer: "
-"wie die übergeordnete Kategorie."
+"Neue Anforderungen und Meldungen zu dieser Kategorie werden diesem Team "
+"zugeordnet. Leer: Es gilt die übergeordnete Kategorie."
 
 #: apps/masterdata/models/category.py:60
 msgid "Shown in the employee portal."
@@ -1488,7 +1490,7 @@ msgid ""
 "Employees may request “any device” of this group. Turn off where only a "
 "specific model makes sense, e.g. accessories or consumables."
 msgstr ""
-"Mitarbeiter dürfen „beliebig“ aus dieser Kategorie anfordern. Abschalten, wo "
+"Mitarbeiter dürfen „beliebig“ aus dieser Kategorie anfordern. Deaktivieren, wenn "
 "nur ein bestimmtes Modell sinnvoll ist, z. B. bei Zubehör oder "
 "Verbrauchsmaterial."
 
@@ -1677,7 +1679,7 @@ msgstr "Das ist nicht möglich, solange die Bestellung „%(status)s“ ist."
 
 #: apps/procurement/services/orders.py:31
 msgid "An order needs at least one line."
-msgstr "Eine Bestellung braucht mindestens eine Position."
+msgstr "Eine Bestellung muss mindestens eine Position enthalten."
 
 #: apps/procurement/services/orders.py:118
 #, python-format
@@ -2020,7 +2022,7 @@ msgstr "%(name)s fordert für „%(title)s“ an:"
 #: apps/reservations/services/notifications.py:49
 #, python-format
 msgid "Assigned to you: request %(number)s"
-msgstr "Ihnen zugewiesen: Anfrage %(number)s"
+msgstr "Ihnen zugewiesen: Anforderung %(number)s"
 
 #: apps/reservations/services/notifications.py:50
 #, python-format
@@ -2061,7 +2063,7 @@ msgstr "Abholbereit: %(number)s"
 #: apps/reservations/services/notifications.py:86
 #, python-format
 msgid "Everything for “%(title)s” is ready."
-msgstr "Alles für „%(title)s“ liegt bereit."
+msgstr "Die Geräte für „%(title)s“ liegen zur Abholung bereit."
 
 #: apps/reservations/services/notifications.py:95
 #, python-format
@@ -2107,7 +2109,7 @@ msgstr "Das ist nicht möglich, solange die Reservierung „%(status)s“ ist."
 
 #: apps/reservations/services/workflow.py:43
 msgid "Temporary reservations need an end date."
-msgstr "Befristete Reservierungen brauchen ein Enddatum."
+msgstr "Befristete Reservierungen erfordern ein Enddatum."
 
 #: apps/reservations/services/workflow.py:45
 msgid "The end date must not be before the start date."
@@ -2258,7 +2260,7 @@ msgstr "Wählen Sie jemanden aus der IT-Abteilung."
 
 #: apps/reservations/services/workflow.py:611
 msgid "Nothing is left to take back."
-msgstr "Es ist nichts mehr zurückzunehmen."
+msgstr "Es sind keine Positionen mehr zurückzunehmen."
 
 #: apps/reservations/services/workflow.py:636
 #, python-format
@@ -2273,6 +2275,96 @@ msgstr "Das ist für %(number)s zurückgelegt. Entfernen Sie es zuerst dort."
 #: config/api.py:69
 msgid "Not found."
 msgstr "Nicht gefunden."
+
+msgid "Authenticator app"
+msgstr "Authenticator-App"
+
+msgid "Code by email"
+msgstr "Code per E-Mail"
+
+msgid "Codes by email require an email address on file and configured email delivery."
+msgstr "Codes per E-Mail erfordern eine hinterlegte E-Mail-Adresse und einen eingerichteten E-Mail-Versand."
+
+msgid "Only administrators can reset the sign-in of an administrator."
+msgstr "Nur Administratoren können die Anmeldung eines Administrators zurücksetzen."
+
+msgid "Please wait a moment before requesting another code."
+msgstr "Bitte warten Sie einen Moment, bevor Sie einen weiteren Code anfordern."
+
+msgid "Reset two-factor authentication"
+msgstr "Zwei-Faktor-Authentifizierung zurücksetzen"
+
+msgid "Disable your own two-factor authentication in your profile."
+msgstr "Ihre eigene Zwei-Faktor-Authentifizierung deaktivieren Sie in Ihrem Profil."
+
+msgid "Enable two-factor authentication first."
+msgstr "Aktivieren Sie zuerst die Zwei-Faktor-Authentifizierung."
+
+msgid "The code is not correct or has expired."
+msgstr "Der Code ist falsch oder abgelaufen."
+
+msgid "The password is not correct."
+msgstr "Das Passwort ist falsch."
+
+msgid "The setup has expired. Please start again."
+msgstr "Die Einrichtung ist abgelaufen. Bitte beginnen Sie erneut."
+
+msgid "The sign-in has expired. Please enter your password again."
+msgstr "Die Anmeldung ist abgelaufen. Bitte geben Sie Ihr Passwort erneut ein."
+
+msgid "This sign-in uses an authenticator app."
+msgstr "Diese Anmeldung verwendet eine Authenticator-App."
+
+msgid "Too many wrong codes. Please enter your password again."
+msgstr "Zu viele falsche Codes. Bitte geben Sie Ihr Passwort erneut ein."
+
+msgid "Too many wrong codes. Please start again."
+msgstr "Zu viele falsche Codes. Bitte beginnen Sie erneut."
+
+msgid "Two-factor authentication"
+msgstr "Zwei-Faktor-Authentifizierung"
+
+msgid "two-factor sign-in"
+msgstr "Zwei-Faktor-Authentifizierung"
+
+msgid "two-factor sign-ins"
+msgstr "Zwei-Faktor-Authentifizierungen"
+
+msgid "app secret"
+msgstr "App-Schlüssel"
+
+msgid "backup code"
+msgstr "Backup-Code"
+
+msgid "backup codes"
+msgstr "Backup-Codes"
+
+msgid "used at"
+msgstr "verwendet am"
+
+#, python-format
+msgid "Your Argus sign-in code: %(code)s"
+msgstr "Ihr Argus-Anmeldecode: %(code)s"
+
+#, python-format
+msgid ""
+"Hello %(name)s,\n"
+"\n"
+"your code for signing in to Argus is %(code)s. It is valid for %(minutes)s minutes.\n"
+"\n"
+"If you did not initiate this sign-in, your password may be compromised: change it immediately and inform IT."
+msgstr ""
+"Guten Tag %(name)s,\n"
+"\n"
+"Ihr Code für die Anmeldung bei Argus lautet %(code)s. Er ist %(minutes)s Minuten gültig.\n"
+"\n"
+"Falls Sie diese Anmeldung nicht selbst ausgelöst haben, ist Ihr Passwort möglicherweise kompromittiert. Ändern Sie es umgehend und informieren Sie die IT."
+
+#, python-format
+msgid "Two-factor authentication reset for %(count)d user."
+msgid_plural "Two-factor authentication reset for %(count)d users."
+msgstr[0] "Zwei-Faktor-Authentifizierung für %(count)d Mitarbeiter zurückgesetzt."
+msgstr[1] "Zwei-Faktor-Authentifizierung für %(count)d Mitarbeiter zurückgesetzt."
 
 #~ msgid "Allocate either a device or a consumable quantity."
 #~ msgstr ""

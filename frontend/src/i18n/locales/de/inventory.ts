@@ -6,8 +6,7 @@ export default {
   editAsset: 'Gerät bearbeiten',
   fields: {
     inventoryNumber: 'Inventar-Nr.',
-    inventoryNumberHint:
-      'Leer lassen, um die nächste Nummer aus der Nummernserie der Kategorie zu ziehen.',
+    inventoryNumberHint: 'Leer: nächste Nummer aus der Nummernserie der Kategorie.',
     serialNumber: 'Seriennummer',
     imei: 'IMEI',
     macAddress: 'MAC-Adresse',
@@ -27,8 +26,7 @@ export default {
     loanable: 'Verleihbar (Pool)',
     loanableHelp: 'Teil des Pools, aus dem Mitarbeiter reservieren können.',
     consumables: 'Verbrauchsmaterial',
-    consumablesHelp:
-      'Passendes Verbrauchsmaterial für genau dieses Gerät. Was zum Modell passt (Modell → kompatibel mit), gilt automatisch. Mitarbeiter bekommen beides beim Anfordern als Schnellwahl angeboten.',
+    consumablesHelp: 'Zusätzlich zu dem, was zum Modell passt.',
     condition: 'Zustand',
   },
   sections: {
@@ -96,10 +94,9 @@ export default {
     licenseKey: 'Lizenzschlüssel',
     seats: 'Plätze',
     seatsUsed: '{used} / {seats} belegt',
-    free: '{count} frei',
     assignTo: 'Zuweisung an',
     assignToHelp:
-      'Pro Mitarbeiter (z. B. Microsoft 365) oder pro Gerät (z. B. Windows, CAD-Arbeitsplatz).',
+      'Pro Mitarbeiter (z. B. Microsoft 365) oder pro Gerät (z. B. Windows, Virenschutz).',
     validFrom: 'Gültig ab',
     validUntil: 'Gültig bis',
     validUntilHelp: 'Leer lassen für unbefristete Lizenzen.',

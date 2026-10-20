@@ -3,6 +3,7 @@ from uuid import UUID
 from ninja import Schema
 
 from apps.accounts.models import User
+from apps.core.api.security import context_is_it_staff
 from apps.core.schemas import RefOut
 from apps.masterdata.schemas.refs import LocationRefOut
 
@@ -29,6 +30,16 @@ class UserOut(Schema):
     terminal_location: LocationRefOut | None
     is_active: bool
     is_ldap_user: bool
+    # Method of the second sign-in step ("email", "totp") or None; only for IT and the user.
+    two_factor: str | None = None
+
+    @staticmethod
+    def resolve_two_factor(obj: User, context):
+        request = (context or {}).get("request")
+        if not (context_is_it_staff(context) or (request and request.user.pk == obj.pk)):
+            return None
+        two_factor = getattr(obj, "two_factor", None)
+        return two_factor.method if two_factor else None
 
 
 class CurrentUserOut(UserOut):

@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { LogIn } from '@lucide/vue'
+import { ArrowLeft, LogIn, ShieldCheck } from '@lucide/vue'
+import { useIntervalFn } from '@vueuse/core'
 import { NAlert, NButton, NForm, NFormItem, NInput } from 'naive-ui'
-import { ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
+import { authApi } from '@/api/auth'
 import { ApiError } from '@/api/client'
+import CodeInput from '@/components/common/CodeInput.vue'
 import { useAuthStore } from '@/stores/auth'
+import type { TwoFactorChallenge } from '@/types/accounts'
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -18,18 +22,112 @@ const password = ref('')
 const error = ref('')
 const busy = ref(false)
 
-async function submit() {
+/** Set once the password fits and the second step is due. */
+const challenge = ref<TwoFactorChallenge | null>(null)
+const code = ref('')
+const useBackup = ref(false)
+/** The digit boxes, or the text field for backup codes. */
+const codeInput = ref<{ focus: () => void } | null>(null)
+const CODE_LENGTH = 6
+const BACKUP_LENGTH = 12
+
+const RESEND_AFTER = 30
+const resendIn = ref(0)
+const { resume: startCountdown } = useIntervalFn(
+  () => (resendIn.value = Math.max(0, resendIn.value - 1)),
+  1000,
+  { immediate: false },
+)
+
+const codeHint = computed(() => {
+  if (!challenge.value) return ''
+  if (useBackup.value) return t('auth.twoFactor.backupHint')
+  if (challenge.value.two_factor === 'totp') return t('auth.twoFactor.totpHint')
+  return challenge.value.code_sent
+    ? t('auth.twoFactor.emailHint', { email: challenge.value.email_hint })
+    : ''
+})
+
+const complete = computed(() =>
+  useBackup.value
+    ? code.value.replace(/[^0-9a-z]/gi, '').length >= BACKUP_LENGTH
+    : code.value.length === CODE_LENGTH,
+)
+
+function proceed() {
+  const next = typeof route.query.next === 'string' ? route.query.next : '/'
+  // The Django admin signs in here too (see admin_login in the backend).
+  if (next.startsWith('/admin/') && auth.isItStaff) window.location.assign(next)
+  else router.replace(next)
+}
+
+async function attempt(action: () => Promise<void>) {
   error.value = ''
   busy.value = true
   try {
-    await auth.login(username.value, password.value)
-    const next = typeof route.query.next === 'string' ? route.query.next : '/'
-    router.replace(next)
+    await action()
   } catch (e) {
     error.value = e instanceof ApiError ? e.message : String(e)
+    // Expired or too many wrong codes: the password has to be entered again.
+    if (e instanceof ApiError && e.status === 401 && challenge.value) back()
   } finally {
     busy.value = false
   }
+}
+
+function startResendCountdown() {
+  resendIn.value = RESEND_AFTER
+  startCountdown()
+}
+
+const submit = () =>
+  attempt(async () => {
+    challenge.value = await auth.login(username.value, password.value)
+    if (!challenge.value) return proceed()
+    code.value = ''
+    // Without a mailed code only a backup code helps.
+    useBackup.value = challenge.value.two_factor === 'email' && !challenge.value.code_sent
+    if (challenge.value.two_factor === 'email') startResendCountdown()
+    await nextTick()
+    codeInput.value?.focus()
+  })
+
+const verify = () =>
+  attempt(async () => {
+    try {
+      await auth.verifyLogin(code.value)
+    } catch (e) {
+      code.value = ''
+      await nextTick()
+      codeInput.value?.focus()
+      throw e
+    }
+    proceed()
+  })
+
+const resend = () =>
+  attempt(async () => {
+    challenge.value = await authApi.resendLoginCode()
+    if (challenge.value.code_sent) useBackup.value = false
+    startResendCountdown()
+  })
+
+/** App and email codes go out as soon as all boxes are filled. */
+function onComplete() {
+  if (!busy.value) verify()
+}
+
+async function toggleBackup() {
+  useBackup.value = !useBackup.value
+  code.value = ''
+  await nextTick()
+  codeInput.value?.focus()
+}
+
+function back() {
+  challenge.value = null
+  password.value = ''
+  code.value = ''
 }
 </script>
 
@@ -53,14 +151,82 @@ async function submit() {
         </div>
       </div>
 
-      <h1>{{ t('auth.title') }}</h1>
+      <h1>{{ challenge ? t('auth.twoFactor.title') : t('auth.title') }}</h1>
 
-      <NAlert v-if="route.query.expired && !error" type="warning" :bordered="false" class="alert">
+      <NAlert
+        v-if="route.query.expired && !error && !challenge"
+        type="warning"
+        :bordered="false"
+        class="alert"
+      >
         {{ t('auth.sessionExpired') }}
       </NAlert>
       <NAlert v-if="error" type="error" :bordered="false" class="alert">{{ error }}</NAlert>
+      <NAlert
+        v-if="challenge?.two_factor === 'email' && !challenge.code_sent"
+        type="warning"
+        :bordered="false"
+        class="alert"
+      >
+        {{ t('auth.twoFactor.emailFailed') }}
+      </NAlert>
 
-      <NForm @submit.prevent="submit">
+      <NForm v-if="challenge" @submit.prevent="verify">
+        <p class="hint muted">{{ codeHint }}</p>
+        <NFormItem
+          :label="useBackup ? t('auth.twoFactor.backupCode') : t('auth.twoFactor.code')"
+          :show-feedback="false"
+          class="field"
+        >
+          <NInput
+            v-if="useBackup"
+            ref="codeInput"
+            v-model:value="code"
+            placeholder="xxxx-xxxx-xxxx"
+            class="mono"
+            :maxlength="20"
+            :input-props="{ autocomplete: 'off', spellcheck: false }"
+          />
+          <CodeInput
+            v-else
+            ref="codeInput"
+            v-model="code"
+            :length="CODE_LENGTH"
+            :label="t('auth.twoFactor.code')"
+            @complete="onComplete"
+          />
+        </NFormItem>
+        <NButton type="primary" attr-type="submit" block :loading="busy" :disabled="!complete">
+          <template #icon><ShieldCheck :size="16" /></template>
+          {{ t('auth.twoFactor.verify') }}
+        </NButton>
+        <div class="links">
+          <NButton text size="small" @click="back">
+            <template #icon><ArrowLeft :size="14" /></template>
+            {{ t('common.back') }}
+          </NButton>
+          <span class="links-end">
+            <NButton
+              v-if="challenge.two_factor === 'email'"
+              text
+              size="small"
+              :disabled="resendIn > 0 || busy"
+              @click="resend"
+            >
+              {{
+                resendIn > 0
+                  ? t('auth.twoFactor.resendIn', { seconds: resendIn })
+                  : t('auth.twoFactor.resend')
+              }}
+            </NButton>
+            <NButton text size="small" type="primary" @click="toggleBackup">
+              {{ useBackup ? t('auth.twoFactor.useCode') : t('auth.twoFactor.useBackup') }}
+            </NButton>
+          </span>
+        </div>
+      </NForm>
+
+      <NForm v-else @submit.prevent="submit">
         <NFormItem :label="t('auth.username')" :show-feedback="false" class="field">
           <NInput
             v-model:value="username"
@@ -139,6 +305,22 @@ h1 {
 }
 .alert {
   margin-bottom: 14px;
+}
+.hint {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 14px;
+  margin-top: 16px;
+}
+.links-end {
+  display: flex;
+  gap: 14px;
 }
 .status {
   position: absolute;

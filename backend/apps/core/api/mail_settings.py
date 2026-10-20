@@ -92,7 +92,7 @@ def send_test_mail(request: HttpRequest, payload: TestMailIn):
             settings,
             payload.to,
             _("Argus test email"),
-            _("If you can read this, Argus can send emails."),
+            _("This test message confirms that Argus can send emails."),
         )
     except Exception as exc:  # noqa: BLE001 - report every SMTP problem to the admin
         raise HttpError(502, _("Sending failed: %(error)s") % {"error": exc}) from exc

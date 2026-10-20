@@ -1,6 +1,6 @@
 export default {
   title: 'Einstellungen',
-  subtitle: 'Systemweite Konfiguration von Argus. Nur für Administratoren sichtbar und änderbar.',
+  subtitle: 'Systemweite Konfiguration von Argus.',
   unsaved: 'Es gibt ungespeicherte Änderungen.',
   sections: {
     ldap: 'LDAP-Anmeldung',
@@ -10,11 +10,11 @@ export default {
     rulesDescription: 'Ausleihdauer, Erinnerungen, Garantie und Lizenzen',
     mail: 'E-Mail',
     mailDescription: 'SMTP-Server und Benachrichtigungen',
-    featuresDescription: 'Bereiche und einzelne Funktionen ein- und ausschalten',
+    featuresDescription: 'Bereiche und einzelne Funktionen aktivieren und deaktivieren',
   },
   ldap: {
     subtitle:
-      'Mitarbeitende melden sich mit ihrem Verzeichniskonto an. Name, Personalnummer und weitere Felder werden bei jeder Anmeldung aus dem LDAP übernommen.',
+      'Mitarbeiter melden sich mit ihrem Verzeichniskonto an. Name, Personalnummer und weitere Felder werden bei jeder Anmeldung aus dem LDAP übernommen.',
     active: 'Aktiv',
     inactive: 'Inaktiv',
     groupStatus: 'Status',
@@ -23,7 +23,7 @@ export default {
     enabled: 'LDAP-Anmeldung',
     createUsers: 'Benutzer bei erster Anmeldung anlegen',
     createUsersHelp:
-      'Sonst können sich nur Mitarbeitende per LDAP anmelden, die in Argus bereits angelegt sind.',
+      'Andernfalls können sich per LDAP nur Mitarbeiter anmelden, die in Argus bereits angelegt sind.',
     server: 'Server',
     groupServerHelp:
       'Adresse des Verzeichnisservers. Mehrere Server werden der Reihe nach versucht (Failover).',
@@ -38,8 +38,7 @@ export default {
     caCertFileHelp: 'Pfad zu einer PEM-Datei im Container; leer = System-CAs.',
     timeout: 'Timeout (s)',
     search: 'Benutzersuche',
-    groupSearchHelp:
-      'Argus sucht die Person mit einem Dienstkonto und prüft das Passwort dann per Anmeldung als diese Person.',
+    groupSearchHelp: 'Suche per Dienstkonto, Passwortprüfung per Bind als Benutzer.',
     bindDn: 'Bind-DN',
     bindDnHelp: 'Dienstkonto für die Benutzersuche; leer = anonyme Suche.',
     bindPassword: 'Bind-Passwort',
@@ -72,12 +71,12 @@ export default {
     testUserFound: 'Eintrag gefunden – diese Werte würden übernommen:',
   },
   flags: {
-    needs: 'braucht {modules}',
-    moduleOn: 'Modul eingeschaltet',
+    needs: 'erfordert {modules}',
+    moduleOn: 'Modul aktiviert',
     general: 'Allgemein',
     generalDescription: 'Funktionen, die zu keinem einzelnen Modul gehören.',
-    switchedOn: '{name} eingeschaltet',
-    switchedOff: '{name} ausgeschaltet',
+    switchedOn: '{name} aktiviert',
+    switchedOff: '{name} deaktiviert',
     consumables: 'Verbrauchsmaterial',
     consumablesHelp: 'Bestände, Mindestmengen und Buchungen von Tinte, Akkus, Kabeln usw.',
     licenses: 'Software & Lizenzen',
@@ -92,27 +91,25 @@ export default {
     terminalHelp:
       'Gemeinsamer Touch-PC, an dem Mitarbeiter vorbereitete Geräte abholen und unterschreiben.',
     calendar_warranty: 'Garantieende im Kalender',
-    calendar_warrantyHelp: 'Zeigt im Kalender, wann die Garantie von Geräten endet.',
+    calendar_warrantyHelp: 'Ein Eintrag pro Tag, gesammelt für alle Geräte.',
     calendar_license_expiry: 'Lizenzablauf im Kalender',
-    calendar_license_expiryHelp: 'Zeigt im Kalender, wann befristete Lizenzen enden.',
+    calendar_license_expiryHelp: 'Nur befristete Lizenzen.',
     calendar_deliveries: 'Lieferungen im Kalender',
-    calendar_deliveriesHelp: 'Zeigt erwartete Lieferungen offener Bestellungen im Kalender.',
+    calendar_deliveriesHelp: 'Erwartete Liefertermine offener Bestellungen.',
     consumable_quick_pick: 'Schnellwahl Verbrauchsmaterial',
     consumable_quick_pickHelp:
       'Bietet Mitarbeitern beim Anfordern passendes Verbrauchsmaterial zu ihren Geräten an.',
     software_requests: 'Software anfordern',
     software_requestsHelp: 'Software-Kategorien erscheinen im Katalog unter „Neue Anforderung“.',
     attention_motion: 'Hinweis-Animationen',
-    attention_motionHelp:
-      'Pulsierende Punkte und Kacheln, wo etwas auf Bearbeitung wartet. Die Systemeinstellung „Bewegung reduzieren“ gilt unabhängig davon.',
+    attention_motionHelp: 'Pulsierende Markierungen an Elementen, die auf Bearbeitung warten.',
   },
   rules: {
     days: 'Tage',
     loans: 'Ausleihen',
     loansDescription: 'Gelten für befristete Anforderungen.',
     warnings: 'Vorwarnzeiten',
-    warningsDescription:
-      'Ab wann Garantien und Lizenzen als „läuft bald ab“ gelten, im Dashboard, in Listen und für E-Mails.',
+    warningsDescription: 'Ab wann Garantien und Lizenzen als „läuft bald ab“ gelten.',
     default_loan_days: 'Standard-Ausleihdauer',
     default_loan_daysHelp: 'Wird beim Anfordern als Zeitraum vorgeschlagen.',
     max_loan_days: 'Maximale Ausleihdauer',
@@ -129,7 +126,7 @@ export default {
     server: 'SMTP-Server',
     serverDescription: 'Über diesen Server verschickt Argus alle E-Mails.',
     enabled: 'E-Mails senden',
-    enabledHelp: 'Ausgeschaltet verschickt Argus keine Benachrichtigungen.',
+    enabledHelp: 'Wenn deaktiviert, versendet Argus keine E-Mails.',
     host: 'Server',
     port: 'Port & Verschlüsselung',
     security: {
@@ -148,14 +145,16 @@ export default {
     appUrl: 'App-Adresse',
     appUrlHelp: 'Adresse von Argus für Links in E-Mails, z. B. https://argus.example.com',
     test: 'Testmail',
-    testHelp: 'Verwendet die gespeicherten Einstellungen; vorher speichern.',
+    testHelp: 'Verwendet die gespeicherten Einstellungen. Änderungen vorher speichern.',
     testTo: 'Empfänger',
     sendTest: 'Testmail senden',
     audience: {
       employee: 'An Mitarbeiter',
-      employeeDescription: 'Gehen an die betroffene Person. Jeder kann sie für sich abschalten.',
+      employeeDescription:
+        'Empfänger ist die jeweils betroffene Person. Jeder Benutzer kann sie in seinem Profil deaktivieren.',
       it: 'An die IT',
-      itDescription: 'Gehen an alle IT-Mitarbeiter. Jeder kann sie für sich abschalten.',
+      itDescription:
+        'Empfänger sind alle IT-Mitarbeiter. Jeder Benutzer kann sie in seinem Profil deaktivieren.',
     },
   },
 }

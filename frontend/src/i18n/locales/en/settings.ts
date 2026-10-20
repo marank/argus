@@ -1,6 +1,6 @@
 export default {
   title: 'Settings',
-  subtitle: 'System-wide configuration of Argus. Only administrators can see and change it.',
+  subtitle: 'System-wide configuration of Argus.',
   unsaved: 'You have unsaved changes.',
   sections: {
     ldap: 'LDAP login',
@@ -10,7 +10,7 @@ export default {
     rulesDescription: 'Loan periods, reminders, warranty and licenses',
     mail: 'Email',
     mailDescription: 'SMTP server and notifications',
-    featuresDescription: 'Switch areas and single features on and off',
+    featuresDescription: 'Enable and disable areas and individual features',
   },
   ldap: {
     subtitle:
@@ -37,8 +37,7 @@ export default {
     caCertFileHelp: 'Path to a PEM file inside the container; empty = system CAs.',
     timeout: 'Timeout (s)',
     search: 'User search',
-    groupSearchHelp:
-      'Argus looks up the user with a service account and then checks the password by signing in as that user.',
+    groupSearchHelp: 'Search via service account, password check by binding as the user.',
     bindDn: 'Bind DN',
     bindDnHelp: 'Service account used to look up users; empty = anonymous search.',
     bindPassword: 'Bind password',
@@ -71,12 +70,12 @@ export default {
     testUserFound: 'Entry found – these values would be applied:',
   },
   flags: {
-    needs: 'needs {modules}',
-    moduleOn: 'Module switched on',
+    needs: 'requires {modules}',
+    moduleOn: 'Module enabled',
     general: 'General',
     generalDescription: 'Features that do not belong to a single module.',
-    switchedOn: '{name} switched on',
-    switchedOff: '{name} switched off',
+    switchedOn: '{name} enabled',
+    switchedOff: '{name} disabled',
     consumables: 'Consumables',
     consumablesHelp: 'Quantities, minimum levels and movements of ink, batteries, cables etc.',
     licenses: 'Software & licenses',
@@ -90,27 +89,25 @@ export default {
     terminal: 'Pickup terminal',
     terminalHelp: 'Shared touch PC where employees collect prepared devices and sign.',
     calendar_warranty: 'Warranty ends in the calendar',
-    calendar_warrantyHelp: 'Shows in the calendar when device warranties end.',
+    calendar_warrantyHelp: 'One entry per day, grouped across devices.',
     calendar_license_expiry: 'License expiry in the calendar',
-    calendar_license_expiryHelp: 'Shows in the calendar when time-limited licenses end.',
+    calendar_license_expiryHelp: 'Time-limited licenses only.',
     calendar_deliveries: 'Deliveries in the calendar',
-    calendar_deliveriesHelp: 'Shows expected deliveries of open purchase orders in the calendar.',
+    calendar_deliveriesHelp: 'Expected delivery dates of open purchase orders.',
     consumable_quick_pick: 'Consumables quick pick',
     consumable_quick_pickHelp:
       'Offers employees consumables that fit their devices when requesting.',
     software_requests: 'Request software',
     software_requestsHelp: 'Software categories appear in the catalog under “New request”.',
     attention_motion: 'Attention animations',
-    attention_motionHelp:
-      'Pulsing dots and tiles where something waits for action. The system setting “reduce motion” applies regardless.',
+    attention_motionHelp: 'Pulsing markers on items awaiting action.',
   },
   rules: {
     days: 'days',
     loans: 'Loans',
     loansDescription: 'Apply to time-limited requests.',
     warnings: 'Warning periods',
-    warningsDescription:
-      'When warranties and licenses count as “ending soon”, on the dashboard, in lists and for emails.',
+    warningsDescription: 'When warranties and licenses count as “ending soon”.',
     default_loan_days: 'Default loan period',
     default_loan_daysHelp: 'Suggested as the period when requesting.',
     max_loan_days: 'Maximum loan period',
@@ -126,7 +123,7 @@ export default {
     server: 'SMTP server',
     serverDescription: 'Argus sends all emails through this server.',
     enabled: 'Send emails',
-    enabledHelp: 'When off, Argus sends no notifications.',
+    enabledHelp: 'When disabled, Argus sends no emails.',
     host: 'Server',
     port: 'Port & encryption',
     security: {
@@ -145,15 +142,15 @@ export default {
     appUrl: 'App address',
     appUrlHelp: 'Address of Argus for links in emails, e.g. https://argus.example.com',
     test: 'Test email',
-    testHelp: 'Uses the stored settings; save first.',
+    testHelp: 'Uses the saved settings. Save changes first.',
     testTo: 'Recipient',
     sendTest: 'Send test email',
     audience: {
       employee: 'To employees',
       employeeDescription:
-        'Go to the person concerned. Everyone can switch them off for themselves.',
+        'Sent to the person concerned. Each user can disable them in their profile.',
       it: 'To IT',
-      itDescription: 'Go to all IT staff. Everyone can switch them off for themselves.',
+      itDescription: 'Sent to all IT staff. Each user can disable them in their profile.',
     },
   },
 }

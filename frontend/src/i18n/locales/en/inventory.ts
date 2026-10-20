@@ -6,7 +6,7 @@ export default {
   editAsset: 'Edit device',
   fields: {
     inventoryNumber: 'Inventory no.',
-    inventoryNumberHint: 'Leave empty to draw the next number of the category’s sequence.',
+    inventoryNumberHint: 'Empty: next number from the category’s sequence.',
     serialNumber: 'Serial number',
     imei: 'IMEI',
     macAddress: 'MAC address',
@@ -26,8 +26,7 @@ export default {
     loanable: 'Loanable (pool)',
     loanableHelp: 'Part of the pool employees can reserve from.',
     consumables: 'Consumables',
-    consumablesHelp:
-      'Consumables for exactly this device. Those compatible with its model (model → compatible with) apply automatically. Employees get both as a quick pick when requesting.',
+    consumablesHelp: 'In addition to those compatible with the model.',
     condition: 'Condition',
   },
   sections: {
@@ -95,10 +94,8 @@ export default {
     licenseKey: 'License key',
     seats: 'Seats',
     seatsUsed: '{used} / {seats} used',
-    free: '{count} free',
     assignTo: 'Assigned to',
-    assignToHelp:
-      'Per employee (e.g. Microsoft 365) or per device (e.g. Windows, CAD workstation).',
+    assignToHelp: 'Per employee (e.g. Microsoft 365) or per device (e.g. Windows, antivirus).',
     validFrom: 'Valid from',
     validUntil: 'Valid until',
     validUntilHelp: 'Leave empty for perpetual licenses.',
