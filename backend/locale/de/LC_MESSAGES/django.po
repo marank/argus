@@ -2002,7 +2002,7 @@ msgstr "Anforderungspositionen"
 msgid "Choose a category or a model, or describe what you need."
 msgstr ""
 "Wählen Sie eine Kategorie oder ein Modell, oder beschreiben Sie, was Sie "
-"brauchen."
+"benötigen."
 
 #: apps/reservations/services/notifications.py:24
 #, python-format
@@ -2448,8 +2448,8 @@ msgstr "Genehmigung"
 msgid ""
 "Only an approver of the requester's department can decide on this request."
 msgstr ""
-"Nur ein Genehmiger aus der Abteilung des Anfordernden kann über diese "
-"Anforderung entscheiden."
+"Nur ein Genehmiger aus der Abteilung des anfordernden Mitarbeiters kann "
+"über diese Anforderung entscheiden."
 
 #: apps/reservations/services/notifications.py
 #, python-format
@@ -2522,11 +2522,11 @@ msgstr "Zuständigkeit geändert"
 
 #: apps/reservations/models/event.py
 msgid "Allocated"
-msgstr "Zugeteilt"
+msgstr "Zugewiesen"
 
 #: apps/reservations/models/event.py
 msgid "Allocation removed"
-msgstr "Zuteilung entfernt"
+msgstr "Zuweisung entfernt"
 
 #: apps/reservations/models/event.py
 msgid "Back in preparation"

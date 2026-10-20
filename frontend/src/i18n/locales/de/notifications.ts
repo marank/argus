@@ -1,7 +1,6 @@
 export default {
   approval_requested: 'Genehmigung erforderlich',
-  approval_requestedHelp:
-    'Ein Mitarbeiter Ihrer Abteilung fordert etwas Genehmigungspflichtiges an.',
+  approval_requestedHelp: 'Bei genehmigungspflichtigen Anforderungen aus Ihrer Abteilung.',
   request_submitted: 'Neue Anforderung',
   request_submittedHelp: 'An das zuständige Team, ersatzweise an die gesamte IT.',
   issue_reported: 'Neue Problemmeldung',

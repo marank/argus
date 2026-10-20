@@ -6,11 +6,12 @@ export default {
     permissions: 'Rechte',
     permissionsHelp:
       'Lesen zeigt den Bereich, Schreiben erlaubt Änderungen. Ohne Recht ist der Bereich ausgeblendet; Auswahllisten in Formularen bleiben nutzbar. Rechte mehrerer Rollen addieren sich.',
-    membersHelp: 'IT-Mitarbeiter mit dieser Rolle. Administratoren dürfen ohnehin alles.',
+    membersHelp:
+      'IT-Mitarbeiter mit dieser Rolle. Administratoren haben grundsätzlich alle Rechte.',
     summary: '{write} schreiben · {read} lesen',
     groups: { masterdata: 'Stammdaten', operations: 'IT-Betrieb' },
-    all: { none: 'alle keins', read: 'alle lesen', write: 'alle schreiben' },
-    levels: { none: 'Keins', read: 'Lesen', write: 'Schreiben' },
+    all: { none: 'Alle: kein Zugriff', read: 'Alle: lesen', write: 'Alle: schreiben' },
+    levels: { none: 'Kein Zugriff', read: 'Lesen', write: 'Schreiben' },
     areas: {
       models: 'Modelle',
       categories: 'Kategorien',
@@ -135,7 +136,7 @@ export default {
     categoryKindHelp: 'Unterkategorien haben denselben Typ wie ihre übergeordnete Kategorie.',
     compatibleWithHelp: 'Zubehör, Ersatzteile und Verbrauchsmaterial, die zu diesem Modell passen.',
     pickupPointHelp: 'Wird bei der Abholplanung angeboten.',
-    itStaffHelp: 'Zugriff auf Inventar, Anforderungen, Beschaffung und Stammdaten.',
+    itStaffHelp: 'Zugang zum IT-Bereich. Welche Bereiche, legen die Rollen fest.',
     sequenceCodeHelp: 'Technischer Schlüssel. Reserviert: asset, reservation, purchase-order.',
     allowAnyModel: '„Beliebiges Modell“ anforderbar',
     allowAnyModelHelp:
@@ -149,13 +150,13 @@ export default {
     itStaff: 'IT-Mitarbeiter',
     approvers: 'Genehmiger',
     approversHelp:
-      'Genehmigen Anforderungen der Mitarbeiter für genehmigungspflichtige Kategorien. Ohne Genehmiger gehen solche Anforderungen direkt an die IT.',
+      'Genehmigen Anforderungen dieser Abteilung für genehmigungspflichtige Kategorien. Ohne Genehmiger gehen sie direkt an die IT.',
     approvalExempt: 'Von Genehmigungen befreit',
     approvalExemptHelp:
       'Anforderungen gehen direkt an die IT, auch für genehmigungspflichtige Kategorien.',
     requiresApproval: 'Genehmigungspflichtig',
     requiresApprovalHelp:
-      'Anforderungen muss zuerst ein Genehmiger aus der Abteilung des Mitarbeiters genehmigen. Gilt auch für Unterkategorien.',
+      'Anforderungen müssen zuerst von einem Genehmiger der Abteilung genehmigt werden. Gilt auch für Unterkategorien.',
   },
   twoFactor: {
     column: '2FA',

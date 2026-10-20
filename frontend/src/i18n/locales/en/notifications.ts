@@ -1,6 +1,6 @@
 export default {
   approval_requested: 'Approval needed',
-  approval_requestedHelp: 'An employee of your department requests something that needs approval.',
+  approval_requestedHelp: 'For requests from your department that require approval.',
   request_submitted: 'New request',
   request_submittedHelp: 'To the responsible team, otherwise to all of IT.',
   issue_reported: 'New problem report',

@@ -6,11 +6,11 @@ export default {
     permissions: 'Rights',
     permissionsHelp:
       'Read shows the area, write allows changes. Without a right the area is hidden; selection lists in forms keep working. Rights of several roles add up.',
-    membersHelp: 'IT staff with this role. Administrators may do everything anyway.',
+    membersHelp: 'IT staff with this role. Administrators always have all rights.',
     summary: '{write} write · {read} read',
     groups: { masterdata: 'Master data', operations: 'IT operations' },
-    all: { none: 'all none', read: 'all read', write: 'all write' },
-    levels: { none: 'None', read: 'Read', write: 'Write' },
+    all: { none: 'All: no access', read: 'All: read', write: 'All: write' },
+    levels: { none: 'No access', read: 'Read', write: 'Write' },
     areas: {
       models: 'Models',
       categories: 'Categories',
@@ -135,7 +135,7 @@ export default {
     categoryKindHelp: 'Subcategories have the same type as their parent category.',
     compatibleWithHelp: 'Accessories, spare parts and consumables that fit this model.',
     pickupPointHelp: 'Offered when scheduling a pickup.',
-    itStaffHelp: 'Access to inventory, requests, procurement and master data.',
+    itStaffHelp: 'Access to the IT area. Roles determine which areas.',
     sequenceCodeHelp: 'Technical key. Reserved: asset, reservation, purchase-order.',
     allowAnyModel: '“Any model” requestable',
     allowAnyModelHelp:
@@ -148,12 +148,12 @@ export default {
     itStaff: 'IT staff',
     approvers: 'Approvers',
     approversHelp:
-      'Approve the members’ requests for categories that need approval. Without approvers such requests go straight to IT.',
+      'Approve this department’s requests for categories that require approval. Without approvers they go straight to IT.',
     approvalExempt: 'Exempt from approval',
     approvalExemptHelp: 'Requests go straight to IT, even for categories that need approval.',
     requiresApproval: 'Requires approval',
     requiresApprovalHelp:
-      'An approver of the employee’s department approves requests first. Applies to subcategories as well.',
+      'Requests must first be approved by an approver of the department. Applies to subcategories as well.',
   },
   twoFactor: {
     column: '2FA',
