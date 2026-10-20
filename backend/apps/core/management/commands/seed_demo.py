@@ -16,7 +16,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
-from apps.accounts.models import Department, User
+from apps.accounts.models import Department, Team, User
 from apps.core.models import NumberSequence
 from apps.core.services.numbering import get_sequence
 from apps.inventory.models import (
@@ -431,6 +431,7 @@ EXTRA_MODELS = [
     ("Brother", "TN-2420 toner", "consumables", "bulk", "64.90", 0),
     ("Generic", "USB-C cable 2 m", "consumables", "bulk", "9.90", 0),
     ("Microsoft", "Windows 11 Pro", "operating-systems", "license", "259.00", 0),
+    ("Fernwerk", "Ledgerline ERP", "office-software", "license", "780.00", 0),
     ("Adobe", "Creative Cloud All Apps", "design-software", "license", "1020.00", 0),
 ]
 
@@ -531,6 +532,23 @@ def seed_extra(base: dict, stdout) -> None:
             default_supplier=brueckner if maker in ("Dell", "Brother", "LG") else supplier,
         )
     models["HL-L2350DW"].compatible_with.add(models["TN-2420 toner"])
+
+    # --- Teams -------------------------------------------------------------------
+    # Support gets everything not routed elsewhere; software requests go to the
+    # license team, Ledgerline has its own. Requests from the basic data above stay
+    # unassigned, so every tab of the lists has something to show.
+    jkoch = by_name["jkoch"]
+    support = Team.objects.create(name="IT-Support", code="SUP", is_default=True, sort_order=10)
+    support.members.add(it, jkoch)
+    software = Team.objects.create(name="Software & Lizenzen", code="SW", sort_order=20)
+    software.members.add(admin, it)
+    ledgerline = Team.objects.create(name="Ledgerline", code="NAV", sort_order=30)
+    ledgerline.members.add(jkoch)
+    for code in ("office-software", "design-software", "operating-systems"):
+        categories[code].team = software
+        categories[code].save()
+    models["Ledgerline ERP"].team = ledgerline
+    models["Ledgerline ERP"].save()
     for laptop in ("ThinkPad X1 Carbon Gen 12", "Latitude 5450", "ThinkPad T14 Gen 5"):
         models[laptop].compatible_with.add(models["ThinkPad Universal USB-C Dock"], models["USB-C cable 2 m"])
 
@@ -687,6 +705,16 @@ def seed_extra(base: dict, stdout) -> None:
     )
     license_service.assign_license(expired, it, user_id=by_name["bschmitt"].pk)
     License.objects.filter(pk=expired.pk).update(valid_until=today - timedelta(days=12))
+    nav = License.objects.create(
+        model=models["Ledgerline ERP"],
+        reference="ERP user licenses",
+        seats=10,
+        supplier=brueckner,
+        purchase_date=today - timedelta(days=500),
+        purchase_price="7800.00",
+    )
+    for username in ("cmeyer", "hkrause", "nlange"):
+        license_service.assign_license(nav, it, user_id=by_name[username].pk)
     m365 = License.objects.get(model__name="365 Business Standard")
     for user in people[:18]:
         license_service.assign_license(m365, it, user_id=user.pk)
@@ -754,9 +782,19 @@ def seed_extra(base: dict, stdout) -> None:
         ],
         duration="permanent",
     )
+    new_colleague.assignee = jkoch
+    new_colleague.save(update_fields=["assignee"])
     approve(new_colleague, pickup_days=1, location=munich_desk)
     workflow.auto_allocate(new_colleague, it)
     workflow.mark_ready(new_colleague, it)
+
+    # Routed to the Ledgerline team by the model, waiting for someone to pick it up.
+    submit(
+        by_name["lweber"],
+        "Ledgerline access for the monthly reports",
+        [{"asset_model": models["Ledgerline ERP"].pk, "quantity": 1}],
+        duration="permanent",
+    )
 
     hand_out(
         submit(
@@ -844,11 +882,12 @@ def seed_extra(base: dict, stdout) -> None:
         return issue_service.report_issue(asset, user, kind, description)
 
     report(by_name["dhoffmann"], AssetIssue.Kind.DEFECT, "Battery is empty after two hours.")
-    issue_service.update_issue(
-        report(by_name["jwagner"], AssetIssue.Kind.DAMAGE, "Monitor flickers when the cable is touched."),
-        it,
-        AssetIssue.Status.IN_PROGRESS,
+    flicker = report(
+        by_name["jwagner"], AssetIssue.Kind.DAMAGE, "Monitor flickers when the cable is touched."
     )
+    flicker.assignee = it
+    flicker.save(update_fields=["assignee"])
+    issue_service.update_issue(flicker, it, AssetIssue.Status.IN_PROGRESS)
     issue_service.update_issue(
         report(by_name["lkrueger"], AssetIssue.Kind.OTHER, "Laptop is very slow since the last update."),
         it,
