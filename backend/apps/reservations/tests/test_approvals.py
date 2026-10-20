@@ -239,3 +239,35 @@ def test_follows_only_an_own_request(approval_setup, employee_client, it_client)
     )
     assert response.status_code == 201, response.content
     assert response.json()["follows"] is None
+
+
+def test_menu_counts_show_open_requests_approvals_and_reports(
+    approval_setup, employee_client, approver_client
+):
+    from apps.inventory.models import Asset, AssetIssue
+    from apps.inventory.services.issues import update_issue
+
+    def counts(client) -> dict:
+        return client.get("/api/portal/menu-counts").json()
+
+    before = counts(employee_client)
+    request(employee_client, "laptops")
+    assert counts(employee_client) == {**before, "requests": before["requests"] + 1}
+    assert counts(approver_client)["approvals"] == 1
+
+    employee = User.objects.get(username="employee")
+    issue = AssetIssue.objects.create(asset=Asset.objects.first(), description="Broken", reported_by=employee)
+    assert counts(employee_client)["issues"] == before["issues"] + 1
+    assert counts(employee_client)["issues_updated"] is before["issues_updated"]
+
+    # IT takes it into work: news for the employee until they look at their reports.
+    update_issue(issue, User.objects.get(username="it"), AssetIssue.Status.IN_PROGRESS)
+    assert counts(employee_client)["issues_updated"] is True
+    assert employee_client.post("/api/portal/my-issues/seen").status_code == 204
+    assert counts(employee_client)["issues_updated"] is False
+    assert employee_client.get("/api/portal/my-issues").json()[0]["unseen_update"] is False
+
+    # Resolved: no longer counted as open, but still news.
+    update_issue(issue, User.objects.get(username="it"), AssetIssue.Status.RESOLVED, "New cable")
+    after = counts(employee_client)
+    assert after["issues"] == before["issues"] and after["issues_updated"] is True

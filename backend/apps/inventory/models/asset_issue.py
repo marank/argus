@@ -61,6 +61,8 @@ class AssetIssue(TimeStampedModel):
     )
     resolution = models.TextField(_("resolution"), blank=True)
     resolved_at = models.DateTimeField(_("resolved at"), null=True, blank=True)
+    # IT changed the status or the resolution since the reporter last looked at their reports.
+    unseen_update = models.BooleanField(_("unseen update"), default=False)
 
     class Meta:
         verbose_name = _("problem report")

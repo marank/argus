@@ -13,6 +13,7 @@ import type {
   ReservationListItem,
   HandOutInput,
   HandoverMode,
+  MenuCounts,
   ReturnInput,
   SignInput,
   TerminalPerson,
@@ -93,8 +94,10 @@ export const portalApi = {
   myAssets: () => http.get<MyAsset[]>('/portal/my-assets'),
   myAsset: (id: Id) => http.get<MyAsset>(`/portal/my-assets/${id}`),
   myIssues: () => http.get<OwnIssueWithDevice[]>('/portal/my-issues'),
+  markIssuesSeen: () => http.post<void>('/portal/my-issues/seen'),
   myLicenses: () => http.get<OwnLicense[]>('/portal/my-licenses'),
   myConsumables: () => http.get<MyConsumables[]>('/portal/my-consumables'),
+  menuCounts: () => http.get<MenuCounts>('/portal/menu-counts'),
   reportIssue: (assetId: Id, data: { kind: IssueKind; description: string }) =>
     http.post<OwnIssue>(`/portal/my-assets/${assetId}/issues`, data),
 }

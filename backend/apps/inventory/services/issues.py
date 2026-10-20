@@ -42,6 +42,10 @@ def update_issue(issue: AssetIssue, user, status: str, resolution: str = "") -> 
     if status == Status.RESOLVED and not resolution:
         raise BusinessError(_("Describe how the problem was solved."))
     was_resolved = issue.status == Status.RESOLVED
+    if issue.reported_by_id != user.pk and (
+        status != issue.status or (status == Status.RESOLVED and resolution != issue.resolution)
+    ):
+        issue.unseen_update = True
     issue.status = status
     issue.handled_by = user
     if status == Status.RESOLVED:
@@ -60,3 +64,8 @@ def update_issue(issue: AssetIssue, user, status: str, resolution: str = "") -> 
         )
         notifications.issue_resolved(issue)
     return issue
+
+
+def mark_seen(user) -> None:
+    """The reporter has looked at their reports: updates are no longer news."""
+    AssetIssue.objects.filter(reported_by=user, unseen_update=True).update(unseen_update=False)

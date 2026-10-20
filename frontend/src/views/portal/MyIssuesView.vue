@@ -11,6 +11,7 @@ import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useGroupedRows, withGroupHeaders } from '@/composables/useGroupedRows'
+import { useMenuCountsStore } from '@/stores/menuCounts'
 import type { OwnIssueWithDevice } from '@/types/inventory'
 import { categoryIcon } from '@/utils/icons'
 
@@ -19,8 +20,20 @@ const { t } = useI18n()
 const router = useRouter()
 const { date, enumLabel } = useFormat()
 
+const menuCounts = useMenuCountsStore()
+
+/**
+ * Updates from IT keep their pulsing status while the page is open; looking at
+ * the list marks them seen, so the menu stops pulsing.
+ */
 const issues = ref<OwnIssueWithDevice[] | null>(null)
-onMounted(async () => (issues.value = await portalApi.myIssues()))
+onMounted(async () => {
+  issues.value = await portalApi.myIssues()
+  if (issues.value.some((i) => i.unseen_update)) {
+    await portalApi.markIssuesSeen()
+    await menuCounts.refresh()
+  }
+})
 
 const isDone = (i: OwnIssueWithDevice) => i.status === 'resolved'
 /** Open and in-progress reports first; newest first within each section (as delivered). */
@@ -65,7 +78,8 @@ const columns = computed(() =>
       key: 'status',
       title: t('common.status'),
       width: 150,
-      render: (i) => h(StatusTag, { group: 'issueStatus', value: i.status }),
+      render: (i) =>
+        h(StatusTag, { group: 'issueStatus', value: i.status, pulse: i.unseen_update }),
     },
     {
       key: 'kind',

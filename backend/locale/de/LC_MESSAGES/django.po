@@ -1047,6 +1047,10 @@ msgstr "Lösung"
 msgid "resolved at"
 msgstr "erledigt am"
 
+#: apps/inventory/models/asset_issue.py:65
+msgid "unseen update"
+msgstr "ungelesene Änderung"
+
 #: apps/inventory/models/asset_issue.py:66
 msgid "problem report"
 msgstr "Problemmeldung"

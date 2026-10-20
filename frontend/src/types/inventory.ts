@@ -238,6 +238,8 @@ export interface OwnIssue {
   status: IssueStatus
   resolution: string
   created_at: string
+  /** IT changed it since the employee last looked at their reports. */
+  unseen_update: boolean
 }
 
 /** One of the employee's reports in their list of all reports. */

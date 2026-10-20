@@ -45,6 +45,15 @@ class AvailabilityOut(Schema):
     categories: dict[str, CountsOut]
 
 
+class MenuCountsOut(Schema):
+    """Numbers for the self-service menu; ``issues_updated``: IT changed a report since the user looked."""
+
+    requests: int
+    approvals: int
+    issues: int
+    issues_updated: bool
+
+
 class ConsumableDeviceOut(Schema):
     id: UUID
     inventory_number: str

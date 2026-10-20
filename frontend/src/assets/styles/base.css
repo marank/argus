@@ -337,6 +337,23 @@ a:hover {
     box-shadow: 0 0 0 6px transparent;
   }
 }
+/* Like ar-pulse-ring, for filled badges: the ring takes the badge's colour, not the text's,
+   and is a little stronger so it still shows next to a filled shape. */
+@keyframes ar-pulse-badge {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--ar-primary) 70%, transparent);
+  }
+  15% {
+    transform: scale(1.06);
+  }
+  30% {
+    transform: none;
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
 @keyframes ar-pulse-soft {
   50% {
     opacity: 0.35;
@@ -349,7 +366,9 @@ a:hover {
 }
 /* Site setting "attention animations" off: pulses stand still, feedback motion stays. */
 .no-attention-motion .dot.pulse,
-.no-attention-motion .stat.alert::before {
+.no-attention-motion .stat.alert::before,
+.no-attention-motion .menu-badge.due,
+.no-attention-motion .icon-dot {
   animation: none !important;
 }
 @media (prefers-reduced-motion: reduce) {

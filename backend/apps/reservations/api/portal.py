@@ -17,12 +17,14 @@ from apps.inventory.models import Asset, AssetIssue, LicenseAssignment
 from apps.inventory.schemas.asset_issue import AssetIssueIn, OwnIssueOut, OwnIssueWithDeviceOut
 from apps.inventory.schemas.license import OwnLicenseOut
 from apps.inventory.services.availability import Counts, period_availability
-from apps.inventory.services.issues import report_issue
+from apps.inventory.services.issues import mark_seen, report_issue
 from apps.masterdata.models import AssetModel, Category
-from apps.reservations.models import ReservationAllocation
+from apps.reservations.api.queries import approvable_reservations
+from apps.reservations.models import Reservation, ReservationAllocation
 from apps.reservations.schemas.catalog import (
     AvailabilityOut,
     CatalogCategoryOut,
+    MenuCountsOut,
     MyAssetOut,
     MyConsumablesOut,
 )
@@ -172,6 +174,31 @@ def my_issues(request: HttpRequest):
     for issue in issues:
         issue.still_assigned = issue.asset.assigned_to_id == request.user.pk
     return issues
+
+
+@router.post("/my-issues/seen", response={204: None})
+def my_issues_seen(request: HttpRequest):
+    """The employee looked at their reports; IT's updates no longer count as new in the menu."""
+    mark_seen(request.user)
+    return Status(204, None)
+
+
+@router.get("/menu-counts", response=MenuCountsOut)
+def menu_counts(request: HttpRequest):
+    """Open requests, approvals and problem reports of the user, for the badges in the menu.
+
+    Approvals always wait for the user; reports only when IT changed one since the user last looked.
+    """
+    approvals = approvable_reservations(request.user).filter(status=Reservation.Status.PENDING_APPROVAL)
+    issues = AssetIssue.objects.filter(reported_by=request.user)
+    return {
+        "requests": Reservation.objects.filter(
+            requester=request.user, status__in=Reservation.OPEN_STATUSES
+        ).count(),
+        "approvals": approvals.count(),
+        "issues": issues.exclude(status=AssetIssue.Status.RESOLVED).count(),
+        "issues_updated": issues.filter(unseen_update=True).exists(),
+    }
 
 
 @router.get("/my-licenses", response=list[OwnLicenseOut])

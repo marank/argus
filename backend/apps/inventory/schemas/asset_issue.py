@@ -39,6 +39,8 @@ class OwnIssueOut(Schema):
     status: str
     resolution: str
     created_at: datetime
+    # IT changed it since the employee last looked at their reports.
+    unseen_update: bool
 
 
 class OwnIssueDeviceOut(Schema):

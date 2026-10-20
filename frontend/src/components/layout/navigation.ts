@@ -41,10 +41,14 @@ export interface NavItem {
   permission?: PermissionKey
   /** Only for administrators. */
   superuser?: boolean
+  /** Shows a count from the menu counts on the right. */
+  badge?: MenuBadge
   label: string
   icon: Component
   to: RouteLocationRaw
 }
+
+export type MenuBadge = 'requests' | 'approvals' | 'issues'
 
 export interface NavSection {
   key: string
@@ -74,6 +78,7 @@ export const NAVIGATION: NavSection[] = [
       {
         key: 'portal-requests',
         label: 'nav.myRequests',
+        badge: 'requests',
         icon: ClipboardList,
         to: { name: 'portal-requests' },
       },
@@ -81,6 +86,7 @@ export const NAVIGATION: NavSection[] = [
         key: 'portal-approvals',
         approver: true,
         label: 'nav.approvals',
+        badge: 'approvals',
         icon: ClipboardCheck,
         to: { name: 'portal-approvals' },
       },
@@ -101,6 +107,7 @@ export const NAVIGATION: NavSection[] = [
         key: 'portal-issues',
         module: 'issues',
         label: 'nav.myIssues',
+        badge: 'issues',
         icon: MessageSquareWarning,
         to: { name: 'portal-issues' },
       },

@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { ChevronDown } from '@lucide/vue'
 import { NMenu, type MenuOption } from 'naive-ui'
-import { useStorage } from '@vueuse/core'
+import { useIntervalFn, useStorage } from '@vueuse/core'
 import { computed, h, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
 
 import { useAuthStore } from '@/stores/auth'
 import { useFeaturesStore } from '@/stores/features'
+import { useMenuCountsStore } from '@/stores/menuCounts'
 
-import { activeKey, NAVIGATION } from './navigation'
+import { activeKey, NAVIGATION, type MenuBadge, type NavItem } from './navigation'
 
 const props = defineProps<{ collapsed: boolean }>()
 
@@ -34,6 +35,48 @@ watch(
   },
   { immediate: true },
 )
+
+/** Counts for the self-service entries, refreshed on every page change and every minute. */
+const menuCounts = useMenuCountsStore()
+watch(() => route.path, menuCounts.refresh, { immediate: true })
+useIntervalFn(menuCounts.refresh, 60_000)
+
+/**
+ * The count of an entry and whether it waits for the user (then it pulses):
+ * approvals always, reports when IT changed one since the user looked.
+ */
+function badgeOf(key: MenuBadge): { count: number; due: boolean } {
+  const c = menuCounts.counts
+  if (!c) return { count: 0, due: false }
+  switch (key) {
+    case 'requests':
+      return { count: c.requests, due: false }
+    case 'approvals':
+      return { count: c.approvals, due: c.approvals > 0 }
+    case 'issues':
+      return { count: c.issues, due: c.issues_updated }
+  }
+}
+
+function itemLabel(item: NavItem) {
+  const badge = item.badge ? badgeOf(item.badge) : null
+  return h(RouterLink, { to: item.to, class: 'menu-link' }, () => [
+    h('span', { class: 'menu-text' }, t(item.label)),
+    // A resolved report leaves no open count, but its update still deserves a mark.
+    badge && (badge.count || badge.due)
+      ? h('span', { class: ['menu-badge', { due: badge.due }] }, badge.count || '!')
+      : null,
+  ])
+}
+
+/** Collapsed there is no room for the count: a dot on the icon marks what waits. */
+function itemIcon(item: NavItem) {
+  const due = props.collapsed && !!item.badge && badgeOf(item.badge).due
+  return h('span', { class: 'menu-icon' }, [
+    h(item.icon, { size: 16, strokeWidth: 1.75 }),
+    due ? h('span', { class: 'icon-dot' }) : null,
+  ])
+}
 
 /**
  * A section heading; where sections fold, a button with an arrow that folds the
@@ -91,8 +134,8 @@ const options = computed<MenuOption[]>(() =>
   sections.value.flatMap<MenuOption>((section) => {
     const children: MenuOption[] = section.items.map((item) => ({
       key: item.key,
-      label: () => h(RouterLink, { to: item.to }, () => t(item.label)),
-      icon: () => h(item.icon, { size: 16, strokeWidth: 1.75 }),
+      label: () => itemLabel(item),
+      icon: () => itemIcon(item),
     }))
     // Without a heading the entries stand alone; an empty group would still leave a gap.
     if (!section.label) return children
@@ -249,5 +292,60 @@ const nodeProps = (option: MenuOption) => {
 :deep(.n-menu-item-content a) {
   color: inherit;
   text-decoration: none;
+}
+/* The link fills the entry, so a count sits on the right where the fold arrows end. */
+/* Specific enough to win over Naive's own rule, which would cut off the pulse ring
+   around a count; the label shortens itself (.menu-text). */
+.sidebar :deep(.n-menu .n-menu-item-content-header) {
+  flex: 1;
+  min-width: 0;
+  overflow: visible;
+}
+:deep(.menu-link) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-right: 6px;
+}
+:deep(.menu-text) {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+:deep(.menu-badge) {
+  flex-shrink: 0;
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--ar-surface-sunken);
+  border: 1px solid var(--ar-border);
+  color: var(--ar-text-muted);
+  font-family: var(--ar-font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 16px;
+  text-align: center;
+}
+/* Waits for the user: in the accent colour, with the pulse used elsewhere for attention. */
+:deep(.menu-badge.due) {
+  background: var(--ar-primary);
+  border-color: var(--ar-primary);
+  color: var(--ar-on-primary);
+  animation: ar-pulse-badge 1.8s ease-out infinite;
+}
+:deep(.menu-icon) {
+  position: relative;
+  display: inline-flex;
+}
+:deep(.icon-dot) {
+  position: absolute;
+  top: -3px;
+  right: -4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ar-primary);
+  animation: ar-pulse-badge 1.8s ease-out infinite;
 }
 </style>

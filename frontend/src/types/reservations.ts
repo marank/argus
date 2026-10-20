@@ -318,6 +318,14 @@ export interface MyConsumables {
   consumables: AssetModelRef[]
 }
 
+/** Numbers for the self-service menu; `issues_updated`: IT changed a report since the employee looked. */
+export interface MenuCounts {
+  requests: number
+  approvals: number
+  issues: number
+  issues_updated: boolean
+}
+
 export interface TerminalPerson {
   id: Id
   display_name: string
