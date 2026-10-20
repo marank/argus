@@ -42,6 +42,8 @@ export type WidgetHeight = 'auto' | 'small' | 'medium' | 'large'
 /** One dashboard widget as the user arranged it; the order of the list is the order on screen. */
 export interface WidgetSettings {
   id: string
+  /** Set on further instances of a widget: which widget it is (the first has its id). */
+  widget?: string
   visible: boolean
   size: WidgetSize
   height: WidgetHeight

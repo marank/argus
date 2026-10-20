@@ -42,7 +42,7 @@ function extend(row: DueReturn) {
 </script>
 
 <template>
-  <NCard :title="t('dashboard.widgets.dueReturns.title')" size="small">
+  <NCard :title="title ?? t('dashboard.widgets.dueReturns.title')" size="small">
     <template #header-extra>
       <DateModeToggle :model-value="mode" @update:model-value="setMode" />
       <WidgetOptions>

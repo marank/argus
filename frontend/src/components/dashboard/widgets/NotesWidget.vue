@@ -35,7 +35,7 @@ function onInput(value: string) {
 </script>
 
 <template>
-  <NCard :title="t('dashboard.widgets.notes.title')" size="small">
+  <NCard :title="title ?? t('dashboard.widgets.notes.title')" size="small">
     <template #header-extra>
       <span class="muted status">{{
         saved ? t('dashboard.widgets.notes.saved') : t('dashboard.widgets.notes.saving')

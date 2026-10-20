@@ -37,7 +37,7 @@ const choose = (value: (string | number)[]) =>
 </script>
 
 <template>
-  <NCard :title="t('dashboard.widgets.shortcuts.title')" size="small">
+  <NCard :title="title ?? t('dashboard.widgets.shortcuts.title')" size="small">
     <template #header-extra>
       <NPopover trigger="click" placement="bottom-end" scrollable style="max-height: 360px">
         <template #trigger>

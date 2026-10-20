@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { LayoutDashboard, Plus, RotateCcw } from '@lucide/vue'
+import { useIntervalFn } from '@vueuse/core'
 import { NButton } from 'naive-ui'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import EmployeeDashboard from '@/components/dashboard/EmployeeDashboard.vue'
@@ -10,8 +11,21 @@ import PageHeader from '@/components/common/PageHeader.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useAuthStore } from '@/stores/auth'
 
-const { t } = useI18n()
+const { t, d } = useI18n()
 const { longDate } = useFormat()
+
+/** A running clock in the header: "Dienstag, 20. Oktober · 13:38" with a blinking colon. */
+const now = ref(new Date())
+useIntervalFn(() => (now.value = new Date()), 1000)
+const clock = computed(() => {
+  const time = d(now.value, 'time')
+  const colon = time.indexOf(':')
+  return {
+    day: longDate(now.value),
+    hours: time.slice(0, colon),
+    minutes: time.slice(colon + 1),
+  }
+})
 const auth = useAuthStore()
 const editing = ref(false)
 const dashboard = ref<InstanceType<typeof ItDashboard> | null>(null)
@@ -59,10 +73,14 @@ const dashboard = ref<InstanceType<typeof ItDashboard> | null>(null)
     </PageHeader>
     <PageHeader
       v-else
-      :eyebrow="longDate(new Date(), true)"
       :title="t('dashboard.greeting', { name: auth.user?.first_name || auth.user?.username })"
       :subtitle="auth.isItStaff ? t('dashboard.itSubtitle') : t('dashboard.employeeSubtitle')"
     >
+      <template #eyebrow>
+        <time :datetime="now.toISOString()"
+          >{{ clock.day }} · {{ clock.hours }}<span class="blink">:</span>{{ clock.minutes }}</time
+        >
+      </template>
       <template v-if="auth.isItStaff" #actions>
         <NButton size="small" @click="editing = true">
           <template #icon><LayoutDashboard /></template>
@@ -76,9 +94,29 @@ const dashboard = ref<InstanceType<typeof ItDashboard> | null>(null)
 </template>
 
 <style scoped>
-/* The tint is drawn behind the header, so it adds nothing to its size. */
+/* The clock's colon changes once a second (a second on, a second off); not for those who reduce motion. */
+.blink {
+  animation: blink 2s steps(1, end) infinite;
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .blink {
+    animation: none;
+  }
+}
+/*
+ * The tint is drawn behind the header, so it adds nothing to its size. It stays
+ * in view while scrolling; the page colour above it covers the widgets passing.
+ */
+/* Stuck at the page's top padding (base.css), so it does not move when scrolling starts. */
 .page-header.editing {
-  position: relative;
+  position: sticky;
+  top: 20px;
+  z-index: 10;
   isolation: isolate;
 }
 .page-header.editing::before {
@@ -89,6 +127,13 @@ const dashboard = ref<InstanceType<typeof ItDashboard> | null>(null)
   border: 1px solid var(--ar-primary);
   border-radius: 3px;
   background: color-mix(in srgb, var(--ar-primary) 8%, var(--ar-surface));
+  /* Covers the gap above it down to the top bar. */
+  box-shadow: 0 -12px 0 0 var(--ar-bg);
+}
+@media (max-width: 720px) {
+  .page-header.editing {
+    top: 14px;
+  }
 }
 .page-header.editing :deep(.eyebrow) {
   color: var(--ar-primary);

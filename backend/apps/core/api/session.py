@@ -81,9 +81,12 @@ def clean_dashboard_settings(value: dict | None) -> dict:
         if not isinstance(widget_id, str) or not widget_id or len(widget_id) > 50 or widget_id in seen:
             continue
         seen.add(widget_id)
+        # Further instances of a widget name the widget they show.
+        kind = entry.get("widget")
         widgets.append(
             {
                 "id": widget_id,
+                **({"widget": kind} if isinstance(kind, str) and 0 < len(kind) <= 50 else {}),
                 "visible": bool(entry.get("visible", True)),
                 "size": entry["size"] if entry.get("size") in DASHBOARD_SIZES else "large",
                 "height": entry["height"] if entry.get("height") in DASHBOARD_HEIGHTS else "auto",

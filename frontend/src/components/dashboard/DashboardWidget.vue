@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ArrowDown, ArrowUp, GripVertical, Scaling, X } from '@lucide/vue'
-import { NButton, NPopover, type PopoverInst } from 'naive-ui'
+import { ArrowDown, ArrowUp, GripVertical, Pencil, Scaling, X } from '@lucide/vue'
+import { NButton, NInput, NPopover, type PopoverInst } from 'naive-ui'
 import { ref, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -12,6 +12,8 @@ import type { WidgetHeight, WidgetSettings, WidgetSize } from '@/types/accounts'
  */
 defineProps<{
   title: string
+  /** The name the user gave a widget that allows several; undefined where it cannot be named. */
+  customTitle?: string
   icon: Component
   settings: WidgetSettings
   editing?: boolean
@@ -21,6 +23,7 @@ defineProps<{
 }>()
 const emit = defineEmits<{
   remove: []
+  rename: [title: string]
   resize: [size: WidgetSize]
   setHeight: [height: WidgetHeight]
   move: [delta: number]
@@ -65,6 +68,24 @@ const HEIGHTS: WidgetHeight[] = ['auto', 'small', 'medium', 'large']
       <GripVertical :size="14" class="grip" />
       <component :is="icon" :size="14" />
       <span class="name">{{ title }}</span>
+      <NPopover v-if="customTitle !== undefined" trigger="click" placement="bottom-end">
+        <template #trigger>
+          <NButton quaternary size="tiny" :title="t('dashboard.edit.rename')">
+            <template #icon><Pencil /></template>
+          </NButton>
+        </template>
+        <div class="rename">
+          <span class="eyebrow">{{ t('dashboard.edit.rename') }}</span>
+          <NInput
+            :value="customTitle"
+            size="small"
+            clearable
+            :maxlength="60"
+            :placeholder="t('dashboard.edit.renamePlaceholder')"
+            @update:value="emit('rename', $event ?? '')"
+          />
+        </div>
+      </NPopover>
       <NPopover ref="sizeMenu" trigger="click" placement="bottom-end">
         <template #trigger>
           <NButton quaternary size="tiny" :title="t('dashboard.edit.size')">
@@ -203,6 +224,12 @@ const HEIGHTS: WidgetHeight[] = ['auto', 'small', 'medium', 'large']
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.rename {
+  display: grid;
+  gap: 6px;
+  width: 240px;
+  padding: 2px;
 }
 .size-menu {
   display: grid;

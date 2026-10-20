@@ -24,6 +24,17 @@ def test_dashboard_layout_is_saved_per_user(it_client):
                 "card_order": [],
                 "options": {"text": "Call Paul"},
             },
+            {
+                # A further instance names the widget it shows.
+                "id": "week~a1b2c3",
+                "widget": "week",
+                "visible": True,
+                "size": "large",
+                "height": "auto",
+                "hidden_cards": [],
+                "card_order": [],
+                "options": {"title": "Counter", "kinds": ["pickup", "return"]},
+            },
         ]
     }
     response = it_client.patch("/api/auth/me", {"dashboard_settings": layout}, content_type=JSON)

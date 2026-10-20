@@ -62,7 +62,7 @@ const byDay = computed(() =>
 </script>
 
 <template>
-  <NCard :title="t('dashboard.widgets.week.title')" size="small">
+  <NCard :title="title ?? t('dashboard.widgets.week.title')" size="small">
     <template #header-extra>
       <RouterLink :to="{ name: 'calendar' }" class="muted">{{ t('nav.calendar') }}</RouterLink>
       <WidgetOptions>

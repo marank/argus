@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Plus } from '@lucide/vue'
-import { NButton, NModal, NSkeleton, useMessage } from 'naive-ui'
+import { NButton, NModal, NSkeleton, NTag, useMessage } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -12,7 +12,9 @@ import {
   availableCards,
   defaultLayout,
   isDefaultLayout,
+  newInstance,
   resolveLayout,
+  widgetType,
   type WidgetDef,
 } from '@/components/dashboard/widgets'
 import { useAuthStore } from '@/stores/auth'
@@ -32,7 +34,12 @@ const data = ref<ITOverview | null>(null)
 onMounted(async () => (data.value = await dashboardApi.it()))
 
 const defs = new Map(WIDGETS.map((def) => [def.id, def]))
-const def = (widget: WidgetSettings) => defs.get(widget.id) as WidgetDef
+const def = (widget: WidgetSettings) => defs.get(widgetType(widget)) as WidgetDef
+/** The name the user gave this instance, if any. */
+const customTitle = (widget: WidgetSettings) =>
+  typeof widget.options.title === 'string' && widget.options.title.trim()
+    ? widget.options.title.trim()
+    : undefined
 
 /** The saved layout; while editing a copy of it is changed and stored on "Done". */
 const saved = computed(() => resolveLayout(WIDGETS, auth.user?.dashboard_settings?.widgets))
@@ -45,9 +52,9 @@ watch(
 const layout = computed(() => draft.value ?? saved.value)
 
 /** Widgets of a switched-off module, and panels whose modules are all off, do not exist for this site. */
-const available = (widget: WidgetSettings) =>
-  (!def(widget).flag || features.isOn(def(widget).flag!)) &&
-  (!def(widget).cards || availableCards(def(widget), features.isOn).length > 0)
+const isAvailable = (d: WidgetDef) =>
+  (!d.flag || features.isOn(d.flag)) && (!d.cards || availableCards(d, features.isOn).length > 0)
+const available = (widget: WidgetSettings) => isAvailable(def(widget))
 /** A panel with every card hidden is left out like a hidden widget. */
 const hasContent = (widget: WidgetSettings) =>
   !def(widget).cards ||
@@ -56,18 +63,55 @@ const hasContent = (widget: WidgetSettings) =>
 const widgets = computed(() =>
   layout.value.filter((w) => available(w) && w.visible && (editing.value || hasContent(w))),
 )
-/** Widgets that are not on the dashboard, offered in the widget list. */
-const addable = computed(() => layout.value.filter((w) => available(w) && !w.visible))
+/**
+ * The widget list: widgets not on the dashboard, and those allowing several
+ * once more (`another`) while they are on it.
+ */
+interface PickerEntry {
+  def: WidgetDef
+  /** The hidden instance to show again; none adds another one. */
+  widget: WidgetSettings | null
+  another: boolean
+  /** How often it is on the dashboard already. */
+  count: number
+}
+const addable = computed(() =>
+  WIDGETS.filter(isAvailable).flatMap((d): PickerEntry[] => {
+    const instances = layout.value.filter((w) => widgetType(w) === d.id)
+    const count = instances.filter((w) => w.visible).length
+    const hidden = instances.find((w) => !w.visible)
+    if (hidden) return [{ def: d, widget: hidden, another: false, count }]
+    return d.multiple ? [{ def: d, widget: null, another: true, count }] : []
+  }),
+)
 const picking = ref(false)
 
 /** An added widget goes to the end, where the user sees it appear. */
-function add(widget: WidgetSettings) {
+function add(d: WidgetDef, widget: WidgetSettings | null) {
   const list = draft.value
   if (!list) return
-  widget.visible = true
-  list.splice(list.indexOf(widget), 1)
-  list.push(widget)
+  if (widget) {
+    widget.visible = true
+    list.splice(list.indexOf(widget), 1)
+    list.push(widget)
+  } else {
+    list.push(newInstance(d))
+  }
   if (!addable.value.length) picking.value = false
+}
+
+/** Further instances go away entirely; the first one waits in the widget list. */
+function remove(widget: WidgetSettings) {
+  if (widget.widget && draft.value) draft.value.splice(draft.value.indexOf(widget), 1)
+  else widget.visible = false
+}
+
+function rename(widget: WidgetSettings, title: string) {
+  const options = { ...widget.options }
+  // Stored as typed (trimmed only for display), so spaces between words survive typing.
+  if (title.trim()) options.title = title
+  else delete options.title
+  widget.options = options
 }
 
 /**
@@ -179,7 +223,8 @@ defineExpose({
       <DashboardWidget
         v-for="(widget, index) in widgets"
         :key="widget.id"
-        :title="t(def(widget).title)"
+        :title="customTitle(widget) ?? t(def(widget).title)"
+        :custom-title="def(widget).multiple ? String(widget.options.title ?? '') : undefined"
         :icon="def(widget).icon"
         :settings="widget"
         :editing="editing"
@@ -187,7 +232,8 @@ defineExpose({
         :first="index === 0"
         :last="index === widgets.length - 1"
         :class="{ dragged: dragged === widget.id }"
-        @remove="widget.visible = false"
+        @remove="remove(widget)"
+        @rename="rename(widget, $event)"
         @resize="widget.size = $event"
         @set-height="widget.height = $event"
         @move="move(widget, $event)"
@@ -211,6 +257,7 @@ defineExpose({
           v-else
           :data="data"
           :options="widget.options"
+          :title="customTitle(widget)"
           @update:options="setOptions(widget, $event)"
         />
       </DashboardWidget>
@@ -224,15 +271,29 @@ defineExpose({
       :auto-focus="false"
     >
       <ul class="picker-list">
-        <li v-for="widget in addable" :key="widget.id">
-          <component :is="def(widget).icon" :size="18" class="picker-icon" />
+        <li v-for="entry in addable" :key="entry.def.id">
+          <component :is="entry.def.icon" :size="18" class="picker-icon" />
           <div class="picker-text">
-            <strong>{{ t(def(widget).title) }}</strong>
-            <span class="muted">{{ t(def(widget).description) }}</span>
+            <div class="picker-title">
+              <strong>{{ t(entry.def.title) }}</strong>
+              <NTag
+                v-if="entry.def.multiple"
+                size="tiny"
+                :bordered="false"
+                type="info"
+                :title="t('dashboard.edit.multipleHint')"
+              >
+                {{ t('dashboard.edit.multiple') }}
+              </NTag>
+              <small v-if="entry.count" class="mono muted">
+                {{ t('dashboard.edit.onDashboard', { count: entry.count }, entry.count) }}
+              </small>
+            </div>
+            <span class="muted">{{ t(entry.def.description) }}</span>
           </div>
-          <NButton size="small" @click="add(widget)">
+          <NButton size="small" @click="add(entry.def, entry.widget)">
             <template #icon><Plus /></template>
-            {{ t('dashboard.edit.addOne') }}
+            {{ entry.another ? t('dashboard.edit.addAnother') : t('dashboard.edit.addOne') }}
           </NButton>
         </li>
       </ul>
@@ -286,7 +347,13 @@ defineExpose({
   display: grid;
   gap: 2px;
 }
-.picker-text span {
+.picker-text > span {
   font-size: 12px;
+}
+.picker-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
 }
 </style>

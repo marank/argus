@@ -79,6 +79,11 @@ export interface WidgetDef {
   size: WidgetSize
   /** Off until the user adds it from the widget list. */
   optional?: boolean
+  /**
+   * Can be added more than once, each with its own settings and title, e.g.
+   * the week once for the counter and once for procurement.
+   */
+  multiple?: boolean
   /** Only offered while this module or feature is on. */
   flag?: FlagKey
   cards?: StatCardDef[]
@@ -261,6 +266,7 @@ export const WIDGETS: WidgetDef[] = [
     title: 'dashboard.upcoming',
     icon: CalendarDays,
     size: 'medium',
+    multiple: true,
     component: UpcomingWidget,
   },
   {
@@ -296,6 +302,7 @@ export const WIDGETS: WidgetDef[] = [
     icon: CalendarRange,
     size: 'large',
     optional: true,
+    multiple: true,
     component: WeekWidget,
   },
   {
@@ -323,6 +330,7 @@ export const WIDGETS: WidgetDef[] = [
     icon: Undo2,
     size: 'medium',
     optional: true,
+    multiple: true,
     component: DueReturnsWidget,
   },
   {
@@ -370,6 +378,7 @@ export const WIDGETS: WidgetDef[] = [
     icon: Zap,
     size: 'small',
     optional: true,
+    multiple: true,
     component: ShortcutsWidget,
   },
   {
@@ -379,6 +388,7 @@ export const WIDGETS: WidgetDef[] = [
     icon: NotebookPen,
     size: 'small',
     optional: true,
+    multiple: true,
     component: NotesWidget,
   },
 ]
@@ -388,7 +398,7 @@ export const availableCards = (def: WidgetDef, isOn: (flag: FlagKey) => boolean)
   (def.cards ?? []).filter((card) => !card.flag || isOn(card.flag))
 
 /** What the layout functions need to know of a widget. */
-type LayoutDef = Pick<WidgetDef, 'id' | 'size' | 'optional'>
+type LayoutDef = Pick<WidgetDef, 'id' | 'size' | 'optional' | 'multiple'>
 
 export const defaultLayout = (defs: LayoutDef[]): WidgetSettings[] =>
   defs.map((d) => ({
@@ -405,8 +415,12 @@ export const defaultLayout = (defs: LayoutDef[]): WidgetSettings[] =>
  * A saved order applied to the ids that exist: unknown ids are dropped, ids
  * added since join behind their default predecessor.
  */
-export function mergeOrder(defaults: string[], saved: string[]): string[] {
-  const order = saved.filter((id, index) => defaults.includes(id) && saved.indexOf(id) === index)
+export function mergeOrder(
+  defaults: string[],
+  saved: string[],
+  known: (id: string) => boolean = (id) => defaults.includes(id),
+): string[] {
+  const order = saved.filter((id, index) => known(id) && saved.indexOf(id) === index)
   defaults.forEach((id, index) => {
     if (order.includes(id)) return
     const before = defaults
@@ -428,21 +442,44 @@ export function moveBefore(order: string[], id: string, target: string): string[
   return moved
 }
 
+/**
+ * The kind of widget an entry shows. The first instance of a widget has the
+ * widget's id; further ones (`multiple`) have their own id and name the widget.
+ */
+export const widgetType = (widget: Pick<WidgetSettings, 'id' | 'widget'>) =>
+  widget.widget ?? widget.id
+
+/** Another instance of a widget that allows several, with its default size. */
+export function newInstance(def: LayoutDef): WidgetSettings {
+  return {
+    ...defaultLayout([def])[0]!,
+    id: `${def.id}~${Math.random().toString(36).slice(2, 8)}`,
+    widget: def.id,
+    visible: true,
+  }
+}
+
 /** The user's saved layout applied to the widgets that exist (see `mergeOrder`). */
 export function resolveLayout(
   defs: LayoutDef[],
   saved: WidgetSettings[] | undefined,
 ): WidgetSettings[] {
   if (!saved?.length) return defaultLayout(defs)
+  const ids = defs.map((d) => d.id)
+  // Further instances stay as long as their widget exists and allows several.
+  const isCopyOf = (w: WidgetSettings) =>
+    !!w.widget && w.widget !== w.id && !!defs.find((d) => d.id === w.widget)?.multiple
   return mergeOrder(
-    defs.map((d) => d.id),
+    ids,
     saved.map((w) => w.id),
+    (id) => ids.includes(id) || saved.some((w) => w.id === id && isCopyOf(w)),
   ).map((id) => {
     const widget = saved.find((w) => w.id === id)
     if (!widget) return defaultLayout(defs.filter((d) => d.id === id))[0]!
     // Every field in a fixed order, filled in for layouts saved before it existed.
     return {
       id: widget.id,
+      ...(isCopyOf(widget) ? { widget: widget.widget } : {}),
       visible: widget.visible,
       size: widget.size,
       height: widget.height ?? 'auto',

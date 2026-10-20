@@ -28,7 +28,7 @@ watch(days, async (value) => (rows.value = await dashboardApi.upcoming(value)), 
 </script>
 
 <template>
-  <NCard :title="t('dashboard.upcomingDays', { count: days })" size="small">
+  <NCard :title="title ?? t('dashboard.upcomingDays', { count: days })" size="small">
     <template #header-extra>
       <DateModeToggle :model-value="mode" @update:model-value="setMode" />
       <WidgetOptions>

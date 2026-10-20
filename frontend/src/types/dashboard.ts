@@ -34,6 +34,8 @@ export interface WidgetProps {
   data: ITOverview
   /** The widget's own stored settings; changed by emitting `update:options`. */
   options: Record<string, unknown>
+  /** The name the user gave this instance; the widget's own title when unset. */
+  title?: string
 }
 
 export interface TaskRequest {

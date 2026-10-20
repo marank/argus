@@ -4,8 +4,10 @@ import {
   defaultLayout,
   isDefaultLayout,
   mergeOrder,
+  newInstance,
   moveBefore,
   resolveLayout,
+  widgetType,
 } from '@/components/dashboard/widgets'
 import type { WidgetSettings } from '@/types/accounts'
 
@@ -114,5 +116,36 @@ describe('optional widgets', () => {
     expect(resolveLayout(withOptional, saved).find((w) => w.id === 'notes')?.options).toEqual({
       text: 'Call Paul',
     })
+  })
+})
+
+describe('further instances', () => {
+  const withMultiple = [
+    ...defs,
+    { id: 'week', size: 'large' as const, optional: true, multiple: true },
+  ]
+
+  it('keep their place, widget and options', () => {
+    const copy = widget('week~x1', { widget: 'week', options: { title: 'Counter' } })
+    const layout = resolveLayout(withMultiple, [widget('a'), copy, widget('b'), widget('c')])
+    expect(layout.map((w) => w.id)).toEqual(['a', 'week~x1', 'b', 'c', 'week'])
+    expect(layout[1]).toEqual(copy)
+    expect(widgetType(layout[1]!)).toBe('week')
+  })
+
+  it('go when their widget is gone or allows only one', () => {
+    const saved = [
+      widget('a'),
+      widget('gone~x1', { widget: 'gone' }),
+      widget('b~x2', { widget: 'b' }),
+    ]
+    expect(resolveLayout(withMultiple, saved).map((w) => w.id)).toEqual(['a', 'b', 'c', 'week'])
+  })
+
+  it('are new entries of the same widget', () => {
+    const copy = newInstance(withMultiple[3]!)
+    expect(copy).toMatchObject({ widget: 'week', visible: true, size: 'large', options: {} })
+    expect(copy.id).toMatch(/^week~/)
+    expect(newInstance(withMultiple[3]!).id).not.toBe(copy.id)
   })
 })
