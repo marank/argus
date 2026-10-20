@@ -39,14 +39,19 @@ const entries = computed<DetailEntry[]>(() => {
       mono: true,
     },
     { label: t('reservations.pickupLocation'), value: r.pickup_location?.full_name },
-    {
-      label: t('handover.method'),
-      value:
-        t(`handover.mode.${r.handover_mode}`) +
-        (r.handover_mode === 'pickup' && r.skip_device_check
-          ? ` · ${t('handover.withoutCheck')}`
-          : ''),
-    },
+    // The planned hand-over; once ready the alert and later the hand-over record say it.
+    ...(['submitted', 'approved'].includes(r.status)
+      ? [
+          {
+            label: t('handover.method'),
+            value:
+              t(`handover.mode.${r.handover_mode}`) +
+              (r.handover_mode === 'pickup' && r.skip_device_check
+                ? ` · ${t('handover.withoutCheck')}`
+                : ''),
+          },
+        ]
+      : []),
     { label: t('reservations.handledBy'), value: r.handled_by?.display_name },
     { label: t('common.createdAt'), value: date(r.created_at), mono: true },
     ...(r.notes ? [{ label: t('reservations.notes'), value: r.notes, wide: true }] : []),

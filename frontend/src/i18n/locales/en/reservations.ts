@@ -156,7 +156,7 @@ export default {
   steps: {
     submitted: 'Submitted',
     approved: 'Approved',
-    prepared: 'Prepared',
+    ready: 'Ready for pickup',
     handedOut: 'Handed out',
     completed: 'Completed',
   },
@@ -198,5 +198,10 @@ export default {
     requested: 'Requested: {text}',
   },
   history: 'History',
-  handledBy: 'Handled by',
+  handledBy: 'Last action by',
+  overdueAlert: {
+    title: 'Return overdue since {date}',
+    text: 'The devices are still with {name}. Follow up and take them back.',
+  },
+  moreActions: 'More actions',
 }

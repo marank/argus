@@ -67,19 +67,32 @@ const columns = computed<DataTableColumns<ReservationListItem>>(() => [
     key: 'number',
     title: t('reservations.number'),
     sorter: true,
-    width: 140,
+    width: 135,
     render: (r) => h('span', { class: 'mono strong' }, r.number),
+  },
+  {
+    key: 'status',
+    title: t('common.status'),
+    sorter: true,
+    width: 125,
+    // Right after the number: it decides what to do next. Pulse: new requests wait for approval.
+    render: (r) =>
+      h(StatusTag, {
+        group: 'reservationStatus',
+        value: r.status,
+        pulse: r.status === 'submitted',
+      }),
   },
   {
     key: 'title',
     title: t('reservations.purpose'),
-    minWidth: 220,
+    minWidth: 200,
     render: (r) => h('div', [h('div', r.title), h('small', { class: 'muted' }, r.summary)]),
   },
   {
     key: 'requester',
     title: t('reservations.requester'),
-    width: 180,
+    width: 160,
     render: (r) =>
       h('div', [
         h('div', r.requester.display_name),
@@ -89,14 +102,14 @@ const columns = computed<DataTableColumns<ReservationListItem>>(() => [
   {
     key: 'assignment',
     title: t('common.assignment.title'),
-    width: 170,
+    width: 150,
     render: assignmentCell,
   },
   {
     key: 'start_date',
     title: t('reservations.period'),
     sorter: true,
-    width: 220,
+    width: 190,
     render: (r) =>
       h(
         'span',
@@ -105,31 +118,11 @@ const columns = computed<DataTableColumns<ReservationListItem>>(() => [
       ),
   },
   {
-    key: 'unit_count',
-    title: t('common.quantity'),
-    width: 70,
-    align: 'right',
-    render: (r) => h('span', { class: 'mono' }, r.unit_count),
-  },
-  {
     key: 'pickup_at',
     title: t('reservations.pickupAt'),
     sorter: true,
-    width: 180,
+    width: 160,
     render: (r) => h('span', { class: 'mono nowrap' }, r.pickup_at ? weekday(r.pickup_at) : '—'),
-  },
-  {
-    key: 'status',
-    title: t('common.status'),
-    sorter: true,
-    width: 150,
-    // Pulse: new requests wait for approval.
-    render: (r) =>
-      h(StatusTag, {
-        group: 'reservationStatus',
-        value: r.status,
-        pulse: r.status === 'submitted',
-      }),
   },
 ])
 </script>
@@ -218,7 +211,7 @@ const columns = computed<DataTableColumns<ReservationListItem>>(() => [
             onClick: () => router.push({ name: 'reservation', params: { id: r.id } }),
           })
         "
-        :scroll-x="1270"
+        :scroll-x="1120"
         @update:sorter="list.onSort"
       />
     </div>

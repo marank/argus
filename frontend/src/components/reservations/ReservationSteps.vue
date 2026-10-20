@@ -9,7 +9,7 @@ const props = defineProps<{ reservation: Reservation }>()
 const { t } = useI18n()
 
 const steps = computed(() => {
-  const list = ['submitted', 'approved', 'prepared', 'handedOut']
+  const list = ['submitted', 'approved', 'ready', 'handedOut']
   if (props.reservation.duration === 'temporary') list.push('completed')
   return list
 })

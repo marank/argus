@@ -157,7 +157,7 @@ export default {
   steps: {
     submitted: 'Eingereicht',
     approved: 'Bestätigt',
-    prepared: 'Vorbereitet',
+    ready: 'Abholbereit',
     handedOut: 'Ausgegeben',
     completed: 'Abgeschlossen',
   },
@@ -199,5 +199,10 @@ export default {
     requested: 'Gewünscht: {text}',
   },
   history: 'Verlauf',
-  handledBy: 'Bearbeitet von',
+  handledBy: 'Letzte Aktion von',
+  overdueAlert: {
+    title: 'Rückgabe überfällig seit {date}',
+    text: 'Die Geräte sind noch bei {name}. Bitte nachfassen und zurücknehmen.',
+  },
+  moreActions: 'Weitere Aktionen',
 }

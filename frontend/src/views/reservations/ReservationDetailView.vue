@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { Id } from '@/types/common'
 import {
+  Ban,
   CalendarClock,
   Check,
+  EllipsisVertical,
   PackageCheck,
   PackageOpen,
   ShoppingCart,
@@ -11,8 +13,18 @@ import {
   UserCheck,
   X,
 } from '@lucide/vue'
-import { NAlert, NButton, NCard, NInput, NModal, NSkeleton, useMessage } from 'naive-ui'
-import { computed, onMounted, ref } from 'vue'
+import {
+  NAlert,
+  NButton,
+  NCard,
+  NDropdown,
+  NInput,
+  NModal,
+  NSkeleton,
+  useMessage,
+  type DropdownOption,
+} from 'naive-ui'
+import { computed, h, onMounted, ref, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { reservationsApi } from '@/api/reservations'
@@ -31,6 +43,7 @@ import ReturnModal from '@/components/reservations/ReturnModal.vue'
 import ReturnsCard from '@/components/reservations/ReturnsCard.vue'
 import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
+import { useFormat } from '@/composables/useFormat'
 import type { Reservation } from '@/types/reservations'
 import { isReturnable } from '@/utils/reservations'
 
@@ -39,6 +52,7 @@ const { t } = useI18n()
 const message = useMessage()
 const confirm = useConfirm()
 const { busy, run } = useAction()
+const { date } = useFormat()
 
 const reservation = ref<Reservation | null>(null)
 const approveMode = ref<'approve' | 'schedule'>('approve')
@@ -130,6 +144,37 @@ async function reopen() {
   }
 }
 
+/** Rare actions, kept out of the header so the next step stands out. */
+const menuOptions = computed<DropdownOption[]>(() => {
+  const option = (key: string, label: string, icon: Component, danger = false) => ({
+    key,
+    label,
+    icon: () => h(icon, { size: 15 }),
+    props: danger ? { style: 'color: var(--ar-error)' } : undefined,
+  })
+  const s = status.value
+  const options: DropdownOption[] = []
+  if (s === 'submitted' && missing.value)
+    options.push(option('order', t('reservations.actions.createOrder'), ShoppingCart))
+  if (s === 'ready') {
+    // While preparing, "Edit" covers date and place; once ready this is the way to change them.
+    options.push(option('schedule', t('reservations.actions.schedule'), CalendarClock))
+    options.push(option('reopen', t('reservations.actions.reopen'), PackageOpen))
+  }
+  if (['submitted', 'approved', 'ready'].includes(s ?? '')) {
+    if (options.length) options.push({ type: 'divider', key: 'cancel-divider' })
+    options.push(option('cancel', t('reservations.actions.cancel'), Ban, true))
+  }
+  return options
+})
+
+function onMenu(key: string) {
+  if (key === 'order') showOrder.value = true
+  else if (key === 'schedule') openApprove('schedule')
+  else if (key === 'reopen') reopen()
+  else if (key === 'cancel') cancel()
+}
+
 async function cancel() {
   if (await confirm(t('reservations.actions.confirmCancel'), { danger: true })) {
     await act(() => reservationsApi.cancel(props.id))
@@ -174,15 +219,6 @@ async function cancel() {
               }}
             </NButton>
           </template>
-          <NButton v-if="status === 'ready'" :loading="busy" @click="reopen">
-            <template #icon><PackageOpen :size="15" /></template>
-            {{ t('reservations.actions.reopen') }}
-          </NButton>
-          <!-- While preparing, "Edit" covers date and place; once ready this is the way to change them. -->
-          <NButton v-if="status === 'ready'" @click="openApprove('schedule')">
-            <template #icon><CalendarClock :size="15" /></template>
-            {{ t('reservations.actions.schedule') }}
-          </NButton>
           <NButton
             v-if="status === 'ready'"
             :type="reservation.handover_mode === 'pickup' ? 'default' : 'primary'"
@@ -199,25 +235,32 @@ async function cancel() {
             <template #icon><Undo2 :size="15" /></template>
             {{ t('reservations.actions.return') }}
           </NButton>
-          <NButton
-            v-if="['submitted', 'approved'].includes(status!) && missing"
-            @click="showOrder = true"
-          >
+          <NButton v-if="status === 'approved' && missing" @click="showOrder = true">
             <template #icon><ShoppingCart :size="15" /></template>
             {{ t('reservations.actions.createOrder') }}
           </NButton>
-          <NButton
-            v-if="['submitted', 'approved', 'ready'].includes(status!)"
-            quaternary
-            type="error"
-            @click="cancel"
+          <NDropdown
+            v-if="menuOptions.length"
+            trigger="click"
+            placement="bottom-end"
+            :options="menuOptions"
+            @select="onMenu"
           >
-            {{ t('reservations.actions.cancel') }}
-          </NButton>
+            <NButton :title="t('reservations.moreActions')">
+              <template #icon><EllipsisVertical :size="16" /></template>
+            </NButton>
+          </NDropdown>
         </template>
       </PageHeader>
 
       <div class="stack">
+        <NAlert
+          v-if="reservation.is_overdue && reservation.end_date"
+          type="error"
+          :title="t('reservations.overdueAlert.title', { date: date(reservation.end_date) })"
+        >
+          {{ t('reservations.overdueAlert.text', { name: reservation.requester.display_name }) }}
+        </NAlert>
         <NCard size="small"><ReservationSteps :reservation="reservation" /></NCard>
         <div class="layout">
           <NCard
