@@ -13,12 +13,16 @@ import type { ReservationInput } from '@/types/reservations'
 
 import { periodQuery, type CartLine, type RequestPeriod } from './types'
 
-/** The request being assembled: selected devices, then purpose; the period comes from the card above. */
+/**
+ * The request being assembled: selected devices, then purpose; the period comes from the card above.
+ * For a direct hand-out (`direct`) the lines are specific devices and stocks.
+ */
 const props = defineProps<{
   period: RequestPeriod
   busy: boolean
   canChooseRequester: boolean
   requesterPlaceholder?: string
+  direct?: boolean
 }>()
 const lines = defineModel<CartLine[]>('lines', { required: true })
 const emit = defineEmits<{ submit: [data: ReservationInput] }>()
@@ -65,7 +69,7 @@ function submit() {
 
     <div v-if="!lines.length" class="empty">
       <PackageSearch :size="30" :stroke-width="1.3" />
-      <p>{{ t('reservations.new.cartEmpty') }}</p>
+      <p>{{ direct ? t('reservations.direct.cartEmpty') : t('reservations.new.cartEmpty') }}</p>
     </div>
 
     <template v-else>
@@ -73,11 +77,13 @@ function submit() {
         <li v-for="(line, index) in lines" :key="line.key">
           <div class="line">
             <div class="text">
+              <span v-if="line.code" class="mono code">{{ line.code }}</span>
               <strong>{{ line.label }}</strong>
               <small v-if="line.description" class="custom-hint">
                 <MessageSquarePlus :size="12" /> {{ t('reservations.new.customHint') }}
               </small>
               <button
+                v-if="!direct"
                 type="button"
                 class="note-link"
                 @click="openNote = openNote === line.key ? null : line.key"
@@ -86,9 +92,10 @@ function submit() {
               </button>
             </div>
             <NInputNumber
+              v-if="!line.asset"
               v-model:value="line.quantity"
               :min="1"
-              :max="500"
+              :max="line.max ?? 500"
               size="small"
               button-placement="both"
               class="qty"
@@ -282,5 +289,9 @@ h2 {
 }
 .details .eyebrow {
   margin-bottom: 10px;
+}
+.code {
+  color: var(--ar-primary);
+  font-size: 11.5px;
 }
 </style>

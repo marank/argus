@@ -4,7 +4,7 @@ export default {
   number: 'No.',
   purpose: 'Purpose',
   purposePlaceholder: 'e.g. training, new hire, stocktaking',
-  notes: 'Notes for IT',
+  notes: 'Message',
   duration: 'Duration',
   period: 'Period',
   startDate: 'Needed from',
@@ -190,6 +190,29 @@ export default {
     approved: 'Approved. The request is now with IT.',
     declined: 'Request declined',
     back: 'All approvals',
+  },
+  direct: {
+    title: 'Direct hand-out',
+    action: 'Hand out directly',
+    subtitle:
+      'Set aside specific devices from stock for an employee – without a request or approval.',
+    choose: 'What would you like to record?',
+    chooseRequest: 'Request',
+    chooseRequestHint:
+      'Request devices from the catalog, also for employees. The department approves if needed, IT confirms and prepares them.',
+    chooseDirectHint:
+      'Scan or search specific devices in stock. They are allocated right away, without approval.',
+    switch: 'Change type',
+    scan: 'Scan or search inventory or serial number',
+    inStock: 'in stock',
+    results: 'Results',
+    noStock: 'None of it in stock.',
+    pickHint: 'Scan or search a device, or choose a group on the left.',
+    picked: 'in cart',
+    notFound: 'No device in stock found for “{code}”.',
+    notInStock: '{number} is not in stock ({status}).',
+    cartEmpty: 'Scan devices or add them from the list.',
+    badge: 'direct',
   },
   allocation: {
     title: 'Preparation',

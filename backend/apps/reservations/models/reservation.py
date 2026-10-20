@@ -20,6 +20,9 @@ class Reservation(TimeStampedModel):
     approved. Requests without anything to collect (only software) are handed
     out right when they are marked ready. Temporary requests stay handed out
     until the devices and license seats are back; consumables are not returned.
+
+    Direct hand-outs (``origin``) are recorded by IT for devices handed out on the
+    spot: they skip straight to handed out.
     """
 
     class Status(models.TextChoices):
@@ -49,6 +52,11 @@ class Reservation(TimeStampedModel):
         PENDING = "pending", _("Pending")
         APPROVED = "approved", _("Approved")
         REJECTED = "rejected", _("Rejected")
+
+    class Origin(models.TextChoices):
+        REQUEST = "request", _("Request")
+        # IT handed out devices on the spot; the request only documents it.
+        DIRECT = "direct", _("Direct hand-out")
 
     OPEN_STATUSES = (
         Status.PENDING_APPROVAL,
@@ -84,6 +92,7 @@ class Reservation(TimeStampedModel):
     # The employee's wish; IT sets the actual appointment in ``pickup_at``.
     requested_pickup_date = models.DateField(_("preferred pickup day"), null=True, blank=True)
     end_date = models.DateField(_("needed until"), null=True, blank=True)
+    origin = models.CharField(_("origin"), max_length=10, choices=Origin.choices, default=Origin.REQUEST)
     status = models.CharField(
         _("status"), max_length=20, choices=Status.choices, default=Status.SUBMITTED, db_index=True
     )

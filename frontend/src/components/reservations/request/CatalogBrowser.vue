@@ -19,8 +19,14 @@ import { offersAnyModel, optionKey, optionCounts, type CatalogOption } from './t
  * Catalog with search on top, below in two columns: all groups as a list on the
  * left, the selected group's options (or the search results) next to it. Accessory groups appear inside their
  * parent group. The default slot sits above the options (e.g. the quick pick).
+ * For a direct hand-out (`direct`) the `direct` slot replaces search and options;
+ * the groups on the left then browse what is in stock.
  */
-const props = defineProps<{ catalog: CatalogCategory[]; cartCounts: Record<string, number> }>()
+const props = defineProps<{
+  catalog: CatalogCategory[]
+  cartCounts: Record<string, number>
+  direct?: boolean
+}>()
 const emit = defineEmits<{
   add: [category: CatalogCategory, model?: CatalogModel]
   addFreeText: [text: string, category?: CatalogCategory]
@@ -36,6 +42,8 @@ const childrenOf = (id: Id) => props.catalog.filter((c) => c.parent_id === id)
 /** Tiles split into hardware and software, followed by the section for anything else. */
 const tileGroups = computed(() =>
   (['hardware', 'software'] as const)
+    // Direct hand-outs are for devices and consumables, not license seats.
+    .filter((kind) => !props.direct || kind === 'hardware')
     .map((kind) => ({ kind, items: topLevel.value.filter((c) => c.kind === kind) }))
     .filter((group) => group.items.length),
 )
@@ -79,6 +87,7 @@ const results = computed<CatalogOption[]>(() => {
     <!-- Search filters the whole catalog, so it heads the group list. -->
     <nav class="groups" role="tablist">
       <NInput
+        v-if="!direct"
         v-model:value="query"
         class="search"
         clearable
@@ -103,23 +112,26 @@ const results = computed<CatalogOption[]>(() => {
         </button>
       </template>
       <!-- Own section at the end: anything the catalog does not list. -->
-      <div class="group-heading eyebrow">{{ t('reservations.new.otherSection') }}</div>
-      <button
-        type="button"
-        role="tab"
-        class="group"
-        :aria-selected="selectedId === OTHER && !query.trim()"
-        :class="{ active: selectedId === OTHER && !query.trim() }"
-        @click="choose(OTHER)"
-      >
-        <MessageSquarePlus :size="18" :stroke-width="1.5" />
-        <span class="name">{{ t('reservations.new.otherTile') }}</span>
-      </button>
+      <template v-if="!direct">
+        <div class="group-heading eyebrow">{{ t('reservations.new.otherSection') }}</div>
+        <button
+          type="button"
+          role="tab"
+          class="group"
+          :aria-selected="selectedId === OTHER && !query.trim()"
+          :class="{ active: selectedId === OTHER && !query.trim() }"
+          @click="choose(OTHER)"
+        >
+          <MessageSquarePlus :size="18" :stroke-width="1.5" />
+          <span class="name">{{ t('reservations.new.otherTile') }}</span>
+        </button>
+      </template>
     </nav>
 
     <div class="main">
+      <slot v-if="direct" name="direct" :category="selected" />
       <!-- Search results replace the group view while typing. -->
-      <template v-if="query.trim()">
+      <template v-else-if="query.trim()">
         <section class="results">
           <header>
             <h2>{{ t('reservations.new.results') }}</h2>

@@ -16,6 +16,13 @@ export interface CartLine {
   asset_model?: Id
   /** Free text for something not in the catalog. */
   description?: string
+  /** Direct hand-out: a specific device (quantity 1) or a consumable stock. */
+  asset?: Id
+  consumable?: Id
+  /** Inventory number of the device, shown in the cart. */
+  code?: string
+  /** Most units the line can hold (what the stock has free). */
+  max?: number
   quantity: number
   note: string
   /** Free in the request period, only known to IT staff. */

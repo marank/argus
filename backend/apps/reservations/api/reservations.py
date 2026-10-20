@@ -5,6 +5,7 @@ from uuid import UUID
 from django.db import transaction
 from django.db.models import Q
 from django.http import HttpRequest
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from ninja import FilterLookup, FilterSchema, Query, Router, Status
 from ninja.pagination import paginate
@@ -20,6 +21,7 @@ from apps.reservations.models import Reservation
 from apps.reservations.schemas.reservation import (
     AssignIn,
     ConfirmIn,
+    DirectRequestIn,
     ExtendIn,
     HandOutIn,
     ReadyIn,
@@ -50,6 +52,7 @@ class ReservationFilter(FilterSchema):
     open: bool | None = None
     team: Annotated[list[UUID] | None, FilterLookup("assigned_team_id__in")] = None
     assignee: Annotated[UUID | None, FilterLookup("assignee_id")] = None
+    origin: str | None = None
 
     def filter_overdue(self, value: bool | None) -> Q:
         if not value:
@@ -99,6 +102,22 @@ def create_reservation(request: HttpRequest, payload: ReservationIn):
         requester = User.objects.get(pk=payload.requester)
     items = [item.dict() for item in payload.items]
     reservation = workflow.submit(requester, data, items, created_by=request.user)
+    return Status(201, get_reservation(request, reservation.pk))
+
+
+@router.post("/direct", response={201: ReservationOut}, auth=reservations_write)
+def create_direct(request: HttpRequest, payload: DirectRequestIn):
+    """A request with specific devices from stock: confirmed and allocated right away."""
+    requester = (
+        get_object_or_404(User, pk=payload.requester, is_active=True) if payload.requester else request.user
+    )
+    reservation = workflow.prepare_direct(
+        requester,
+        request.user,
+        payload.dict(exclude={"requester", "assets", "consumables"}),
+        assets=payload.assets,
+        consumables={c.consumable: c.quantity for c in payload.consumables},
+    )
     return Status(201, get_reservation(request, reservation.pk))
 
 

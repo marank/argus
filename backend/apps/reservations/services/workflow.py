@@ -643,6 +643,74 @@ def hand_out(
 
 
 @transaction.atomic
+def prepare_direct(
+    requester,
+    user,
+    data: dict,
+    *,
+    assets: list[UUID],
+    consumables: dict[UUID, int] | None = None,
+) -> Reservation:
+    """IT picks specific devices from stock for an employee, without a request first.
+
+    ``data`` holds the same fields as a request (purpose, period, pickup wish).
+    The request is recorded as confirmed with the devices allocated; IT then marks
+    it ready and hands it out as usual. ``consumables`` maps each stock to the
+    quantity taken.
+    """
+    consumables = consumables or {}
+    if not assets and not consumables:
+        raise BusinessError(_("Add at least one device to the request."))
+    if data["start_date"] < timezone.localdate():
+        raise BusinessError(_("The start date must not be in the past."))
+    end_date = data.get("end_date") if data["duration"] == Reservation.Duration.TEMPORARY else None
+    _validate_period(data["duration"], data["start_date"], end_date)
+    _validate_pickup_wish(data.get("requested_pickup_date"), data["start_date"])
+
+    reservation = Reservation.objects.create(
+        origin=Reservation.Origin.DIRECT,
+        requester=requester,
+        created_by=user,
+        **{**data, "end_date": end_date},
+        status=Status.CONFIRMED,
+        handled_by=user,
+        assignee=user,
+        confirmed_at=timezone.now(),
+    )
+
+    # One line per model, in the order the devices were picked.
+    devices = Asset.objects.select_related("model__category").in_bulk(assets)
+    stocks = Consumable.objects.select_related("model__category").in_bulk(list(consumables))
+    picked = [(devices[pk], 1) for pk in dict.fromkeys(assets) if pk in devices]
+    picked += [(stocks[pk], quantity) for pk, quantity in consumables.items() if pk in stocks]
+    if len(picked) != len(set(assets)) + len(consumables):
+        raise BusinessError(_("A device or consumable was not found."))
+    lines: dict[UUID, ReservationItem] = {}
+    for thing, quantity in picked:
+        model = thing.model
+        if model.pk not in lines:
+            lines[model.pk] = ReservationItem(
+                reservation=reservation,
+                position=len(lines),
+                category=model.category,
+                asset_model=model,
+                quantity_requested=0,
+            )
+        lines[model.pk].quantity_requested += quantity
+    for line in lines.values():
+        line.quantity_confirmed = line.quantity_requested
+        line.save()
+    for thing, quantity in picked:
+        line = lines[thing.model.pk]
+        if isinstance(thing, Asset):
+            allocate_asset(line, thing, user)
+        else:
+            allocate_consumable(line, thing, quantity, user)
+
+    return reservation
+
+
+@transaction.atomic
 def return_devices(
     reservation: Reservation,
     user,

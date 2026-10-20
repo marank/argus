@@ -3,6 +3,7 @@ import type { IssueKind, OwnIssue, OwnIssueWithDevice, OwnLicense } from '@/type
 import type {
   Candidates,
   CatalogCategory,
+  DirectRequestInput,
   MyAsset,
   MyConsumables,
   PeriodAvailability,
@@ -34,6 +35,7 @@ export const reservationsApi = {
   list: (params: ListParams = {}) => http.get<Page<ReservationListItem>>(base, params),
   get: (id: Id) => http.get<Reservation>(`${base}/${id}`),
   create: (data: ReservationInput) => http.post<Reservation>(base, data),
+  createDirect: (data: DirectRequestInput) => http.post<Reservation>(`${base}/direct`, data),
   cancel: (id: Id) => http.post<Reservation>(`${base}/${id}/cancel`),
   confirm: (id: Id, data: ConfirmInput) => http.post<Reservation>(`${base}/${id}/confirm`, data),
   reject: (id: Id, comment: string) => http.post<Reservation>(`${base}/${id}/reject`, { comment }),

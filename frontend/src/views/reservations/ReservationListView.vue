@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Plus } from '@lucide/vue'
+import { HandHelping, Plus } from '@lucide/vue'
 import {
   NButton,
   NDataTable,
@@ -23,6 +23,7 @@ import StatusTag from '@/components/common/StatusTag.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useAssigned } from '@/composables/useAssigned'
 import { useList } from '@/composables/useList'
+import { useAuthStore } from '@/stores/auth'
 import type { Team, User } from '@/types/accounts'
 import { RESERVATION_STATUSES, type ReservationListItem } from '@/types/reservations'
 
@@ -30,6 +31,7 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const { date, weekday, enumLabel } = useFormat()
+const canWrite = computed(() => useAuthStore().can('reservations', 'write'))
 
 type Scope = 'open' | 'overdue' | 'all'
 const scope = ref<Scope>(route.query.overdue ? 'overdue' : route.query.status ? 'all' : 'open')
@@ -87,7 +89,16 @@ const columns = computed<DataTableColumns<ReservationListItem>>(() => [
     key: 'title',
     title: t('reservations.purpose'),
     minWidth: 200,
-    render: (r) => h('div', [h('div', r.title), h('small', { class: 'muted' }, r.summary)]),
+    render: (r) =>
+      h('div', [
+        h('div', [
+          r.title,
+          r.origin === 'direct'
+            ? h('span', { class: 'origin' }, t('reservations.direct.badge'))
+            : null,
+        ]),
+        h('small', { class: 'muted' }, r.summary),
+      ]),
   },
   {
     key: 'requester',
@@ -131,6 +142,12 @@ const columns = computed<DataTableColumns<ReservationListItem>>(() => [
   <div class="page">
     <PageHeader :title="t('reservations.title')" :subtitle="t('reservations.subtitle')">
       <template #actions>
+        <RouterLink v-if="canWrite" :to="{ name: 'portal-new', query: { mode: 'direct' } }">
+          <NButton>
+            <template #icon><HandHelping :size="16" /></template>
+            {{ t('reservations.direct.action') }}
+          </NButton>
+        </RouterLink>
         <RouterLink :to="{ name: 'portal-new' }">
           <NButton type="primary">
             <template #icon><Plus :size="16" /></template>
@@ -221,6 +238,17 @@ const columns = computed<DataTableColumns<ReservationListItem>>(() => [
 <style scoped>
 :deep(.strong) {
   font-weight: 600;
+}
+:deep(.origin) {
+  margin-left: 6px;
+  padding: 0 5px;
+  border: 1px solid var(--ar-border);
+  border-radius: 2px;
+  color: var(--ar-text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 :deep(.overdue) {
   color: var(--ar-error);

@@ -4,7 +4,7 @@ export default {
   number: 'Nr.',
   purpose: 'Zweck',
   purposePlaceholder: 'z. B. Schulung, neuer Mitarbeiter, Inventur',
-  notes: 'Hinweise an die IT',
+  notes: 'Mitteilung',
   duration: 'Dauer',
   period: 'Zeitraum',
   startDate: 'Benötigt ab',
@@ -192,6 +192,29 @@ export default {
     approved: 'Genehmigt. Die Anforderung ist jetzt bei der IT.',
     declined: 'Anforderung abgelehnt',
     back: 'Alle Genehmigungen',
+  },
+  direct: {
+    title: 'Direktausgabe',
+    action: 'Direkt ausgeben',
+    subtitle:
+      'Bestimmte Geräte aus dem Lager für einen Mitarbeiter bereitstellen – ohne Anforderung und Genehmigung.',
+    choose: 'Was möchten Sie erfassen?',
+    chooseRequest: 'Anforderung',
+    chooseRequestHint:
+      'Geräte aus dem Katalog anfordern, auch für Mitarbeiter. Die Abteilung genehmigt bei Bedarf, die IT bestätigt und stellt bereit.',
+    chooseDirectHint:
+      'Bestimmte Geräte aus dem Lager scannen oder suchen. Sie werden sofort zugeteilt, ohne Genehmigung.',
+    switch: 'Art wechseln',
+    scan: 'Inventar- oder Seriennummer scannen oder suchen',
+    inStock: 'im Lager',
+    results: 'Treffer',
+    noStock: 'Nichts davon im Lager.',
+    pickHint: 'Gerät scannen, suchen oder links eine Gruppe wählen.',
+    picked: 'im Warenkorb',
+    notFound: 'Kein Gerät im Lager für „{code}“ gefunden.',
+    notInStock: '{number} ist nicht im Lager ({status}).',
+    cartEmpty: 'Geräte scannen oder aus der Liste hinzufügen.',
+    badge: 'direkt',
   },
   allocation: {
     title: 'Vorbereitung',

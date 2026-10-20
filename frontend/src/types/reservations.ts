@@ -86,6 +86,8 @@ export interface ReservationListItem {
   start_date: string
   end_date: string | null
   status: ReservationStatus
+  /** `direct`: devices IT handed out on the spot, without a request first. */
+  origin: 'request' | 'direct'
   approval: ApprovalState
   handover_mode: HandoverMode
   /** The employee's preferred pickup day; IT sets the appointment (pickup_at). */
@@ -280,6 +282,12 @@ export interface HandOutInput {
   location: string
   notes: string
   allocation_notes: { allocation: Id; note: string }[]
+}
+
+/** A request with specific devices from stock, picked by IT instead of catalog lines. */
+export interface DirectRequestInput extends Omit<ReservationInput, 'items'> {
+  assets: Id[]
+  consumables: { consumable: Id; quantity: number }[]
 }
 
 export interface SignInput {

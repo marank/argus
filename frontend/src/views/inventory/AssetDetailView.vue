@@ -27,6 +27,8 @@ const props = defineProps<{ id: Id }>()
 const { t } = useI18n()
 // Without the right to change assets, the page is for viewing only.
 const canWrite = computed(() => useAuthStore().can('assets', 'write'))
+// Handing out goes through a direct hand-out, so it gets a protocol and can be taken back.
+const canHandOut = computed(() => useAuthStore().can('reservations', 'write'))
 const features = useFeaturesStore()
 const router = useRouter()
 const message = useMessage()
@@ -142,7 +144,14 @@ async function removeEvent(event: AssetEvent) {
             <template #icon><UserMinus :size="15" /></template>
             {{ t('inventory.unassign') }}
           </NButton>
-          <NButton v-else-if="asset.status === 'in_stock'" @click="showAssign = true">
+          <NButton
+            v-else-if="asset.status === 'in_stock'"
+            @click="
+              canHandOut
+                ? router.push({ name: 'portal-new', query: { mode: 'direct', asset: asset.id } })
+                : (showAssign = true)
+            "
+          >
             <template #icon><UserPlus :size="15" /></template>
             {{ t('inventory.assign') }}
           </NButton>

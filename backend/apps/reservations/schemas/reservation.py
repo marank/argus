@@ -88,6 +88,8 @@ class ReservationListOut(Schema):
     start_date: date
     end_date: date | None
     status: str
+    # "request", or "direct" for devices IT handed out on the spot.
+    origin: str
     # The department's decision: "" (not needed), pending, approved or rejected.
     approval: str
     handover_mode: str
@@ -272,6 +274,25 @@ class HandOutIn(Schema):
     location: str = Field("", max_length=150)
     notes: str = ""
     allocation_notes: list[AllocationNoteIn] = []
+
+
+class DirectConsumableIn(Schema):
+    consumable: UUID
+    quantity: int = Field(1, ge=1, le=500)
+
+
+class DirectRequestIn(Schema):
+    """A request with specific devices from stock, picked by IT instead of catalog lines."""
+
+    title: str = Field(..., min_length=1, max_length=200)
+    notes: str = ""
+    duration: Reservation.Duration = Reservation.Duration.TEMPORARY
+    start_date: date
+    end_date: date | None = None
+    requested_pickup_date: date | None = None
+    requester: UUID | None = Field(None, description="Left out: the current user")
+    assets: list[UUID] = []
+    consumables: list[DirectConsumableIn] = []
 
 
 class AllocateIn(Schema):

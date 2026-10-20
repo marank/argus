@@ -2486,3 +2486,20 @@ msgstr "Rechte"
 #: apps/core/api/security.py
 msgid "Your roles do not allow this."
 msgstr "Ihre Rollen erlauben das nicht."
+
+#: apps/reservations/models/reservation.py
+msgid "Request"
+msgstr "Anforderung"
+
+#: apps/reservations/models/reservation.py
+#: apps/reservations/services/workflow.py
+msgid "Direct hand-out"
+msgstr "Direktausgabe"
+
+#: apps/reservations/models/reservation.py
+msgid "origin"
+msgstr "Herkunft"
+
+#: apps/reservations/services/workflow.py
+msgid "A device or consumable was not found."
+msgstr "Ein Gerät oder Verbrauchsmaterial wurde nicht gefunden."
