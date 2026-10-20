@@ -9,7 +9,10 @@ import { useFormat } from '@/composables/useFormat'
 import type { Reservation } from '@/types/reservations'
 import { allocationCode, allocationModel } from '@/utils/reservations'
 
-const props = defineProps<{ reservation: Reservation }>()
+/** `printable`: link the handover protocol (IT only). */
+const props = withDefaults(defineProps<{ reservation: Reservation; printable?: boolean }>(), {
+  printable: true,
+})
 const { t } = useI18n()
 const { dateTime, enumLabel } = useFormat()
 
@@ -43,7 +46,7 @@ const entries = computed<DetailEntry[]>(() => {
 
 <template>
   <NCard :title="t('handover.title')" size="small">
-    <template #header-extra>
+    <template v-if="printable" #header-extra>
       <RouterLink
         :to="{ name: 'handover-protocol', params: { id: reservation.id } }"
         target="_blank"

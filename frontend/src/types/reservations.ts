@@ -150,6 +150,65 @@ export interface Reservation extends ReservationListItem {
   items: ReservationItem[]
   handover: Handover | null
   returns: DeviceReturn[]
+  /** What happened so far, oldest first; employees and approvers get their part. */
+  events: ReservationEvent[]
+  /** The earlier request this one asks again for, with why it ended. */
+  follows: FollowedRequest | null
+}
+
+export interface FollowedRequest {
+  id: Id
+  number: string
+  status: ReservationStatus
+  approval: ApprovalState
+  approval_comment: string
+  it_comment: string
+}
+
+export type ReservationEventKind =
+  | 'created'
+  | 'direct'
+  | 'approved'
+  | 'declined'
+  | 'confirmed'
+  | 'rejected'
+  | 'cancelled'
+  | 'assigned'
+  | 'allocated'
+  | 'released'
+  | 'ready'
+  | 'reopened'
+  | 'rescheduled'
+  | 'handed_out'
+  | 'returned'
+  | 'extended'
+  | 'reminded'
+  | 'completed'
+
+/** One step in a request's history; `data` holds plain values of what it was about. */
+export interface ReservationEvent {
+  id: Id
+  kind: ReservationEventKind
+  at: string
+  actor: UserRef | null
+  data: {
+    requester?: string
+    follows?: string
+    comment?: string
+    team?: string
+    assignee?: string
+    items?: string[]
+    damaged?: string[]
+    notes?: string
+    handover_mode?: HandoverMode
+    pickup_at?: string
+    pickup_location?: string
+    method?: HandoverMethod
+    received_by?: string
+    location?: string
+    previous?: string
+    end_date?: string
+  }
 }
 
 export interface ReservationItemInput {
@@ -169,6 +228,8 @@ export interface ReservationInput {
   requested_pickup_date: string | null
   items: ReservationItemInput[]
   requester?: Id | null
+  /** The earlier request this one asks again for. */
+  follows?: Id | null
 }
 
 export interface Candidates {

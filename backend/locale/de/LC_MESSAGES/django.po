@@ -804,7 +804,7 @@ msgstr "verleihbar"
 
 #: apps/inventory/models/asset.py:45
 msgid "Part of the pool employees can reserve from."
-msgstr "Teil des Pools, aus dem Mitarbeiter reservieren können."
+msgstr "Teil des Pools, aus dem Mitarbeiter anfordern können."
 
 #: apps/inventory/models/asset.py:49 apps/inventory/models/consumable.py:18
 #: apps/masterdata/models/location.py:31
@@ -983,7 +983,7 @@ msgstr "Mitarbeiter"
 #: apps/reservations/models/reservation.py:150
 #: apps/reservations/models/reservation_item.py:19
 msgid "reservation"
-msgstr "Reservierung"
+msgstr "Anforderung"
 
 #: apps/inventory/models/asset_event.py:72
 msgid "asset event"
@@ -1658,7 +1658,7 @@ msgstr "Position"
 
 #: apps/procurement/models/purchase_order_line.py:32
 msgid "for reservation item"
-msgstr "für Reservierungsposition"
+msgstr "für Anforderungsposition"
 
 #: apps/procurement/models/purchase_order_line.py:40
 msgid "order line"
@@ -1729,12 +1729,12 @@ msgstr "Wählen Sie ein Gerät oder Verbrauchsmaterial."
 
 #: apps/reservations/apps.py:8
 msgid "Reservations"
-msgstr "Reservierungen"
+msgstr "Anforderungen"
 
 #: apps/reservations/models/allocation.py:18
 #: apps/reservations/models/reservation_item.py:52
 msgid "reservation item"
-msgstr "Reservierungsposition"
+msgstr "Anforderungsposition"
 
 #: apps/reservations/models/allocation.py:57
 msgid "allocated by"
@@ -1980,7 +1980,7 @@ msgstr "abgeschlossen am"
 
 #: apps/reservations/models/reservation.py:151
 msgid "reservations"
-msgstr "Reservierungen"
+msgstr "Anforderungen"
 
 #: apps/reservations/models/reservation_item.py:43
 msgid "Free text for something that is not in the catalog."
@@ -1996,7 +1996,7 @@ msgstr "bestätigte Menge"
 
 #: apps/reservations/models/reservation_item.py:53
 msgid "reservation items"
-msgstr "Reservierungspositionen"
+msgstr "Anforderungspositionen"
 
 #: apps/reservations/models/reservation_item.py:61
 msgid "Choose a category or a model, or describe what you need."
@@ -2105,11 +2105,11 @@ msgstr "Gesendet von %(name)s, IT"
 #: apps/reservations/services/workflow.py:35
 #, python-format
 msgid "This is not possible while the reservation is “%(status)s”."
-msgstr "Das ist nicht möglich, solange die Reservierung „%(status)s“ ist."
+msgstr "Das ist nicht möglich, solange die Anforderung „%(status)s“ ist."
 
 #: apps/reservations/services/workflow.py:43
 msgid "Temporary reservations need an end date."
-msgstr "Befristete Reservierungen erfordern ein Enddatum."
+msgstr "Befristete Anforderungen erfordern ein Enddatum."
 
 #: apps/reservations/services/workflow.py:45
 msgid "The end date must not be before the start date."
@@ -2163,7 +2163,7 @@ msgstr "Bestätigen Sie mindestens ein Gerät oder lehnen Sie die Anforderung ab
 #: apps/reservations/services/workflow.py:204
 #: apps/reservations/services/workflow.py:223
 msgid "Only temporary reservations have a return date."
-msgstr "Nur befristete Reservierungen haben ein Rückgabedatum."
+msgstr "Nur befristete Anforderungen haben ein Rückgabedatum."
 
 #: apps/reservations/services/workflow.py:206
 msgid "The new return date must not be in the past."
@@ -2503,3 +2503,75 @@ msgstr "Herkunft"
 #: apps/reservations/services/workflow.py
 msgid "A device or consumable was not found."
 msgstr "Ein Gerät oder Verbrauchsmaterial wurde nicht gefunden."
+
+#: apps/reservations/models/event.py
+msgid "Requested"
+msgstr "Angefordert"
+
+#: apps/reservations/models/event.py
+msgid "Direct hand-out recorded"
+msgstr "Direktausgabe erfasst"
+
+#: apps/reservations/models/event.py
+msgid "Not approved"
+msgstr "Nicht genehmigt"
+
+#: apps/reservations/models/event.py
+msgid "Assignment changed"
+msgstr "Zuständigkeit geändert"
+
+#: apps/reservations/models/event.py
+msgid "Allocated"
+msgstr "Zugeteilt"
+
+#: apps/reservations/models/event.py
+msgid "Allocation removed"
+msgstr "Zuteilung entfernt"
+
+#: apps/reservations/models/event.py
+msgid "Back in preparation"
+msgstr "Zurück in Vorbereitung"
+
+#: apps/reservations/models/event.py
+msgid "Handover changed"
+msgstr "Übergabe geändert"
+
+#: apps/reservations/models/event.py
+msgid "Taken back"
+msgstr "Zurückgenommen"
+
+#: apps/reservations/models/event.py
+msgid "Loan extended"
+msgstr "Leihfrist verlängert"
+
+#: apps/reservations/models/event.py
+msgid "Reminded to return"
+msgstr "An Rückgabe erinnert"
+
+#: apps/reservations/models/event.py
+msgid "request"
+msgstr "Anforderung"
+
+#: apps/reservations/models/event.py
+msgid "at"
+msgstr "Zeitpunkt"
+
+#: apps/reservations/models/event.py
+msgid "by"
+msgstr "von"
+
+#: apps/reservations/models/event.py
+msgid "details"
+msgstr "Details"
+
+#: apps/reservations/models/event.py
+msgid "request event"
+msgstr "Anforderungsereignis"
+
+#: apps/reservations/models/event.py
+msgid "request events"
+msgstr "Anforderungsereignisse"
+
+#: apps/reservations/models/reservation.py
+msgid "follows"
+msgstr "Folgt auf"

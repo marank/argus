@@ -101,8 +101,7 @@ export const portalApi = {
 
 /** Department approvers decide on requests before IT gets them. */
 export const approvalsApi = {
-  list: (params: ListParams & { pending?: boolean } = {}) =>
-    http.get<Page<ReservationListItem>>('/approvals', params),
+  list: (params: ListParams = {}) => http.get<Page<ReservationListItem>>('/approvals', params),
   approve: (id: Id, comment: string) =>
     http.post<Reservation>(`/approvals/${id}/approve`, { comment }),
   decline: (id: Id, comment: string) =>

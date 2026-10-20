@@ -30,6 +30,7 @@ export default {
     other: 'Sonstiges',
   },
   issueStatus: { open: 'Offen', in_progress: 'In Bearbeitung', resolved: 'Erledigt' },
+  approval: { pending: 'Ausstehend', approved: 'Genehmigt', rejected: 'Nicht genehmigt' },
   reservationStatus: {
     pending_approval: 'In Genehmigung',
     submitted: 'Eingereicht',

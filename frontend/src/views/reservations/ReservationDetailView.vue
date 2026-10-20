@@ -40,10 +40,13 @@ import ExtendModal from '@/components/reservations/ExtendModal.vue'
 import HandoverCard from '@/components/reservations/HandoverCard.vue'
 import HandOutModal from '@/components/reservations/HandOutModal.vue'
 import ReadyModal from '@/components/reservations/ReadyModal.vue'
-import ReservationInfo from '@/components/reservations/ReservationInfo.vue'
 import ReservationSteps from '@/components/reservations/ReservationSteps.vue'
 import ReturnModal from '@/components/reservations/ReturnModal.vue'
 import ReturnsCard from '@/components/reservations/ReturnsCard.vue'
+import ApprovalCard from '@/components/reservations/detail/ApprovalCard.vue'
+import HandoverPlanCard from '@/components/reservations/detail/HandoverPlanCard.vue'
+import RequestInfoCard from '@/components/reservations/detail/RequestInfoCard.vue'
+import ReservationHistory from '@/components/reservations/detail/ReservationHistory.vue'
 import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
 import { useFormat } from '@/composables/useFormat'
@@ -178,6 +181,15 @@ async function reopen() {
     await act(() => reservationsApi.reopen(props.id), t('common.saved'))
   }
 }
+
+/** The return tile: due date and reminders while lent, then what came back. */
+const showReturns = computed(
+  () =>
+    (reservation.value?.returns.length ?? 0) > 0 ||
+    (reservation.value?.duration === 'temporary' &&
+      ['handed_out', 'completed'].includes(status.value ?? '') &&
+      Boolean(reservation.value?.handover)),
+)
 
 const canRemind = computed(
   () => status.value === 'handed_out' && reservation.value?.duration === 'temporary',
@@ -344,44 +356,36 @@ async function cancel() {
         </NAlert>
         <NCard size="small"><ReservationSteps :reservation="reservation" /></NCard>
         <div class="layout">
-          <NCard
-            :title="preparing ? t('reservations.allocation.title') : t('reservations.items')"
-            size="small"
-          >
-            <p v-if="preparing" class="muted small hint">{{ t('reservations.allocation.hint') }}</p>
-            <AllocationPanel
-              v-for="item in reservation.items"
-              :key="item.id"
-              :reservation="reservation"
-              :item="item"
-              :editable="preparing"
-              :availability="itemAvailability(item)"
-              @updated="(r) => (reservation = r)"
-            />
-          </NCard>
+          <div class="stack">
+            <NCard
+              :title="preparing ? t('reservations.allocation.title') : t('reservations.items')"
+              size="small"
+            >
+              <p v-if="preparing" class="muted small hint">
+                {{ t('reservations.allocation.hint') }}
+              </p>
+              <AllocationPanel
+                v-for="item in reservation.items"
+                :key="item.id"
+                :reservation="reservation"
+                :item="item"
+                :editable="preparing"
+                :availability="itemAvailability(item)"
+                @updated="(r) => (reservation = r)"
+              />
+            </NCard>
+            <ReservationHistory :reservation="reservation" />
+          </div>
           <div class="stack">
             <AssignmentCard :reservation="reservation" @updated="(r) => (reservation = r)" />
-            <!-- How the devices get to the employee, while that is still ahead. -->
-            <NAlert
-              v-if="status === 'ready'"
-              type="info"
-              :bordered="false"
-              :title="t(`handover.mode.${reservation.handover_mode}`)"
-            >
-              <template v-if="reservation.handover_mode === 'pickup'">
-                {{ t('handover.waitingAtTerminal') }}
-                <template v-if="reservation.skip_device_check">
-                  {{ t('handover.checkSkipped') }}</template
-                >
-              </template>
-              <template v-else-if="reservation.handover_mode === 'collect'">{{
-                t('handover.collectPending')
-              }}</template>
-              <template v-else>{{ t('handover.deliveryPending') }}</template>
-            </NAlert>
+            <RequestInfoCard :reservation="reservation" />
+            <ApprovalCard v-if="reservation.approval" :reservation="reservation" />
             <HandoverCard v-if="reservation.handover" :reservation="reservation" />
-            <ReturnsCard v-if="reservation.returns.length" :reservation="reservation" />
-            <NCard size="small"><ReservationInfo :reservation="reservation" /></NCard>
+            <HandoverPlanCard
+              v-else-if="['submitted', 'confirmed', 'ready'].includes(reservation.status)"
+              :reservation="reservation"
+            />
+            <ReturnsCard v-if="showReturns" :reservation="reservation" with-due />
           </div>
         </div>
       </div>

@@ -1,19 +1,23 @@
 <script setup lang="ts">
 import type { Id } from '@/types/common'
-import { CalendarClock, X } from '@lucide/vue'
+import { RotateCcw, X } from '@lucide/vue'
 import { NAlert, NButton, NCard, NDataTable, NSkeleton, type DataTableColumns } from 'naive-ui'
-import { h, onMounted, ref } from 'vue'
+import { computed, h, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
 import { reservationsApi } from '@/api/reservations'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
-import ReservationInfo from '@/components/reservations/ReservationInfo.vue'
+import HandoverCard from '@/components/reservations/HandoverCard.vue'
 import ReservationSteps from '@/components/reservations/ReservationSteps.vue'
+import ReturnsCard from '@/components/reservations/ReturnsCard.vue'
+import ApprovalCard from '@/components/reservations/detail/ApprovalCard.vue'
+import HandoverPlanCard from '@/components/reservations/detail/HandoverPlanCard.vue'
+import RequestInfoCard from '@/components/reservations/detail/RequestInfoCard.vue'
+import ReservationHistory from '@/components/reservations/detail/ReservationHistory.vue'
 import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
-import { useFormat } from '@/composables/useFormat'
 import type { Reservation, ReservationItem } from '@/types/reservations'
 import { allocationCode, allocationModel, itemLabel } from '@/utils/reservations'
 
@@ -21,12 +25,21 @@ const props = defineProps<{ id: Id }>()
 const { t } = useI18n()
 const route = useRoute()
 const confirm = useConfirm()
-const { weekday } = useFormat()
 const { busy, run } = useAction()
 
 const reservation = ref<Reservation | null>(null)
 
 onMounted(async () => (reservation.value = await reservationsApi.get(props.id)))
+
+/** Lent for a period: when it is due back, then what came back. */
+const showReturns = computed(() => {
+  const r = reservation.value
+  if (!r) return false
+  return (
+    r.returns.length > 0 ||
+    (r.duration === 'temporary' && ['handed_out', 'completed'].includes(r.status) && !!r.handover)
+  )
+})
 
 async function cancel() {
   if (!(await confirm(t('reservations.actions.confirmCancel'), { danger: true }))) return
@@ -102,6 +115,15 @@ const columns: DataTableColumns<ReservationItem> = [
             <template #icon><X :size="15" /></template>
             {{ t('reservations.actions.cancel') }}
           </NButton>
+          <RouterLink
+            v-if="['rejected', 'cancelled', 'completed'].includes(reservation.status)"
+            :to="{ name: 'portal-new', query: { from: reservation.id } }"
+          >
+            <NButton :type="reservation.status === 'completed' ? 'default' : 'primary'">
+              <template #icon><RotateCcw :size="15" /></template>
+              {{ t('reservations.again.action') }}
+            </NButton>
+          </RouterLink>
         </template>
       </PageHeader>
 
@@ -116,25 +138,63 @@ const columns: DataTableColumns<ReservationItem> = [
             )
           }}
         </NAlert>
-        <NAlert v-if="reservation.status === 'ready' && reservation.pickup_at" type="success">
-          <template #icon><CalendarClock :size="18" /></template>
-          <strong>{{ t('dashboard.pickupAt', { date: weekday(reservation.pickup_at) }) }}</strong>
-          <span v-if="reservation.pickup_location">
-            · {{ reservation.pickup_location.full_name }}</span
-          >
-        </NAlert>
-
         <NCard size="small"><ReservationSteps :reservation="reservation" /></NCard>
-        <NCard size="small"><ReservationInfo :reservation="reservation" /></NCard>
-        <NCard :title="t('reservations.items')" size="small">
-          <NDataTable size="small" :columns="columns" :data="reservation.items" :bordered="false" />
-        </NCard>
+        <div class="layout">
+          <div class="stack">
+            <NCard :title="t('reservations.items')" size="small">
+              <NDataTable
+                size="small"
+                :columns="columns"
+                :data="reservation.items"
+                :bordered="false"
+              />
+            </NCard>
+            <ReservationHistory :reservation="reservation" />
+          </div>
+          <!-- First on narrow screens: how and when the devices come matters most. -->
+          <div class="stack side">
+            <HandoverCard
+              v-if="reservation.handover"
+              :reservation="reservation"
+              :printable="false"
+            />
+            <HandoverPlanCard
+              v-else-if="['confirmed', 'ready'].includes(reservation.status)"
+              :reservation="reservation"
+              for-employee
+            />
+            <ReturnsCard
+              v-if="showReturns"
+              :reservation="reservation"
+              with-due
+              :printable="false"
+            />
+            <RequestInfoCard :reservation="reservation" />
+            <ApprovalCard v-if="reservation.approval" :reservation="reservation" />
+          </div>
+        </div>
       </div>
     </template>
   </div>
 </template>
 
 <style scoped>
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 1100px) {
+  .side {
+    order: -1;
+  }
+}
 :deep(.reduced) {
   color: var(--ar-warning);
   font-weight: 600;

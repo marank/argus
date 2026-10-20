@@ -4,14 +4,34 @@ import { NButton, NCard } from 'naive-ui'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import DetailGrid, { type DetailEntry } from '@/components/common/DetailGrid.vue'
 import { useFormat } from '@/composables/useFormat'
 import type { Reservation } from '@/types/reservations'
 import { allocationCode, allocationModel } from '@/utils/reservations'
 
-/** What came back when, with the notes taken at the return. */
-const props = defineProps<{ reservation: Reservation }>()
+/**
+ * What came back when, with the notes taken at the return. `withDue` adds the
+ * return date and the last reminder on top (IT's view).
+ */
+const props = withDefaults(
+  defineProps<{ reservation: Reservation; withDue?: boolean; printable?: boolean }>(),
+  { printable: true },
+)
 const { t } = useI18n()
-const { dateTime } = useFormat()
+const { date, dateTime } = useFormat()
+
+const due = computed<DetailEntry[]>(() => {
+  const r = props.reservation
+  return [
+    { label: t('reservations.detail.dueDate'), value: date(r.end_date), slot: 'due' },
+    {
+      label: t('reservations.remindedAt'),
+      value: r.reminded_at
+        ? `${dateTime(r.reminded_at)} · ${r.reminded_by?.display_name ?? '—'}`
+        : null,
+    },
+  ]
+})
 
 const returns = computed(() => {
   const allocations = props.reservation.items.flatMap((item) => item.allocations)
@@ -24,7 +44,7 @@ const returns = computed(() => {
 
 <template>
   <NCard :title="t('reservations.returning.title')" size="small">
-    <template #header-extra>
+    <template v-if="printable && reservation.returns.length" #header-extra>
       <RouterLink
         :to="{ name: 'handover-protocol', params: { id: reservation.id } }"
         target="_blank"
@@ -35,6 +55,14 @@ const returns = computed(() => {
         </NButton>
       </RouterLink>
     </template>
+    <DetailGrid v-if="withDue" :entries="due" :class="{ spaced: returns.length }">
+      <template #due>
+        <span class="mono">{{ date(reservation.end_date) }}</span>
+        <span v-if="reservation.is_overdue" class="overdue">
+          · {{ t('reservations.overdue') }}</span
+        >
+      </template>
+    </DetailGrid>
     <section v-for="r in returns" :key="r.id" class="return">
       <div class="head">
         <span class="mono">{{ dateTime(r.returned_at) }}</span>
@@ -56,6 +84,15 @@ const returns = computed(() => {
 </template>
 
 <style scoped>
+.spaced {
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--ar-border);
+}
+.overdue {
+  color: var(--ar-error);
+  font-weight: 600;
+}
 .return + .return {
   margin-top: 12px;
   padding-top: 12px;

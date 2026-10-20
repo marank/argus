@@ -29,6 +29,7 @@ const TONES: Record<string, Record<string, Tone>> = {
   },
   condition: { new: 'success', good: 'info', worn: 'warning', defective: 'error' },
   issueStatus: { open: 'warning', in_progress: 'info', resolved: 'success' },
+  approval: { pending: 'warning', approved: 'success', rejected: 'error' },
 }
 
 export function toneOf(group: string, value: string): Tone {

@@ -1,12 +1,12 @@
 export default {
   title: 'Kalender',
   subtitle:
-    'Reservierungen, Abholungen, Rückgaben, Lieferungen, Garantie- und Lizenzenden auf einen Blick.',
+    'Anforderungen, Abholungen, Rückgaben, Lieferungen, Garantie- und Lizenzenden auf einen Blick.',
   previous: 'Zurück',
   next: 'Weiter',
   views: { month: 'Monat', week: 'Woche', list: 'Liste' },
   kinds: {
-    loan: 'Reservierung',
+    loan: 'Anforderung',
     pickup: 'Abholung',
     return: 'Rückgabe fällig',
     delivery: 'Lieferung',

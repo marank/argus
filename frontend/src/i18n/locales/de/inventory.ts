@@ -24,7 +24,7 @@ export default {
     purchasePrice: 'Kaufpreis',
     warrantyUntil: 'Garantie bis',
     loanable: 'Verleihbar (Pool)',
-    loanableHelp: 'Teil des Pools, aus dem Mitarbeiter reservieren können.',
+    loanableHelp: 'Teil des Pools, aus dem Mitarbeiter anfordern können.',
     consumables: 'Verbrauchsmaterial',
     consumablesHelp: 'Zusätzlich zu dem, was zum Modell passt.',
     condition: 'Zustand',

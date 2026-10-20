@@ -1,7 +1,7 @@
 export default {
   needs: {
     title: 'Demand',
-    subtitle: 'What the pool cannot cover: open reservation items and consumables below minimum.',
+    subtitle: 'What the pool cannot cover: open request lines and consumables below minimum.',
     fromReservations: 'From requests',
     belowMinimum: 'Consumables below minimum',
     missing: 'Missing',

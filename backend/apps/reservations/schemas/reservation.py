@@ -9,7 +9,7 @@ from apps.core.api.security import context_is_it_staff
 from apps.core.schemas import RefOut
 from apps.inventory.schemas.refs import AssetRefOut
 from apps.masterdata.schemas.refs import AssetModelRefOut, CategoryRefOut, LocationRefOut
-from apps.reservations.models import Reservation
+from apps.reservations.models import Reservation, ReservationEvent
 
 
 class ConsumableRefOut(Schema):
@@ -143,6 +143,25 @@ class DeviceReturnOut(Schema):
     returned_at: datetime
 
 
+class FollowsOut(Schema):
+    """The earlier request a new one asks again for, with why it ended."""
+
+    id: UUID
+    number: str
+    status: str
+    approval: str
+    approval_comment: str
+    it_comment: str
+
+
+class ReservationEventOut(Schema):
+    id: UUID
+    kind: str
+    at: datetime
+    actor: UserRefOut | None
+    data: dict
+
+
 class ReservationOut(ReservationListOut):
     notes: str
     requested_pickup_date: date | None
@@ -167,6 +186,22 @@ class ReservationOut(ReservationListOut):
     items: list[ReservationItemOut]
     handover: HandoverOut | None = None
     returns: list[DeviceReturnOut] = []
+    follows: FollowsOut | None = None
+    # What happened so far: all of it for IT, their part for the employee, and for a
+    # department approver only the request and the decision.
+    events: list[ReservationEventOut] = []
+
+    @staticmethod
+    def resolve_events(obj, context) -> list:
+        events = list(obj.events.all())
+        if context_is_it_staff(context):
+            return events
+        request = (context or {}).get("request")
+        if request is not None and request.user.pk == obj.requester_id:
+            kinds = ReservationEvent.EMPLOYEE_KINDS
+        else:
+            kinds = ReservationEvent.APPROVER_KINDS
+        return [e for e in events if e.kind in kinds]
 
     @staticmethod
     def resolve_approvers(obj) -> list:
@@ -211,6 +246,7 @@ class ReservationIn(Schema):
     requested_pickup_date: date | None = None
     items: list[ReservationItemIn] = Field(..., min_length=1)
     requester: UUID | None = Field(None, description="IT only: create on behalf of an employee")
+    follows: UUID | None = Field(None, description="The earlier request this one asks again for")
 
 
 class ConfirmItemIn(Schema):

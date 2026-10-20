@@ -21,7 +21,7 @@ export default {
       teams: 'Teams',
       users: 'Mitarbeiter',
       number_sequences: 'Nummernserien',
-      reservations: 'Reservierungen & Kalender',
+      reservations: 'Anforderungen & Kalender',
       assets: 'Geräte & Servicebuch',
       consumables: 'Verbrauchsmaterial',
       licenses: 'Lizenzen',
@@ -135,7 +135,7 @@ export default {
     categoryKindHelp: 'Unterkategorien haben denselben Typ wie ihre übergeordnete Kategorie.',
     compatibleWithHelp: 'Zubehör, Ersatzteile und Verbrauchsmaterial, die zu diesem Modell passen.',
     pickupPointHelp: 'Wird bei der Abholplanung angeboten.',
-    itStaffHelp: 'Zugriff auf Inventar, Reservierungen, Beschaffung und Stammdaten.',
+    itStaffHelp: 'Zugriff auf Inventar, Anforderungen, Beschaffung und Stammdaten.',
     sequenceCodeHelp: 'Technischer Schlüssel. Reserviert: asset, reservation, purchase-order.',
     allowAnyModel: '„Beliebiges Modell“ anforderbar',
     allowAnyModelHelp:

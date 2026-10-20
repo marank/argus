@@ -25,6 +25,7 @@ from apps.reservations.models import (
     ReservationItem,
 )
 from apps.reservations.services import notifications
+from apps.reservations.services.history import Kind, allocation_label, record
 
 Status = Reservation.Status
 Approval = Reservation.Approval
@@ -78,6 +79,7 @@ def submit(
     reservation = Reservation.objects.create(
         requester=requester, created_by=created_by, **{**data, "end_date": end_date}
     )
+    _record_created(reservation, Kind.CREATED, created_by)
     for position, item in enumerate(items):
         line = ReservationItem(
             reservation=reservation,
@@ -127,7 +129,24 @@ def _needs_approval(reservation: Reservation, created_by) -> bool:
     return reservation.approvers().exists()
 
 
+def _record_created(reservation: Reservation, kind: str, user) -> None:
+    on_behalf = user is not None and user.pk != reservation.requester_id
+    record(
+        reservation,
+        kind,
+        user,
+        requester=reservation.requester.display_name if on_behalf else None,
+        follows=reservation.follows.number if reservation.follows_id else None,
+    )
+
+
 def _record_approval(reservation: Reservation, user, decision: str, comment: str = "") -> None:
+    record(
+        reservation,
+        Kind.APPROVED if decision == Approval.APPROVED else Kind.DECLINED,
+        user,
+        comment=comment,
+    )
     reservation.approval = decision
     reservation.approver = user
     reservation.approval_decided_at = timezone.now()
@@ -153,6 +172,7 @@ def cancel(reservation: Reservation, user) -> Reservation:
     reservation.status = Status.CANCELLED
     reservation.completed_at = timezone.now()
     reservation.save()
+    record(reservation, Kind.CANCELLED, user)
     return reservation
 
 
@@ -224,6 +244,7 @@ def confirm(
     reservation.confirmed_at = reservation.confirmed_at or timezone.now()
     reservation.save()
     if first_decision:
+        record(reservation, Kind.CONFIRMED, user, comment=comment)
         notifications.request_decided(reservation)
     return reservation
 
@@ -237,6 +258,7 @@ def reject(reservation: Reservation, user, comment: str) -> Reservation:
     reservation.handled_by = user
     reservation.completed_at = timezone.now()
     reservation.save()
+    record(reservation, Kind.REJECTED, user, comment=comment)
     notifications.request_decided(reservation)
     return reservation
 
@@ -256,7 +278,21 @@ def reschedule(
         reservation.handover_mode = handover_mode
     reservation.handled_by = user
     reservation.save()
+    reservation.refresh_from_db(fields=["pickup_location"])
+    _record_schedule(reservation, Kind.RESCHEDULED, user)
     return reservation
+
+
+def _record_schedule(reservation: Reservation, kind: str, user) -> None:
+    """A step that sets how and when the devices reach the employee."""
+    record(
+        reservation,
+        kind,
+        user,
+        handover_mode=reservation.handover_mode,
+        pickup_at=reservation.pickup_at.isoformat() if reservation.pickup_at else None,
+        pickup_location=reservation.pickup_location.full_name if reservation.pickup_location_id else None,
+    )
 
 
 @transaction.atomic
@@ -273,6 +309,13 @@ def extend(reservation: Reservation, user, end_date: date) -> Reservation:
         raise BusinessError(_("The new return date must not be in the past."))
     if end_date <= reservation.end_date:
         raise BusinessError(_("The new return date must be after the current one."))
+    record(
+        reservation,
+        Kind.EXTENDED,
+        user,
+        previous=reservation.end_date.isoformat(),
+        end_date=end_date.isoformat(),
+    )
     reservation.end_date = end_date
     reservation.handled_by = user
     reservation.save(update_fields=["end_date", "handled_by", "updated_at"])
@@ -299,6 +342,7 @@ def remind(reservation: Reservation, user) -> Reservation:
     reservation.reminded_at = timezone.now()
     reservation.reminded_by = user
     reservation.save(update_fields=["reminded_at", "reminded_by", "updated_at"])
+    record(reservation, Kind.REMINDED, user)
     return reservation
 
 
@@ -362,7 +406,7 @@ def allocate_asset(item: ReservationItem, asset: Asset, user) -> ReservationAllo
         related_user=reservation.requester,
         reservation=reservation,
     )
-    return ReservationAllocation.objects.create(item=item, asset=asset, allocated_by=user)
+    return _allocated(ReservationAllocation.objects.create(item=item, asset=asset, allocated_by=user), user)
 
 
 @transaction.atomic
@@ -380,9 +424,10 @@ def allocate_consumable(
             % {"missing": item.quantity_missing, "item": item.label}
         )
     reserve_consumable(consumable, quantity)
-    return ReservationAllocation.objects.create(
+    allocation = ReservationAllocation.objects.create(
         item=item, consumable=consumable, quantity=quantity, allocated_by=user
     )
+    return _allocated(allocation, user)
 
 
 @transaction.atomic
@@ -412,9 +457,15 @@ def allocate_license(
     else:
         target = {"user_id": reservation.requester_id}
     assignment = assign_license(license, user, note=reservation.number, **target)
-    return ReservationAllocation.objects.create(
+    allocation = ReservationAllocation.objects.create(
         item=item, license=license, license_assignment=assignment, allocated_by=user
     )
+    return _allocated(allocation, user)
+
+
+def _allocated(allocation: ReservationAllocation, user) -> ReservationAllocation:
+    record(allocation.item.reservation, Kind.ALLOCATED, user, items=[allocation_label(allocation)])
+    return allocation
 
 
 @transaction.atomic
@@ -453,6 +504,7 @@ def auto_allocate(reservation: Reservation, user) -> int:
 def remove_allocation(allocation: ReservationAllocation, user) -> None:
     reservation = allocation.item.reservation
     _require_status(reservation, Status.CONFIRMED, Status.READY)
+    record(reservation, Kind.RELEASED, user, items=[allocation_label(allocation)])
     _release(allocation, user)
     allocation.delete()
     if reservation.status == Status.READY:
@@ -511,6 +563,7 @@ def mark_ready(
     reservation.handled_by = user
     reservation.prepared_by = user
     reservation.save()
+    _record_schedule(reservation, Kind.READY, user)
     notifications.request_ready(reservation)
     if not _has_physical(reservation):
         hand_out(reservation, user)
@@ -524,6 +577,7 @@ def reopen(reservation: Reservation, user) -> Reservation:
     reservation.status = Status.CONFIRMED
     reservation.handled_by = user
     reservation.save(update_fields=["status", "handled_by", "updated_at"])
+    record(reservation, Kind.REOPENED, user)
     return reservation
 
 
@@ -629,6 +683,15 @@ def hand_out(
         recorded_by=user,
     )
 
+    record(
+        reservation,
+        Kind.HANDED_OUT,
+        User.objects.filter(pk=handed_out_by_id).first() if handed_out_by_id else user,
+        method=method,
+        received_by=received_by_name.strip(),
+        location=location.strip(),
+        items=[allocation_label(a) for a in allocations],
+    )
     reservation.handed_out_at = now
     if method != Handover.Method.SIGNATURE:
         reservation.handled_by = user
@@ -677,6 +740,7 @@ def prepare_direct(
         assignee=user,
         confirmed_at=timezone.now(),
     )
+    _record_created(reservation, Kind.DIRECT, user)
 
     # One line per model, in the order the devices were picked.
     devices = Asset.objects.select_related("model__category").in_bulk(assets)
@@ -742,10 +806,11 @@ def return_devices(
             reservation.status = Status.COMPLETED
             reservation.completed_at = now
             reservation.save()
+            record(reservation, Kind.COMPLETED, user)
             return reservation
         raise BusinessError(_("Nothing is left to take back."))
 
-    record = DeviceReturn.objects.create(reservation=reservation, notes=notes.strip(), returned_by=user)
+    taken_back = DeviceReturn.objects.create(reservation=reservation, notes=notes.strip(), returned_by=user)
     for allocation in selected:
         note = allocation_notes.get(allocation.pk, "").strip()
         if allocation.asset_id:
@@ -774,7 +839,7 @@ def return_devices(
             allocation.license_assignment.delete()
             allocation.license_assignment = None
         allocation.returned_at = now
-        allocation.device_return = record
+        allocation.device_return = taken_back
         allocation.return_note = note
         allocation.returned_damaged = bool(allocation.asset_id) and allocation.pk in damaged
         allocation.save(
@@ -787,10 +852,19 @@ def return_devices(
             ]
         )
 
+    record(
+        reservation,
+        Kind.RETURNED,
+        user,
+        items=[allocation_label(a) for a in selected],
+        damaged=[allocation_label(a) for a in selected if a.returned_damaged],
+        notes=notes.strip(),
+    )
     if reservation.status == Status.HANDED_OUT and not returnable.exists():
         open_allocations.update(returned_at=now)
         reservation.status = Status.COMPLETED
         reservation.completed_at = now
+        record(reservation, Kind.COMPLETED, user)
     reservation.handled_by = user
     reservation.save()
     return reservation

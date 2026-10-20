@@ -14,7 +14,7 @@ export default {
   issues: 'Problem reports',
   eventLog: 'Service log',
   calendar: 'Calendar',
-  reservations: 'Reservations',
+  reservations: 'Requests',
   procurement: 'Procurement',
   needs: 'Demand',
   orders: 'Purchase orders',

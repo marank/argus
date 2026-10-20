@@ -14,7 +14,7 @@ export default {
   issues: 'Meldungen',
   eventLog: 'Servicebuch',
   calendar: 'Kalender',
-  reservations: 'Reservierungen',
+  reservations: 'Anforderungen',
   procurement: 'Beschaffung',
   needs: 'Bedarf',
   orders: 'Bestellungen',

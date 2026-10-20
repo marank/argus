@@ -83,7 +83,7 @@ export default {
     procurement: 'Procurement',
     procurementHelp: 'Demand and purchase orders including goods receipt.',
     calendar: 'Calendar',
-    calendarHelp: 'IT planning calendar with reservations, pickups and returns.',
+    calendarHelp: 'IT planning calendar with requests, pickups and returns.',
     issues: 'Problem reports',
     issuesHelp: 'Employees report problems with their devices, IT handles them.',
     terminal: 'Pickup terminal',

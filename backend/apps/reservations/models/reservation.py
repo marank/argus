@@ -133,6 +133,15 @@ class Reservation(TimeStampedModel):
         help_text=_("The pickup terminal starts with who collects, without checking the devices."),
     )
     it_comment = models.TextField(_("IT comment"), blank=True)
+    # Asked again after an earlier request was declined or closed; shown to the approver.
+    follows = models.ForeignKey(
+        "self",
+        verbose_name=_("follows"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+    )
     handled_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_("handled by"),

@@ -86,10 +86,12 @@ def test_request_waits_for_the_department_then_goes_to_it(
     # Now IT gets the request as work.
     assert "it@example.com" in [to for m in mail.outbox for to in m.to]
 
+    # Decided: done for the approver, it leaves the list.
     assert approver_client.get("/api/approvals").json()["items"] == []
-    decided = approver_client.get("/api/approvals", {"pending": False}).json()["items"]
-    assert [r["id"] for r in decided] == [reservation["id"]]
     assert it_client.post(f"{url}/confirm", {"items": []}, content_type=JSON).status_code == 200
+    # Opened again, the approver sees the request and the decision, not IT's work after it.
+    events = approver_client.get(url).json()["events"]
+    assert [e["kind"] for e in events] == ["created", "approved"]
 
 
 def test_declined_request_is_closed_with_the_comment(
@@ -187,3 +189,53 @@ def test_pending_requests_are_open(approval_setup, employee_client, it_client):
     response = it_client.get("/api/reservations", {"open": True})
     assert reservation["id"] in [r["id"] for r in response.json()["items"]]
     assert Reservation.objects.get(pk=reservation["id"]).completed_at is None
+
+
+def test_asking_again_shows_the_approver_why_it_was_declined(
+    approval_setup, employee_client, approver_client, it_client
+):
+    declined = request(employee_client, "laptops")
+    approver_client.post(
+        f"/api/approvals/{declined['id']}/decline", {"comment": "Not this quarter"}, content_type=JSON
+    )
+
+    start = date.today() + timedelta(days=3)
+    response = employee_client.post(
+        "/api/reservations",
+        {
+            "title": "Workshop",
+            "duration": "temporary",
+            "start_date": start.isoformat(),
+            "end_date": (start + timedelta(days=2)).isoformat(),
+            "items": [{"category": str(Category.objects.get(code="laptops").pk), "quantity": 1}],
+            "follows": declined["id"],
+        },
+        content_type=JSON,
+    )
+    assert response.status_code == 201, response.content
+    again = response.json()
+    assert again["status"] == "pending_approval"
+
+    seen = approver_client.get(f"/api/reservations/{again['id']}").json()
+    assert seen["follows"]["number"] == declined["number"]
+    assert seen["follows"]["approval"] == "rejected"
+    assert seen["follows"]["approval_comment"] == "Not this quarter"
+    assert seen["events"][0]["data"]["follows"] == declined["number"]
+
+
+def test_follows_only_an_own_request(approval_setup, employee_client, it_client):
+    someone_else = request(it_client, "headsets")
+    start = date.today() + timedelta(days=3)
+    response = employee_client.post(
+        "/api/reservations",
+        {
+            "title": "Workshop",
+            "duration": "permanent",
+            "start_date": start.isoformat(),
+            "items": [{"category": str(Category.objects.get(code="headsets").pk), "quantity": 1}],
+            "follows": someone_else["id"],
+        },
+        content_type=JSON,
+    )
+    assert response.status_code == 201, response.content
+    assert response.json()["follows"] is None

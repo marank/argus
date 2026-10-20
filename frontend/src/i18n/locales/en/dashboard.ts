@@ -1,6 +1,6 @@
 export default {
   greeting: 'Welcome, {name}',
-  itSubtitle: 'Current state of inventory, reservations and procurement.',
+  itSubtitle: 'Current state of inventory, requests and procurement.',
   employeeSubtitle: 'Your requests and devices at a glance.',
   toConfirm: 'To confirm',
   toPrepare: 'To prepare',

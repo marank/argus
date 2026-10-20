@@ -196,6 +196,27 @@ All models use random UUIDs as primary keys (`apps.core.models.UUIDModel`, also 
 Business rules live in `services/` (e.g. `apps/reservations/services/workflow.py`);
 API modules stay thin.
 
+## Glossary
+
+The code keeps its names; the interface uses the German (and English) terms on the
+right. "Reservierung" is not used in the interface: a request also covers permanent
+hand-outs, software and consumables. "Reserviert" stays as a device status (set aside
+for a request).
+
+| Code                    | Interface (de)          | Interface (en)      |
+| ----------------------- | ----------------------- | ------------------- |
+| `Reservation`           | Anforderung             | Request             |
+| `ReservationItem`       | Position                | Line                |
+| `ReservationAllocation` | Zuteilung               | Allocation          |
+| `Handover`              | Übergabe / Ausgabe      | Handover / hand-out |
+| `DeviceReturn`          | Rückgabe                | Return              |
+| `approve` (department)  | Genehmigung             | Approval            |
+| `confirm` (IT)          | Bestätigung             | Confirmation        |
+| `origin="direct"`       | Direktausgabe           | Direct hand-out     |
+
+`Reservation` is not renamed to `Request` to avoid confusion with the `request`
+argument of every API view.
+
 ## Checks
 
 ```bash

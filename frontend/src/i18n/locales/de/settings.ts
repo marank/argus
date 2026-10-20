@@ -84,7 +84,7 @@ export default {
     procurement: 'Beschaffung',
     procurementHelp: 'Bedarf und Bestellungen inklusive Wareneingang.',
     calendar: 'Kalender',
-    calendarHelp: 'Planungskalender der IT mit Reservierungen, Abholungen und Rückgaben.',
+    calendarHelp: 'Planungskalender der IT mit Anforderungen, Abholungen und Rückgaben.',
     issues: 'Problemmeldungen',
     issuesHelp: 'Mitarbeiter melden Probleme zu ihren Geräten, die IT bearbeitet sie.',
     terminal: 'Abholterminal',

@@ -6,7 +6,13 @@ from django.http import Http404, HttpRequest
 from django.shortcuts import get_object_or_404
 
 from apps.accounts.permissions import can
-from apps.reservations.models import DeviceReturn, Reservation, ReservationAllocation, ReservationItem
+from apps.reservations.models import (
+    DeviceReturn,
+    Reservation,
+    ReservationAllocation,
+    ReservationEvent,
+    ReservationItem,
+)
 
 
 def reservation_queryset() -> QuerySet[Reservation]:
@@ -37,12 +43,14 @@ def reservation_queryset() -> QuerySet[Reservation]:
         "assignee",
         "approver",
         "pickup_location__parent",
+        "follows",
         "handover__received_by",
         "handover__handed_out_by",
         "handover__recorded_by",
     ).prefetch_related(
         Prefetch("items", queryset=items),
         Prefetch("returns", queryset=DeviceReturn.objects.select_related("returned_by")),
+        Prefetch("events", queryset=ReservationEvent.objects.select_related("actor")),
     )
 
 

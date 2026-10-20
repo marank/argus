@@ -1,30 +1,30 @@
 <script setup lang="ts">
 import type { Id } from '@/types/common'
 import { ArrowLeft, Check, X } from '@lucide/vue'
-import {
-  NButton,
-  NCard,
-  NDataTable,
-  NInput,
-  NModal,
-  NSkeleton,
-  type DataTableColumns,
-} from 'naive-ui'
-import { h, onMounted, ref } from 'vue'
+import { NAlert, NButton, NInput, NModal, NSkeleton } from 'naive-ui'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 
 import { approvalsApi, reservationsApi } from '@/api/reservations'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
-import ReservationInfo from '@/components/reservations/ReservationInfo.vue'
-import ReservationSteps from '@/components/reservations/ReservationSteps.vue'
+import ApprovalCard from '@/components/reservations/detail/ApprovalCard.vue'
+import RequestInfoCard from '@/components/reservations/detail/RequestInfoCard.vue'
+import RequestedItems from '@/components/reservations/detail/RequestedItems.vue'
+import ReservationHistory from '@/components/reservations/detail/ReservationHistory.vue'
 import { useAction } from '@/composables/useAction'
-import type { Reservation, ReservationItem } from '@/types/reservations'
-import { itemLabel } from '@/utils/reservations'
+import { useFormat } from '@/composables/useFormat'
+import type { Reservation } from '@/types/reservations'
 
-/** A request as its department's approver sees it, with the decision to take. */
+/**
+ * A request as its department's approver sees it: what is asked for, by whom, and
+ * the decision. What IT does afterwards is not the approver's business.
+ */
 const props = defineProps<{ id: Id }>()
 const { t } = useI18n()
+const router = useRouter()
+const { enumLabel } = useFormat()
 const { busy, run } = useAction()
 
 const reservation = ref<Reservation | null>(null)
@@ -34,6 +34,13 @@ onMounted(async () => (reservation.value = await reservationsApi.get(props.id)))
 const decision = ref<'approve' | 'decline'>('approve')
 const deciding = ref(false)
 const comment = ref('')
+
+/** Why the earlier request ended: the department's or IT's comment. */
+const earlierReason = computed(() => {
+  const f = reservation.value?.follows
+  if (!f) return ''
+  return f.approval === 'rejected' ? f.approval_comment : f.it_comment
+})
 
 function open(kind: 'approve' | 'decline') {
   comment.value = ''
@@ -51,26 +58,11 @@ async function decide() {
     t(approve ? 'reservations.approvals.approved' : 'reservations.approvals.declined'),
   )
   if (updated) {
-    reservation.value = updated
+    // Decided: done for the approver, back to what still waits.
     deciding.value = false
+    router.push({ name: 'portal-approvals' })
   }
 }
-
-const columns: DataTableColumns<ReservationItem> = [
-  {
-    key: 'label',
-    title: () => t('reservations.items'),
-    render: (i) =>
-      h('div', [h('div', itemLabel(i)), i.note ? h('small', { class: 'muted' }, i.note) : null]),
-  },
-  {
-    key: 'requested',
-    title: () => t('reservations.quantities.requested'),
-    width: 120,
-    align: 'right',
-    render: (i) => h('span', { class: 'mono' }, i.quantity_requested),
-  },
-]
 </script>
 
 <template>
@@ -78,9 +70,7 @@ const columns: DataTableColumns<ReservationItem> = [
     <NSkeleton v-if="!reservation" height="200px" />
     <template v-else>
       <PageHeader :title="reservation.title" :eyebrow="reservation.number">
-        <template #badge
-          ><StatusTag group="reservationStatus" :value="reservation.status"
-        /></template>
+        <template #badge><StatusTag group="approval" :value="reservation.approval" /></template>
         <template #actions>
           <RouterLink :to="{ name: 'portal-approvals' }">
             <NButton quaternary>
@@ -102,11 +92,24 @@ const columns: DataTableColumns<ReservationItem> = [
       </PageHeader>
 
       <div class="stack">
-        <NCard size="small"><ReservationSteps :reservation="reservation" /></NCard>
-        <NCard size="small"><ReservationInfo :reservation="reservation" /></NCard>
-        <NCard :title="t('reservations.items')" size="small">
-          <NDataTable size="small" :columns="columns" :data="reservation.items" :bordered="false" />
-        </NCard>
+        <NAlert
+          v-if="reservation.follows"
+          type="warning"
+          :title="t('reservations.again.approverTitle', { number: reservation.follows.number })"
+        >
+          {{ enumLabel('reservationStatus', reservation.follows.status) }}
+          <template v-if="earlierReason">: „{{ earlierReason }}“</template>
+        </NAlert>
+        <div class="layout">
+          <div class="stack">
+            <RequestedItems :reservation="reservation" />
+            <RequestInfoCard :reservation="reservation" />
+          </div>
+          <div class="stack">
+            <ApprovalCard :reservation="reservation" />
+            <ReservationHistory :reservation="reservation" />
+          </div>
+        </div>
       </div>
 
       <NModal
@@ -158,6 +161,17 @@ const columns: DataTableColumns<ReservationItem> = [
 </template>
 
 <style scoped>
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
 .hint {
   margin: 0 0 10px;
 }

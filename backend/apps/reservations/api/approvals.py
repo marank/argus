@@ -24,13 +24,13 @@ router = Router(tags=["approvals"])
 
 @router.get("", response=list[ReservationListOut])
 @paginate(Pagination)
-def list_approvals(request: HttpRequest, pending: bool = True, q: str | None = None):
-    """Waiting requests, the oldest first; with ``pending=false`` the decided ones, newest first."""
-    queryset = approvable_reservations(request.user)
-    if pending:
-        queryset = queryset.filter(status=Reservation.Status.PENDING_APPROVAL).order_by("created_at")
-    else:
-        queryset = queryset.exclude(status=Reservation.Status.PENDING_APPROVAL).order_by("-created_at")
+def list_approvals(request: HttpRequest, q: str | None = None):
+    """Requests waiting for a decision, the oldest first; once decided they leave the list."""
+    queryset = (
+        approvable_reservations(request.user)
+        .filter(status=Reservation.Status.PENDING_APPROVAL)
+        .order_by("created_at")
+    )
     return search(
         queryset,
         q,

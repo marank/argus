@@ -31,8 +31,8 @@ from apps.reservations.schemas.reservation import (
     ReservationOut,
     ScheduleIn,
 )
+from apps.reservations.services import history, workflow
 from apps.reservations.services import notifications as reservation_notifications
-from apps.reservations.services import workflow
 
 from .queries import get_for_update, get_reservation, visible_reservations
 
@@ -96,10 +96,15 @@ def list_reservations(
 
 @router.post("", response={201: ReservationOut})
 def create_reservation(request: HttpRequest, payload: ReservationIn):
-    data = payload.dict(exclude={"items", "requester"})
+    data = payload.dict(exclude={"items", "requester", "follows"})
     requester = request.user
     if payload.requester and can(request.user, "reservations", WRITE):
         requester = User.objects.get(pk=payload.requester)
+    if payload.follows:
+        # Only an earlier request of the same employee that the user may see.
+        data["follows"] = (
+            visible_reservations(request).filter(pk=payload.follows, requester=requester).first()
+        )
     items = [item.dict() for item in payload.items]
     reservation = workflow.submit(requester, data, items, created_by=request.user)
     return Status(201, get_reservation(request, reservation.pk))
@@ -202,7 +207,17 @@ def remind(request: HttpRequest, pk: UUID):
 @router.post("/{uuid:pk}/assign", response=ReservationOut, auth=reservations_write)
 def assign(request: HttpRequest, pk: UUID, payload: AssignIn):
     reservation = get_for_update(pk)
-    if assignment.assign(reservation, payload.team, payload.assignee, request.user):
+    before = (reservation.assigned_team_id, reservation.assignee_id)
+    notify = assignment.assign(reservation, payload.team, payload.assignee, request.user)
+    if (reservation.assigned_team_id, reservation.assignee_id) != before:
+        history.record(
+            reservation,
+            history.Kind.ASSIGNED,
+            request.user,
+            team=reservation.assigned_team.name if reservation.assigned_team else None,
+            assignee=reservation.assignee.display_name if reservation.assignee else None,
+        )
+    if notify:
         reservation_notifications.request_assigned(reservation)
     return get_reservation(request, pk)
 

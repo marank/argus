@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
-from apps.reservations.models import Handover, Reservation, ReservationItem
+from apps.reservations.models import Handover, Reservation, ReservationEvent, ReservationItem
 
 
 class ReservationItemInline(admin.TabularInline):
@@ -18,6 +18,19 @@ class ReservationItemInline(admin.TabularInline):
     ]
     autocomplete_fields = ["category", "asset_model"]
     show_change_link = True
+
+
+class ReservationEventInline(admin.TabularInline):
+    """The history as the workflow wrote it; not editable."""
+
+    model = ReservationEvent
+    extra = 0
+    can_delete = False
+    fields = ["at", "kind", "actor", "data"]
+    readonly_fields = fields
+
+    def has_add_permission(self, request, obj=None) -> bool:
+        return False
 
 
 class HandoverInline(admin.StackedInline):
@@ -116,4 +129,4 @@ class ReservationAdmin(admin.ModelAdmin):
             },
         ),
     ]
-    inlines = [ReservationItemInline, HandoverInline]
+    inlines = [ReservationItemInline, HandoverInline, ReservationEventInline]

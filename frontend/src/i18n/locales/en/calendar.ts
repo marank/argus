@@ -1,11 +1,11 @@
 export default {
   title: 'Calendar',
-  subtitle: 'Reservations, pickups, returns, deliveries, warranty and license ends at a glance.',
+  subtitle: 'Requests, pickups, returns, deliveries, warranty and license ends at a glance.',
   previous: 'Previous',
   next: 'Next',
   views: { month: 'Month', week: 'Week', list: 'List' },
   kinds: {
-    loan: 'Reservation',
+    loan: 'Request',
     pickup: 'Pickup',
     return: 'Return due',
     delivery: 'Delivery',

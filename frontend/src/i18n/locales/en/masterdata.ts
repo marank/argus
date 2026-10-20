@@ -21,7 +21,7 @@ export default {
       teams: 'Teams',
       users: 'Employees',
       number_sequences: 'Number sequences',
-      reservations: 'Reservations & calendar',
+      reservations: 'Requests & calendar',
       assets: 'Devices & service log',
       consumables: 'Consumables',
       licenses: 'Licenses',
@@ -135,7 +135,7 @@ export default {
     categoryKindHelp: 'Subcategories have the same type as their parent category.',
     compatibleWithHelp: 'Accessories, spare parts and consumables that fit this model.',
     pickupPointHelp: 'Offered when scheduling a pickup.',
-    itStaffHelp: 'Access to inventory, reservations, procurement and master data.',
+    itStaffHelp: 'Access to inventory, requests, procurement and master data.',
     sequenceCodeHelp: 'Technical key. Reserved: asset, reservation, purchase-order.',
     allowAnyModel: '“Any model” requestable',
     allowAnyModelHelp:

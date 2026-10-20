@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { MessageSquarePlus, Minus, PackageSearch, Plus, Send, Trash2 } from '@lucide/vue'
 import { NButton, NForm, NFormItem, NInput, NInputNumber } from 'naive-ui'
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { usersApi } from '@/api/accounts'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import FieldLabel from '@/components/common/FieldLabel.vue'
 import { toIsoDate } from '@/composables/useFormat'
+import type { UserRef } from '@/types/accounts'
 import type { Id } from '@/types/common'
 import type { ReservationInput } from '@/types/reservations'
 
@@ -23,6 +24,8 @@ const props = defineProps<{
   canChooseRequester: boolean
   requesterPlaceholder?: string
   direct?: boolean
+  /** Prefilled details, e.g. when asking again for an earlier request. */
+  initial?: { title: string; notes: string; requester: UserRef | null } | null
 }>()
 const lines = defineModel<CartLine[]>('lines', { required: true })
 const emit = defineEmits<{ submit: [data: ReservationInput] }>()
@@ -33,6 +36,18 @@ const form = reactive({
   notes: '',
   requester: null as Id | null,
 })
+watch(
+  () => props.initial,
+  (initial) => {
+    if (initial)
+      Object.assign(form, {
+        title: initial.title,
+        notes: initial.notes,
+        requester: initial.requester?.id ?? null,
+      })
+  },
+  { immediate: true },
+)
 const openNote = ref<string | null>(null)
 
 const total = computed(() => lines.value.reduce((sum, line) => sum + line.quantity, 0))
@@ -142,6 +157,7 @@ function submit() {
             v-model="form.requester"
             :fetcher="usersApi.list"
             :label="(u) => u.display_name"
+            :initial="(initial?.requester ?? null) as never"
             :placeholder="requesterPlaceholder"
           />
         </NFormItem>

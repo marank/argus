@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ArrowLeftRight, ClipboardList, ScanLine } from '@lucide/vue'
-import { NButton, NSkeleton, useMessage } from 'naive-ui'
+import { NAlert, NButton, NSkeleton, useMessage } from 'naive-ui'
 import { watchDebounced } from '@vueuse/core'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -21,15 +21,18 @@ import {
   type RequestPeriod,
 } from '@/components/reservations/request/types'
 import { useAction } from '@/composables/useAction'
+import { fromIsoDate } from '@/composables/useFormat'
 import { useAuthStore } from '@/stores/auth'
-import { anyModelLabel } from '@/utils/reservations'
+import { anyModelLabel, itemLabel } from '@/utils/reservations'
 import { useFeaturesStore } from '@/stores/features'
+import type { UserRef } from '@/types/accounts'
 import type { Asset, Consumable } from '@/types/inventory'
 import type {
   CatalogCategory,
   CatalogModel,
   DirectRequestInput,
   MyConsumables,
+  Reservation,
   ReservationInput,
 } from '@/types/reservations'
 
@@ -44,10 +47,11 @@ const { busy, run } = useAction()
 /**
  * IT staff first choose between a request and a direct hand-out of specific
  * devices from stock (`?mode=direct`); everyone else only requests.
+ * `?from=<id>` asks again for an earlier request: a request, prefilled.
  */
 const canDirect = computed(() => auth.can('reservations', 'write'))
 const mode = computed<'request' | 'direct' | null>(() => {
-  if (!canDirect.value) return 'request'
+  if (!canDirect.value || route.query.from) return 'request'
   const value = route.query.mode
   return value === 'direct' || value === 'request' ? value : null
 })
@@ -81,7 +85,50 @@ onMounted(async () => {
   ])
   catalog.value = entries
   myConsumables.value = consumables
+  if (typeof route.query.from === 'string') {
+    const earlier = await run(() => reservationsApi.get(route.query.from as string))
+    if (earlier) prefill(earlier)
+  }
 })
+
+/** Asking again: the earlier request's lines, details and period (moved to today if past). */
+const previous = ref<Reservation | null>(null)
+const initial = ref<{ title: string; notes: string; requester: UserRef | null } | null>(null)
+
+function prefill(earlier: Reservation) {
+  previous.value = earlier
+  let freeText = 0
+  cart.value = earlier.items.map((item) => {
+    const key = item.description
+      ? `f${++freeText}`
+      : item.asset_model
+        ? `m${item.asset_model.id}`
+        : `c${item.category!.id}`
+    return {
+      key,
+      label: itemLabel(item),
+      category: item.asset_model ? undefined : item.category?.id,
+      asset_model: item.asset_model?.id,
+      description: item.description || undefined,
+      quantity: item.quantity_requested,
+      note: item.note,
+      available: availableFor(key),
+    }
+  })
+  const start = fromIsoDate(earlier.start_date)!
+  const end = fromIsoDate(earlier.end_date) ?? start
+  const first = Math.max(start, today)
+  period.duration = earlier.duration
+  period.start = first
+  period.range = [first, first + Math.max(end - start, 0)]
+  period.pickup = first
+  initial.value = {
+    title: earlier.title,
+    notes: earlier.notes,
+    // Recorded for someone else: keep them as the requester.
+    requester: earlier.requester.id === auth.user?.id ? null : earlier.requester,
+  }
+}
 
 // From the device page: start the hand-out with that device.
 watch(
@@ -207,7 +254,9 @@ function directInput(data: ReservationInput): DirectRequestInput {
 
 async function submit(data: ReservationInput) {
   const reservation = await run(() =>
-    direct.value ? reservationsApi.createDirect(directInput(data)) : reservationsApi.create(data),
+    direct.value
+      ? reservationsApi.createDirect(directInput(data))
+      : reservationsApi.create({ ...data, follows: previous.value?.id ?? null }),
   )
   if (!reservation) return
   // IT continues on the request itself; employees follow it in the portal.
@@ -256,6 +305,9 @@ const header = computed(() =>
           </NButton>
         </template>
       </PageHeader>
+      <NAlert v-if="previous" type="info" :bordered="false" class="again">
+        {{ t('reservations.again.prefilled', { number: previous.number }) }}
+      </NAlert>
       <div class="layout">
         <NSkeleton v-if="!catalog" height="320px" />
         <CatalogBrowser
@@ -291,6 +343,7 @@ const header = computed(() =>
             :direct="direct"
             :can-choose-requester="canDirect"
             :requester-placeholder="auth.user?.display_name"
+            :initial="initial"
             @submit="submit"
           />
         </div>
@@ -300,6 +353,9 @@ const header = computed(() =>
 </template>
 
 <style scoped>
+.again {
+  margin-bottom: 14px;
+}
 .side {
   position: sticky;
   top: 16px;
