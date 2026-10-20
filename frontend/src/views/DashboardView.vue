@@ -7,9 +7,11 @@ import { useI18n } from 'vue-i18n'
 import EmployeeDashboard from '@/components/dashboard/EmployeeDashboard.vue'
 import ItDashboard from '@/components/dashboard/ItDashboard.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
+import { useFormat } from '@/composables/useFormat'
 import { useAuthStore } from '@/stores/auth'
 
-const { t, d } = useI18n()
+const { t } = useI18n()
+const { longDate } = useFormat()
 const auth = useAuthStore()
 const editing = ref(false)
 const dashboard = ref<InstanceType<typeof ItDashboard> | null>(null)
@@ -57,7 +59,7 @@ const dashboard = ref<InstanceType<typeof ItDashboard> | null>(null)
     </PageHeader>
     <PageHeader
       v-else
-      :eyebrow="d(new Date(), 'weekday')"
+      :eyebrow="longDate(new Date(), true)"
       :title="t('dashboard.greeting', { name: auth.user?.first_name || auth.user?.username })"
       :subtitle="auth.isItStaff ? t('dashboard.itSubtitle') : t('dashboard.employeeSubtitle')"
     >

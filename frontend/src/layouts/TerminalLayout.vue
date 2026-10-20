@@ -6,10 +6,12 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
+import { useFormat } from '@/composables/useFormat'
 import { useAuthStore } from '@/stores/auth'
 
 /** Full-screen shell for the shared touch terminal: no navigation, large targets. */
-const { t, d, locale } = useI18n()
+const { t, locale } = useI18n()
+const { longDate } = useFormat()
 const auth = useAuthStore()
 const router = useRouter()
 const now = ref(new Date())
@@ -43,7 +45,7 @@ function toggleLanguage() {
         <span class="eyebrow">{{ t('terminal.title') }}</span>
       </RouterLink>
       <div class="right">
-        <span class="mono clock">{{ d(now, 'weekday') }}</span>
+        <span class="mono clock">{{ longDate(now, true) }}</span>
         <NButton quaternary @click="toggleLanguage">{{ locale === 'de' ? 'EN' : 'DE' }}</NButton>
         <NButton v-if="auth.isTerminal" quaternary :title="t('nav.logout')" @click="logout">
           <template #icon><LogOut :size="18" /></template>
