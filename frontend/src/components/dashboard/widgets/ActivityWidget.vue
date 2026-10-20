@@ -3,9 +3,9 @@ import { NCard } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
 
 import { useFormat } from '@/composables/useFormat'
-import type { ITOverview } from '@/types/dashboard'
+import type { WidgetProps } from '@/types/dashboard'
 
-defineProps<{ data: ITOverview }>()
+defineProps<WidgetProps>()
 
 const { t } = useI18n()
 const { dateTime, enumLabel } = useFormat()

@@ -1,5 +1,6 @@
 import { CalendarClock, KeyRound, PackageCheck, ShieldAlert, Truck, Undo2 } from '@lucide/vue'
 import type { Component } from 'vue'
+import type { RouteLocationRaw } from 'vue-router'
 
 import type { CalendarEntry, CalendarKind } from '@/types/calendar'
 
@@ -38,4 +39,32 @@ export function isTentative(entry: Pick<CalendarEntry, 'kind' | 'status'>): bool
     (entry.kind === 'loan' && entry.status === 'submitted') ||
     (entry.kind === 'pickup' && entry.status === 'approved')
   )
+}
+
+type Translate = (key: string, named: Record<string, unknown>, plural?: number) => string
+
+/** The text shown for an entry; the API sends only the name, number or supplier. */
+export function entryLabel(entry: CalendarEntry, t: Translate): string {
+  switch (entry.kind) {
+    case 'pickup':
+      return t('calendar.titles.pickup', { name: entry.title })
+    case 'return':
+      return t('calendar.titles.return', { name: entry.title })
+    case 'delivery':
+      return t('calendar.titles.delivery', { supplier: entry.title })
+    case 'warranty':
+      return t('calendar.titles.warranty', { count: Number(entry.title) }, Number(entry.title))
+    case 'license':
+      return t('calendar.titles.license', { name: entry.title })
+    default:
+      return entry.title
+  }
+}
+
+/** Where an entry leads: its request, order or license, or the devices whose warranty ends. */
+export function entryRoute(entry: CalendarEntry): RouteLocationRaw | null {
+  if (entry.link.name === 'assets')
+    return { name: 'assets', query: { warranty_until: entry.link.warranty_until } }
+  if (entry.link.id) return { name: entry.link.name, params: { id: entry.link.id } }
+  return null
 }

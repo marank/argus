@@ -1,5 +1,7 @@
 """Session based login for the single page app."""
 
+import json
+
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpRequest
 from django.middleware.csrf import get_token
@@ -50,6 +52,10 @@ def logout_view(request: HttpRequest):
 
 
 DASHBOARD_SIZES = {"small", "medium", "large"}
+# "auto" fits the content (and the row); the others are fixed heights that scroll.
+DASHBOARD_HEIGHTS = {"auto", "small", "medium", "large"}
+# Room for a widget's own settings, such as the text of the notes widget.
+WIDGET_OPTIONS_MAX = 10_000
 
 
 def card_keys(value) -> list[str]:
@@ -57,6 +63,12 @@ def card_keys(value) -> list[str]:
     if not isinstance(value, list):
         return []
     return list(dict.fromkeys(c for c in value if isinstance(c, str) and 0 < len(c) <= 50))[:50]
+
+
+def widget_options(value) -> dict:
+    if not isinstance(value, dict) or len(json.dumps(value, ensure_ascii=False)) > WIDGET_OPTIONS_MAX:
+        return {}
+    return value
 
 
 def clean_dashboard_settings(value: dict | None) -> dict:
@@ -74,9 +86,11 @@ def clean_dashboard_settings(value: dict | None) -> dict:
                 "id": widget_id,
                 "visible": bool(entry.get("visible", True)),
                 "size": entry["size"] if entry.get("size") in DASHBOARD_SIZES else "large",
+                "height": entry["height"] if entry.get("height") in DASHBOARD_HEIGHTS else "auto",
                 "hidden_cards": card_keys(entry.get("hidden_cards")),
                 # Cards in the user's order; empty keeps the default order.
                 "card_order": card_keys(entry.get("card_order")),
+                "options": widget_options(entry.get("options")),
             }
         )
     return {"widgets": widgets[:50]} if widgets else {}

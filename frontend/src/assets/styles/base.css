@@ -5,10 +5,16 @@
   --ar-font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
   --ar-sidebar-width: 232px;
   --ar-header-height: 52px;
+  /* Chart series in fixed order, checked for colour-blind separation on the light surface. */
+  --ar-series-1: #2a78d6;
+  --ar-series-2: #eb6834;
   color-scheme: light;
 }
 
 :root[data-theme='dark'] {
+  /* The same hues stepped for the dark surface. */
+  --ar-series-1: #3987e5;
+  --ar-series-2: #d95926;
   color-scheme: dark;
 }
 

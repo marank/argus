@@ -89,6 +89,11 @@ class User(AbstractUser):
         return self.get_full_name() or self.username
 
     @property
+    def can_be_reminded(self) -> bool:
+        """Whether emails such as a return reminder can reach the user."""
+        return bool(self.email) and self.is_active
+
+    @property
     def is_ldap_user(self) -> bool:
         return bool(self.ldap_dn)
 

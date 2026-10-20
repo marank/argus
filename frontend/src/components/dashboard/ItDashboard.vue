@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { NButton, NSkeleton, useMessage } from 'naive-ui'
+import { Plus } from '@lucide/vue'
+import { NButton, NModal, NSkeleton, useMessage } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -38,29 +39,53 @@ const saved = computed(() => resolveLayout(WIDGETS, auth.user?.dashboard_setting
 const draft = ref<WidgetSettings[] | null>(null)
 watch(
   editing,
-  (on) =>
-    (draft.value = on
-      ? saved.value.map((w) => ({
-          ...w,
-          hidden_cards: [...w.hidden_cards],
-          card_order: [...w.card_order],
-        }))
-      : null),
+  (on) => (draft.value = on ? (JSON.parse(JSON.stringify(saved.value)) as WidgetSettings[]) : null),
   { immediate: true },
 )
 const layout = computed(() => draft.value ?? saved.value)
 
-/** Panels whose modules are all switched off do not exist for this site. */
+/** Widgets of a switched-off module, and panels whose modules are all off, do not exist for this site. */
 const available = (widget: WidgetSettings) =>
-  !def(widget).cards || availableCards(def(widget), features.isOn).length > 0
+  (!def(widget).flag || features.isOn(def(widget).flag!)) &&
+  (!def(widget).cards || availableCards(def(widget), features.isOn).length > 0)
 /** A panel with every card hidden is left out like a hidden widget. */
 const hasContent = (widget: WidgetSettings) =>
   !def(widget).cards ||
   availableCards(def(widget), features.isOn).some((c) => !widget.hidden_cards.includes(c.key))
 
 const widgets = computed(() =>
-  layout.value.filter((w) => available(w) && (editing.value || (w.visible && hasContent(w)))),
+  layout.value.filter((w) => available(w) && w.visible && (editing.value || hasContent(w))),
 )
+/** Widgets that are not on the dashboard, offered in the widget list. */
+const addable = computed(() => layout.value.filter((w) => available(w) && !w.visible))
+const picking = ref(false)
+
+/** An added widget goes to the end, where the user sees it appear. */
+function add(widget: WidgetSettings) {
+  const list = draft.value
+  if (!list) return
+  widget.visible = true
+  list.splice(list.indexOf(widget), 1)
+  list.push(widget)
+  if (!addable.value.length) picking.value = false
+}
+
+/**
+ * A widget changes its own settings (the notes text): while editing that goes
+ * into the draft, otherwise it is saved right away.
+ */
+async function setOptions(widget: WidgetSettings, options: Record<string, unknown>) {
+  if (draft.value) {
+    widget.options = options
+    return
+  }
+  const layout = saved.value.map((w) => (w.id === widget.id ? { ...w, options } : w))
+  try {
+    await auth.changeDashboard({ widgets: layout })
+  } catch {
+    message.error(t('common.error'))
+  }
+}
 
 function moveTo(id: string, targetId: string) {
   const list = draft.value
@@ -143,6 +168,10 @@ const reset = () => (draft.value = defaultLayout(WIDGETS))
     <div v-if="editing" class="editor-bar">
       <p class="muted">{{ t('dashboard.edit.hint') }}</p>
       <div class="row">
+        <NButton size="small" :disabled="!addable.length" @click="picking = true">
+          <template #icon><Plus /></template>
+          {{ t('dashboard.edit.add') }}
+        </NButton>
         <NButton size="small" quaternary @click="reset">{{ t('dashboard.edit.reset') }}</NButton>
         <NButton size="small" @click="editing = false">{{ t('common.cancel') }}</NButton>
         <NButton size="small" type="primary" :loading="saving" @click="save">
@@ -163,8 +192,9 @@ const reset = () => (draft.value = defaultLayout(WIDGETS))
         :first="index === 0"
         :last="index === widgets.length - 1"
         :class="{ dragged: dragged === widget.id }"
-        @toggle="widget.visible = !widget.visible"
+        @remove="widget.visible = false"
         @resize="widget.size = $event"
+        @set-height="widget.height = $event"
         @move="move(widget, $event)"
         @dragstart="onDragStart($event, widget)"
         @dragover="onDragOver($event, widget)"
@@ -181,9 +211,37 @@ const reset = () => (draft.value = defaultLayout(WIDGETS))
           @toggle-card="toggleCard(widget, $event)"
           @reorder="reorderCards(widget, $event)"
         />
-        <component :is="def(widget).component" v-else :data="data" />
+        <component
+          :is="def(widget).component"
+          v-else
+          :data="data"
+          :options="widget.options"
+          @update:options="setOptions(widget, $event)"
+        />
       </DashboardWidget>
     </TransitionGroup>
+    <NModal
+      v-model:show="picking"
+      preset="card"
+      :title="t('dashboard.edit.add')"
+      class="widget-picker"
+      style="width: min(560px, calc(100vw - 32px))"
+      :auto-focus="false"
+    >
+      <ul class="picker-list">
+        <li v-for="widget in addable" :key="widget.id">
+          <component :is="def(widget).icon" :size="18" class="picker-icon" />
+          <div class="picker-text">
+            <strong>{{ t(def(widget).title) }}</strong>
+            <span class="muted">{{ t(def(widget).description) }}</span>
+          </div>
+          <NButton size="small" @click="add(widget)">
+            <template #icon><Plus /></template>
+            {{ t('dashboard.edit.addOne') }}
+          </NButton>
+        </li>
+      </ul>
+    </NModal>
   </div>
 </template>
 
@@ -219,5 +277,32 @@ const reset = () => (draft.value = defaultLayout(WIDGETS))
 }
 .empty {
   margin: 0;
+}
+.picker-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.picker-list li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--ar-border);
+}
+.picker-list li:last-child {
+  border-bottom: none;
+}
+.picker-icon {
+  color: var(--ar-primary);
+}
+.picker-text {
+  display: grid;
+  gap: 2px;
+}
+.picker-text span {
+  font-size: 12px;
 }
 </style>

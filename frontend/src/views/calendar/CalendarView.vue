@@ -18,7 +18,14 @@ import { useRouter } from 'vue-router'
 import { calendarApi } from '@/api/calendar'
 import AssignedTabs from '@/components/common/AssignedTabs.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
-import { entryColor, isTentative, KIND_ICONS, kindColor } from '@/components/calendar/kinds'
+import {
+  entryColor,
+  entryLabel,
+  entryRoute,
+  isTentative,
+  KIND_ICONS,
+  kindColor,
+} from '@/components/calendar/kinds'
 import { useAssigned } from '@/composables/useAssigned'
 import { toIsoDate, useFormat } from '@/composables/useFormat'
 import { useTheme } from '@/theme/useTheme'
@@ -62,22 +69,7 @@ const loading = ref(false)
 
 const api = () => calendar.value?.getApi()
 
-function label(entry: CalendarEntry): string {
-  switch (entry.kind) {
-    case 'pickup':
-      return t('calendar.titles.pickup', { name: entry.title })
-    case 'return':
-      return t('calendar.titles.return', { name: entry.title })
-    case 'delivery':
-      return t('calendar.titles.delivery', { supplier: entry.title })
-    case 'warranty':
-      return t('calendar.titles.warranty', { count: Number(entry.title) }, Number(entry.title))
-    case 'license':
-      return t('calendar.titles.license', { name: entry.title })
-    default:
-      return entry.title
-  }
-}
+const label = (entry: CalendarEntry) => entryLabel(entry, t)
 
 async function fetchEvents(info: EventSourceFuncInfo): Promise<EventInput[]> {
   if (!enabled.value.length) return []
@@ -105,11 +97,8 @@ async function fetchEvents(info: EventSourceFuncInfo): Promise<EventInput[]> {
 }
 
 function open(entry: CalendarEntry) {
-  if (entry.link.name === 'assets') {
-    router.push({ name: 'assets', query: { warranty_until: entry.link.warranty_until } })
-  } else if (entry.link.id) {
-    router.push({ name: entry.link.name, params: { id: entry.link.id } })
-  }
+  const to = entryRoute(entry)
+  if (to) router.push(to)
 }
 
 const options = computed<CalendarOptions>(() => ({

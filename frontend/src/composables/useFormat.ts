@@ -1,6 +1,10 @@
 import { useI18n } from 'vue-i18n'
 
 /** Locale-aware formatting helpers for dates, money and enum labels. */
+/** Midnight of the day, so day differences ignore the time and DST shifts. */
+const startOfDay = (date: Date) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+
 export function useFormat() {
   const { d, n, t, te } = useI18n()
 
@@ -10,6 +14,29 @@ export function useFormat() {
   return {
     date: (value: string | null | undefined) => (value ? d(toDate(value), 'date') : '—'),
     dateTime: (value: string | null | undefined) => (value ? d(toDate(value), 'dateTime') : '—'),
+    /** Like `date` / `dateTime` with the short weekday in front, e.g. "Di., 20.10.2026, 12:00". */
+    dateWithWeekday: (value: string | null | undefined) =>
+      value ? d(toDate(value), isDateOnly(value) ? 'weekdayNumeric' : 'weekdayNumericTime') : '—',
+    /**
+     * How far away a day is, e.g. "Morgen, 20:00 Uhr" or "In 2 Tagen"; with the
+     * time only when the value has one.
+     */
+    relativeDay: (value: string | null | undefined) => {
+      if (!value) return '—'
+      const at = toDate(value)
+      const days = Math.round((startOfDay(at) - startOfDay(new Date())) / 86_400_000)
+      const day =
+        days === 0
+          ? t('common.relative.today')
+          : days === 1
+            ? t('common.relative.tomorrow')
+            : days === -1
+              ? t('common.relative.yesterday')
+              : days > 0
+                ? t('common.relative.inDays', { count: days })
+                : t('common.relative.daysAgo', { count: -days })
+      return isDateOnly(value) ? day : t('common.relative.atTime', { day, time: d(at, 'time') })
+    },
     /** Weekday and date; with the time only when the value has one (not for plain dates). */
     weekday: (value: string | null | undefined) =>
       value ? d(toDate(value), isDateOnly(value) ? 'weekdayDate' : 'weekday') : '—',

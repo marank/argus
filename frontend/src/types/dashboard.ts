@@ -1,6 +1,6 @@
 import type { Id } from '@/types/common'
 import type { UserRef } from './accounts'
-import type { AssetEventWithAsset } from './inventory'
+import type { AssetEventWithAsset, AssetRef } from './inventory'
 
 export interface ITOverview {
   asset_status: Record<string, number>
@@ -35,4 +35,63 @@ export interface EmployeeOverview {
   open_reservations: number
   ready_for_pickup: { id: Id; number: string; title: string; pickup_at: string | null }[]
   assigned_assets: number
+}
+
+/** Props every dashboard widget component gets. */
+export interface WidgetProps {
+  data: ITOverview
+  /** The widget's own stored settings; changed by emitting `update:options`. */
+  options: Record<string, unknown>
+}
+
+export interface TaskRequest {
+  id: Id
+  number: string
+  title: string
+  status: string
+  start_date: string
+  end_date: string | null
+  requester: UserRef
+}
+
+export interface TaskIssue {
+  id: Id
+  kind: string
+  status: string
+  description: string
+  created_at: string
+  asset: AssetRef
+  reported_by: UserRef | null
+}
+
+export interface MyTasks {
+  requests: TaskRequest[]
+  requests_total: number
+  issues: TaskIssue[]
+  issues_total: number
+}
+
+export interface OverdueReturn {
+  id: Id
+  number: string
+  title: string
+  end_date: string
+  requester: UserRef
+  /** The employee has an email address a reminder can go to. */
+  can_remind: boolean
+  reminded_at: string | null
+  reminded_by: UserRef | null
+}
+
+export interface TeamLoad {
+  people: { user: UserRef; requests: number; issues: number }[]
+  unassigned_requests: number
+  unassigned_issues: number
+}
+
+export interface TrendWeek {
+  /** Monday of the week. */
+  week_start: string
+  created: number
+  completed: number
 }

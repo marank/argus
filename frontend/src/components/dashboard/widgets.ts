@@ -3,28 +3,40 @@ import {
   Activity,
   CalendarClock,
   CalendarDays,
+  CalendarRange,
   ChartBar,
   CircleAlert,
   ClipboardCheck,
   ClipboardList,
   Boxes,
   KeyRound,
+  ListTodo,
   MessageSquareWarning,
+  NotebookPen,
   PackageCheck,
   PackageOpen,
   ShieldAlert,
   ShoppingCart,
+  TrendingUp,
   Truck,
   UserRound,
   UserRoundX,
   UsersRound,
+  Zap,
 } from '@lucide/vue'
 import type { Component } from 'vue'
 import type { RouteLocationRaw } from 'vue-router'
 
 import ActivityWidget from '@/components/dashboard/widgets/ActivityWidget.vue'
 import AssetStatusWidget from '@/components/dashboard/widgets/AssetStatusWidget.vue'
+import MyTasksWidget from '@/components/dashboard/widgets/MyTasksWidget.vue'
+import NotesWidget from '@/components/dashboard/widgets/NotesWidget.vue'
+import OverdueReturnsWidget from '@/components/dashboard/widgets/OverdueReturnsWidget.vue'
+import RequestTrendWidget from '@/components/dashboard/widgets/RequestTrendWidget.vue'
+import ShortcutsWidget from '@/components/dashboard/widgets/ShortcutsWidget.vue'
+import TeamLoadWidget from '@/components/dashboard/widgets/TeamLoadWidget.vue'
 import UpcomingWidget from '@/components/dashboard/widgets/UpcomingWidget.vue'
+import WeekWidget from '@/components/dashboard/widgets/WeekWidget.vue'
 import type { WidgetSettings, WidgetSize } from '@/types/accounts'
 import type { ITOverview } from '@/types/dashboard'
 import type { FlagKey, Rules } from '@/types/settings'
@@ -46,13 +58,20 @@ export interface StatCardDef {
 
 /**
  * A block on the IT dashboard: either a panel of key figures (`cards`) or its
- * own component, which gets the overview as `data`.
+ * own component. Components get the overview as `data` and their stored
+ * `options`; they emit `update:options` to change them (e.g. the notes text).
  */
 export interface WidgetDef {
   id: string
   title: string
+  /** One line for the widget list in the editor. */
+  description: string
   icon: Component
   size: WidgetSize
+  /** Off until the user adds it from the widget list. */
+  optional?: boolean
+  /** Only offered while this module or feature is on. */
+  flag?: FlagKey
   cards?: StatCardDef[]
   component?: Component
 }
@@ -64,6 +83,7 @@ export const WIDGETS: WidgetDef[] = [
   {
     // The viewer's own queue: open requests and reports by who is responsible.
     id: 'mine',
+    description: 'dashboard.widgets.mine',
     title: 'dashboard.groups.mine',
     icon: UserRound,
     size: 'large',
@@ -105,6 +125,7 @@ export const WIDGETS: WidgetDef[] = [
   },
   {
     id: 'requests',
+    description: 'dashboard.widgets.requests',
     title: 'dashboard.groups.requests',
     icon: ClipboardList,
     size: 'large',
@@ -147,6 +168,7 @@ export const WIDGETS: WidgetDef[] = [
   },
   {
     id: 'stock',
+    description: 'dashboard.widgets.stock',
     title: 'dashboard.groups.stock',
     icon: Boxes,
     size: 'medium',
@@ -182,6 +204,7 @@ export const WIDGETS: WidgetDef[] = [
   },
   {
     id: 'attention',
+    description: 'dashboard.widgets.attention',
     title: 'dashboard.groups.attention',
     icon: CalendarClock,
     size: 'medium',
@@ -217,6 +240,7 @@ export const WIDGETS: WidgetDef[] = [
   },
   {
     id: 'asset_status',
+    description: 'dashboard.widgets.assetStatus',
     title: 'dashboard.devicesByStatus',
     icon: ChartBar,
     size: 'large',
@@ -224,6 +248,7 @@ export const WIDGETS: WidgetDef[] = [
   },
   {
     id: 'upcoming',
+    description: 'dashboard.widgets.upcoming',
     title: 'dashboard.upcoming',
     icon: CalendarDays,
     size: 'medium',
@@ -231,10 +256,74 @@ export const WIDGETS: WidgetDef[] = [
   },
   {
     id: 'activity',
+    description: 'dashboard.widgets.activity',
     title: 'dashboard.recentActivity',
     icon: Activity,
     size: 'medium',
     component: ActivityWidget,
+  },
+  {
+    id: 'my_tasks',
+    title: 'dashboard.widgets.myTasks.title',
+    description: 'dashboard.widgets.myTasks.description',
+    icon: ListTodo,
+    size: 'medium',
+    optional: true,
+    component: MyTasksWidget,
+  },
+  {
+    id: 'overdue_returns',
+    title: 'dashboard.widgets.overdueReturns.title',
+    description: 'dashboard.widgets.overdueReturns.description',
+    icon: AlarmClock,
+    size: 'medium',
+    optional: true,
+    component: OverdueReturnsWidget,
+  },
+  {
+    id: 'week',
+    title: 'dashboard.widgets.week.title',
+    description: 'dashboard.widgets.week.description',
+    icon: CalendarRange,
+    size: 'large',
+    optional: true,
+    component: WeekWidget,
+  },
+  {
+    id: 'team_load',
+    title: 'dashboard.widgets.teamLoad.title',
+    description: 'dashboard.widgets.teamLoad.description',
+    icon: UsersRound,
+    size: 'medium',
+    optional: true,
+    component: TeamLoadWidget,
+  },
+  {
+    id: 'request_trend',
+    title: 'dashboard.widgets.requestTrend.title',
+    description: 'dashboard.widgets.requestTrend.description',
+    icon: TrendingUp,
+    size: 'medium',
+    optional: true,
+    component: RequestTrendWidget,
+  },
+  {
+    id: 'shortcuts',
+    title: 'dashboard.widgets.shortcuts.title',
+    description: 'dashboard.widgets.shortcuts.description',
+    icon: Zap,
+    size: 'small',
+    optional: true,
+    component: ShortcutsWidget,
+  },
+  {
+    id: 'notes',
+    title: 'dashboard.widgets.notes.title',
+    description: 'dashboard.widgets.notes.description',
+    icon: NotebookPen,
+    size: 'small',
+    optional: true,
+    component: NotesWidget,
   },
 ]
 
@@ -242,8 +331,19 @@ export const WIDGETS: WidgetDef[] = [
 export const availableCards = (def: WidgetDef, isOn: (flag: FlagKey) => boolean) =>
   (def.cards ?? []).filter((card) => !card.flag || isOn(card.flag))
 
-export const defaultLayout = (defs: { id: string; size: WidgetSize }[]): WidgetSettings[] =>
-  defs.map((d) => ({ id: d.id, visible: true, size: d.size, hidden_cards: [], card_order: [] }))
+/** What the layout functions need to know of a widget. */
+type LayoutDef = Pick<WidgetDef, 'id' | 'size' | 'optional'>
+
+export const defaultLayout = (defs: LayoutDef[]): WidgetSettings[] =>
+  defs.map((d) => ({
+    id: d.id,
+    visible: !d.optional,
+    size: d.size,
+    height: 'auto',
+    hidden_cards: [],
+    card_order: [],
+    options: {},
+  }))
 
 /**
  * A saved order applied to the ids that exist: unknown ids are dropped, ids
@@ -274,7 +374,7 @@ export function moveBefore(order: string[], id: string, target: string): string[
 
 /** The user's saved layout applied to the widgets that exist (see `mergeOrder`). */
 export function resolveLayout(
-  defs: { id: string; size: WidgetSize }[],
+  defs: LayoutDef[],
   saved: WidgetSettings[] | undefined,
 ): WidgetSettings[] {
   if (!saved?.length) return defaultLayout(defs)
@@ -284,10 +384,15 @@ export function resolveLayout(
   ).map((id) => {
     const widget = saved.find((w) => w.id === id)
     if (!widget) return defaultLayout(defs.filter((d) => d.id === id))[0]!
+    // Every field in a fixed order, filled in for layouts saved before it existed.
     return {
-      ...widget,
+      id: widget.id,
+      visible: widget.visible,
+      size: widget.size,
+      height: widget.height ?? 'auto',
       hidden_cards: [...(widget.hidden_cards ?? [])],
       card_order: [...(widget.card_order ?? [])],
+      options: { ...widget.options },
     }
   })
 }
@@ -300,7 +405,5 @@ export const orderCards = (cards: StatCardDef[], order: string[]) =>
   ).map((key) => cards.find((c) => c.key === key)!)
 
 /** Whether a layout is the default one, so nothing needs to be stored. */
-export const isDefaultLayout = (
-  defs: { id: string; size: WidgetSize }[],
-  layout: WidgetSettings[],
-) => JSON.stringify(layout) === JSON.stringify(defaultLayout(defs))
+export const isDefaultLayout = (defs: LayoutDef[], layout: WidgetSettings[]) =>
+  JSON.stringify(layout) === JSON.stringify(defaultLayout(defs))

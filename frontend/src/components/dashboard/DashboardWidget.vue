@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { ArrowDown, ArrowUp, Eye, EyeOff, GripVertical } from '@lucide/vue'
-import { NButton } from 'naive-ui'
-import type { Component } from 'vue'
+import { ArrowDown, ArrowUp, GripVertical, Scaling, X } from '@lucide/vue'
+import { NButton, NPopover, type PopoverInst } from 'naive-ui'
+import { ref, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import type { WidgetSettings, WidgetSize } from '@/types/accounts'
+import type { WidgetHeight, WidgetSettings, WidgetSize } from '@/types/accounts'
 
 /**
  * Places a dashboard widget in the grid. While editing it adds a bar to move,
- * resize and hide it; the content itself then only reacts where `interactive`.
+ * resize and remove it; the content itself then only reacts where `interactive`.
  */
 defineProps<{
   title: string
@@ -19,34 +19,89 @@ defineProps<{
   first?: boolean
   last?: boolean
 }>()
-const emit = defineEmits<{ toggle: []; resize: [size: WidgetSize]; move: [delta: number] }>()
+const emit = defineEmits<{
+  remove: []
+  resize: [size: WidgetSize]
+  setHeight: [height: WidgetHeight]
+  move: [delta: number]
+}>()
 
 const { t } = useI18n()
+
+/**
+ * A new size moves the widget, sliding to its place (0.2s); the open size menu
+ * follows its button frame by frame until it has settled.
+ */
+const sizeMenu = ref<PopoverInst | null>(null)
+function followButton() {
+  const until = performance.now() + 400
+  const step = () => {
+    sizeMenu.value?.syncPosition()
+    if (performance.now() < until) requestAnimationFrame(step)
+  }
+  requestAnimationFrame(step)
+}
+
+function resize(size: WidgetSize) {
+  emit('resize', size)
+  followButton()
+}
+
+function setHeight(height: WidgetHeight) {
+  emit('setHeight', height)
+  followButton()
+}
 const SIZES: WidgetSize[] = ['small', 'medium', 'large']
+const HEIGHTS: WidgetHeight[] = ['auto', 'small', 'medium', 'large']
 </script>
 
 <template>
   <div
     class="widget"
-    :class="[`size-${settings.size}`, { editing, off: !settings.visible }]"
+    :class="[`size-${settings.size}`, `height-${settings.height}`, { editing }]"
     :draggable="editing"
   >
     <div v-if="editing" class="edit-bar">
       <GripVertical :size="14" class="grip" />
       <component :is="icon" :size="14" />
       <span class="name">{{ title }}</span>
-      <div class="sizes" role="group" :aria-label="t('dashboard.edit.width')">
-        <button
-          v-for="size in SIZES"
-          :key="size"
-          type="button"
-          :class="{ active: settings.size === size }"
-          :aria-pressed="settings.size === size"
-          @click="emit('resize', size)"
-        >
-          {{ t(`dashboard.edit.sizes.${size}`) }}
-        </button>
-      </div>
+      <NPopover ref="sizeMenu" trigger="click" placement="bottom-end">
+        <template #trigger>
+          <NButton quaternary size="tiny" :title="t('dashboard.edit.size')">
+            <template #icon><Scaling /></template>
+            {{ t(`dashboard.edit.sizes.${settings.size}`) }} ·
+            {{ t(`dashboard.edit.heights.${settings.height}`) }}
+          </NButton>
+        </template>
+        <div class="size-menu">
+          <span class="eyebrow">{{ t('dashboard.edit.width') }}</span>
+          <div class="sizes" role="group" :aria-label="t('dashboard.edit.width')">
+            <button
+              v-for="size in SIZES"
+              :key="size"
+              type="button"
+              :class="{ active: settings.size === size }"
+              :aria-pressed="settings.size === size"
+              @click="resize(size)"
+            >
+              {{ t(`dashboard.edit.sizes.${size}`) }}
+            </button>
+          </div>
+          <span class="eyebrow">{{ t('dashboard.edit.height') }}</span>
+          <div class="sizes" role="group" :aria-label="t('dashboard.edit.height')">
+            <button
+              v-for="height in HEIGHTS"
+              :key="height"
+              type="button"
+              :class="{ active: settings.height === height }"
+              :aria-pressed="settings.height === height"
+              @click="setHeight(height)"
+            >
+              {{ t(`dashboard.edit.heights.${height}`) }}
+            </button>
+          </div>
+        </div>
+      </NPopover>
       <NButton
         quaternary
         size="tiny"
@@ -65,14 +120,8 @@ const SIZES: WidgetSize[] = ['small', 'medium', 'large']
       >
         <template #icon><ArrowDown /></template>
       </NButton>
-      <NButton
-        quaternary
-        size="tiny"
-        :type="settings.visible ? 'default' : 'primary'"
-        :title="settings.visible ? t('dashboard.edit.hide') : t('dashboard.edit.show')"
-        @click="emit('toggle')"
-      >
-        <template #icon><component :is="settings.visible ? Eye : EyeOff" /></template>
+      <NButton quaternary size="tiny" :title="t('dashboard.edit.remove')" @click="emit('remove')">
+        <template #icon><X /></template>
       </NButton>
     </div>
     <div class="content" :inert="editing && !interactive">
@@ -99,9 +148,32 @@ const SIZES: WidgetSize[] = ['small', 'medium', 'large']
 .content {
   flex: 1;
   min-width: 0;
+  /* Widgets adapt to their own width, not the window's. */
+  container-type: inline-size;
 }
 .content > :deep(*) {
   height: 100%;
+}
+/* A fixed height: the widget no longer stretches with its row, its content scrolls. */
+.widget:not(.height-auto) {
+  align-self: start;
+}
+.widget.height-small .content {
+  flex: none;
+  height: 240px;
+}
+.widget.height-medium .content {
+  flex: none;
+  height: 380px;
+}
+.widget.height-large .content {
+  flex: none;
+  height: 540px;
+}
+.widget:not(.height-auto) .content :deep(.n-card-content),
+.widget:not(.height-auto) .content :deep(.tiles) {
+  min-height: 0;
+  overflow: auto;
 }
 .widget.editing {
   padding: 6px;
@@ -112,10 +184,6 @@ const SIZES: WidgetSize[] = ['small', 'medium', 'large']
 }
 .widget.editing:active {
   cursor: grabbing;
-}
-.widget.off .content {
-  opacity: 0.35;
-  filter: grayscale(1);
 }
 .edit-bar {
   display: flex;
@@ -136,9 +204,14 @@ const SIZES: WidgetSize[] = ['small', 'medium', 'large']
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.widget.off .name {
-  color: var(--ar-text-subtle);
-  text-decoration: line-through;
+.size-menu {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  padding: 2px;
+}
+.size-menu .eyebrow + .sizes {
+  margin-bottom: 4px;
 }
 .sizes {
   display: inline-flex;
@@ -173,9 +246,6 @@ const SIZES: WidgetSize[] = ['small', 'medium', 'large']
   .widget.size-small,
   .widget.size-medium {
     grid-column: span 6;
-  }
-  .sizes {
-    display: none;
   }
 }
 </style>

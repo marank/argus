@@ -18,8 +18,10 @@ const widget = (id: string, extra: Partial<WidgetSettings> = {}): WidgetSettings
   id,
   visible: true,
   size: 'large',
+  height: 'auto',
   hidden_cards: [],
   card_order: [],
+  options: {},
   ...extra,
 })
 
@@ -63,6 +65,11 @@ describe('dashboard layout', () => {
     ).toBe(false)
   })
 
+  it('fills in the height of layouts saved before it existed', () => {
+    const old = { id: 'a', visible: true, size: 'large' } as unknown as WidgetSettings
+    expect(resolveLayout(defs, [old])[0]!.height).toBe('auto')
+  })
+
   it('fills in the card order of layouts saved before it existed', () => {
     const old = {
       id: 'a',
@@ -85,5 +92,27 @@ describe('card order', () => {
     expect(moveBefore(['a', 'b', 'c', 'd'], 'a', 'c')).toEqual(['b', 'c', 'a', 'd'])
     expect(moveBefore(['a', 'b', 'c', 'd'], 'd', 'b')).toEqual(['a', 'd', 'b', 'c'])
     expect(moveBefore(['a', 'b'], 'a', 'missing')).toEqual(['a', 'b'])
+  })
+})
+
+describe('optional widgets', () => {
+  const withOptional = [...defs, { id: 'notes', size: 'small' as const, optional: true }]
+
+  it('are off by default', () => {
+    const notes = defaultLayout(withOptional).find((w) => w.id === 'notes')
+    expect(notes?.visible).toBe(false)
+    expect(isDefaultLayout(withOptional, defaultLayout(withOptional))).toBe(true)
+  })
+
+  it('join older layouts switched off', () => {
+    const layout = resolveLayout(withOptional, [widget('a'), widget('b'), widget('c')])
+    expect(layout.find((w) => w.id === 'notes')).toMatchObject({ visible: false, options: {} })
+  })
+
+  it('keep their options', () => {
+    const saved = [widget('notes', { options: { text: 'Call Paul' } })]
+    expect(resolveLayout(withOptional, saved).find((w) => w.id === 'notes')?.options).toEqual({
+      text: 'Call Paul',
+    })
   })
 })

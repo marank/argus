@@ -19,6 +19,7 @@ export const i18n = createI18n<[MessageSchema], Locale, false>({
   datetimeFormats: {
     en: {
       date: { year: 'numeric', month: '2-digit', day: '2-digit' },
+      time: { hour: '2-digit', minute: '2-digit' },
       dateTime: {
         year: 'numeric',
         month: '2-digit',
@@ -34,9 +35,20 @@ export const i18n = createI18n<[MessageSchema], Locale, false>({
         minute: '2-digit',
       },
       weekdayDate: { weekday: 'short', day: '2-digit', month: 'short' },
+      /** Like `date` / `dateTime`, with the short weekday in front. */
+      weekdayNumeric: { weekday: 'short', year: 'numeric', month: '2-digit', day: '2-digit' },
+      weekdayNumericTime: {
+        weekday: 'short',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      },
     },
     de: {
       date: { year: 'numeric', month: '2-digit', day: '2-digit' },
+      time: { hour: '2-digit', minute: '2-digit' },
       dateTime: {
         year: 'numeric',
         month: '2-digit',
@@ -52,6 +64,16 @@ export const i18n = createI18n<[MessageSchema], Locale, false>({
         minute: '2-digit',
       },
       weekdayDate: { weekday: 'short', day: '2-digit', month: 'short' },
+      /** Like `date` / `dateTime`, with the short weekday in front. */
+      weekdayNumeric: { weekday: 'short', year: 'numeric', month: '2-digit', day: '2-digit' },
+      weekdayNumericTime: {
+        weekday: 'short',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      },
     },
   },
   numberFormats: {

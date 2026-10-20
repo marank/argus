@@ -3,9 +3,6 @@
   display: grid;
   column-gap: 12px;
 }
-.lines.upcoming {
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
-}
 .lines.activity {
   grid-template-columns: auto minmax(0, 1fr) auto;
 }
@@ -31,4 +28,34 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.lines.cols-3 {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+.lines.cols-4 {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+/* Number, title, how far away, date, status. */
+.lines.dated {
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+}
+.when {
+  white-space: nowrap;
+}
+/* Narrow widgets keep the relative day and drop the full date. */
+@container (max-width: 640px) {
+  .lines.dated {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+  }
+  .lines.dated .date {
+    display: none;
+  }
+}
+/* A heading inside a list, spanning all its columns so the columns stay shared. */
+.section {
+  grid-column: 1 / -1;
+  margin: 12px 0 2px;
+}
+.section:first-child {
+  margin-top: 0;
 }

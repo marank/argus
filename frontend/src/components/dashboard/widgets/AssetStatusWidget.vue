@@ -5,11 +5,11 @@ import { useI18n } from 'vue-i18n'
 
 import StatusTag from '@/components/common/StatusTag.vue'
 import { useFormat } from '@/composables/useFormat'
-import type { ITOverview } from '@/types/dashboard'
+import type { WidgetProps } from '@/types/dashboard'
 import { ASSET_STATUSES } from '@/types/inventory'
 import { toneOf } from '@/utils/status'
 
-const props = defineProps<{ data: ITOverview }>()
+const props = defineProps<WidgetProps>()
 
 const { t } = useI18n()
 const { enumLabel } = useFormat()

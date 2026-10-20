@@ -1,4 +1,12 @@
 export default {
+  relative: {
+    today: 'Heute',
+    tomorrow: 'Morgen',
+    yesterday: 'Gestern',
+    inDays: 'In {count} Tagen',
+    daysAgo: 'Vor {count} Tagen',
+    atTime: '{day}, {time} Uhr',
+  },
   save: 'Speichern',
   cancel: 'Abbrechen',
   delete: 'Löschen',

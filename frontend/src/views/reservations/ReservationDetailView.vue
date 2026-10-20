@@ -183,7 +183,10 @@ const canRemind = computed(
 async function remind() {
   const name = reservation.value!.requester.display_name
   if (await confirm(t('reservations.actions.confirmRemind', { name }))) {
-    await act(() => reservationsApi.remind(props.id), t('reservations.actions.remindSent', { name }))
+    await act(
+      () => reservationsApi.remind(props.id),
+      t('reservations.actions.remindSent', { name }),
+    )
   }
 }
 
@@ -315,7 +318,9 @@ async function cancel() {
         >
           <div class="overdue">
             <span>
-              {{ t('reservations.overdueAlert.text', { name: reservation.requester.display_name }) }}
+              {{
+                t('reservations.overdueAlert.text', { name: reservation.requester.display_name })
+              }}
               <template v-if="reservation.reminded_at">
                 {{
                   t('reservations.overdueAlert.reminded', {

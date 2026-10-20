@@ -224,7 +224,7 @@ def remind(reservation: Reservation, user) -> Reservation:
     if not mail_ready(MailSettings.load()):
         raise BusinessError(_("Email is not set up, so no reminder can be sent."))
     requester = reservation.requester
-    if not requester.email or not requester.is_active:
+    if not requester.can_be_reminded:
         raise BusinessError(
             _("%(name)s has no email address, so no reminder can be sent.") % {"name": requester.display_name}
         )

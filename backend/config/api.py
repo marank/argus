@@ -11,7 +11,7 @@ from apps.accounts.api import departments, ldap, teams, users
 from apps.core.api import mail_settings, number_sequences, session, site_settings
 from apps.core.api.security import employee_auth, it_staff_auth
 from apps.core.exceptions import BusinessError
-from apps.dashboard.api import calendar, overview
+from apps.dashboard.api import calendar, overview, widgets
 from apps.inventory.api import router as inventory_router
 from apps.masterdata.api import asset_models, categories, locations, manufacturers, suppliers
 from apps.procurement.api import router as procurement_router
@@ -21,6 +21,7 @@ api = NinjaAPI(title="Argus API", version="1.0.0", auth=employee_auth, urls_name
 
 api.add_router("/auth", session.router)
 api.add_router("/dashboard", overview.router)
+api.add_router("/dashboard/widgets", widgets.router)
 api.add_router("/calendar", calendar.router)
 api.add_router("/accounts/users", users.router)
 api.add_router("/accounts/departments", departments.router)

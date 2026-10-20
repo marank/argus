@@ -4,18 +4,18 @@ import { useI18n } from 'vue-i18n'
 
 import StatusTag from '@/components/common/StatusTag.vue'
 import { useFormat } from '@/composables/useFormat'
-import type { ITOverview } from '@/types/dashboard'
+import type { WidgetProps } from '@/types/dashboard'
 
-defineProps<{ data: ITOverview }>()
+defineProps<WidgetProps>()
 
 const { t } = useI18n()
-const { date, dateTime } = useFormat()
+const { dateWithWeekday, relativeDay } = useFormat()
 </script>
 
 <template>
   <NCard :title="t('dashboard.upcoming')" size="small">
     <p v-if="!data.upcoming.length" class="muted">{{ t('dashboard.noUpcoming') }}</p>
-    <div v-else class="lines upcoming">
+    <div v-else class="lines dated">
       <RouterLink
         v-for="r in data.upcoming"
         :key="r.id"
@@ -26,9 +26,8 @@ const { date, dateTime } = useFormat()
         <span class="title"
           >{{ r.title }}<small class="muted"> · {{ r.requester.display_name }}</small></span
         >
-        <span class="mono muted">{{
-          r.pickup_at ? dateTime(r.pickup_at) : date(r.start_date)
-        }}</span>
+        <span class="when">{{ relativeDay(r.pickup_at ?? r.start_date) }}</span>
+        <span class="mono muted date">{{ dateWithWeekday(r.pickup_at ?? r.start_date) }}</span>
         <!-- Pending hand-outs wait for IT: the dot pulses. -->
         <StatusTag group="reservationStatus" :value="r.status" pulse />
       </RouterLink>
