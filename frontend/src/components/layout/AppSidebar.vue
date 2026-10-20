@@ -67,7 +67,10 @@ const sections = computed(() =>
   )
     .map((section) => ({
       ...section,
-      items: section.items.filter((item) => !item.module || features.isOn(item.module)),
+      items: section.items.filter(
+        (item) =>
+          (!item.module || features.isOn(item.module)) && (!item.approver || auth.isApprover),
+      ),
     }))
     // Sections whose modules are all switched off disappear.
     .filter((section) => section.items.length),

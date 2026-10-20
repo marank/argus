@@ -30,6 +30,7 @@ class UserOut(Schema):
     terminal_location: LocationRefOut | None
     is_active: bool
     is_ldap_user: bool
+    approval_exempt: bool
     # Method of the second sign-in step ("email", "totp") or None; only for IT and the user.
     two_factor: str | None = None
 
@@ -47,6 +48,8 @@ class CurrentUserOut(UserOut):
     notification_settings: dict[str, bool]
     dashboard_settings: dict
     is_superuser: bool
+    # Decides on requests of at least one department (shows the approvals page).
+    is_approver: bool
 
 
 class UserIn(Schema):
@@ -62,6 +65,7 @@ class UserIn(Schema):
     is_terminal: bool = False
     terminal_location: UUID | None = None
     is_active: bool = True
+    approval_exempt: bool = False
 
 
 class PreferencesIn(Schema):

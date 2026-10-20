@@ -11,8 +11,8 @@ import { useFeaturesStore } from '@/stores/features'
 import type { NotificationKey } from '@/types/settings'
 
 /**
- * Which emails the user wants to receive. IT notifications only show for IT
- * staff; kinds switched off site-wide are shown greyed out.
+ * Which emails the user wants to receive. IT and approver notifications only show
+ * to IT staff and approvers; kinds switched off site-wide are shown greyed out.
  */
 const { t } = useI18n()
 const message = useMessage()
@@ -23,8 +23,9 @@ onMounted(() => features.load())
 
 const groups = computed(() => {
   const events = features.settings?.notifications ?? []
-  return (['employee', 'it'] as const)
-    .filter((audience) => audience === 'employee' || auth.isItStaff)
+  const shown = { employee: true, it: auth.isItStaff, approver: auth.isApprover }
+  return (['employee', 'approver', 'it'] as const)
+    .filter((audience) => shown[audience])
     .map((audience) => ({ audience, events: events.filter((e) => e.audience === audience) }))
 })
 

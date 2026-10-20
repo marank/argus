@@ -68,7 +68,7 @@ const securityOptions = computed(() =>
 /** Notification kinds grouped by who receives them. */
 const audiences = computed(() => {
   const events = features.settings?.notifications ?? []
-  return (['employee', 'it'] as const).map((audience) => ({
+  return (['employee', 'approver', 'it'] as const).map((audience) => ({
     audience,
     events: events.filter((e) => e.audience === audience).map((e) => e.key),
   }))

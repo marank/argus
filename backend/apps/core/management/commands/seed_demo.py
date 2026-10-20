@@ -852,6 +852,28 @@ def seed_extra(base: dict, stdout) -> None:
         by_name["dhoffmann"],
     )
 
+    # Smartphones need the department's approval; the team lead approves for customer service.
+    categories["phones"].requires_approval = True
+    categories["phones"].save(update_fields=["requires_approval"])
+    departments["Customer Service"].approvers.add(by_name["jwagner"])
+    submit(
+        by_name["sschulz"],
+        "On-call phone",
+        [{"category": categories["phones"].pk, "quantity": 1}],
+        duration="permanent",
+        notes="For the weekend on-call duty.",
+    )
+    workflow.approve(
+        submit(
+            by_name["dhoffmann"],
+            "Smartphone for customer visits",
+            [{"asset_model": models["Galaxy A56"].pk, "quantity": 1}],
+            duration="permanent",
+        ),
+        by_name["jwagner"],
+        "Agreed, David visits customers from next month on.",
+    )
+
     # --- Procurement -----------------------------------------------------------
     def order(supplier_, lines, notes=""):
         return order_service.create_order(

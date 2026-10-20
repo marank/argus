@@ -1,4 +1,6 @@
 export default {
+  approval_requested: 'Approval needed',
+  approval_requestedHelp: 'An employee of your department requests something that needs approval.',
   request_submitted: 'New request',
   request_submittedHelp: 'To the responsible team, otherwise to all of IT.',
   issue_reported: 'New problem report',
@@ -10,7 +12,7 @@ export default {
   request_confirmed: 'Request confirmed',
   request_confirmedHelp: 'Includes the IT comment, if any.',
   request_rejected: 'Request declined',
-  request_rejectedHelp: 'Includes the reason given by IT, if any.',
+  request_rejectedHelp: 'Includes the reason given by IT or the approver, if any.',
   request_ready: 'Ready for pickup',
   request_readyHelp: 'Includes pickup time and location.',
   return_reminder: 'Return reminder',

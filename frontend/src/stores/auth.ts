@@ -14,6 +14,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isItStaff = computed(() => user.value?.is_it_staff ?? false)
   const isSuperuser = computed(() => user.value?.is_superuser ?? false)
   const isTerminal = computed(() => user.value?.is_terminal ?? false)
+  const isApprover = computed(() => user.value?.is_approver ?? false)
 
   function apply(current: CurrentUser | null) {
     user.value = current
@@ -70,6 +71,7 @@ export const useAuthStore = defineStore('auth', () => {
     isItStaff,
     isSuperuser,
     isTerminal,
+    isApprover,
     fetchCurrentUser,
     login,
     verifyLogin,

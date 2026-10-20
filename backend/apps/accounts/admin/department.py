@@ -9,6 +9,7 @@ from apps.accounts.models import Department
 class DepartmentAdmin(admin.ModelAdmin):
     list_display = ["name", "code", "cost_center", "member_count"]
     search_fields = ["name", "code", "cost_center"]
+    autocomplete_fields = ["approvers"]
 
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(_members=Count("members"))

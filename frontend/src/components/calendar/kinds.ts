@@ -36,7 +36,7 @@ export function entryColor(entry: Pick<CalendarEntry, 'kind' | 'overdue'>): stri
  */
 export function isTentative(entry: Pick<CalendarEntry, 'kind' | 'status'>): boolean {
   return (
-    (entry.kind === 'loan' && entry.status === 'submitted') ||
+    (entry.kind === 'loan' && ['pending_approval', 'submitted'].includes(entry.status)) ||
     (entry.kind === 'pickup' && entry.status === 'confirmed')
   )
 }

@@ -61,7 +61,14 @@ class ReservationAdmin(admin.ModelAdmin):
         "assigned_team",
         "assignee",
     ]
-    list_filter = ["status", "duration", "handover_mode", "requester__department", "assigned_team"]
+    list_filter = [
+        "status",
+        "approval",
+        "duration",
+        "handover_mode",
+        "requester__department",
+        "assigned_team",
+    ]
     search_fields = ["number", "title", "requester__username", "requester__last_name"]
     list_select_related = ["requester", "assigned_team", "assignee"]
     autocomplete_fields = [
@@ -80,6 +87,8 @@ class ReservationAdmin(admin.ModelAdmin):
         "handed_out_at",
         "reminded_at",
         "reminded_by",
+        "approver",
+        "approval_decided_at",
         "completed_at",
         "created_at",
         "updated_at",
@@ -87,6 +96,7 @@ class ReservationAdmin(admin.ModelAdmin):
     fieldsets = [
         (None, {"fields": ["number", "title", "requester", "created_by", "status"]}),
         (_("Period"), {"fields": ["duration", "start_date", "end_date"]}),
+        (_("Approval"), {"fields": ["approval", "approver", "approval_decided_at", "approval_comment"]}),
         (_("Pickup"), {"fields": ["handover_mode", "pickup_at", "pickup_location"]}),
         (_("Responsible"), {"fields": ["assigned_team", "assignee"]}),
         (_("Notes"), {"fields": ["notes", "it_comment", "handled_by", "prepared_by"]}),

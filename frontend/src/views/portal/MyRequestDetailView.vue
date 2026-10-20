@@ -93,7 +93,9 @@ const columns: DataTableColumns<ReservationItem> = [
         /></template>
         <template #actions>
           <NButton
-            v-if="['submitted', 'confirmed', 'ready'].includes(reservation.status)"
+            v-if="
+              ['pending_approval', 'submitted', 'confirmed', 'ready'].includes(reservation.status)
+            "
             :loading="busy"
             @click="cancel"
           >
@@ -105,7 +107,14 @@ const columns: DataTableColumns<ReservationItem> = [
 
       <div class="stack">
         <NAlert v-if="route.query.created" type="success" :bordered="false">
-          {{ t('reservations.new.submitted', { number: reservation.number }) }}
+          {{
+            t(
+              reservation.status === 'pending_approval'
+                ? 'reservations.new.submittedForApproval'
+                : 'reservations.new.submitted',
+              { number: reservation.number },
+            )
+          }}
         </NAlert>
         <NAlert v-if="reservation.status === 'ready' && reservation.pickup_at" type="success">
           <template #icon><CalendarClock :size="18" /></template>

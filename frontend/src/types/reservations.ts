@@ -5,13 +5,24 @@ import type { AssetRef, OwnIssue } from './inventory'
 import type { AssetModelRef, CategoryKind, CategoryRef, LocationRef } from './masterdata'
 
 export type ReservationStatus =
-  'submitted' | 'confirmed' | 'ready' | 'handed_out' | 'completed' | 'rejected' | 'cancelled'
+  | 'pending_approval'
+  | 'submitted'
+  | 'confirmed'
+  | 'ready'
+  | 'handed_out'
+  | 'completed'
+  | 'rejected'
+  | 'cancelled'
+
+/** The department's decision; empty when the request did not need one. */
+export type ApprovalState = '' | 'pending' | 'approved' | 'rejected'
 
 export type Duration = 'temporary' | 'permanent'
 export type HandoverMode = 'pickup' | 'collect' | 'delivery'
 export type HandoverMethod = 'signature' | 'delivered' | 'direct'
 
 export const RESERVATION_STATUSES: ReservationStatus[] = [
+  'pending_approval',
   'submitted',
   'confirmed',
   'ready',
@@ -75,6 +86,7 @@ export interface ReservationListItem {
   start_date: string
   end_date: string | null
   status: ReservationStatus
+  approval: ApprovalState
   handover_mode: HandoverMode
   /** The employee's preferred pickup day; IT sets the appointment (pickup_at). */
   requested_pickup_date?: string | null
@@ -122,6 +134,14 @@ export interface Reservation extends ReservationListItem {
   /** When IT last emailed the employee to return the devices. */
   reminded_at: string | null
   reminded_by: UserRef | null
+  /** Who decided for the department (the requester when they approve for it themselves). */
+  approver: UserRef | null
+  approval_decided_at: string | null
+  approval_comment: string
+  /** Who can decide while the request awaits approval. */
+  approvers: UserRef[]
+  /** The current user can approve or decline it now. */
+  can_approve: boolean
   confirmed_at: string | null
   handed_out_at: string | null
   completed_at: string | null

@@ -122,7 +122,9 @@ async function remove(allocationId: Id) {
         <span :class="{ done: !item.quantity_missing }">{{ item.quantity_allocated }}</span>
         <span class="muted">/ {{ target }}</span>
         <span
-          v-if="item.quantity_confirmed !== null && item.quantity_confirmed < item.quantity_requested"
+          v-if="
+            item.quantity_confirmed !== null && item.quantity_confirmed < item.quantity_requested
+          "
           class="reduced"
           :title="t('reservations.quantities.requested')"
         >

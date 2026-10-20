@@ -10,6 +10,8 @@ declare module 'vue-router' {
     it?: boolean
     /** Restricted to administrators (superusers). */
     superuser?: boolean
+    /** Restricted to department approvers. */
+    approver?: boolean
     /** Pickup terminal pages (terminal account and IT staff). */
     terminal?: boolean
     /** i18n key of the page title. */
@@ -82,6 +84,19 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/portal/MyRequestDetailView.vue'),
         props: (route) => ({ id: String(route.params.id) }),
         meta: { title: 'nav.myRequests' },
+      },
+      {
+        path: 'portal/approvals',
+        name: 'portal-approvals',
+        component: () => import('@/views/portal/ApprovalsView.vue'),
+        meta: { approver: true, title: 'nav.approvals' },
+      },
+      {
+        path: 'portal/approvals/:id([0-9a-f-]{36})',
+        name: 'portal-approval',
+        component: () => import('@/views/portal/ApprovalDetailView.vue'),
+        props: (route) => ({ id: String(route.params.id) }),
+        meta: { approver: true, title: 'nav.approvals' },
       },
       {
         path: 'profile/notifications',

@@ -116,6 +116,14 @@ export default {
     terminalLocationHelp:
       'Pickup terminal accounts only: lists pickups at this location and below. Empty: all.',
     itStaff: 'IT staff',
+    approvers: 'Approvers',
+    approversHelp:
+      'Approve the members’ requests for categories that need approval. Without approvers such requests go straight to IT.',
+    approvalExempt: 'Exempt from approval',
+    approvalExemptHelp: 'Requests go straight to IT, even for categories that need approval.',
+    requiresApproval: 'Requires approval',
+    requiresApprovalHelp:
+      'An approver of the employee’s department approves requests first. Applies to subcategories as well.',
   },
   twoFactor: {
     column: '2FA',

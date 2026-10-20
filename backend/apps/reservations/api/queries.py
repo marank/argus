@@ -2,7 +2,7 @@ from uuid import UUID
 
 from django.db.models import Prefetch, QuerySet, Sum
 from django.db.models.functions import Coalesce
-from django.http import HttpRequest
+from django.http import Http404, HttpRequest
 from django.shortcuts import get_object_or_404
 
 from apps.core.api.security import is_it_staff
@@ -35,6 +35,7 @@ def reservation_queryset() -> QuerySet[Reservation]:
         "prepared_by",
         "assigned_team",
         "assignee",
+        "approver",
         "pickup_location__parent",
         "handover__received_by",
         "handover__handed_out_by",
@@ -52,8 +53,23 @@ def visible_reservations(request: HttpRequest) -> QuerySet[Reservation]:
     return queryset.filter(requester=request.user)
 
 
-def get_reservation(request: HttpRequest, pk: UUID) -> Reservation:
-    return get_object_or_404(visible_reservations(request), pk=pk)
+def approvable_reservations(user) -> QuerySet[Reservation]:
+    """Requests that went to one of the departments ``user`` approves for."""
+    return (
+        reservation_queryset()
+        .filter(requester__department__approvers=user)
+        .exclude(approval=Reservation.Approval.NOT_REQUIRED)
+    )
+
+
+def get_reservation(request: HttpRequest, pk: UUID, *, as_approver: bool = False) -> Reservation:
+    """A request the user may see; ``as_approver`` adds those they decide on."""
+    reservation = visible_reservations(request).filter(pk=pk).first()
+    if reservation is None and as_approver:
+        reservation = approvable_reservations(request.user).filter(pk=pk).first()
+    if reservation is None:
+        raise Http404
+    return reservation
 
 
 def get_for_update(pk: UUID) -> Reservation:

@@ -27,13 +27,14 @@ onMounted(async () => {
 })
 
 const STEPS = ['submitted', 'confirmed', 'ready', 'handed_out'] as const
-const ACTIVE = new Set<string>(STEPS)
+// Waiting for the department comes before the first step.
+const ACTIVE = new Set<string>(['pending_approval', ...STEPS])
 
 const active = computed(() => (requests.value ?? []).filter((r) => ACTIVE.has(r.status)))
 const closed = computed(() => (requests.value ?? []).filter((r) => !ACTIVE.has(r.status)))
 
 /** Rows of cards: per status with the most urgent first, or one row by date. */
-const STATUS_ROWS = ['ready', 'handed_out', 'confirmed', 'submitted'] as const
+const STATUS_ROWS = ['ready', 'handed_out', 'confirmed', 'submitted', 'pending_approval'] as const
 const rows = computed(() => {
   if (sortBy.value === 'date') return [{ key: 'all', label: '', items: active.value }]
   return STATUS_ROWS.map((status) => ({
@@ -52,6 +53,8 @@ function period(r: ReservationListItem): string {
 /** One sentence on where the request stands and what the employee can expect. */
 function nextStep(r: ReservationListItem): string {
   switch (r.status) {
+    case 'pending_approval':
+      return t('reservations.mine.next.pending_approval')
     case 'submitted':
       return t('reservations.mine.next.submitted')
     case 'confirmed':

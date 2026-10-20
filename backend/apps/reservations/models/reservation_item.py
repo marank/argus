@@ -74,6 +74,11 @@ class ReservationItem(UUIDModel):
         return str(self.category)
 
     @property
+    def requires_approval(self) -> bool:
+        category = self.asset_model.category if self.asset_model_id else self.category
+        return category.needs_approval() if category else False
+
+    @property
     def effective_category_id(self) -> int:
         return self.asset_model.category_id if self.asset_model_id else self.category_id
 

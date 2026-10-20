@@ -155,6 +155,9 @@ export default {
       it: 'An die IT',
       itDescription:
         'Empfänger sind alle IT-Mitarbeiter. Jeder Benutzer kann sie in seinem Profil deaktivieren.',
+      approver: 'An Genehmiger',
+      approverDescription:
+        'Empfänger sind die Genehmiger der Abteilung des Mitarbeiters. Jeder Benutzer kann sie in seinem Profil deaktivieren.',
     },
   },
 }

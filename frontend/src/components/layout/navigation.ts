@@ -2,6 +2,7 @@ import {
   AppWindow,
   Boxes,
   CalendarDays,
+  ClipboardCheck,
   Building2,
   ClipboardList,
   Factory,
@@ -32,6 +33,8 @@ export interface NavItem {
   key: string
   /** Hidden while this module is switched off in the site settings. */
   module?: ModuleKey
+  /** Only for department approvers. */
+  approver?: boolean
   label: string
   icon: Component
   to: RouteLocationRaw
@@ -67,6 +70,13 @@ export const NAVIGATION: NavSection[] = [
         label: 'nav.myRequests',
         icon: ClipboardList,
         to: { name: 'portal-requests' },
+      },
+      {
+        key: 'portal-approvals',
+        approver: true,
+        label: 'nav.approvals',
+        icon: ClipboardCheck,
+        to: { name: 'portal-approvals' },
       },
       {
         key: 'portal-devices',
@@ -238,6 +248,8 @@ export function activeKey(name: string | undefined, params: Record<string, unkno
       return 'orders'
     case 'portal-request':
       return 'portal-requests'
+    case 'portal-approval':
+      return 'portal-approvals'
     case 'portal-device':
       return 'portal-devices'
     case 'settings-ldap':

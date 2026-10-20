@@ -3,6 +3,7 @@ export default {
   selfService: 'Self-service',
   newRequest: 'New request',
   myRequests: 'My requests',
+  approvals: 'Approvals',
   myDevices: 'My devices',
   mySoftware: 'My software',
   myIssues: 'My reports',

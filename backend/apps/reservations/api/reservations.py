@@ -101,7 +101,7 @@ def create_reservation(request: HttpRequest, payload: ReservationIn):
 
 @router.get("/{uuid:pk}", response=ReservationOut)
 def get_reservation_detail(request: HttpRequest, pk: UUID):
-    return get_reservation(request, pk)
+    return get_reservation(request, pk, as_approver=True)
 
 
 @router.post("/{uuid:pk}/cancel", response=ReservationOut)

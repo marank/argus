@@ -22,6 +22,8 @@ export interface User extends UserRef {
   /** Pickup terminal only: lists pickups at this location and below. */
   terminal_location: LocationRef | null
   is_active: boolean
+  /** Requests go straight to IT, even for categories that need approval. */
+  approval_exempt: boolean
   /** Directory account; synced fields are overwritten at every login. */
   is_ldap_user: boolean
   /** Second sign-in step; only sent to IT staff and the user themself. */
@@ -64,6 +66,8 @@ export interface CurrentUser extends User {
   /** The own dashboard layout; empty means the default. */
   dashboard_settings: DashboardSettings
   is_superuser: boolean
+  /** Approves requests for at least one department. */
+  is_approver: boolean
 }
 
 export type WidgetSize = 'small' | 'medium' | 'large'
@@ -97,6 +101,8 @@ export interface Department {
   cost_center: string
   sort_order: number
   member_count: number
+  /** Approve requests for categories that need approval; none = straight to IT. */
+  approvers: UserRef[]
 }
 
 export interface TeamRef {

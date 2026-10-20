@@ -2372,3 +2372,101 @@ msgstr[1] "Zwei-Faktor-Authentifizierung für %(count)d Mitarbeiter zurückgeset
 
 #~ msgid "Answer from IT:"
 #~ msgstr "Antwort der IT:"
+
+#: apps/accounts/models/department.py
+msgid "approvers"
+msgstr "Genehmiger"
+
+#: apps/accounts/models/department.py
+msgid ""
+"Approve requests of the department's members for categories that need "
+"approval. Without approvers such requests go straight to IT."
+msgstr ""
+"Genehmigen Anforderungen der Mitarbeiter dieser Abteilung für "
+"genehmigungspflichtige Kategorien. Ohne Genehmiger gehen solche "
+"Anforderungen direkt an die IT."
+
+#: apps/accounts/models/user.py
+msgid "exempt from approval"
+msgstr "von Genehmigungen befreit"
+
+#: apps/accounts/models/user.py
+msgid "Requests go straight to IT, even for categories that need approval."
+msgstr ""
+"Anforderungen gehen direkt an die IT, auch für genehmigungspflichtige "
+"Kategorien."
+
+#: apps/masterdata/models/category.py
+msgid "requires approval"
+msgstr "genehmigungspflichtig"
+
+#: apps/masterdata/models/category.py
+msgid ""
+"Requests must first be approved by the employee's department. Applies to the "
+"subcategories as well."
+msgstr ""
+"Anforderungen müssen zuerst von der Abteilung des Mitarbeiters genehmigt "
+"werden. Gilt auch für Unterkategorien."
+
+#: apps/reservations/models/reservation.py
+msgid "Awaiting approval"
+msgstr "In Genehmigung"
+
+#: apps/reservations/models/reservation.py
+msgid "Not required"
+msgstr "Nicht erforderlich"
+
+#: apps/reservations/models/reservation.py
+msgid "Pending"
+msgstr "Ausstehend"
+
+#: apps/reservations/models/reservation.py
+msgid "Approved"
+msgstr "Genehmigt"
+
+#: apps/reservations/models/reservation.py
+msgid "approval"
+msgstr "Genehmigung"
+
+#: apps/reservations/models/reservation.py
+msgid "approver"
+msgstr "Genehmiger"
+
+#: apps/reservations/models/reservation.py
+msgid "approval decided at"
+msgstr "Genehmigung entschieden am"
+
+#: apps/reservations/models/reservation.py
+msgid "approval comment"
+msgstr "Kommentar zur Genehmigung"
+
+#: apps/reservations/admin/reservation.py
+msgid "Approval"
+msgstr "Genehmigung"
+
+#: apps/reservations/services/workflow.py
+msgid ""
+"Only an approver of the requester's department can decide on this request."
+msgstr ""
+"Nur ein Genehmiger aus der Abteilung des Anfordernden kann über diese "
+"Anforderung entscheiden."
+
+#: apps/reservations/services/notifications.py
+#, python-format
+msgid "Approval needed: request %(number)s from %(name)s"
+msgstr "Genehmigung erforderlich: Anforderung %(number)s von %(name)s"
+
+#: apps/reservations/services/notifications.py
+#, python-format
+msgid "%(name)s requests for “%(title)s” and needs your approval:"
+msgstr "%(name)s fordert für „%(title)s“ an und benötigt Ihre Genehmigung:"
+
+#: apps/reservations/services/notifications.py
+#, python-format
+msgid "%(name)s did not approve your request “%(title)s”."
+msgstr "%(name)s hat Ihre Anforderung „%(title)s“ nicht genehmigt."
+
+#: apps/reservations/services/notifications.py
+#, python-format
+msgid "Comment: %(comment)s"
+msgstr "Kommentar: %(comment)s"

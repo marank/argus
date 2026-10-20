@@ -61,8 +61,11 @@ export interface SiteSettings {
   /** Directory login is configured and on; forms show LDAP-related fields. */
   ldap_enabled: boolean
   /** Notification kinds and whether they are switched on site-wide. */
-  notifications: { key: NotificationKey; audience: 'employee' | 'it'; enabled: boolean }[]
+  notifications: { key: NotificationKey; audience: NotificationAudience; enabled: boolean }[]
 }
+
+/** Who a notification is for: the person concerned, IT or department approvers. */
+export type NotificationAudience = 'employee' | 'it' | 'approver'
 
 /** Deadlines and warning periods (days). */
 export interface Rules {
@@ -75,6 +78,7 @@ export interface Rules {
 }
 
 export type NotificationKey =
+  | 'approval_requested'
   | 'request_submitted'
   | 'issue_reported'
   | 'assigned_to_me'

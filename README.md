@@ -137,6 +137,12 @@ signs in through the app's login, so the second step applies there too.
 - **Self-service portal** – employees request devices by group ("any headset") or
   model, for a period or permanently, and follow status, pickup time and their
   assigned devices. Consumables that fit their own devices are offered as a quick pick.
+- **Department approval** – categories can require approval (inherited by
+  subcategories). Such requests wait as *awaiting approval* until an approver of the
+  requester's department approves them under *Approvals* in the portal; only then
+  does IT get them. Requests go straight to IT for exempt employees, when IT records
+  them on someone's behalf, when the department has no approvers, and approvers'
+  own requests count as approved.
 - **Reservation workflow** – IT confirms (optionally with reduced quantities),
   sets pickup date and place, allocates concrete devices (scan, pick or automatic),
   marks the request ready, hands out and takes back.

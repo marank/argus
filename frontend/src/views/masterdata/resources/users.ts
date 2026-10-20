@@ -113,6 +113,12 @@ export default defineResource<User>({
         },
         { key: 'job_title', label: 'masterdata.fields.jobTitle', type: 'text' },
         { key: 'employee_number', label: 'masterdata.fields.employeeNumber', type: 'mono' },
+        {
+          key: 'approval_exempt',
+          label: 'masterdata.fields.approvalExempt',
+          type: 'switch',
+          help: 'masterdata.fields.approvalExemptHelp',
+        },
       ],
     },
     {
@@ -165,6 +171,7 @@ export default defineResource<User>({
     is_terminal: false,
     terminal_location: null,
     is_active: true,
+    approval_exempt: false,
   }),
   toForm: (u) => ({
     username: u.username,
@@ -179,5 +186,6 @@ export default defineResource<User>({
     is_terminal: u.is_terminal,
     terminal_location: u.terminal_location?.id ?? null,
     is_active: u.is_active,
+    approval_exempt: u.approval_exempt,
   }),
 })

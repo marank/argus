@@ -8,24 +8,30 @@ import type { Reservation } from '@/types/reservations'
 const props = defineProps<{ reservation: Reservation }>()
 const { t } = useI18n()
 
+/** Requests that needed the department's approval show it as their first step. */
 const steps = computed(() => {
   const list = ['submitted', 'confirmed', 'ready', 'handedOut']
+  if (props.reservation.approval) list.unshift('approval')
   if (props.reservation.duration === 'temporary') list.push('completed')
   return list
 })
 
-const ORDER: Record<string, number> = {
-  submitted: 1,
-  confirmed: 2,
-  ready: 3,
-  handed_out: 4,
-  completed: 5,
+const STEP_OF: Record<string, string> = {
+  pending_approval: 'approval',
+  submitted: 'submitted',
+  confirmed: 'confirmed',
+  ready: 'ready',
+  handed_out: 'handedOut',
+  completed: 'completed',
 }
 
 const current = computed(() => {
-  const status = props.reservation.status
-  if (status === 'completed' && props.reservation.duration === 'permanent') return 4
-  return ORDER[status] ?? 1
+  const { status, duration, approval } = props.reservation
+  let step = STEP_OF[status]
+  if (status === 'completed' && duration === 'permanent') step = 'handedOut'
+  // Closed early: at the step where it ended – the approval, or IT's decision.
+  if (!step) step = approval === 'pending' || approval === 'rejected' ? 'approval' : 'submitted'
+  return steps.value.indexOf(step) + 1
 })
 
 const stepStatus = computed(() => {

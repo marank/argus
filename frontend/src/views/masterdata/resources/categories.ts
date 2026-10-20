@@ -52,6 +52,12 @@ export default defineResource<Category>({
       render: (c) => bool(c.is_requestable),
     },
     {
+      key: 'requires_approval',
+      label: 'masterdata.fields.requiresApproval',
+      width: 170,
+      render: (c) => bool(c.requires_approval),
+    },
+    {
       key: 'sort_order',
       label: 'masterdata.fields.sortOrder',
       sorter: 'sort_order',
@@ -142,6 +148,12 @@ export default defineResource<Category>({
           type: 'switch',
           help: 'masterdata.fields.allowAnyModelHelp',
         },
+        {
+          key: 'requires_approval',
+          label: 'masterdata.fields.requiresApproval',
+          type: 'switch',
+          help: 'masterdata.fields.requiresApprovalHelp',
+        },
         { key: 'sort_order', label: 'masterdata.fields.sortOrder', type: 'number', min: 0 },
       ],
     },
@@ -158,6 +170,7 @@ export default defineResource<Category>({
     team: null,
     is_requestable: true,
     allow_any_model: true,
+    requires_approval: false,
     sort_order: 0,
   }),
   toForm: (c) => ({
@@ -172,6 +185,7 @@ export default defineResource<Category>({
     team: c.team?.id ?? null,
     is_requestable: c.is_requestable,
     allow_any_model: c.allow_any_model,
+    requires_approval: c.requires_approval,
     sort_order: c.sort_order,
   }),
 })

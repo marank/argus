@@ -117,6 +117,15 @@ export default {
     terminalLocationHelp:
       'Nur für Terminal-Konten: zeigt nur Abholungen an diesem Standort und darunter. Leer: alle.',
     itStaff: 'IT-Mitarbeiter',
+    approvers: 'Genehmiger',
+    approversHelp:
+      'Genehmigen Anforderungen der Mitarbeiter für genehmigungspflichtige Kategorien. Ohne Genehmiger gehen solche Anforderungen direkt an die IT.',
+    approvalExempt: 'Von Genehmigungen befreit',
+    approvalExemptHelp:
+      'Anforderungen gehen direkt an die IT, auch für genehmigungspflichtige Kategorien.',
+    requiresApproval: 'Genehmigungspflichtig',
+    requiresApprovalHelp:
+      'Anforderungen muss zuerst ein Genehmiger aus der Abteilung des Mitarbeiters genehmigen. Gilt auch für Unterkategorien.',
   },
   twoFactor: {
     column: '2FA',

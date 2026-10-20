@@ -4,6 +4,7 @@ export default {
     subtitle: 'Legen Sie fest, welche Benachrichtigungen an {email} gesendet werden.',
     employeeDescription: 'Zu Ihren Anforderungen, Geräten und Meldungen.',
     itDescription: 'Für IT-Mitarbeiter.',
+    approverDescription: 'Für Genehmiger von Abteilungen.',
     mailOff: 'Der E-Mail-Versand ist derzeit deaktiviert.',
     noEmail: 'Für Ihr Konto ist keine E-Mail-Adresse hinterlegt. Bitte wenden Sie sich an die IT.',
     siteOff: 'von der IT deaktiviert',

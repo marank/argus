@@ -31,7 +31,7 @@ class UserAdmin(BaseUserAdmin):
             _("Organisation"),
             {"fields": ("department", "employee_number", "job_title", "phone", "language")},
         ),
-        (_("Argus roles"), {"fields": ("is_terminal", "terminal_location")}),
+        (_("Argus roles"), {"fields": ("approval_exempt", "is_terminal", "terminal_location")}),
         (_("Directory"), {"fields": ("ldap_dn",)}),
         (_("Two-factor authentication"), {"fields": ("two_factor_method",)}),
     )

@@ -88,6 +88,8 @@ class ReservationListOut(Schema):
     start_date: date
     end_date: date | None
     status: str
+    # The department's decision: "" (not needed), pending, approved or rejected.
+    approval: str
     handover_mode: str
     is_overdue: bool
     pickup_at: datetime | None
@@ -150,12 +152,32 @@ class ReservationOut(ReservationListOut):
     prepared_by: UserRefOut | None
     reminded_at: datetime | None
     reminded_by: UserRefOut | None
+    approver: UserRefOut | None
+    approval_decided_at: datetime | None
+    approval_comment: str
+    # Who can decide while the request awaits approval.
+    approvers: list[UserRefOut] = []
+    # Whether the current user can approve or decline it now.
+    can_approve: bool = False
     confirmed_at: datetime | None
     handed_out_at: datetime | None
     completed_at: datetime | None
     items: list[ReservationItemOut]
     handover: HandoverOut | None = None
     returns: list[DeviceReturnOut] = []
+
+    @staticmethod
+    def resolve_approvers(obj) -> list:
+        if obj.status != Reservation.Status.PENDING_APPROVAL:
+            return []
+        return list(obj.approvers())
+
+    @staticmethod
+    def resolve_can_approve(obj, context) -> bool:
+        request = (context or {}).get("request")
+        return bool(
+            request and obj.status == Reservation.Status.PENDING_APPROVAL and obj.may_approve(request.user)
+        )
 
     @staticmethod
     def resolve_returns(obj):
@@ -199,6 +221,14 @@ class ConfirmIn(Schema):
     pickup_at: datetime | None = None
     pickup_location: UUID | None = None
     comment: str = ""
+
+
+class ApproveIn(Schema):
+    comment: str = ""
+
+
+class DeclineIn(Schema):
+    comment: str = Field(..., min_length=1)
 
 
 class AssignIn(Schema):

@@ -31,6 +31,7 @@ export default {
   },
   issueStatus: { open: 'Offen', in_progress: 'In Bearbeitung', resolved: 'Erledigt' },
   reservationStatus: {
+    pending_approval: 'In Genehmigung',
     submitted: 'Eingereicht',
     confirmed: 'Bestätigt',
     ready: 'Abholbereit',

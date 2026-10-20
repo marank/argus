@@ -210,7 +210,7 @@ const menuOptions = computed<DropdownOption[]>(() => {
   // Overdue, the alert offers it.
   if (canRemind.value && !reservation.value?.is_overdue)
     options.push(option('remind', t('reservations.actions.remind'), Mail))
-  if (['submitted', 'confirmed', 'ready'].includes(s ?? '')) {
+  if (['pending_approval', 'submitted', 'confirmed', 'ready'].includes(s ?? '')) {
     if (options.length) options.push({ type: 'divider', key: 'cancel-divider' })
     options.push(option('cancel', t('reservations.actions.cancel'), Ban, true))
   }
@@ -311,6 +311,9 @@ async function cancel() {
       </PageHeader>
 
       <div class="stack">
+        <NAlert v-if="status === 'pending_approval'" type="info" :bordered="false">
+          {{ t('reservations.approval.itWaiting') }}
+        </NAlert>
         <NAlert
           v-if="reservation.is_overdue && reservation.end_date"
           type="error"

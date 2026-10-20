@@ -1,4 +1,7 @@
 export default {
+  approval_requested: 'Genehmigung erforderlich',
+  approval_requestedHelp:
+    'Ein Mitarbeiter Ihrer Abteilung fordert etwas Genehmigungspflichtiges an.',
   request_submitted: 'Neue Anforderung',
   request_submittedHelp: 'An das zuständige Team, ersatzweise an die gesamte IT.',
   issue_reported: 'Neue Problemmeldung',
@@ -11,7 +14,7 @@ export default {
   request_confirmed: 'Anforderung bestätigt',
   request_confirmedHelp: 'Mit Kommentar der IT, falls vorhanden.',
   request_rejected: 'Anforderung abgelehnt',
-  request_rejectedHelp: 'Mit Begründung der IT, falls vorhanden.',
+  request_rejectedHelp: 'Mit Begründung der IT oder des Genehmigers, falls vorhanden.',
   request_ready: 'Abholbereit',
   request_readyHelp: 'Mit Abholtermin und -ort.',
   return_reminder: 'Rückgabe-Erinnerung',

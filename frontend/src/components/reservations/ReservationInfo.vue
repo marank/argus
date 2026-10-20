@@ -17,11 +17,27 @@ const period = computed(() => {
     : `${date(r.start_date)} → ${date(r.end_date)}`
 })
 
+/** Where the department's approval stands; empty for requests that did not need one. */
+const approval = computed(() => {
+  const r = props.reservation
+  if (r.status === 'pending_approval')
+    return t('reservations.approval.waiting', {
+      names: r.approvers.map((a) => a.display_name).join(', ') || '—',
+    })
+  if (!r.approver || !r.approval_decided_at) return null
+  const params = { name: r.approver.display_name, date: dateTime(r.approval_decided_at) }
+  if (r.approval === 'rejected') return t('reservations.approval.rejected', params)
+  return r.approver.id === r.requester.id
+    ? t('reservations.approval.selfApproved', params)
+    : t('reservations.approval.approved', params)
+})
+
 const entries = computed<DetailEntry[]>(() => {
   const r = props.reservation
   return [
     { label: t('reservations.requester'), value: r.requester.display_name },
     { label: t('reservations.department'), value: r.department?.name },
+    ...(approval.value ? [{ label: t('reservations.approval.label'), value: approval.value }] : []),
     { label: t('reservations.duration'), value: enumLabel('duration', r.duration) },
     { label: t('reservations.period'), value: period.value, mono: true, slot: 'period' },
     ...(r.requested_pickup_date
@@ -63,6 +79,9 @@ const entries = computed<DetailEntry[]>(() => {
       : []),
     { label: t('common.createdAt'), value: date(r.created_at), mono: true },
     ...(r.notes ? [{ label: t('reservations.notes'), value: r.notes, wide: true }] : []),
+    ...(r.approval_comment
+      ? [{ label: t('reservations.approval.comment'), value: r.approval_comment, wide: true }]
+      : []),
     ...(r.it_comment
       ? [{ label: t('reservations.itComment'), value: r.it_comment, wide: true }]
       : []),

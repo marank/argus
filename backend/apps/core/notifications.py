@@ -23,10 +23,12 @@ logger = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class Event:
     key: str
-    audience: str  # "employee": the person concerned; "it": the IT department
+    # "employee": the person concerned; "it": the IT department; "approver": department approvers
+    audience: str
 
 
 EVENTS: tuple[Event, ...] = (
+    Event("approval_requested", "approver"),
     Event("request_submitted", "it"),
     Event("issue_reported", "it"),
     Event("assigned_to_me", "it"),

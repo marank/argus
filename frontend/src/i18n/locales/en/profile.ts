@@ -4,6 +4,7 @@ export default {
     subtitle: 'Choose which notifications are sent to {email}.',
     employeeDescription: 'About your requests, devices and reports.',
     itDescription: 'For IT staff.',
+    approverDescription: 'For department approvers.',
     mailOff: 'Email delivery is currently disabled.',
     noEmail: 'Your account has no email address. Please contact IT.',
     siteOff: 'disabled by IT',

@@ -11,16 +11,19 @@ class Reservation(TimeStampedModel):
 
     Life cycle::
 
-        submitted ─► confirmed ─► ready ─► handed_out ─► completed
-            │            │                     (permanent requests complete on hand-out)
-            └─► rejected / cancelled
+        (pending_approval ─►) submitted ─► confirmed ─► ready ─► handed_out ─► completed
+                 │                │            │          (permanent requests complete on hand-out)
+                 └────────────────┴────────────┴─► rejected / cancelled
 
-    Requests without anything to collect (only software) are handed out right
-    when they are marked ready. Temporary requests stay handed out until the
-    devices and license seats are back; consumables are not returned.
+    Requests for categories that need approval wait for an approver of the
+    requester's department first (``pending_approval``); IT only gets them once
+    approved. Requests without anything to collect (only software) are handed
+    out right when they are marked ready. Temporary requests stay handed out
+    until the devices and license seats are back; consumables are not returned.
     """
 
     class Status(models.TextChoices):
+        PENDING_APPROVAL = "pending_approval", _("Awaiting approval")
         SUBMITTED = "submitted", _("Submitted")
         CONFIRMED = "confirmed", _("Confirmed")
         READY = "ready", _("Ready for pickup")
@@ -39,8 +42,22 @@ class Reservation(TimeStampedModel):
         COLLECT = "collect", _("Simple pickup")
         DELIVERY = "delivery", _("Delivered by IT")
 
-    OPEN_STATUSES = (Status.SUBMITTED, Status.CONFIRMED, Status.READY, Status.HANDED_OUT)
-    CANCELLABLE_STATUSES = (Status.SUBMITTED, Status.CONFIRMED, Status.READY)
+    class Approval(models.TextChoices):
+        """The department's decision; empty when the request did not need one."""
+
+        NOT_REQUIRED = "", _("Not required")
+        PENDING = "pending", _("Pending")
+        APPROVED = "approved", _("Approved")
+        REJECTED = "rejected", _("Rejected")
+
+    OPEN_STATUSES = (
+        Status.PENDING_APPROVAL,
+        Status.SUBMITTED,
+        Status.CONFIRMED,
+        Status.READY,
+        Status.HANDED_OUT,
+    )
+    CANCELLABLE_STATUSES = (Status.PENDING_APPROVAL, Status.SUBMITTED, Status.CONFIRMED, Status.READY)
     # Devices handed out permanently can still be taken back later.
     RETURNABLE_STATUSES = (Status.HANDED_OUT, Status.COMPLETED)
 
@@ -68,8 +85,22 @@ class Reservation(TimeStampedModel):
     requested_pickup_date = models.DateField(_("preferred pickup day"), null=True, blank=True)
     end_date = models.DateField(_("needed until"), null=True, blank=True)
     status = models.CharField(
-        _("status"), max_length=12, choices=Status.choices, default=Status.SUBMITTED, db_index=True
+        _("status"), max_length=20, choices=Status.choices, default=Status.SUBMITTED, db_index=True
     )
+    approval = models.CharField(
+        _("approval"), max_length=10, choices=Approval.choices, default=Approval.NOT_REQUIRED, blank=True
+    )
+    # Who decided for the department; the requester when they approve for it themselves.
+    approver = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("approver"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+    )
+    approval_decided_at = models.DateTimeField(_("approval decided at"), null=True, blank=True)
+    approval_comment = models.TextField(_("approval comment"), blank=True)
 
     pickup_at = models.DateTimeField(_("pickup at"), null=True, blank=True)
     pickup_location = models.ForeignKey(
@@ -160,6 +191,18 @@ class Reservation(TimeStampedModel):
 
             self.number = next_number("reservation")
         super().save(*args, **kwargs)
+
+    def approvers(self):
+        """Who may approve for the requester's department (none without a department)."""
+        from apps.accounts.models import User
+
+        department_id = self.requester.department_id
+        if not department_id:
+            return User.objects.none()
+        return User.objects.filter(approving_departments=department_id, is_active=True)
+
+    def may_approve(self, user) -> bool:
+        return self.approvers().filter(pk=user.pk).exists()
 
     @property
     def is_overdue(self) -> bool:

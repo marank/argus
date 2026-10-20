@@ -67,6 +67,8 @@ export interface Category {
   team: TeamRef | null
   is_requestable: boolean
   allow_any_model: boolean
+  /** The requester's department approves first; applies to subcategories too. */
+  requires_approval: boolean
   sort_order: number
   path: string[]
 }

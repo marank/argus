@@ -3,6 +3,7 @@ export default {
   selfService: 'Self-Service',
   newRequest: 'Neue Anforderung',
   myRequests: 'Meine Anforderungen',
+  approvals: 'Genehmigungen',
   myDevices: 'Meine Geräte',
   mySoftware: 'Meine Software',
   myIssues: 'Meine Meldungen',

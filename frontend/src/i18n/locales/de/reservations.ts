@@ -44,6 +44,8 @@ export default {
     itemNote: 'Hinweis (optional)',
     submit: 'Anforderung absenden',
     submitted: 'Anforderung {number} wurde eingereicht',
+    submittedForApproval:
+      'Anforderung {number} wurde eingereicht. Sie geht an die IT, sobald Ihre Abteilung sie genehmigt hat.',
     searchPlaceholder: 'Suchen, z. B. Headset',
     results: 'Suchergebnisse',
     searchEmpty: 'Keine Treffer für „{q}“.',
@@ -78,6 +80,7 @@ export default {
     byStatus: 'Nach Status',
     byDate: 'Nach Datum',
     next: {
+      pending_approval: 'Wartet auf die Genehmigung Ihrer Abteilung.',
       submitted: 'Wartet auf Bestätigung durch die IT.',
       confirmed: 'Bestätigt. Die IT bereitet die Ausgabe vor.',
       ready: 'Abholbereit',
@@ -154,11 +157,41 @@ export default {
     createOrder: 'Fehlendes bestellen',
   },
   steps: {
+    approval: 'Genehmigung',
     submitted: 'Eingereicht',
     confirmed: 'Bestätigt',
     ready: 'Abholbereit',
     handedOut: 'Ausgegeben',
     completed: 'Abgeschlossen',
+  },
+  approval: {
+    label: 'Genehmigung',
+    waiting: 'Wartet auf Genehmigung durch {names}.',
+    itWaiting:
+      'Die Abteilung muss die Anforderung erst genehmigen. Danach kann die IT sie bestätigen.',
+    approved: 'Genehmigt von {name} · {date}',
+    selfApproved: 'Von {name} als Genehmiger angefordert · {date}',
+    rejected: 'Nicht genehmigt von {name} · {date}',
+    comment: 'Kommentar zur Genehmigung',
+  },
+  approvals: {
+    title: 'Genehmigungen',
+    subtitle:
+      'Anforderungen von Mitarbeitern Ihrer Abteilung, die Ihre Genehmigung brauchen, bevor die IT sie bearbeitet.',
+    pending: 'Offen',
+    decided: 'Entschieden',
+    empty: 'Keine Anforderung wartet auf Ihre Genehmigung.',
+    emptyDecided: 'Sie haben noch über keine Anforderung entschieden.',
+    approve: 'Genehmigen',
+    decline: 'Ablehnen',
+    approveTitle: 'Anforderung genehmigen',
+    approveHint: 'Die Anforderung geht danach an die IT.',
+    declineTitle: 'Anforderung ablehnen',
+    declineReason: 'Begründung für den Mitarbeiter',
+    comment: 'Kommentar (optional)',
+    approved: 'Genehmigt. Die Anforderung ist jetzt bei der IT.',
+    declined: 'Anforderung abgelehnt',
+    back: 'Alle Genehmigungen',
   },
   allocation: {
     title: 'Vorbereitung',

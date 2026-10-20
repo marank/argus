@@ -67,6 +67,14 @@ class Category(TimeStampedModel):
             "specific model makes sense, e.g. accessories or consumables."
         ),
     )
+    requires_approval = models.BooleanField(
+        _("requires approval"),
+        default=False,
+        help_text=_(
+            "Requests must first be approved by the employee's department. "
+            "Applies to the subcategories as well."
+        ),
+    )
     sort_order = models.PositiveIntegerField(_("sort order"), default=0)
 
     class Meta:
@@ -114,6 +122,10 @@ class Category(TimeStampedModel):
             if node.number_sequence_id:
                 return node.number_sequence
         return None
+
+    def needs_approval(self) -> bool:
+        """Whether this category or one above it requires the department's approval."""
+        return any(node.requires_approval for node in [self, *self.ancestors()])
 
     def effective_team(self):
         """The responsible team, inherited from the nearest parent that names one."""

@@ -20,6 +20,7 @@ class CategoryOut(Schema):
     number_sequence: RefOut | None
     is_requestable: bool
     allow_any_model: bool
+    requires_approval: bool
     sort_order: int
     path: list[str]
     # IT-internal: empty for employees.
@@ -45,5 +46,6 @@ class CategoryIn(Schema):
     number_sequence: UUID | None = None
     is_requestable: bool = True
     allow_any_model: bool = True
+    requires_approval: bool = False
     team: UUID | None = None
     sort_order: int = 0

@@ -44,6 +44,40 @@ def request_submitted(reservation: Reservation) -> None:
     )
 
 
+def approval_requested(reservation: Reservation) -> None:
+    def render(user):
+        subject = _("Approval needed: request %(number)s from %(name)s") % {
+            "number": reservation.number,
+            "name": reservation.requester.display_name,
+        }
+        body = _("%(name)s requests for “%(title)s” and needs your approval:") % {
+            "name": reservation.requester.display_name,
+            "title": reservation.title,
+        }
+        return subject, f"{body}\n\n{_items(reservation)}"
+
+    notify(
+        "approval_requested",
+        reservation.approvers().exclude(pk=reservation.requester_id),
+        render,
+        path=f"/portal/approvals/{reservation.pk}",
+    )
+
+
+def approval_declined(reservation: Reservation) -> None:
+    def render(user):
+        subject = _("Your request %(number)s was declined") % {"number": reservation.number}
+        body = _("%(name)s did not approve your request “%(title)s”.") % {
+            "name": reservation.approver.display_name,
+            "title": reservation.title,
+        }
+        if reservation.approval_comment:
+            body += "\n\n" + _("Comment: %(comment)s") % {"comment": reservation.approval_comment}
+        return subject, f"{body}\n\n{_items(reservation)}"
+
+    notify("request_rejected", [reservation.requester], render, path=f"/portal/requests/{reservation.pk}")
+
+
 def request_assigned(reservation: Reservation) -> None:
     def render(user):
         subject = _("Assigned to you: request %(number)s") % {"number": reservation.number}

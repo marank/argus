@@ -11,6 +11,7 @@ const TONES: Record<string, Record<string, Tone>> = {
     retired: 'default',
   },
   reservationStatus: {
+    pending_approval: 'default',
     submitted: 'warning',
     confirmed: 'primary',
     ready: 'success',

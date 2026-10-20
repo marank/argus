@@ -11,7 +11,9 @@ router = build_crud_router(
         in_schema=DepartmentIn,
         search_fields=("name", "code", "cost_center"),
         ordering_fields=("name", "code", "cost_center", "sort_order"),
-        queryset=lambda: Department.objects.annotate(member_count=Count("members")),
+        queryset=lambda: Department.objects.annotate(
+            member_count=Count("members", distinct=True)
+        ).prefetch_related("approvers"),
     ),
     tags=["departments"],
 )

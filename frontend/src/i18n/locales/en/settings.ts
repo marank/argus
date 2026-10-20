@@ -151,6 +151,9 @@ export default {
         'Sent to the person concerned. Each user can disable them in their profile.',
       it: 'To IT',
       itDescription: 'Sent to all IT staff. Each user can disable them in their profile.',
+      approver: 'To approvers',
+      approverDescription:
+        'Sent to the approvers of the employee’s department. Each user can disable them in their profile.',
     },
   },
 }

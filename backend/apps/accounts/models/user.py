@@ -52,6 +52,11 @@ class User(AbstractUser):
         related_name="+",
         help_text=_("Pickup terminal only: lists pickups at this location and below; empty lists all."),
     )
+    approval_exempt = models.BooleanField(
+        _("exempt from approval"),
+        default=False,
+        help_text=_("Requests go straight to IT, even for categories that need approval."),
+    )
     ldap_dn = models.CharField(
         _("LDAP DN"),
         max_length=500,
@@ -100,3 +105,8 @@ class User(AbstractUser):
     @property
     def is_it_staff(self) -> bool:
         return self.is_staff or self.is_superuser
+
+    @property
+    def is_approver(self) -> bool:
+        """Approves requests for at least one department."""
+        return self.approving_departments.exists()

@@ -27,6 +27,7 @@ from apps.reservations.models import (
 from apps.reservations.services import notifications
 
 Status = Reservation.Status
+Approval = Reservation.Approval
 
 
 def _require_status(reservation: Reservation, *allowed: str) -> None:
@@ -95,10 +96,47 @@ def submit(
                 )
         line.save()
     reservation.assigned_team = assignment.route(_item_team(item) for item in reservation.items.all())
-    if reservation.assigned_team:
-        reservation.save(update_fields=["assigned_team", "updated_at"])
-    notifications.request_submitted(reservation)
+    if _needs_approval(reservation, created_by):
+        if reservation.may_approve(requester):
+            # An approver's own request is approved by asking for it.
+            _record_approval(reservation, requester, Approval.APPROVED)
+        else:
+            reservation.status = Status.PENDING_APPROVAL
+            reservation.approval = Approval.PENDING
+    reservation.save()
+    if reservation.status == Status.PENDING_APPROVAL:
+        notifications.approval_requested(reservation)
+    else:
+        notifications.request_submitted(reservation)
     return reservation
+
+
+def _needs_approval(reservation: Reservation, created_by) -> bool:
+    """Whether the request must wait for the department before IT gets it.
+
+    Not for exempt employees, not for requests IT records on someone's behalf and
+    not when the department has nobody to approve (then it goes straight to IT).
+    """
+    requester = reservation.requester
+    if requester.approval_exempt:
+        return False
+    if created_by is not None and created_by.pk != requester.pk and created_by.is_it_staff:
+        return False
+    if not any(item.requires_approval for item in reservation.items.all()):
+        return False
+    return reservation.approvers().exists()
+
+
+def _record_approval(reservation: Reservation, user, decision: str, comment: str = "") -> None:
+    reservation.approval = decision
+    reservation.approver = user
+    reservation.approval_decided_at = timezone.now()
+    reservation.approval_comment = comment
+    if decision == Approval.APPROVED:
+        reservation.status = Status.SUBMITTED
+    else:
+        reservation.status = Status.REJECTED
+        reservation.completed_at = reservation.approval_decided_at
 
 
 def _item_team(item: ReservationItem):
@@ -115,6 +153,35 @@ def cancel(reservation: Reservation, user) -> Reservation:
     reservation.status = Status.CANCELLED
     reservation.completed_at = timezone.now()
     reservation.save()
+    return reservation
+
+
+# --- Department approval -----------------------------------------------------
+
+
+def _require_approver(reservation: Reservation, user) -> None:
+    _require_status(reservation, Status.PENDING_APPROVAL)
+    if not reservation.may_approve(user):
+        raise BusinessError(_("Only an approver of the requester's department can decide on this request."))
+
+
+@transaction.atomic
+def approve(reservation: Reservation, user, comment: str = "") -> Reservation:
+    """The department agrees; from now on the request is IT's."""
+    _require_approver(reservation, user)
+    _record_approval(reservation, user, Approval.APPROVED, comment)
+    reservation.save()
+    notifications.request_submitted(reservation)
+    return reservation
+
+
+@transaction.atomic
+def decline(reservation: Reservation, user, comment: str) -> Reservation:
+    """The department refuses; IT never sees the request as work."""
+    _require_approver(reservation, user)
+    _record_approval(reservation, user, Approval.REJECTED, comment)
+    reservation.save()
+    notifications.approval_declined(reservation)
     return reservation
 
 
