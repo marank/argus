@@ -17,8 +17,8 @@ from apps.core.api.querying import order, search
 from apps.core.api.security import is_it_staff, it_staff_auth
 from apps.reservations.models import Reservation
 from apps.reservations.schemas.reservation import (
-    ApproveIn,
     AssignIn,
+    ConfirmIn,
     ExtendIn,
     HandOutIn,
     ReadyIn,
@@ -111,10 +111,10 @@ def cancel(request: HttpRequest, pk: UUID):
     return get_reservation(request, pk)
 
 
-@router.post("/{uuid:pk}/approve", response=ReservationOut, auth=it_staff_auth)
-def approve(request: HttpRequest, pk: UUID, payload: ApproveIn):
-    quantities = {item.id: item.quantity_approved for item in payload.items}
-    workflow.approve(
+@router.post("/{uuid:pk}/confirm", response=ReservationOut, auth=it_staff_auth)
+def confirm(request: HttpRequest, pk: UUID, payload: ConfirmIn):
+    quantities = {item.id: item.quantity_confirmed for item in payload.items}
+    workflow.confirm(
         get_for_update(pk),
         request.user,
         quantities,

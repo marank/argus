@@ -32,7 +32,7 @@ export default {
   issueStatus: { open: 'Offen', in_progress: 'In Bearbeitung', resolved: 'Erledigt' },
   reservationStatus: {
     submitted: 'Eingereicht',
-    approved: 'Bestätigt',
+    confirmed: 'Bestätigt',
     ready: 'Abholbereit',
     handed_out: 'Ausgegeben',
     completed: 'Abgeschlossen',

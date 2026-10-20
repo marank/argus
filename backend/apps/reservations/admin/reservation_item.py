@@ -26,7 +26,7 @@ class AllocationInline(admin.TabularInline):
 
 @admin.register(ReservationItem)
 class ReservationItemAdmin(admin.ModelAdmin):
-    list_display = ["reservation", "label", "quantity_requested", "quantity_approved", "is_free_text"]
+    list_display = ["reservation", "label", "quantity_requested", "quantity_confirmed", "is_free_text"]
     list_filter = ["reservation__status", "category"]
     search_fields = ["reservation__number", "description", "asset_model__name", "category__name"]
     list_select_related = ["reservation", "category", "asset_model__manufacturer"]

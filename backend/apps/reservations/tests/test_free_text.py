@@ -37,7 +37,7 @@ def test_free_text_lines_need_resolution(employee_client, it_client):
     assert general["label"] == "Label printer"
 
     rid = reservation["id"]
-    it_client.post(f"/api/reservations/{rid}/approve", {"items": []}, content_type=JSON)
+    it_client.post(f"/api/reservations/{rid}/confirm", {"items": []}, content_type=JSON)
 
     # Free text is never filled automatically, so nothing random lands in the request.
     assert it_client.post(f"/api/reservations/{rid}/auto-allocate").json()["allocated"] == 0

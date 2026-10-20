@@ -23,8 +23,8 @@ import { http } from './client'
 
 const base = '/reservations'
 
-export interface ApproveInput {
-  items: { id: Id; quantity_approved: number }[]
+export interface ConfirmInput {
+  items: { id: Id; quantity_confirmed: number }[]
   pickup_at: string | null
   pickup_location: Id | null
   comment: string
@@ -35,7 +35,7 @@ export const reservationsApi = {
   get: (id: Id) => http.get<Reservation>(`${base}/${id}`),
   create: (data: ReservationInput) => http.post<Reservation>(base, data),
   cancel: (id: Id) => http.post<Reservation>(`${base}/${id}/cancel`),
-  approve: (id: Id, data: ApproveInput) => http.post<Reservation>(`${base}/${id}/approve`, data),
+  confirm: (id: Id, data: ConfirmInput) => http.post<Reservation>(`${base}/${id}/confirm`, data),
   reject: (id: Id, comment: string) => http.post<Reservation>(`${base}/${id}/reject`, { comment }),
   schedule: (
     id: Id,

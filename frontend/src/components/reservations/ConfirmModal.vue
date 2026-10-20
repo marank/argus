@@ -15,8 +15,8 @@ import { itemLabel } from '@/utils/reservations'
 
 import HandoverModeSelect from './HandoverModeSelect.vue'
 
-/** Approve a request (possibly with reduced quantities) or just change the pickup. */
-const props = defineProps<{ reservation: Reservation; mode: 'approve' | 'schedule' }>()
+/** Confirm a request (possibly with reduced quantities) or just change the pickup. */
+const props = defineProps<{ reservation: Reservation; mode: 'confirm' | 'schedule' }>()
 const show = defineModel<boolean>('show', { required: true })
 const emit = defineEmits<{ saved: [reservation: Reservation] }>()
 const { t } = useI18n()
@@ -41,7 +41,7 @@ watch(show, (visible) => {
   if (!visible) return
   const r = props.reservation
   form.quantities = Object.fromEntries(
-    r.items.map((i) => [i.id, i.quantity_approved ?? i.quantity_requested]),
+    r.items.map((i) => [i.id, i.quantity_confirmed ?? i.quantity_requested]),
   )
   form.pickup_at = r.pickup_at ? new Date(r.pickup_at).getTime() : defaultPickup()
   form.pickup_location = r.pickup_location?.id ?? null
@@ -53,11 +53,11 @@ async function save() {
   const pickup_at = form.pickup_at ? new Date(form.pickup_at).toISOString() : null
   const saved = await run(
     () =>
-      props.mode === 'approve'
-        ? reservationsApi.approve(props.reservation.id, {
+      props.mode === 'confirm'
+        ? reservationsApi.confirm(props.reservation.id, {
             items: Object.entries(form.quantities).map(([id, quantity]) => ({
               id,
-              quantity_approved: quantity,
+              quantity_confirmed: quantity,
             })),
             pickup_at,
             pickup_location: form.pickup_location,
@@ -82,21 +82,21 @@ async function save() {
     v-model:show="show"
     preset="card"
     :title="
-      mode === 'approve'
-        ? t('reservations.actions.approveTitle')
+      mode === 'confirm'
+        ? t('reservations.actions.confirmTitle')
         : t('reservations.actions.schedule')
     "
     style="max-width: 720px"
   >
     <NForm class="ar-form" label-placement="top" size="small" :show-feedback="false">
-      <template v-if="mode === 'approve'">
-        <p class="muted">{{ t('reservations.actions.approveHint') }}</p>
+      <template v-if="mode === 'confirm'">
+        <p class="muted">{{ t('reservations.actions.confirmHint') }}</p>
         <NTable size="small" :bordered="false" class="items">
           <thead>
             <tr>
               <th>{{ t('reservations.items') }}</th>
               <th class="num">{{ t('reservations.quantities.requested') }}</th>
-              <th class="num">{{ t('reservations.quantities.approved') }}</th>
+              <th class="num">{{ t('reservations.quantities.confirmed') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -148,7 +148,7 @@ async function save() {
       <NFormItem v-if="mode === 'schedule'" :label="t('handover.method')">
         <HandoverModeSelect v-model="form.handover_mode" style="width: 100%" />
       </NFormItem>
-      <NFormItem v-if="mode === 'approve'" :label="t('reservations.itComment')">
+      <NFormItem v-if="mode === 'confirm'" :label="t('reservations.itComment')">
         <NInput
           v-model:value="form.comment"
           type="textarea"
@@ -160,7 +160,7 @@ async function save() {
       <div class="row" style="justify-content: flex-end">
         <NButton @click="show = false">{{ t('common.cancel') }}</NButton>
         <NButton type="primary" :loading="busy" @click="save">
-          {{ mode === 'approve' ? t('reservations.actions.approve') : t('common.save') }}
+          {{ mode === 'confirm' ? t('reservations.actions.confirm') : t('common.save') }}
         </NButton>
       </div>
     </template>

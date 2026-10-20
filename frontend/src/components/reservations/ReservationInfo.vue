@@ -40,7 +40,7 @@ const entries = computed<DetailEntry[]>(() => {
     },
     { label: t('reservations.pickupLocation'), value: r.pickup_location?.full_name },
     // The planned hand-over; once ready the alert and later the hand-over record say it.
-    ...(['submitted', 'approved'].includes(r.status)
+    ...(['submitted', 'confirmed'].includes(r.status)
       ? [
           {
             label: t('handover.method'),

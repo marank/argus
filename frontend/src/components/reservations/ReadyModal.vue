@@ -30,7 +30,7 @@ watch(show, (visible) => {
   const r = props.reservation
   mode.value = r.handover_mode
   skipCheck.value = r.skip_device_check
-  // The date set when approving; the employee is told this one with the ready message.
+  // The date set when confirming; the employee is told this one with the ready message.
   when.value = r.pickup_at ? new Date(r.pickup_at).getTime() : null
   where.value = r.pickup_location?.id ?? null
 })

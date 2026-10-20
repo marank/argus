@@ -31,13 +31,13 @@ export function entryColor(entry: Pick<CalendarEntry, 'kind' | 'overdue'>): stri
 }
 
 /**
- * Not settled yet: a request IT has not approved, or a pickup whose devices are
+ * Not settled yet: a request IT has not confirmed, or a pickup whose devices are
  * not prepared. Drawn as outline only; everything confirmed is filled.
  */
 export function isTentative(entry: Pick<CalendarEntry, 'kind' | 'status'>): boolean {
   return (
     (entry.kind === 'loan' && entry.status === 'submitted') ||
-    (entry.kind === 'pickup' && entry.status === 'approved')
+    (entry.kind === 'pickup' && entry.status === 'confirmed')
   )
 }
 

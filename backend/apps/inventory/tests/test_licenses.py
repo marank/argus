@@ -137,8 +137,8 @@ def test_software_request_is_filled_with_a_license_seat(employee_client, it_clie
     assert item["is_software"] is True
 
     response = it_client.post(
-        f"/api/reservations/{rid}/approve",
-        {"items": [{"id": item["id"], "quantity_approved": 1}]},
+        f"/api/reservations/{rid}/confirm",
+        {"items": [{"id": item["id"], "quantity_confirmed": 1}]},
         content_type=JSON,
     )
     assert response.json()["items"][0]["quantity_missing"] == 1
@@ -176,7 +176,7 @@ def test_temporary_software_seat_is_taken_back(employee_client, it_client):
         },
         content_type=JSON,
     ).json()["id"]
-    it_client.post(f"/api/reservations/{rid}/approve", {"items": []}, content_type=JSON)
+    it_client.post(f"/api/reservations/{rid}/confirm", {"items": []}, content_type=JSON)
     it_client.post(f"/api/reservations/{rid}/auto-allocate")
     reservation = it_client.post(f"/api/reservations/{rid}/ready", {}, content_type=JSON).json()
     assert reservation["status"] == "handed_out"

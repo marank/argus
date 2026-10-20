@@ -79,7 +79,7 @@ export type NotificationKey =
   | 'issue_reported'
   | 'assigned_to_me'
   | 'license_expiring'
-  | 'request_approved'
+  | 'request_confirmed'
   | 'request_rejected'
   | 'request_ready'
   | 'return_reminder'

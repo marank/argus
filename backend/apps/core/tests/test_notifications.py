@@ -59,7 +59,7 @@ def test_decision_goes_to_requester_in_their_language(
     reservation = submit(employee_client).json()
     mail.outbox.clear()
     with django_capture_on_commit_callbacks(execute=True):
-        it_client.post(f"/api/reservations/{reservation['id']}/approve", {"items": []}, content_type=JSON)
+        it_client.post(f"/api/reservations/{reservation['id']}/confirm", {"items": []}, content_type=JSON)
     assert recipients() == {"employee@example.com"}
     assert "bestätigt" in mail.outbox[0].subject  # the demo employee uses German
 
@@ -69,15 +69,15 @@ def test_users_and_admins_can_switch_notifications_off(
 ):
     response = employee_client.patch(
         "/api/auth/me",
-        {"notification_settings": {"request_approved": False, "unknown": False}},
+        {"notification_settings": {"request_confirmed": False, "unknown": False}},
         content_type=JSON,
     )
-    assert response.json()["notification_settings"] == {"request_approved": False}
+    assert response.json()["notification_settings"] == {"request_confirmed": False}
 
     reservation = submit(employee_client).json()
     mail.outbox.clear()
     with django_capture_on_commit_callbacks(execute=True):
-        it_client.post(f"/api/reservations/{reservation['id']}/approve", {"items": []}, content_type=JSON)
+        it_client.post(f"/api/reservations/{reservation['id']}/confirm", {"items": []}, content_type=JSON)
     assert mail.outbox == []
 
     mail_on.events = {"request_submitted": False}

@@ -75,7 +75,7 @@ const columns = computed<DataTableColumns<ReservationListItem>>(() => [
     title: t('common.status'),
     sorter: true,
     width: 125,
-    // Right after the number: it decides what to do next. Pulse: new requests wait for approval.
+    // Right after the number: it decides what to do next. Pulse: new requests wait for confirmation.
     render: (r) =>
       h(StatusTag, {
         group: 'reservationStatus',

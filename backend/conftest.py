@@ -10,6 +10,12 @@ def in_memory_mail(settings):
     settings.ARGUS_EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
 
+@pytest.fixture(autouse=True)
+def fast_password_hashing(settings):
+    """Every test creates the demo users; the real hasher would make that take seconds."""
+    settings.PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+
+
 @pytest.fixture
 def demo(db):
     # Only the core part of the demo data: keeps the tests fast and their expectations stable.

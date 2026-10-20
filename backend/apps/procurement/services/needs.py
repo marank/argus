@@ -38,7 +38,7 @@ def _on_order_by_model() -> dict[UUID, int]:
 def reservation_needs() -> list[dict]:
     on_order = _on_order_by_item()
     items = ReservationItem.objects.filter(
-        reservation__status__in=(Reservation.Status.SUBMITTED, Reservation.Status.APPROVED)
+        reservation__status__in=(Reservation.Status.SUBMITTED, Reservation.Status.CONFIRMED)
     ).select_related(
         "reservation__requester",
         "asset_model__manufacturer",

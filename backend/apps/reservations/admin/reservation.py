@@ -13,7 +13,7 @@ class ReservationItemInline(admin.TabularInline):
         "asset_model",
         "description",
         "quantity_requested",
-        "quantity_approved",
+        "quantity_confirmed",
         "note",
     ]
     autocomplete_fields = ["category", "asset_model"]
@@ -76,7 +76,7 @@ class ReservationAdmin(admin.ModelAdmin):
     date_hierarchy = "start_date"
     readonly_fields = [
         "number",
-        "approved_at",
+        "confirmed_at",
         "handed_out_at",
         "reminded_at",
         "reminded_by",
@@ -94,7 +94,7 @@ class ReservationAdmin(admin.ModelAdmin):
             _("History"),
             {
                 "fields": [
-                    "approved_at",
+                    "confirmed_at",
                     "handed_out_at",
                     "reminded_at",
                     "reminded_by",

@@ -8,8 +8,8 @@ export default {
   license_expiring: 'Lizenz läuft ab',
   license_expiringHelp:
     'Eine befristete Lizenz endet innerhalb der Vorwarnzeit (einmal pro Lizenz).',
-  request_approved: 'Anforderung bestätigt',
-  request_approvedHelp: 'Mit Kommentar der IT, falls vorhanden.',
+  request_confirmed: 'Anforderung bestätigt',
+  request_confirmedHelp: 'Mit Kommentar der IT, falls vorhanden.',
   request_rejected: 'Anforderung abgelehnt',
   request_rejectedHelp: 'Mit Begründung der IT, falls vorhanden.',
   request_ready: 'Abholbereit',

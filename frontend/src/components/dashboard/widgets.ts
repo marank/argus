@@ -145,8 +145,8 @@ export const WIDGETS: WidgetDef[] = [
     size: 'large',
     cards: [
       {
-        key: 'to_approve',
-        label: 'dashboard.toApprove',
+        key: 'to_confirm',
+        label: 'dashboard.toConfirm',
         icon: ClipboardCheck,
         value: (d) => d.reservations_submitted,
         tone: () => 'warning',
@@ -159,7 +159,7 @@ export const WIDGETS: WidgetDef[] = [
         icon: PackageOpen,
         value: (d) => d.reservations_to_prepare,
         tone: () => 'primary',
-        to: { name: 'reservations', query: { status: 'approved' } },
+        to: { name: 'reservations', query: { status: 'confirmed' } },
       },
       {
         key: 'ready',

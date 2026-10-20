@@ -385,7 +385,7 @@ const legend = computed(() =>
   --fc-classic-background-event-foreground-opacity: 50%;
   font-size: 12.5px;
 }
-/* Not confirmed yet (request awaiting approval, pickup not prepared): outline only. */
+/* Not confirmed yet (request awaiting confirmation, pickup not prepared): outline only. */
 .ar-calendar .ar-tentative {
   /* FullCalendar sets the contrast colour inline; !important on a custom property wins over it. */
   --fc-event-contrast-color: var(--fc-event-color) !important;

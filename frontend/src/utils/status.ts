@@ -12,7 +12,7 @@ const TONES: Record<string, Record<string, Tone>> = {
   },
   reservationStatus: {
     submitted: 'warning',
-    approved: 'primary',
+    confirmed: 'primary',
     ready: 'success',
     handed_out: 'info',
     completed: 'default',

@@ -87,7 +87,7 @@ def period_availability(start: date, end: date | None) -> tuple[dict[UUID, Count
 
     ``end=None`` means from ``start`` on without end (permanent request). A request
     occupies its devices from the pickup day (wish or appointment) on. Reserved
-    are units of approved or ready requests whose period overlaps: devices
+    are units of confirmed or ready requests whose period overlaps: devices
     allocated to them plus what they still lack. Devices allocated to a request
     in another period count as available. Software is never reserved; licenses
     show their free seats.
@@ -106,7 +106,7 @@ def period_availability(start: date, end: date | None) -> tuple[dict[UUID, Count
         stock[row["model_id"]] += row["n"] or 0
         reserved[row["model_id"]] += row["r"] or 0
 
-    overlapping = Q(reservation__status__in=[Reservation.Status.APPROVED, Reservation.Status.READY]) & (
+    overlapping = Q(reservation__status__in=[Reservation.Status.CONFIRMED, Reservation.Status.READY]) & (
         Q(reservation__end_date__isnull=True) | Q(reservation__end_date__gte=start)
     )
     if end is not None:

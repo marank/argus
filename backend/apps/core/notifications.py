@@ -31,7 +31,7 @@ EVENTS: tuple[Event, ...] = (
     Event("issue_reported", "it"),
     Event("assigned_to_me", "it"),
     Event("license_expiring", "it"),
-    Event("request_approved", "employee"),
+    Event("request_confirmed", "employee"),
     Event("request_rejected", "employee"),
     Event("request_ready", "employee"),
     Event("return_reminder", "employee"),

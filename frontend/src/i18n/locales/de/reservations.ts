@@ -23,7 +23,7 @@ export default {
   onlyOverdue: 'Überfällig',
   quantities: {
     requested: 'Angefordert',
-    approved: 'Bestätigt',
+    confirmed: 'Bestätigt',
     allocated: 'Zugewiesen',
     missing: 'Fehlt',
   },
@@ -79,7 +79,7 @@ export default {
     byDate: 'Nach Datum',
     next: {
       submitted: 'Wartet auf Bestätigung durch die IT.',
-      approved: 'Bestätigt. Die IT bereitet die Ausgabe vor.',
+      confirmed: 'Bestätigt. Die IT bereitet die Ausgabe vor.',
       ready: 'Abholbereit',
       readyAt: 'Abholbereit: {date}',
       handedOut: 'Ausgegeben. Rückgabe bis {date}.',
@@ -128,9 +128,9 @@ export default {
     cancel: 'Anforderung stornieren',
     confirmCancel:
       'Anforderung stornieren? Zugewiesene Geräte werden wieder in den Pool übernommen.',
-    approve: 'Bestätigen',
-    approveTitle: 'Anforderung bestätigen',
-    approveHint: 'Mengen reduzieren, falls der Pool die Anforderung nicht abdeckt.',
+    confirm: 'Bestätigen',
+    confirmTitle: 'Anforderung bestätigen',
+    confirmHint: 'Mengen reduzieren, falls der Pool die Anforderung nicht abdeckt.',
     reject: 'Ablehnen',
     rejectReason: 'Begründung für den Mitarbeiter',
     schedule: 'Übergabe ändern',
@@ -155,7 +155,7 @@ export default {
   },
   steps: {
     submitted: 'Eingereicht',
-    approved: 'Bestätigt',
+    confirmed: 'Bestätigt',
     ready: 'Abholbereit',
     handedOut: 'Ausgegeben',
     completed: 'Abgeschlossen',

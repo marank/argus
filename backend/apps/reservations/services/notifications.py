@@ -57,10 +57,10 @@ def request_assigned(reservation: Reservation) -> None:
 
 
 def request_decided(reservation: Reservation) -> None:
-    approved = reservation.status == Reservation.Status.APPROVED
+    confirmed = reservation.status == Reservation.Status.CONFIRMED
 
     def render(user):
-        if approved:
+        if confirmed:
             subject = _("Your request %(number)s was confirmed") % {"number": reservation.number}
             body = _("IT confirmed your request “%(title)s” and is preparing it.") % {
                 "title": reservation.title
@@ -73,7 +73,7 @@ def request_decided(reservation: Reservation) -> None:
         return subject, f"{body}\n\n{_items(reservation)}"
 
     notify(
-        "request_approved" if approved else "request_rejected",
+        "request_confirmed" if confirmed else "request_rejected",
         [reservation.requester],
         render,
         path=f"/portal/requests/{reservation.pk}",

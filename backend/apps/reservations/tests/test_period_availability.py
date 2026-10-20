@@ -21,8 +21,8 @@ def _request_laptops(
     ).json()
     item_id = reservation["items"][0]["id"]
     it_client.post(
-        f"/api/reservations/{reservation['id']}/approve",
-        {"items": [{"id": item_id, "quantity_approved": quantity}]},
+        f"/api/reservations/{reservation['id']}/confirm",
+        {"items": [{"id": item_id, "quantity_confirmed": quantity}]},
         content_type="application/json",
     )
     return reservation
@@ -35,7 +35,7 @@ def _laptops(client, start: date, end: date) -> dict:
     return counts["categories"][str(Category.objects.get(code="laptops").pk)]
 
 
-def test_approved_requests_reserve_their_period_only(employee_client, it_client):
+def test_confirmed_requests_reserve_their_period_only(employee_client, it_client):
     start = date.today() + timedelta(days=10)
     before = _laptops(it_client, start, start + timedelta(days=2))
     _request_laptops(employee_client, it_client, start, days=4, quantity=2)

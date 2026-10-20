@@ -25,14 +25,14 @@ def test_full_reservation_cycle(employee_client, it_client):
     reservation = response.json()
     item_id = reservation["items"][0]["id"]
 
-    # IT approves only two laptops.
+    # IT confirms only two laptops.
     response = it_client.post(
-        f"/api/reservations/{reservation['id']}/approve",
-        {"items": [{"id": item_id, "quantity_approved": 2}], "comment": "Only two left"},
+        f"/api/reservations/{reservation['id']}/confirm",
+        {"items": [{"id": item_id, "quantity_confirmed": 2}], "comment": "Only two left"},
         content_type="application/json",
     )
     assert response.status_code == 200, response.content
-    assert response.json()["status"] == "approved"
+    assert response.json()["status"] == "confirmed"
 
     # Not ready while devices are missing.
     response = it_client.post(
@@ -144,8 +144,8 @@ def _ready_request(employee_client, it_client, **ready) -> dict:
     item_id = reservation["items"][0]["id"]
     base = f"/api/reservations/{reservation['id']}"
     it_client.post(
-        f"{base}/approve",
-        {"items": [{"id": item_id, "quantity_approved": 1}]},
+        f"{base}/confirm",
+        {"items": [{"id": item_id, "quantity_confirmed": 1}]},
         content_type="application/json",
     )
     it_client.post(f"{base}/auto-allocate")
@@ -168,7 +168,7 @@ def test_ready_request_can_be_reopened(employee_client, it_client, terminal_clie
     response = it_client.post(f"{base}/reopen")
     assert response.status_code == 200
     reopened = response.json()
-    assert reopened["status"] == "approved"
+    assert reopened["status"] == "confirmed"
     # Devices stay allocated; the terminal no longer offers the pickup.
     assert reopened["items"][0]["allocations"]
     assert terminal_client.get(f"/api/terminal/pickups/{reservation['id']}").status_code == 404

@@ -23,7 +23,7 @@ const props = defineProps<{
   reservation: Reservation
   item: ReservationItem
   editable: boolean
-  /** Pool counts for the request's period, shown before approval. */
+  /** Pool counts for the request's period, shown before IT confirms. */
   availability?: AvailabilityCounts | null
 }>()
 const emit = defineEmits<{ updated: [reservation: Reservation] }>()
@@ -64,7 +64,7 @@ async function assignSeat() {
   deviceId.value = null
 }
 
-const target = computed(() => props.item.quantity_approved ?? props.item.quantity_requested)
+const target = computed(() => props.item.quantity_confirmed ?? props.item.quantity_requested)
 const percent = computed(() =>
   target.value ? (props.item.quantity_allocated / target.value) * 100 : 100,
 )
@@ -122,7 +122,7 @@ async function remove(allocationId: Id) {
         <span :class="{ done: !item.quantity_missing }">{{ item.quantity_allocated }}</span>
         <span class="muted">/ {{ target }}</span>
         <span
-          v-if="item.quantity_approved !== null && item.quantity_approved < item.quantity_requested"
+          v-if="item.quantity_confirmed !== null && item.quantity_confirmed < item.quantity_requested"
           class="reduced"
           :title="t('reservations.quantities.requested')"
         >
@@ -151,7 +151,7 @@ async function remove(allocationId: Id) {
     />
 
     <ResolveFreeText
-      v-if="item.is_free_text && ['submitted', 'approved'].includes(reservation.status)"
+      v-if="item.is_free_text && ['submitted', 'confirmed'].includes(reservation.status)"
       :reservation="reservation"
       :item="item"
       @updated="(r) => emit('updated', r)"

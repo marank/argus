@@ -9,14 +9,14 @@ const props = defineProps<{ reservation: Reservation }>()
 const { t } = useI18n()
 
 const steps = computed(() => {
-  const list = ['submitted', 'approved', 'ready', 'handedOut']
+  const list = ['submitted', 'confirmed', 'ready', 'handedOut']
   if (props.reservation.duration === 'temporary') list.push('completed')
   return list
 })
 
 const ORDER: Record<string, number> = {
   submitted: 1,
-  approved: 2,
+  confirmed: 2,
   ready: 3,
   handed_out: 4,
   completed: 5,

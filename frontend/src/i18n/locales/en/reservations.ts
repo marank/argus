@@ -1,6 +1,6 @@
 export default {
   title: 'Reservations',
-  subtitle: 'Requests from employees — approve, prepare, hand out and take back.',
+  subtitle: 'Requests from employees — confirm, prepare, hand out and take back.',
   number: 'No.',
   purpose: 'Purpose',
   purposePlaceholder: 'e.g. training, new hire, stocktaking',
@@ -23,7 +23,7 @@ export default {
   onlyOverdue: 'Overdue',
   quantities: {
     requested: 'Requested',
-    approved: 'Approved',
+    confirmed: 'Confirmed',
     allocated: 'Allocated',
     missing: 'Missing',
   },
@@ -79,7 +79,7 @@ export default {
     byDate: 'By date',
     next: {
       submitted: 'Waiting for IT to confirm.',
-      approved: 'Confirmed. IT is preparing everything.',
+      confirmed: 'Confirmed. IT is preparing everything.',
       ready: 'Ready for pickup',
       readyAt: 'Ready for pickup: {date}',
       handedOut: 'Handed out. Return by {date}.',
@@ -127,9 +127,9 @@ export default {
   actions: {
     cancel: 'Cancel request',
     confirmCancel: 'Cancel this request? Allocated devices are returned to the pool.',
-    approve: 'Approve',
-    approveTitle: 'Approve request',
-    approveHint: 'Reduce quantities if the pool cannot cover the request.',
+    confirm: 'Confirm',
+    confirmTitle: 'Confirm request',
+    confirmHint: 'Reduce quantities if the pool cannot cover the request.',
     reject: 'Reject',
     rejectReason: 'Reason for the employee',
     schedule: 'Change handover',
@@ -154,7 +154,7 @@ export default {
   },
   steps: {
     submitted: 'Submitted',
-    approved: 'Approved',
+    confirmed: 'Confirmed',
     ready: 'Ready for pickup',
     handedOut: 'Handed out',
     completed: 'Completed',

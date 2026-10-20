@@ -9,7 +9,7 @@ import type { WaitingRequest, WidgetProps } from '@/types/dashboard'
 import { useDateMode } from './dateMode'
 import DateModeToggle from './DateModeToggle.vue'
 
-/** Requests waiting for approval, the longest waiting first, with who has them. */
+/** Requests waiting for IT to confirm them, the longest waiting first, with who has them. */
 const props = defineProps<WidgetProps>()
 const emit = defineEmits<{ 'update:options': [options: Record<string, unknown>] }>()
 

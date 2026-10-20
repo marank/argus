@@ -98,10 +98,10 @@ def request_trend(weeks: int = 12) -> list[dict]:
 
 
 def upcoming(days: int) -> list[Reservation]:
-    """Approved and prepared requests to hand out within `days` days, the earliest first."""
+    """Confirmed and prepared requests to hand out within `days` days, the earliest first."""
     return list(
         Reservation.objects.filter(
-            status__in=(Reservation.Status.APPROVED, Reservation.Status.READY),
+            status__in=(Reservation.Status.CONFIRMED, Reservation.Status.READY),
             start_date__lte=timezone.localdate() + timedelta(days=days),
         )
         .select_related("requester")
@@ -174,7 +174,7 @@ def open_orders() -> list[PurchaseOrder]:
 
 
 def waiting_requests() -> list[Reservation]:
-    """Submitted requests waiting for approval, the longest waiting first."""
+    """Submitted requests waiting for IT to confirm them, the longest waiting first."""
     return list(
         Reservation.objects.filter(status=Reservation.Status.SUBMITTED)
         .select_related("requester", "assignee")

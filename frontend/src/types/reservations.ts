@@ -5,7 +5,7 @@ import type { AssetRef, OwnIssue } from './inventory'
 import type { AssetModelRef, CategoryKind, CategoryRef, LocationRef } from './masterdata'
 
 export type ReservationStatus =
-  'submitted' | 'approved' | 'ready' | 'handed_out' | 'completed' | 'rejected' | 'cancelled'
+  'submitted' | 'confirmed' | 'ready' | 'handed_out' | 'completed' | 'rejected' | 'cancelled'
 
 export type Duration = 'temporary' | 'permanent'
 export type HandoverMode = 'pickup' | 'collect' | 'delivery'
@@ -13,7 +13,7 @@ export type HandoverMethod = 'signature' | 'delivered' | 'direct'
 
 export const RESERVATION_STATUSES: ReservationStatus[] = [
   'submitted',
-  'approved',
+  'confirmed',
   'ready',
   'handed_out',
   'completed',
@@ -58,7 +58,7 @@ export interface ReservationItem {
   /** Software lines are filled with license seats instead of devices. */
   is_software: boolean
   quantity_requested: number
-  quantity_approved: number | null
+  quantity_confirmed: number | null
   quantity_allocated: number
   quantity_missing: number
   note: string
@@ -122,7 +122,7 @@ export interface Reservation extends ReservationListItem {
   /** When IT last emailed the employee to return the devices. */
   reminded_at: string | null
   reminded_by: UserRef | null
-  approved_at: string | null
+  confirmed_at: string | null
   handed_out_at: string | null
   completed_at: string | null
   items: ReservationItem[]

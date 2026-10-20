@@ -137,7 +137,7 @@ signs in through the app's login, so the second step applies there too.
 - **Self-service portal** – employees request devices by group ("any headset") or
   model, for a period or permanently, and follow status, pickup time and their
   assigned devices. Consumables that fit their own devices are offered as a quick pick.
-- **Reservation workflow** – IT approves (optionally with reduced quantities),
+- **Reservation workflow** – IT confirms (optionally with reduced quantities),
   sets pickup date and place, allocates concrete devices (scan, pick or automatic),
   marks the request ready, hands out and takes back.
 - **Pickup terminal & handover record** – when a request is ready, IT chooses

@@ -78,7 +78,7 @@ def calendar_entries(
 
     if "pickup" in kinds:
         pickups = reservations.filter(
-            status__in=(Reservation.Status.APPROVED, Reservation.Status.READY),
+            status__in=(Reservation.Status.CONFIRMED, Reservation.Status.READY),
             pickup_at__date__gte=start,
             pickup_at__date__lte=end,
         )

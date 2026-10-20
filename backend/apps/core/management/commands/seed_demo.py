@@ -327,7 +327,7 @@ class Command(BaseCommand):
             [{"category": categories["laptops"].pk, "quantity": 4}],
             created_by=employee,
         )
-        workflow.approve(workshop, it, {}, timezone.now() + timedelta(days=2), None, "Pick up at the desk.")
+        workflow.confirm(workshop, it, {}, timezone.now() + timedelta(days=2), None, "Pick up at the desk.")
 
         # One prepared pickup waiting at the terminal.
         onboarding = workflow.submit(
@@ -340,7 +340,7 @@ class Command(BaseCommand):
             ],
             created_by=sales,
         )
-        workflow.approve(onboarding, it, {}, timezone.now() + timedelta(hours=2), None, "")
+        workflow.confirm(onboarding, it, {}, timezone.now() + timedelta(hours=2), None, "")
         workflow.auto_allocate(onboarding, it)
         workflow.mark_ready(onboarding, it)
 
@@ -731,12 +731,12 @@ def seed_extra(base: dict, stdout) -> None:
             data["end_date"] = today + timedelta(days=start + days - 1)
         return workflow.submit(user, data, items, created_by=user, allow_past_start=start < 0)
 
-    def approve(reservation, pickup_days=1, location=None, comment=""):
+    def confirm(reservation, pickup_days=1, location=None, comment=""):
         pickup = now.replace(hour=10, minute=0, second=0, microsecond=0) + timedelta(days=pickup_days)
-        return workflow.approve(reservation, it, {}, pickup, location.pk if location else None, comment)
+        return workflow.confirm(reservation, it, {}, pickup, location.pk if location else None, comment)
 
     def hand_out(reservation):
-        approve(reservation, pickup_days=0)
+        confirm(reservation, pickup_days=0)
         workflow.auto_allocate(reservation, it)
         workflow.mark_ready(reservation, it)
         return workflow.hand_out(reservation, it, method=Handover.Method.DIRECT)
@@ -762,7 +762,7 @@ def seed_extra(base: dict, stdout) -> None:
         [{"asset_model": models["Acrobat Pro"].pk, "quantity": 1}],
         duration="permanent",
     )
-    approve(
+    confirm(
         submit(
             by_name["jwagner"],
             "Customer workshop",
@@ -784,7 +784,7 @@ def seed_extra(base: dict, stdout) -> None:
     )
     new_colleague.assignee = jkoch
     new_colleague.save(update_fields=["assignee"])
-    approve(new_colleague, pickup_days=1, location=munich_desk)
+    confirm(new_colleague, pickup_days=1, location=munich_desk)
     workflow.auto_allocate(new_colleague, it)
     workflow.mark_ready(new_colleague, it)
 

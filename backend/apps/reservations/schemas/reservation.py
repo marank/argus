@@ -67,7 +67,7 @@ class ReservationItemOut(Schema):
     is_free_text: bool
     is_software: bool
     quantity_requested: int
-    quantity_approved: int | None
+    quantity_confirmed: int | None
     quantity_allocated: int
     quantity_missing: int
     note: str
@@ -150,7 +150,7 @@ class ReservationOut(ReservationListOut):
     prepared_by: UserRefOut | None
     reminded_at: datetime | None
     reminded_by: UserRefOut | None
-    approved_at: datetime | None
+    confirmed_at: datetime | None
     handed_out_at: datetime | None
     completed_at: datetime | None
     items: list[ReservationItemOut]
@@ -189,13 +189,13 @@ class ReservationIn(Schema):
     requester: UUID | None = Field(None, description="IT only: create on behalf of an employee")
 
 
-class ApprovalItemIn(Schema):
+class ConfirmItemIn(Schema):
     id: UUID
-    quantity_approved: int = Field(..., ge=0)
+    quantity_confirmed: int = Field(..., ge=0)
 
 
-class ApproveIn(Schema):
-    items: list[ApprovalItemIn] = []
+class ConfirmIn(Schema):
+    items: list[ConfirmItemIn] = []
     pickup_at: datetime | None = None
     pickup_location: UUID | None = None
     comment: str = ""

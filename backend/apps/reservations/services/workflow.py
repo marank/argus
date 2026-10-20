@@ -122,7 +122,7 @@ def cancel(reservation: Reservation, user) -> Reservation:
 
 
 @transaction.atomic
-def approve(
+def confirm(
     reservation: Reservation,
     user,
     quantities: dict[UUID, int],
@@ -131,30 +131,30 @@ def approve(
     comment: str = "",
 ) -> Reservation:
     """Confirm a reservation, possibly with fewer devices than requested."""
-    _require_status(reservation, Status.SUBMITTED, Status.APPROVED)
-    # Editing an approved request again does not notify a second time.
+    _require_status(reservation, Status.SUBMITTED, Status.CONFIRMED)
+    # Editing a confirmed request again does not notify a second time.
     first_decision = reservation.status == Status.SUBMITTED
     for item in reservation.items.all():
-        approved = quantities.get(item.pk, item.quantity_requested)
-        if approved > item.quantity_requested:
-            raise BusinessError(_("You cannot approve more devices than were requested."))
-        if approved < item.quantity_allocated:
+        confirmed = quantities.get(item.pk, item.quantity_requested)
+        if confirmed > item.quantity_requested:
+            raise BusinessError(_("You cannot confirm more devices than were requested."))
+        if confirmed < item.quantity_allocated:
             raise BusinessError(
                 _("Remove allocated devices of “%(item)s” before lowering the quantity.")
                 % {"item": item.label}
             )
-        item.quantity_approved = approved
-        item.save(update_fields=["quantity_approved"])
+        item.quantity_confirmed = confirmed
+        item.save(update_fields=["quantity_confirmed"])
 
-    if not any(item.quantity_approved for item in reservation.items.all()):
-        raise BusinessError(_("Approve at least one device or reject the request."))
+    if not any(item.quantity_confirmed for item in reservation.items.all()):
+        raise BusinessError(_("Confirm at least one device or reject the request."))
 
-    reservation.status = Status.APPROVED
+    reservation.status = Status.CONFIRMED
     reservation.pickup_at = pickup_at
     reservation.pickup_location_id = pickup_location_id
     reservation.it_comment = comment
     reservation.handled_by = user
-    reservation.approved_at = reservation.approved_at or timezone.now()
+    reservation.confirmed_at = reservation.confirmed_at or timezone.now()
     reservation.save()
     if first_decision:
         notifications.request_decided(reservation)
@@ -163,7 +163,7 @@ def approve(
 
 @transaction.atomic
 def reject(reservation: Reservation, user, comment: str) -> Reservation:
-    _require_status(reservation, Status.SUBMITTED, Status.APPROVED)
+    _require_status(reservation, Status.SUBMITTED, Status.CONFIRMED)
     _release_all(reservation)
     reservation.status = Status.REJECTED
     reservation.it_comment = comment
@@ -182,7 +182,7 @@ def reschedule(
     pickup_location_id: UUID | None,
     handover_mode: str | None = None,
 ) -> Reservation:
-    _require_status(reservation, Status.APPROVED, Status.READY)
+    _require_status(reservation, Status.CONFIRMED, Status.READY)
     reservation.pickup_at = pickup_at
     reservation.pickup_location_id = pickup_location_id
     if handover_mode:
@@ -238,7 +238,7 @@ def remind(reservation: Reservation, user) -> Reservation:
 @transaction.atomic
 def resolve_item(item: ReservationItem, asset_model, user) -> ReservationItem:
     """Map a free-text line (or change an unallocated line) to a catalog model."""
-    _require_status(item.reservation, Status.SUBMITTED, Status.APPROVED)
+    _require_status(item.reservation, Status.SUBMITTED, Status.CONFIRMED)
     if item.allocations.exists():
         raise BusinessError(_("Remove allocated devices before changing the model."))
     item.asset_model = asset_model
@@ -270,7 +270,7 @@ def _matches(item: ReservationItem, model) -> bool:
 @transaction.atomic
 def allocate_asset(item: ReservationItem, asset: Asset, user) -> ReservationAllocation:
     reservation = item.reservation
-    _require_status(reservation, Status.APPROVED)
+    _require_status(reservation, Status.CONFIRMED)
     asset = Asset.objects.select_for_update().get(pk=asset.pk)
     if not _matches(item, asset.model):
         raise BusinessError(
@@ -283,7 +283,7 @@ def allocate_asset(item: ReservationItem, asset: Asset, user) -> ReservationAllo
         )
     if item.quantity_missing < 1:
         raise BusinessError(
-            _("All approved devices for “%(item)s” are already allocated.") % {"item": item.label}
+            _("All confirmed devices for “%(item)s” are already allocated.") % {"item": item.label}
         )
 
     asset.status = Asset.Status.RESERVED
@@ -302,7 +302,7 @@ def allocate_asset(item: ReservationItem, asset: Asset, user) -> ReservationAllo
 def allocate_consumable(
     item: ReservationItem, consumable: Consumable, quantity: int, user
 ) -> ReservationAllocation:
-    _require_status(item.reservation, Status.APPROVED)
+    _require_status(item.reservation, Status.CONFIRMED)
     if not _matches(item, consumable.model):
         raise BusinessError(
             _("%(model)s does not match “%(item)s”.") % {"model": consumable.model, "item": item.label}
@@ -324,14 +324,14 @@ def allocate_license(
 ) -> ReservationAllocation:
     """Give the requester a seat of ``license`` (or one of their devices, for device licenses)."""
     reservation = item.reservation
-    _require_status(reservation, Status.APPROVED)
+    _require_status(reservation, Status.CONFIRMED)
     if not _matches(item, license.model):
         raise BusinessError(
             _("%(model)s does not match “%(item)s”.") % {"model": license.model, "item": item.label}
         )
     if item.quantity_missing < 1:
         raise BusinessError(
-            _("All approved licenses for “%(item)s” are already allocated.") % {"item": item.label}
+            _("All confirmed licenses for “%(item)s” are already allocated.") % {"item": item.label}
         )
     if license.assign_to == License.AssignTo.DEVICE:
         if asset is None:
@@ -353,7 +353,7 @@ def allocate_license(
 @transaction.atomic
 def auto_allocate(reservation: Reservation, user) -> int:
     """Fill every open item from the pool; returns the number of units allocated."""
-    _require_status(reservation, Status.APPROVED)
+    _require_status(reservation, Status.CONFIRMED)
     allocated = 0
     for item in reservation.items.select_related("asset_model", "category"):
         if item.is_free_text:
@@ -385,11 +385,11 @@ def auto_allocate(reservation: Reservation, user) -> int:
 @transaction.atomic
 def remove_allocation(allocation: ReservationAllocation, user) -> None:
     reservation = allocation.item.reservation
-    _require_status(reservation, Status.APPROVED, Status.READY)
+    _require_status(reservation, Status.CONFIRMED, Status.READY)
     _release(allocation, user)
     allocation.delete()
     if reservation.status == Status.READY:
-        reservation.status = Status.APPROVED
+        reservation.status = Status.CONFIRMED
         reservation.save(update_fields=["status", "updated_at"])
 
 
@@ -433,7 +433,7 @@ def mark_ready(
 
     Without anything to collect (only software), the request is handed out right away.
     """
-    _require_status(reservation, Status.APPROVED)
+    _require_status(reservation, Status.CONFIRMED)
     missing = [item.label for item in reservation.items.all() if item.quantity_missing]
     if missing:
         raise BusinessError(_("Devices are still missing for: %(items)s") % {"items": ", ".join(missing)})
@@ -454,7 +454,7 @@ def mark_ready(
 def reopen(reservation: Reservation, user) -> Reservation:
     """Back from ready to preparing, e.g. to change devices; allocations stay."""
     _require_status(reservation, Status.READY)
-    reservation.status = Status.APPROVED
+    reservation.status = Status.CONFIRMED
     reservation.handled_by = user
     reservation.save(update_fields=["status", "handled_by", "updated_at"])
     return reservation
@@ -669,7 +669,7 @@ def release_from_elsewhere(allocation: ReservationAllocation, user) -> None:
     """
     reservation = allocation.item.reservation
     if allocation.handed_out_at is None:
-        if reservation.status in (Status.APPROVED, Status.READY):
+        if reservation.status in (Status.CONFIRMED, Status.READY):
             raise BusinessError(
                 _("This is set aside for %(number)s. Remove it there first.") % {"number": reservation.number}
             )

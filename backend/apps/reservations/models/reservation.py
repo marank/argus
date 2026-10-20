@@ -11,7 +11,7 @@ class Reservation(TimeStampedModel):
 
     Life cycle::
 
-        submitted ─► approved ─► ready ─► handed_out ─► completed
+        submitted ─► confirmed ─► ready ─► handed_out ─► completed
             │            │                     (permanent requests complete on hand-out)
             └─► rejected / cancelled
 
@@ -22,7 +22,7 @@ class Reservation(TimeStampedModel):
 
     class Status(models.TextChoices):
         SUBMITTED = "submitted", _("Submitted")
-        APPROVED = "approved", _("Approved")
+        CONFIRMED = "confirmed", _("Confirmed")
         READY = "ready", _("Ready for pickup")
         HANDED_OUT = "handed_out", _("Handed out")
         COMPLETED = "completed", _("Completed")
@@ -39,8 +39,8 @@ class Reservation(TimeStampedModel):
         COLLECT = "collect", _("Simple pickup")
         DELIVERY = "delivery", _("Delivered by IT")
 
-    OPEN_STATUSES = (Status.SUBMITTED, Status.APPROVED, Status.READY, Status.HANDED_OUT)
-    CANCELLABLE_STATUSES = (Status.SUBMITTED, Status.APPROVED, Status.READY)
+    OPEN_STATUSES = (Status.SUBMITTED, Status.CONFIRMED, Status.READY, Status.HANDED_OUT)
+    CANCELLABLE_STATUSES = (Status.SUBMITTED, Status.CONFIRMED, Status.READY)
     # Devices handed out permanently can still be taken back later.
     RETURNABLE_STATUSES = (Status.HANDED_OUT, Status.COMPLETED)
 
@@ -142,7 +142,7 @@ class Reservation(TimeStampedModel):
         blank=True,
         related_name="+",
     )
-    approved_at = models.DateTimeField(_("approved at"), null=True, blank=True)
+    confirmed_at = models.DateTimeField(_("confirmed at"), null=True, blank=True)
     handed_out_at = models.DateTimeField(_("handed out at"), null=True, blank=True)
     completed_at = models.DateTimeField(_("completed at"), null=True, blank=True)
 

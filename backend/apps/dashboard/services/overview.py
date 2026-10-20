@@ -21,7 +21,7 @@ def it_overview(user) -> dict:
             row["status"]: row["count"] for row in Asset.objects.values("status").annotate(count=Count("id"))
         },
         "reservations_submitted": reservations.filter(status=Reservation.Status.SUBMITTED).count(),
-        "reservations_to_prepare": reservations.filter(status=Reservation.Status.APPROVED).count(),
+        "reservations_to_prepare": reservations.filter(status=Reservation.Status.CONFIRMED).count(),
         "reservations_ready": reservations.filter(status=Reservation.Status.READY).count(),
         "reservations_overdue": reservations.filter(
             status=Reservation.Status.HANDED_OUT, end_date__lt=today

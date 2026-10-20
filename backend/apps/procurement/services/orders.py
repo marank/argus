@@ -128,7 +128,7 @@ def receive(order: PurchaseOrder, receipts: list[dict], user) -> PurchaseOrder:
             )
 
         item = line.reservation_item
-        allocate = item is not None and item.reservation.status == Reservation.Status.APPROVED
+        allocate = item is not None and item.reservation.status == Reservation.Status.CONFIRMED
 
         if model.is_bulk:
             if not location_id:

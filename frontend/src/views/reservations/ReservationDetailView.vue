@@ -34,7 +34,7 @@ import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import CreateOrderModal, { type DraftLine } from '@/components/procurement/CreateOrderModal.vue'
 import AllocationPanel from '@/components/reservations/AllocationPanel.vue'
-import ApproveModal from '@/components/reservations/ApproveModal.vue'
+import ConfirmModal from '@/components/reservations/ConfirmModal.vue'
 import AssignmentCard from '@/components/reservations/AssignmentCard.vue'
 import ExtendModal from '@/components/reservations/ExtendModal.vue'
 import HandoverCard from '@/components/reservations/HandoverCard.vue'
@@ -63,8 +63,8 @@ const { busy, run } = useAction()
 const { date, dateTime } = useFormat()
 
 const reservation = ref<Reservation | null>(null)
-const approveMode = ref<'approve' | 'schedule'>('approve')
-const showApprove = ref(false)
+const confirmMode = ref<'confirm' | 'schedule'>('confirm')
+const showConfirm = ref(false)
 const showReject = ref(false)
 const rejectReason = ref('')
 const showOrder = ref(false)
@@ -80,7 +80,7 @@ onMounted(async () => {
   if (reservation.value.status === 'submitted') await loadAvailability(reservation.value)
 })
 
-/** Before approving: what the pool holds in the request's period, from the pickup day on. */
+/** Before confirming: what the pool holds in the request's period, from the pickup day on. */
 async function loadAvailability(r: Reservation) {
   const pickup = r.requested_pickup_date
   const start = pickup && pickup < r.start_date ? pickup : r.start_date
@@ -100,7 +100,7 @@ function itemAvailability(item: ReservationItem): AvailabilityCounts | null {
 
 const status = computed(() => reservation.value?.status)
 const missing = computed(() => reservation.value?.items.some((i) => i.quantity_missing) ?? false)
-const preparing = computed(() => status.value === 'approved')
+const preparing = computed(() => status.value === 'confirmed')
 /** Only license seats: nothing to collect, so marking ready hands it out right away. */
 const seatsOnly = computed(() => {
   const allocations = (reservation.value?.items ?? []).flatMap((i) => i.allocations)
@@ -152,9 +152,9 @@ async function act(action: () => Promise<Reservation>, success?: string) {
   if (updated) reservation.value = updated
 }
 
-function openApprove(mode: 'approve' | 'schedule') {
-  approveMode.value = mode
-  showApprove.value = true
+function openConfirm(mode: 'confirm' | 'schedule') {
+  confirmMode.value = mode
+  showConfirm.value = true
 }
 
 async function autoAllocate() {
@@ -210,7 +210,7 @@ const menuOptions = computed<DropdownOption[]>(() => {
   // Overdue, the alert offers it.
   if (canRemind.value && !reservation.value?.is_overdue)
     options.push(option('remind', t('reservations.actions.remind'), Mail))
-  if (['submitted', 'approved', 'ready'].includes(s ?? '')) {
+  if (['submitted', 'confirmed', 'ready'].includes(s ?? '')) {
     if (options.length) options.push({ type: 'divider', key: 'cancel-divider' })
     options.push(option('cancel', t('reservations.actions.cancel'), Ban, true))
   }
@@ -219,7 +219,7 @@ const menuOptions = computed<DropdownOption[]>(() => {
 
 function onMenu(key: string) {
   if (key === 'order') showOrder.value = true
-  else if (key === 'schedule') openApprove('schedule')
+  else if (key === 'schedule') openConfirm('schedule')
   else if (key === 'reopen') reopen()
   else if (key === 'cancel') cancel()
   else if (key === 'remind') remind()
@@ -249,13 +249,13 @@ async function cancel() {
               <template #icon><X :size="15" /></template>
               {{ t('reservations.actions.reject') }}
             </NButton>
-            <NButton type="primary" @click="openApprove('approve')">
+            <NButton type="primary" @click="openConfirm('confirm')">
               <template #icon><Check :size="15" /></template>
-              {{ t('reservations.actions.approve') }}
+              {{ t('reservations.actions.confirm') }}
             </NButton>
           </template>
-          <template v-if="status === 'approved'">
-            <NButton @click="openApprove('approve')">{{ t('common.edit') }}</NButton>
+          <template v-if="status === 'confirmed'">
+            <NButton @click="openConfirm('confirm')">{{ t('common.edit') }}</NButton>
             <NButton v-if="missing" :loading="busy" @click="autoAllocate">
               <template #icon><Sparkles :size="15" /></template>
               {{ t('reservations.actions.autoAllocate') }}
@@ -292,7 +292,7 @@ async function cancel() {
             <template #icon><Undo2 :size="15" /></template>
             {{ t('reservations.actions.return') }}
           </NButton>
-          <NButton v-if="status === 'approved' && missing" @click="showOrder = true">
+          <NButton v-if="status === 'confirmed' && missing" @click="showOrder = true">
             <template #icon><ShoppingCart :size="15" /></template>
             {{ t('reservations.actions.createOrder') }}
           </NButton>
@@ -380,10 +380,10 @@ async function cancel() {
         </div>
       </div>
 
-      <ApproveModal
-        v-model:show="showApprove"
+      <ConfirmModal
+        v-model:show="showConfirm"
         :reservation="reservation"
-        :mode="approveMode"
+        :mode="confirmMode"
         @saved="(r) => (reservation = r)"
       />
       <CreateOrderModal v-model:show="showOrder" :lines="orderLines" />

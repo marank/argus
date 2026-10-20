@@ -18,11 +18,11 @@ def submit(client, items, duration="temporary", start=None):
     return client.post("/api/reservations", data, content_type=JSON)
 
 
-def prepare(employee_client, it_client, items, duration="temporary", handover_mode="collect", **approve):
+def prepare(employee_client, it_client, items, duration="temporary", handover_mode="collect", **confirm):
     response = submit(employee_client, items, duration)
     assert response.status_code == 201, response.content
     rid = response.json()["id"]
-    it_client.post(f"/api/reservations/{rid}/approve", {"items": [], **approve}, content_type=JSON)
+    it_client.post(f"/api/reservations/{rid}/confirm", {"items": [], **confirm}, content_type=JSON)
     it_client.post(f"/api/reservations/{rid}/auto-allocate")
     response = it_client.post(
         f"/api/reservations/{rid}/ready", {"handover_mode": handover_mode}, content_type=JSON
@@ -161,7 +161,7 @@ def test_device_license_goes_onto_one_of_the_requesters_devices(employee_client,
         employee_client, [{"asset_model": str(autocad.pk), "quantity": 1}], duration="permanent"
     )
     rid, item = response.json()["id"], response.json()["items"][0]
-    it_client.post(f"/api/reservations/{rid}/approve", {"items": []}, content_type=JSON)
+    it_client.post(f"/api/reservations/{rid}/confirm", {"items": []}, content_type=JSON)
     candidates = it_client.get(f"/api/reservations/items/{item['id']}/candidates").json()
     license = candidates["licenses"][0]
     assert license["assign_to"] == "device"

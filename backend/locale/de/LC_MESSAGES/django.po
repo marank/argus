@@ -1867,7 +1867,7 @@ msgid "Submitted"
 msgstr "Eingereicht"
 
 #: apps/reservations/models/reservation.py:25
-msgid "Approved"
+msgid "Confirmed"
 msgstr "Bestätigt"
 
 #: apps/reservations/models/reservation.py:26
@@ -1971,7 +1971,7 @@ msgid "reminded by"
 msgstr "erinnert von"
 
 #: apps/reservations/models/reservation.py:145
-msgid "approved at"
+msgid "confirmed at"
 msgstr "bestätigt am"
 
 #: apps/reservations/models/reservation.py:147
@@ -1991,7 +1991,7 @@ msgid "requested quantity"
 msgstr "angeforderte Menge"
 
 #: apps/reservations/models/reservation_item.py:46
-msgid "approved quantity"
+msgid "confirmed quantity"
 msgstr "bestätigte Menge"
 
 #: apps/reservations/models/reservation_item.py:53
@@ -2145,7 +2145,7 @@ msgid "Please choose a specific model for “%(category)s”."
 msgstr "Bitte wählen Sie für „%(category)s“ ein bestimmtes Modell."
 
 #: apps/reservations/services/workflow.py:140
-msgid "You cannot approve more devices than were requested."
+msgid "You cannot confirm more devices than were requested."
 msgstr "Es können nicht mehr Geräte bestätigt werden als angefordert."
 
 #: apps/reservations/services/workflow.py:143
@@ -2156,8 +2156,8 @@ msgstr ""
 "reduzieren."
 
 #: apps/reservations/services/workflow.py:150
-msgid "Approve at least one device or reject the request."
-msgstr ""
+msgid "Confirm at least one device or reject the request."
+msgstr "Bestätigen Sie mindestens ein Gerät oder lehnen Sie die Anforderung ab."
 "Bestätigen Sie mindestens ein Gerät oder lehnen Sie die Anforderung ab."
 
 #: apps/reservations/services/workflow.py:204
@@ -2208,7 +2208,7 @@ msgstr "%(asset)s ist nicht im Lager (%(status)s)."
 
 #: apps/reservations/services/workflow.py:286
 #, python-format
-msgid "All approved devices for “%(item)s” are already allocated."
+msgid "All confirmed devices for “%(item)s” are already allocated."
 msgstr "Alle bestätigten Geräte für „%(item)s“ sind bereits zugewiesen."
 
 #: apps/reservations/services/workflow.py:308
@@ -2224,7 +2224,7 @@ msgstr "Für „%(item)s“ werden nur noch %(missing)s Stück benötigt."
 
 #: apps/reservations/services/workflow.py:334
 #, python-format
-msgid "All approved licenses for “%(item)s” are already allocated."
+msgid "All confirmed licenses for “%(item)s” are already allocated."
 msgstr "Alle bestätigten Lizenzen für „%(item)s“ sind bereits zugewiesen."
 
 #: apps/reservations/services/workflow.py:341

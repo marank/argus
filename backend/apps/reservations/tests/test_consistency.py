@@ -10,7 +10,7 @@ JSON = "application/json"
 
 
 def prepare(employee_client, it_client, items, handover_mode="collect"):
-    """Submit, approve, allocate and mark ready; returns the reservation id."""
+    """Submit, confirm, allocate and mark ready; returns the reservation id."""
     start = date.today()
     response = employee_client.post(
         "/api/reservations",
@@ -25,7 +25,7 @@ def prepare(employee_client, it_client, items, handover_mode="collect"):
     )
     assert response.status_code == 201, response.content
     rid = response.json()["id"]
-    it_client.post(f"/api/reservations/{rid}/approve", {"items": []}, content_type=JSON)
+    it_client.post(f"/api/reservations/{rid}/confirm", {"items": []}, content_type=JSON)
     it_client.post(f"/api/reservations/{rid}/auto-allocate")
     response = it_client.post(
         f"/api/reservations/{rid}/ready", {"handover_mode": handover_mode}, content_type=JSON
@@ -72,7 +72,7 @@ def test_deleting_a_device_with_history_is_refused(employee_client, it_client):
     assert Asset.objects.filter(pk=asset.pk).exists()
 
 
-def test_terminal_hides_lines_without_approved_devices(employee_client, it_client, terminal_client):
+def test_terminal_hides_lines_without_confirmed_devices(employee_client, it_client, terminal_client):
     laptops = Category.objects.get(code="laptops")
     model = laptops.asset_models.first()
     start = date.today()
@@ -91,11 +91,11 @@ def test_terminal_hides_lines_without_approved_devices(employee_client, it_clien
         content_type=JSON,
     ).json()["id"]
     items = Reservation.objects.get(pk=rid).items.order_by("position")
-    approval = [
-        {"id": str(items[0].pk), "quantity_approved": 1},
-        {"id": str(items[1].pk), "quantity_approved": 0},
+    confirmation = [
+        {"id": str(items[0].pk), "quantity_confirmed": 1},
+        {"id": str(items[1].pk), "quantity_confirmed": 0},
     ]
-    it_client.post(f"/api/reservations/{rid}/approve", {"items": approval}, content_type=JSON)
+    it_client.post(f"/api/reservations/{rid}/confirm", {"items": confirmation}, content_type=JSON)
     it_client.post(f"/api/reservations/{rid}/auto-allocate")
     it_client.post(f"/api/reservations/{rid}/ready", {"handover_mode": "pickup"}, content_type=JSON)
 

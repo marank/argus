@@ -34,7 +34,7 @@ class TerminalPickupOut(Schema):
 
     @staticmethod
     def resolve_summary(obj) -> str:
-        # Lines IT did not approve (quantity 0) are nothing to collect.
+        # Lines IT did not confirm (quantity 0) are nothing to collect.
         return ", ".join(f"{i.quantity_target}× {i.label}" for i in obj.items.all() if i.quantity_target)
 
 

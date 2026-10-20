@@ -2,7 +2,7 @@ export default {
   greeting: 'Willkommen, {name}',
   itSubtitle: 'Aktueller Stand von Inventar, Reservierungen und Beschaffung.',
   employeeSubtitle: 'Ihre Anforderungen und Geräte auf einen Blick.',
-  toApprove: 'Zu bestätigen',
+  toConfirm: 'Zu bestätigen',
   toPrepare: 'Vorzubereiten',
   readyForPickup: 'Abholbereit',
   overdue: 'Überfällige Rückgaben',

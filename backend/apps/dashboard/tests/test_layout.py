@@ -12,7 +12,7 @@ def test_dashboard_layout_is_saved_per_user(it_client):
                 "size": "medium",
                 "height": "small",
                 "hidden_cards": ["overdue"],
-                "card_order": ["ready", "to_approve"],
+                "card_order": ["ready", "to_confirm"],
                 "options": {},
             },
             {

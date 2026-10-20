@@ -47,7 +47,7 @@ def test_request_trend_counts_this_weeks_requests(it_client):
 def test_upcoming_follows_the_chosen_period(it_client):
     workshop = Reservation.objects.get(title="Training workshop")
     Reservation.objects.filter(pk=workshop.pk).update(
-        status=Reservation.Status.APPROVED, start_date=timezone.localdate() + timedelta(days=10)
+        status=Reservation.Status.CONFIRMED, start_date=timezone.localdate() + timedelta(days=10)
     )
     week = {r["id"] for r in it_client.get("/api/dashboard/widgets/upcoming?days=7").json()}
     fortnight = {r["id"] for r in it_client.get("/api/dashboard/widgets/upcoming?days=14").json()}

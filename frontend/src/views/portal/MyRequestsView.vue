@@ -26,14 +26,14 @@ onMounted(async () => {
   requests.value = page.items
 })
 
-const STEPS = ['submitted', 'approved', 'ready', 'handed_out'] as const
+const STEPS = ['submitted', 'confirmed', 'ready', 'handed_out'] as const
 const ACTIVE = new Set<string>(STEPS)
 
 const active = computed(() => (requests.value ?? []).filter((r) => ACTIVE.has(r.status)))
 const closed = computed(() => (requests.value ?? []).filter((r) => !ACTIVE.has(r.status)))
 
 /** Rows of cards: per status with the most urgent first, or one row by date. */
-const STATUS_ROWS = ['ready', 'handed_out', 'approved', 'submitted'] as const
+const STATUS_ROWS = ['ready', 'handed_out', 'confirmed', 'submitted'] as const
 const rows = computed(() => {
   if (sortBy.value === 'date') return [{ key: 'all', label: '', items: active.value }]
   return STATUS_ROWS.map((status) => ({
@@ -54,8 +54,8 @@ function nextStep(r: ReservationListItem): string {
   switch (r.status) {
     case 'submitted':
       return t('reservations.mine.next.submitted')
-    case 'approved':
-      return t('reservations.mine.next.approved')
+    case 'confirmed':
+      return t('reservations.mine.next.confirmed')
     case 'ready':
       return r.pickup_at
         ? t('reservations.mine.next.readyAt', { date: weekday(r.pickup_at) })
@@ -227,7 +227,7 @@ function nextStep(r: ReservationListItem): string {
   margin: 0;
   color: var(--ar-text-muted);
 }
-/* Four segments: submitted, approved, ready, handed out. */
+/* Four segments: submitted, confirmed, ready, handed out. */
 .progress {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

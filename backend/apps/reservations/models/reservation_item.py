@@ -43,7 +43,7 @@ class ReservationItem(UUIDModel):
         help_text=_("Free text for something that is not in the catalog."),
     )
     quantity_requested = models.PositiveIntegerField(_("requested quantity"), default=1)
-    quantity_approved = models.PositiveIntegerField(_("approved quantity"), null=True, blank=True)
+    quantity_confirmed = models.PositiveIntegerField(_("confirmed quantity"), null=True, blank=True)
     note = models.CharField(_("note"), max_length=255, blank=True)
     # UUIDs carry no order, so lines keep the order in which they were requested.
     position = models.PositiveSmallIntegerField(_("position"), default=0)
@@ -79,10 +79,10 @@ class ReservationItem(UUIDModel):
 
     @property
     def quantity_target(self) -> int:
-        """The quantity IT committed to, or the requested quantity before approval."""
-        if self.quantity_approved is None:
+        """The quantity IT committed to, or the requested quantity before IT confirmed it."""
+        if self.quantity_confirmed is None:
             return self.quantity_requested
-        return self.quantity_approved
+        return self.quantity_confirmed
 
     @property
     def quantity_allocated(self) -> int:

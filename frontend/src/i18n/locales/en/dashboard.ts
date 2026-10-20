@@ -2,7 +2,7 @@ export default {
   greeting: 'Welcome, {name}',
   itSubtitle: 'Current state of inventory, reservations and procurement.',
   employeeSubtitle: 'Your requests and devices at a glance.',
-  toApprove: 'To approve',
+  toConfirm: 'To confirm',
   toPrepare: 'To prepare',
   readyForPickup: 'Ready for pickup',
   overdue: 'Overdue returns',
@@ -70,8 +70,8 @@ export default {
     },
     waiting: {
       title: 'Waiting requests',
-      description: 'Requests waiting for approval, the oldest first.',
-      empty: 'No request is waiting for approval.',
+      description: 'Requests waiting for confirmation, the oldest first.',
+      empty: 'No request is waiting for confirmation.',
     },
     expiring: {
       title: 'Expiring licenses & warranties',

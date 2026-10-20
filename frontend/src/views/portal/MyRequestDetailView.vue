@@ -49,8 +49,8 @@ const columns: DataTableColumns<ReservationItem> = [
     render: (i) => h('span', { class: 'mono' }, i.quantity_requested),
   },
   {
-    key: 'approved',
-    title: () => t('reservations.quantities.approved'),
+    key: 'confirmed',
+    title: () => t('reservations.quantities.confirmed'),
     width: 120,
     align: 'right',
     render: (i) =>
@@ -59,12 +59,12 @@ const columns: DataTableColumns<ReservationItem> = [
         {
           class: [
             'mono',
-            i.quantity_approved !== null && i.quantity_approved < i.quantity_requested
+            i.quantity_confirmed !== null && i.quantity_confirmed < i.quantity_requested
               ? 'reduced'
               : '',
           ],
         },
-        i.quantity_approved ?? '—',
+        i.quantity_confirmed ?? '—',
       ),
   },
   {
@@ -93,7 +93,7 @@ const columns: DataTableColumns<ReservationItem> = [
         /></template>
         <template #actions>
           <NButton
-            v-if="['submitted', 'approved', 'ready'].includes(reservation.status)"
+            v-if="['submitted', 'confirmed', 'ready'].includes(reservation.status)"
             :loading="busy"
             @click="cancel"
           >
