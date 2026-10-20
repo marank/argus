@@ -5,6 +5,9 @@ export default {
   request_submittedHelp: 'An das zuständige Team, ersatzweise an die gesamte IT.',
   issue_reported: 'Neue Problemmeldung',
   issue_reportedHelp: 'An das zuständige Team, ersatzweise an die gesamte IT.',
+  issue_answered: 'Rückmeldung zu Problemmeldung',
+  issue_answeredHelp:
+    'Der Melder hat geschrieben oder die Meldung als gelöst markiert. An das zuständige Team, ersatzweise an die gesamte IT.',
   assigned_to_me: 'Mir zugewiesen',
   assigned_to_meHelp: 'Jemand hat Ihnen eine Anforderung oder Meldung zugewiesen.',
   license_expiring: 'Lizenz läuft ab',
@@ -20,6 +23,8 @@ export default {
   return_reminderHelp: 'Einige Tage vor dem Rückgabetermin.',
   return_overdue: 'Rückgabe überfällig',
   return_overdueHelp: 'Einmalig, sobald der Rückgabetermin überschritten ist.',
-  issue_resolved: 'Problemmeldung erledigt',
-  issue_resolvedHelp: 'Mit Lösungsbeschreibung der IT.',
+  issue_message: 'Nachricht zu Problemmeldung',
+  issue_messageHelp: 'Die IT hat Ihnen zu einer Ihrer Meldungen geschrieben.',
+  issue_resolved: 'Problemmeldung gelöst',
+  issue_resolvedHelp: 'Mit der Nachricht der IT, falls vorhanden.',
 }

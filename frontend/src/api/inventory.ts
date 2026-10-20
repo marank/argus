@@ -6,6 +6,7 @@ import type {
   AssetEventWithAsset,
   AssetInput,
   AssetIssue,
+  AssetIssueDetail,
   IssueStatus,
   LicenseDetail,
   LicenseInput,
@@ -68,10 +69,14 @@ export const licensesApi = {
 
 export const issuesApi = {
   list: (params: ListParams = {}) => http.get<Page<AssetIssue>>('/inventory/issues', params),
-  update: (id: Id, data: { status: IssueStatus; resolution?: string }) =>
-    http.put<AssetIssue>(`/inventory/issues/${id}`, data),
+  get: (id: Id) => http.get<AssetIssueDetail>(`/inventory/issues/${id}`),
+  /** Change the status, optionally with a message sent along. */
+  update: (id: Id, data: { status: IssueStatus; message?: string }) =>
+    http.put<AssetIssueDetail>(`/inventory/issues/${id}`, data),
+  message: (id: Id, text: string) =>
+    http.post<AssetIssueDetail>(`/inventory/issues/${id}/messages`, { text }),
   assign: (id: Id, data: { team: Id | null; assignee: Id | null }) =>
-    http.post<AssetIssue>(`/inventory/issues/${id}/assign`, data),
+    http.post<AssetIssueDetail>(`/inventory/issues/${id}/assign`, data),
 }
 
 export const lookupApi = {

@@ -4,7 +4,7 @@ from django.utils.translation import gettext as _
 
 from apps.accounts.services import assignment
 from apps.core.exceptions import BusinessError
-from apps.inventory.models import Asset, AssetEvent, AssetIssue
+from apps.inventory.models import Asset, AssetEvent, AssetIssue, AssetIssueEntry
 from apps.inventory.services import notifications
 from apps.inventory.services.events import log_event
 
@@ -35,37 +35,68 @@ def report_issue(asset: Asset, user, kind: str, description: str) -> AssetIssue:
     return issue
 
 
-@transaction.atomic
-def update_issue(issue: AssetIssue, user, status: str, resolution: str = "") -> AssetIssue:
-    """IT takes a report into work or resolves it; resolving needs a note for the employee."""
-    resolution = resolution.strip()
-    if status == Status.RESOLVED and not resolution:
-        raise BusinessError(_("Describe how the problem was solved."))
-    was_resolved = issue.status == Status.RESOLVED
-    if issue.reported_by_id != user.pk and (
-        status != issue.status or (status == Status.RESOLVED and resolution != issue.resolution)
-    ):
+def _is_reporter(issue: AssetIssue, user) -> bool:
+    return issue.reported_by_id == user.pk
+
+
+def _add_entry(issue: AssetIssue, user, **fields) -> AssetIssueEntry:
+    """Record a step; what IT does is news for the reporter until they look."""
+    if not _is_reporter(issue, user) and not issue.unseen_update:
         issue.unseen_update = True
-    issue.status = status
-    issue.handled_by = user
-    if status == Status.RESOLVED:
-        issue.resolution = resolution
-        issue.resolved_at = timezone.now()
+        issue.save(update_fields=["unseen_update", "updated_at"])
+    return AssetIssueEntry.objects.create(issue=issue, author=user, **fields)
+
+
+@transaction.atomic
+def post_message(issue: AssetIssue, user, text: str, *, by_it: bool) -> AssetIssueEntry:
+    """Reporter (``by_it`` false) or IT write to the other side, whatever the status."""
+    text = text.strip()
+    if not text:
+        raise BusinessError(_("Write a message."))
+    entry = _add_entry(issue, user, kind=AssetIssueEntry.Kind.MESSAGE, text=text)
+    if by_it:
+        notifications.issue_message(issue, text)
     else:
-        issue.resolved_at = None
+        notifications.issue_answered(issue, text)
+    return entry
+
+
+@transaction.atomic
+def update_issue(issue: AssetIssue, user, status: str, message: str = "", *, by_it: bool) -> AssetIssue:
+    """Change the status, with an optional message sent along.
+
+    IT may set any status; the reporter (``by_it`` false) may only mark the problem resolved.
+    """
+    if not by_it and status != Status.RESOLVED:
+        raise BusinessError(_("Only IT can take a report into work or reopen it."))
+    if status == issue.status:
+        raise BusinessError(_("The report already has this status."))
+    message = message.strip()
+    if message:
+        _add_entry(issue, user, kind=AssetIssueEntry.Kind.MESSAGE, text=message)
+    issue.status = status
+    if by_it:
+        issue.handled_by = user
+    issue.resolved_at = timezone.now() if status == Status.RESOLVED else None
     issue.save()
-    if status == Status.RESOLVED and not was_resolved:
+    _add_entry(issue, user, kind=AssetIssueEntry.Kind.STATUS, status=status)
+    if status == Status.RESOLVED:
         log_event(
             issue.asset,
             AssetEvent.Kind.ISSUE_RESOLVED,
             user,
             related_user=issue.reported_by,
-            description=resolution,
+            description=message,
         )
-        notifications.issue_resolved(issue)
+    if not by_it:
+        notifications.issue_answered(issue, message, resolved=True)
+    elif status == Status.RESOLVED:
+        notifications.issue_resolved(issue, message)
+    elif message:
+        notifications.issue_message(issue, message)
     return issue
 
 
-def mark_seen(user) -> None:
-    """The reporter has looked at their reports: updates are no longer news."""
-    AssetIssue.objects.filter(reported_by=user, unseen_update=True).update(unseen_update=False)
+def mark_seen(user, issue: AssetIssue) -> None:
+    """The reporter opened the report: IT's updates are no longer news."""
+    AssetIssue.objects.filter(pk=issue.pk, reported_by=user, unseen_update=True).update(unseen_update=False)

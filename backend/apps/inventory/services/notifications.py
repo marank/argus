@@ -19,7 +19,7 @@ def issue_reported(issue: AssetIssue) -> None:
         }
         return subject, f"{body}\n\n{issue.description}"
 
-    notify("issue_reported", responsible_staff(issue), render, path="/inventory/issues")
+    notify("issue_reported", responsible_staff(issue), render, path=_it_path(issue))
 
 
 def issue_assigned(issue: AssetIssue) -> None:
@@ -34,10 +34,18 @@ def issue_assigned(issue: AssetIssue) -> None:
         }
         return subject, f"{body}\n\n{issue.description}"
 
-    notify("assigned_to_me", [issue.assignee], render, path="/inventory/issues")
+    notify("assigned_to_me", [issue.assignee], render, path=_it_path(issue))
 
 
-def issue_resolved(issue: AssetIssue) -> None:
+def _it_path(issue: AssetIssue) -> str:
+    return f"/inventory/issues/{issue.pk}"
+
+
+def _reporter_path(issue: AssetIssue) -> str:
+    return f"/portal/issues/{issue.pk}"
+
+
+def issue_resolved(issue: AssetIssue, message: str) -> None:
     if not issue.reported_by:
         return
 
@@ -46,9 +54,46 @@ def issue_resolved(issue: AssetIssue) -> None:
             "device": issue.asset.inventory_number
         }
         body = _("IT resolved your report “%(description)s”.") % {"description": issue.description}
-        return subject, f"{body}\n\n{_('Answer from IT:')} {issue.resolution}"
+        if message:
+            # Outside the f-string, where makemessages finds it.
+            label = _("Message from IT:")
+            body = f"{body}\n\n{label} {message}"
+        return subject, body
 
-    notify("issue_resolved", [issue.reported_by], render, path=f"/portal/devices/{issue.asset_id}")
+    notify("issue_resolved", [issue.reported_by], render, path=_reporter_path(issue))
+
+
+def issue_message(issue: AssetIssue, message: str) -> None:
+    """IT wrote to the reporter."""
+    if not issue.reported_by:
+        return
+
+    def render(user):
+        subject = _("Message on your problem report for %(device)s") % {
+            "device": issue.asset.inventory_number
+        }
+        body = _("IT wrote about your report “%(description)s”:") % {"description": issue.description}
+        return subject, f"{body}\n\n{message}"
+
+    notify("issue_message", [issue.reported_by], render, path=_reporter_path(issue))
+
+
+def issue_answered(issue: AssetIssue, message: str, *, resolved: bool = False) -> None:
+    """The reporter wrote to IT or marked the problem resolved themselves."""
+    name = issue.reported_by.display_name if issue.reported_by else "—"
+
+    def render(user):
+        values = {"name": name, "device": issue.asset.inventory_number}
+        if resolved:
+            subject = _("Resolved by the reporter: %(device)s") % values
+            body = _("%(name)s marked the report on %(device)s as resolved.") % values
+        else:
+            subject = _("Answer on problem report: %(device)s") % values
+            body = _("%(name)s wrote about the report on %(device)s:") % values
+        return subject, f"{body}\n\n{message}" if message else body
+
+    recipients = [u for u in responsible_staff(issue) if u.pk != issue.reported_by_id]
+    notify("issue_answered", recipients, render, path=_it_path(issue))
 
 
 def license_expiring(license: License) -> None:

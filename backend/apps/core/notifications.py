@@ -31,6 +31,7 @@ EVENTS: tuple[Event, ...] = (
     Event("approval_requested", "approver"),
     Event("request_submitted", "it"),
     Event("issue_reported", "it"),
+    Event("issue_answered", "it"),
     Event("assigned_to_me", "it"),
     Event("license_expiring", "it"),
     Event("request_confirmed", "employee"),
@@ -38,6 +39,7 @@ EVENTS: tuple[Event, ...] = (
     Event("request_ready", "employee"),
     Event("return_reminder", "employee"),
     Event("return_overdue", "employee"),
+    Event("issue_message", "employee"),
     Event("issue_resolved", "employee"),
 )
 EVENT_KEYS = {event.key for event in EVENTS}

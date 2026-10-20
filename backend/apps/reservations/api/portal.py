@@ -13,11 +13,18 @@ from apps.accounts.permissions import can
 from apps.core.api.security import permission_auth
 from apps.core.features import is_enabled
 from apps.core.models import SiteSettings
+from apps.inventory.api.issues import issue_detail
 from apps.inventory.models import Asset, AssetIssue, LicenseAssignment
-from apps.inventory.schemas.asset_issue import AssetIssueIn, OwnIssueOut, OwnIssueWithDeviceOut
+from apps.inventory.schemas.asset_issue import (
+    AssetIssueDetailOut,
+    AssetIssueIn,
+    IssueMessageIn,
+    OwnIssueOut,
+    OwnIssueWithDeviceOut,
+)
 from apps.inventory.schemas.license import OwnLicenseOut
 from apps.inventory.services.availability import Counts, period_availability
-from apps.inventory.services.issues import mark_seen, report_issue
+from apps.inventory.services.issues import mark_seen, post_message, report_issue, update_issue
 from apps.masterdata.models import AssetModel, Category
 from apps.reservations.api.queries import approvable_reservations
 from apps.reservations.models import Reservation, ReservationAllocation
@@ -176,18 +183,37 @@ def my_issues(request: HttpRequest):
     return issues
 
 
-@router.post("/my-issues/seen", response={204: None})
-def my_issues_seen(request: HttpRequest):
-    """The employee looked at their reports; IT's updates no longer count as new in the menu."""
-    mark_seen(request.user)
-    return Status(204, None)
+def _own_issues(request: HttpRequest):
+    return AssetIssue.objects.filter(reported_by=request.user)
+
+
+@router.get("/my-issues/{uuid:pk}", response=AssetIssueDetailOut)
+def my_issue(request: HttpRequest, pk: UUID):
+    """One of the employee's reports with its conversation; opening it marks IT's updates seen."""
+    issue = issue_detail(_own_issues(request), pk)
+    mark_seen(request.user, issue)
+    return issue
+
+
+@router.post("/my-issues/{uuid:pk}/messages", response=AssetIssueDetailOut)
+def my_issue_message(request: HttpRequest, pk: UUID, payload: IssueMessageIn):
+    post_message(get_object_or_404(_own_issues(request), pk=pk), request.user, payload.text, by_it=False)
+    return issue_detail(_own_issues(request), pk)
+
+
+@router.post("/my-issues/{uuid:pk}/resolve", response=AssetIssueDetailOut)
+def my_issue_resolve(request: HttpRequest, pk: UUID, payload: IssueMessageIn):
+    """The employee marks the problem resolved, optionally saying how."""
+    issue = get_object_or_404(_own_issues(request), pk=pk)
+    update_issue(issue, request.user, AssetIssue.Status.RESOLVED, payload.text, by_it=False)
+    return issue_detail(_own_issues(request), pk)
 
 
 @router.get("/menu-counts", response=MenuCountsOut)
 def menu_counts(request: HttpRequest):
     """Open requests, approvals and problem reports of the user, for the badges in the menu.
 
-    Approvals always wait for the user; reports only when IT changed one since the user last looked.
+    Approvals always wait for the user; reports only when IT changed one since the user last opened it.
     """
     approvals = approvable_reservations(request.user).filter(status=Reservation.Status.PENDING_APPROVAL)
     issues = AssetIssue.objects.filter(reported_by=request.user)

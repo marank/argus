@@ -132,6 +132,13 @@ export const routes: RouteRecordRaw[] = [
         meta: { module: 'issues', title: 'nav.myIssues' },
       },
       {
+        path: 'portal/issues/:id([0-9a-f-]{36})',
+        name: 'portal-issue',
+        component: () => import('@/views/issues/IssueDetailView.vue'),
+        props: (route) => ({ id: String(route.params.id), viewer: 'reporter' }),
+        meta: { module: 'issues', title: 'nav.myIssues' },
+      },
+      {
         path: 'portal/devices/:id([0-9a-f-]{36})',
         name: 'portal-device',
         component: () => import('@/views/portal/MyDeviceDetailView.vue'),
@@ -187,6 +194,13 @@ export const routes: RouteRecordRaw[] = [
         path: 'inventory/issues',
         name: 'issues',
         component: () => import('@/views/inventory/IssueListView.vue'),
+        meta: { permission: 'issues', module: 'issues', it: true, title: 'nav.issues' },
+      },
+      {
+        path: 'inventory/issues/:id([0-9a-f-]{36})',
+        name: 'issue',
+        component: () => import('@/views/issues/IssueDetailView.vue'),
+        props: (route) => ({ id: String(route.params.id), viewer: 'it' }),
         meta: { permission: 'issues', module: 'issues', it: true, title: 'nav.issues' },
       },
       // Former name of the consumables page; keeps old bookmarks working.

@@ -80,20 +80,26 @@ const details = computed<DetailEntry[]>(() => {
           </p>
           <ul v-else class="issues">
             <li v-for="issue in asset.issues" :key="issue.id">
-              <div class="issue-head">
-                <StatusTag
-                  group="issueStatus"
-                  :value="issue.status"
-                  :pulse="issue.status === 'open'"
-                />
-                <strong class="small">{{ enumLabel('issueKind', issue.kind) }}</strong>
-                <span class="mono muted small">{{ dateTime(issue.created_at) }}</span>
-              </div>
-              <p class="text">{{ issue.description }}</p>
-              <p v-if="issue.resolution" class="answer">
-                <span class="eyebrow">{{ t('reservations.myDevices.itAnswer') }}</span>
-                {{ issue.resolution }}
-              </p>
+              <!-- Opens the conversation; IT's updates pulse until then. -->
+              <RouterLink :to="{ name: 'portal-issue', params: { id: issue.id } }" class="issue">
+                <div class="issue-head">
+                  <StatusTag
+                    group="issueStatus"
+                    :value="issue.status"
+                    :pulse="issue.unseen_update"
+                  />
+                  <strong class="small">{{ enumLabel('issueKind', issue.kind) }}</strong>
+                  <span class="mono muted small">{{ dateTime(issue.created_at) }}</span>
+                </div>
+                <p class="text">{{ issue.description }}</p>
+                <p
+                  v-if="issue.last_message && issue.last_message !== issue.description"
+                  class="answer"
+                >
+                  <span class="eyebrow">{{ t('reservations.myDevices.lastMessage') }}</span>
+                  {{ issue.last_message }}
+                </p>
+              </RouterLink>
             </li>
           </ul>
         </NCard>
@@ -138,6 +144,14 @@ const details = computed<DetailEntry[]>(() => {
   padding: 10px 12px;
   border-radius: 3px;
   background: var(--ar-surface-sunken);
+}
+.issue {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.issue:hover .text {
+  color: var(--ar-text);
 }
 .issue-head {
   display: flex;

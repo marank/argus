@@ -81,6 +81,7 @@ export type NotificationKey =
   | 'approval_requested'
   | 'request_submitted'
   | 'issue_reported'
+  | 'issue_answered'
   | 'assigned_to_me'
   | 'license_expiring'
   | 'request_confirmed'
@@ -88,6 +89,7 @@ export type NotificationKey =
   | 'request_ready'
   | 'return_reminder'
   | 'return_overdue'
+  | 'issue_message'
   | 'issue_resolved'
 
 export type MailSecurity = 'starttls' | 'ssl' | 'none'

@@ -926,12 +926,19 @@ def seed_extra(base: dict, stdout) -> None:
     )
     flicker.assignee = it
     flicker.save(update_fields=["assignee"])
-    issue_service.update_issue(flicker, it, AssetIssue.Status.IN_PROGRESS)
+    issue_service.update_issue(flicker, it, AssetIssue.Status.IN_PROGRESS, by_it=True)
+    issue_service.post_message(
+        flicker, it, "Does it also flicker with the spare cable from the IT desk?", by_it=True
+    )
+    issue_service.post_message(
+        flicker, by_name["jwagner"], "Yes, with that cable too, but less often.", by_it=False
+    )
     issue_service.update_issue(
         report(by_name["lkrueger"], AssetIssue.Kind.OTHER, "Laptop is very slow since the last update."),
         it,
         AssetIssue.Status.RESOLVED,
         "Disk was full; temporary files removed and storage doubled.",
+        by_it=True,
     )
 
     stdout.write(

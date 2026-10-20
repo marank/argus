@@ -6,7 +6,11 @@ from apps.core.models import TimeStampedModel
 
 
 class AssetIssue(TimeStampedModel):
-    """A problem an employee reports for one of their devices; IT handles it."""
+    """A problem an employee reports for one of their devices; IT handles it.
+
+    Reporter and IT write each other messages at any time (``entries``) and either
+    side marks the problem resolved; only IT takes it into work or reopens it.
+    """
 
     class Kind(models.TextChoices):
         DEFECT = "defect", _("Not working")
@@ -59,9 +63,8 @@ class AssetIssue(TimeStampedModel):
         blank=True,
         related_name="assigned_issues",
     )
-    resolution = models.TextField(_("resolution"), blank=True)
     resolved_at = models.DateTimeField(_("resolved at"), null=True, blank=True)
-    # IT changed the status or the resolution since the reporter last looked at their reports.
+    # IT wrote or changed the status since the reporter last looked at the report.
     unseen_update = models.BooleanField(_("unseen update"), default=False)
 
     class Meta:
@@ -75,3 +78,34 @@ class AssetIssue(TimeStampedModel):
     @property
     def is_open(self) -> bool:
         return self.status != self.Status.RESOLVED
+
+
+class AssetIssueEntry(TimeStampedModel):
+    """A step in a report's conversation: a message or a change of status, and who it came from."""
+
+    class Kind(models.TextChoices):
+        MESSAGE = "message", _("Message")
+        STATUS = "status", _("Change of status")
+
+    issue = models.ForeignKey(
+        AssetIssue, verbose_name=_("problem report"), on_delete=models.CASCADE, related_name="entries"
+    )
+    kind = models.CharField(_("kind"), max_length=10, choices=Kind.choices)
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("author"),
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="+",
+    )
+    text = models.TextField(_("text"), blank=True)
+    # The new status of a status change.
+    status = models.CharField(_("status"), max_length=12, choices=AssetIssue.Status.choices, blank=True)
+
+    class Meta:
+        verbose_name = _("problem report entry")
+        verbose_name_plural = _("problem report entries")
+        ordering = ["created_at"]
+
+    def __str__(self) -> str:
+        return f"{self.issue}: {self.get_kind_display()}"

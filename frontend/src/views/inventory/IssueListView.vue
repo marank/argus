@@ -1,31 +1,27 @@
 <script setup lang="ts">
-import { NButton, NDataTable, NInput, NModal, NSelect, type DataTableColumns } from 'naive-ui'
-import { computed, h, onMounted, ref, watch } from 'vue'
+import { NDataTable, NInput, NSelect, type DataTableColumns } from 'naive-ui'
+import { computed, h, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 
 import { teamsApi, usersApi } from '@/api/accounts'
 import { issuesApi } from '@/api/inventory'
 import AssignedTabs from '@/components/common/AssignedTabs.vue'
-import AssignmentFields from '@/components/common/AssignmentFields.vue'
 import { assignmentCell } from '@/components/common/assignmentCell'
 import CheckField from '@/components/common/CheckField.vue'
 import EntitySelect from '@/components/common/EntitySelect.vue'
-import FieldLabel from '@/components/common/FieldLabel.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
-import { useAction } from '@/composables/useAction'
 import { useAssigned } from '@/composables/useAssigned'
 import { useFormat } from '@/composables/useFormat'
 import { useList } from '@/composables/useList'
 import type { Team, User } from '@/types/accounts'
-import type { Id } from '@/types/common'
 import { ISSUE_KINDS, type AssetIssue, type IssueStatus } from '@/types/inventory'
 
-/** Problems employees reported for their devices; IT takes them into work and resolves them. */
+/** Problems employees reported for their devices; each opens its page with the conversation. */
 const { t } = useI18n()
-const { date, dateTime, enumLabel } = useFormat()
-const { busy, run } = useAction()
+const router = useRouter()
+const { date, enumLabel } = useFormat()
 
 const OPEN: IssueStatus[] = ['open', 'in_progress']
 const { assigned, param: assignedParam } = useAssigned('issues')
@@ -49,36 +45,6 @@ const onlyOpen = computed({
 const kindOptions = computed(() =>
   ISSUE_KINDS.map((k) => ({ value: k, label: enumLabel('issueKind', k) })),
 )
-
-const selected = ref<AssetIssue | null>(null)
-const resolution = ref('')
-const showHandle = ref(false)
-
-function open(issue: AssetIssue) {
-  selected.value = issue
-  resolution.value = issue.resolution
-  showHandle.value = true
-}
-
-const assignSelected = (data: { team: Id | null; assignee: Id | null }) =>
-  issuesApi.assign(selected.value!.id, data)
-
-function onAssigned(issue: AssetIssue) {
-  selected.value = issue
-  list.load()
-}
-
-async function setStatus(status: IssueStatus) {
-  if (!selected.value) return
-  const updated = await run(
-    () => issuesApi.update(selected.value!.id, { status, resolution: resolution.value }),
-    t('common.saved'),
-  )
-  if (updated) {
-    showHandle.value = false
-    list.load()
-  }
-}
 
 const columns = computed<DataTableColumns<AssetIssue>>(() => [
   {
@@ -190,105 +156,19 @@ const columns = computed<DataTableColumns<AssetIssue>>(() => [
         :loading="list.loading.value"
         :pagination="list.pagination.value"
         :row-key="(i: AssetIssue) => i.id"
-        :row-props="(i: AssetIssue) => ({ onClick: () => open(i) })"
+        :row-props="
+          (i: AssetIssue) => ({
+            onClick: () => router.push({ name: 'issue', params: { id: i.id } }),
+          })
+        "
         :scroll-x="1160"
         @update:sorter="list.onSort"
       />
     </div>
-
-    <NModal
-      v-model:show="showHandle"
-      preset="card"
-      :title="t('inventory.issues.handle')"
-      style="max-width: 560px"
-    >
-      <div v-if="selected" class="handle">
-        <div class="head">
-          <StatusTag group="issueStatus" :value="selected.status" />
-          <strong>{{ enumLabel('issueKind', selected.kind) }}</strong>
-          <span class="muted small">
-            {{ selected.asset.inventory_number }} · {{ selected.asset.model.full_name }}
-          </span>
-        </div>
-        <p class="description">{{ selected.description }}</p>
-        <p class="muted small">
-          {{ selected.reported_by?.display_name }} · {{ dateTime(selected.created_at) }}
-          <template v-if="selected.handled_by">
-            · {{ t('inventory.issues.handledBy', { name: selected.handled_by.display_name }) }}
-          </template>
-        </p>
-        <div class="field">
-          <span class="eyebrow">{{ t('common.assignment.title') }}</span>
-          <AssignmentFields
-            :key="selected.id"
-            :team="selected.assigned_team"
-            :assignee="selected.assignee"
-            :assign="assignSelected"
-            @updated="onAssigned"
-          />
-        </div>
-        <div class="field">
-          <FieldLabel
-            :label="t('inventory.issues.resolution')"
-            :help="t('inventory.issues.resolutionHelp')"
-          />
-          <NInput
-            v-model:value="resolution"
-            type="textarea"
-            :autosize="{ minRows: 2, maxRows: 6 }"
-            :placeholder="t('inventory.issues.resolutionPlaceholder')"
-          />
-        </div>
-      </div>
-      <template #footer>
-        <div v-if="selected" class="row" style="justify-content: flex-end">
-          <NButton
-            v-if="selected.status === 'resolved'"
-            :loading="busy"
-            @click="setStatus('open')"
-            >{{ t('inventory.issues.reopen') }}</NButton
-          >
-          <NButton
-            v-if="selected.status === 'open'"
-            :loading="busy"
-            @click="setStatus('in_progress')"
-            >{{ t('inventory.issues.startWork') }}</NButton
-          >
-          <NButton
-            type="primary"
-            :loading="busy"
-            :disabled="!resolution.trim()"
-            @click="setStatus('resolved')"
-            >{{ t('inventory.issues.resolve') }}</NButton
-          >
-        </div>
-      </template>
-    </NModal>
   </div>
 </template>
 
 <style scoped>
-.handle {
-  display: grid;
-  gap: 10px;
-}
-.head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 10px;
-}
-.description {
-  margin: 0;
-  padding: 10px 12px;
-  border-radius: 3px;
-  background: var(--ar-surface-sunken);
-  white-space: pre-wrap;
-}
-.field {
-  display: grid;
-  gap: 6px;
-}
 .small,
 :deep(.small) {
   font-size: 12px;

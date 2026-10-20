@@ -186,20 +186,19 @@ async function removeEvent(event: AssetEvent) {
             type="warning"
             :bordered="false"
           >
-            <RouterLink :to="{ name: 'issues' }">
-              {{
-                t(
-                  'inventory.issues.openOnDevice',
-                  { count: asset.open_issues.length },
-                  asset.open_issues.length,
-                )
-              }}:
-            </RouterLink>
             {{
-              asset.open_issues
-                .map((i) => `${enumLabel('issueKind', i.kind)} – ${i.description}`)
-                .join(' · ')
-            }}
+              t(
+                'inventory.issues.openOnDevice',
+                { count: asset.open_issues.length },
+                asset.open_issues.length,
+              )
+            }}:
+            <template v-for="(issue, index) in asset.open_issues" :key="issue.id">
+              <template v-if="index">·</template>
+              <RouterLink :to="{ name: 'issue', params: { id: issue.id } }">
+                {{ enumLabel('issueKind', issue.kind) }} – {{ issue.description }}
+              </RouterLink>
+            </template>
           </NAlert>
           <NCard size="small">
             <div class="hero">

@@ -5,6 +5,9 @@ export default {
   request_submittedHelp: 'To the responsible team, otherwise to all of IT.',
   issue_reported: 'New problem report',
   issue_reportedHelp: 'To the responsible team, otherwise to all of IT.',
+  issue_answered: 'Reply on problem report',
+  issue_answeredHelp:
+    'The reporter wrote or marked the report resolved. To the responsible team, otherwise to all of IT.',
   assigned_to_me: 'Assigned to me',
   assigned_to_meHelp: 'Someone assigned a request or report to you.',
   license_expiring: 'License ending',
@@ -19,6 +22,8 @@ export default {
   return_reminderHelp: 'A few days before the return date.',
   return_overdue: 'Return overdue',
   return_overdueHelp: 'Once, as soon as the return date has passed.',
+  issue_message: 'Message on problem report',
+  issue_messageHelp: 'IT wrote to you about one of your reports.',
   issue_resolved: 'Problem report resolved',
-  issue_resolvedHelp: 'Includes the resolution from IT.',
+  issue_resolvedHelp: 'With the message from IT, if any.',
 }

@@ -104,7 +104,7 @@ export default {
     subtitle: 'Probleme, die Sie der IT gemeldet haben, und deren Antworten.',
     empty: 'Keine Meldungen vorhanden. Probleme melden Sie unter „Meine Geräte“.',
     current: 'Offen',
-    done: 'Erledigt',
+    done: 'Gelöst',
     returned: 'zurückgegeben',
   },
   myDevices: {
@@ -119,7 +119,7 @@ export default {
     reportPlaceholder: 'Was funktioniert nicht, seit wann, was haben Sie schon versucht?',
     reportSent: 'Meldung an die IT gesendet',
     send: 'An die IT senden',
-    itAnswer: 'Antwort der IT',
+    lastMessage: 'Letzte Nachricht',
     device: 'Gerät',
     returnBy: 'Rückgabe',
     reports: 'Meldungen',

@@ -1,6 +1,18 @@
 from django.contrib import admin
 
-from apps.inventory.models import AssetIssue
+from apps.inventory.models import AssetIssue, AssetIssueEntry
+
+
+class AssetIssueEntryInline(admin.TabularInline):
+    model = AssetIssueEntry
+    extra = 0
+    fields = ["created_at", "kind", "author", "text", "status"]
+    readonly_fields = fields
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None) -> bool:
+        # Written in the app, which also notifies the other side.
+        return False
 
 
 @admin.register(AssetIssue)
@@ -25,3 +37,4 @@ class AssetIssueAdmin(admin.ModelAdmin):
     autocomplete_fields = ["asset", "reported_by", "handled_by", "assigned_team", "assignee"]
     readonly_fields = ["created_at", "updated_at"]
     date_hierarchy = "created_at"
+    inlines = [AssetIssueEntryInline]

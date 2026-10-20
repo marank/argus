@@ -11,29 +11,17 @@ import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useGroupedRows, withGroupHeaders } from '@/composables/useGroupedRows'
-import { useMenuCountsStore } from '@/stores/menuCounts'
 import type { OwnIssueWithDevice } from '@/types/inventory'
 import { categoryIcon } from '@/utils/icons'
 
-/** All problems the employee reported: open ones first, resolved ones with IT's answer. */
+/** All problems the employee reported, open ones first; each opens its conversation. */
 const { t } = useI18n()
 const router = useRouter()
 const { date, enumLabel } = useFormat()
 
-const menuCounts = useMenuCountsStore()
-
-/**
- * Updates from IT keep their pulsing status while the page is open; looking at
- * the list marks them seen, so the menu stops pulsing.
- */
+/** Reports IT changed since the employee last opened them pulse until opened. */
 const issues = ref<OwnIssueWithDevice[] | null>(null)
-onMounted(async () => {
-  issues.value = await portalApi.myIssues()
-  if (issues.value.some((i) => i.unseen_update)) {
-    await portalApi.markIssuesSeen()
-    await menuCounts.refresh()
-  }
-})
+onMounted(async () => (issues.value = await portalApi.myIssues()))
 
 const isDone = (i: OwnIssueWithDevice) => i.status === 'resolved'
 /** Open and in-progress reports first; newest first within each section (as delivered). */
@@ -52,8 +40,8 @@ const grouping = useGroupedRows<OwnIssueWithDevice>({
   storageKey: 'argus.groups.my-issues',
 })
 
-function openDevice(issue: OwnIssueWithDevice) {
-  if (issue.still_assigned) router.push({ name: 'portal-device', params: { id: issue.asset.id } })
+function openIssue(issue: OwnIssueWithDevice) {
+  router.push({ name: 'portal-issue', params: { id: issue.id } })
 }
 
 const columns = computed(() =>
@@ -94,11 +82,11 @@ const columns = computed(() =>
       ellipsis: { tooltip: true },
     },
     {
-      key: 'resolution',
-      title: t('reservations.myDevices.itAnswer'),
+      key: 'last_message',
+      title: t('inventory.issues.lastMessage'),
       minWidth: 220,
       ellipsis: { tooltip: true },
-      render: (i) => i.resolution || h('span', { class: 'muted' }, '—'),
+      render: (i) => i.last_message || h('span', { class: 'muted' }, '—'),
     },
     {
       key: 'created_at',
@@ -125,7 +113,7 @@ const columns = computed(() =>
       :data="grouping.rows.value"
       :loading="!issues"
       :row-key="(i: OwnIssueWithDevice) => i.id"
-      :row-props="(i: OwnIssueWithDevice) => grouping.rowProps(i, openDevice)"
+      :row-props="(i: OwnIssueWithDevice) => grouping.rowProps(i, openIssue)"
       :row-class-name="grouping.rowClass"
       :scroll-x="1100"
     />

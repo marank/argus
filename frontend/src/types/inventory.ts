@@ -236,10 +236,11 @@ export interface OwnIssue {
   kind: IssueKind
   description: string
   status: IssueStatus
-  resolution: string
   created_at: string
-  /** IT changed it since the employee last looked at their reports. */
+  /** IT wrote or changed the status since the employee last looked. */
   unseen_update: boolean
+  /** The latest message of either side. */
+  last_message: string | null
 }
 
 /** One of the employee's reports in their list of all reports. */
@@ -250,7 +251,7 @@ export interface OwnIssueWithDevice extends OwnIssue {
 }
 
 /** A problem report in the IT list. */
-export interface AssetIssue extends OwnIssue {
+export interface AssetIssue extends Omit<OwnIssue, 'last_message'> {
   asset: { id: Id; inventory_number: string; model: AssetModelRef; assigned_to: UserRef | null }
   reported_by: UserRef | null
   handled_by: UserRef | null
@@ -258,4 +259,67 @@ export interface AssetIssue extends OwnIssue {
   assigned_team: TeamRef | null
   assignee: UserRef | null
   resolved_at: string | null
+}
+
+/** Which side a step in a report's conversation came from. */
+export type IssueSide = 'reporter' | 'it'
+
+/** A message or a change of status in a report's conversation. */
+export interface IssueEntry {
+  id: Id
+  kind: 'message' | 'status'
+  author: UserRef | null
+  side: IssueSide
+  text: string
+  /** The new status of a status change. */
+  status: IssueStatus | ''
+  created_at: string
+}
+
+/** A report with its conversation, for its detail page (IT and reporter). */
+export interface AssetIssueDetail {
+  id: Id
+  kind: IssueKind
+  description: string
+  status: IssueStatus
+  created_at: string
+  resolved_at: string | null
+  reported_by: {
+    id: Id
+    display_name: string
+    email: string
+    phone: string
+    job_title: string
+    department: string | null
+  } | null
+  handled_by: UserRef | null
+  assigned_team: TeamRef | null
+  assignee: UserRef | null
+  asset: {
+    id: Id
+    inventory_number: string
+    serial_number: string
+    hostname: string
+    status: string
+    model: AssetModelRef
+    category: string
+    category_icon: string
+    assigned_to: UserRef | null
+    assigned_since: string | null
+    location: { id: Id; name: string; full_name: string } | null
+    purchase_date: string | null
+    warranty_until: string | null
+  }
+  entries: IssueEntry[]
+  /** Other reports on the same device (for the reporter: only their own). */
+  other_issues: {
+    id: Id
+    kind: IssueKind
+    description: string
+    status: IssueStatus
+    created_at: string
+  }[]
+  unseen_update: boolean
+  /** The reporter still has the device. */
+  still_assigned: boolean
 }

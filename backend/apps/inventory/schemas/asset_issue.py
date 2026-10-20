@@ -1,11 +1,11 @@
-from datetime import datetime
+from datetime import date, datetime
 from uuid import UUID
 
 from ninja import Field, Schema
 
 from apps.accounts.schemas import TeamRefOut, UserRefOut
-from apps.inventory.models import AssetIssue
-from apps.masterdata.schemas.refs import AssetModelRefOut
+from apps.inventory.models import AssetIssue, AssetIssueEntry
+from apps.masterdata.schemas.refs import AssetModelRefOut, LocationRefOut
 
 
 class IssueAssetOut(Schema):
@@ -25,7 +25,6 @@ class AssetIssueOut(Schema):
     handled_by: UserRefOut | None
     assigned_team: TeamRefOut | None
     assignee: UserRefOut | None
-    resolution: str
     resolved_at: datetime | None
     created_at: datetime
 
@@ -37,10 +36,16 @@ class OwnIssueOut(Schema):
     kind: str
     description: str
     status: str
-    resolution: str
     created_at: datetime
-    # IT changed it since the employee last looked at their reports.
+    # IT wrote or changed the status since the employee last looked.
     unseen_update: bool
+    last_message: str | None
+
+    @staticmethod
+    def resolve_last_message(obj: AssetIssue) -> str | None:
+        """The latest message of either side; few reports per employee, so a query each is fine."""
+        entry = obj.entries.filter(kind=AssetIssueEntry.Kind.MESSAGE).order_by("created_at").last()
+        return entry.text if entry else None
 
 
 class OwnIssueDeviceOut(Schema):
@@ -70,4 +75,77 @@ class AssignIn(Schema):
 
 class AssetIssueUpdateIn(Schema):
     status: AssetIssue.Status
-    resolution: str = ""
+    # Sent along with the change, e.g. what was done.
+    message: str = Field("", max_length=4000)
+
+
+class IssueMessageIn(Schema):
+    # Optional when sent along with marking a report resolved.
+    text: str = Field("", max_length=4000)
+
+
+class IssueEntryOut(Schema):
+    id: UUID
+    kind: str
+    author: UserRefOut | None
+    # "reporter" or "it": which side it came from.
+    side: str
+    text: str
+    status: str
+    created_at: datetime
+
+
+class IssueReporterOut(Schema):
+    id: UUID
+    display_name: str
+    email: str
+    phone: str
+    job_title: str
+    department: str | None = Field(None, alias="department.name")
+
+
+class IssueDeviceDetailOut(Schema):
+    id: UUID
+    inventory_number: str
+    serial_number: str
+    hostname: str
+    status: str
+    model: AssetModelRefOut
+    category: str = Field(..., alias="model.category.name")
+    category_icon: str = Field(..., alias="model.category.icon")
+    assigned_to: UserRefOut | None
+    assigned_since: datetime | None
+    location: LocationRefOut | None
+    purchase_date: date | None
+    warranty_until: date | None
+
+
+class IssueSummaryOut(Schema):
+    """Another report on the same device."""
+
+    id: UUID
+    kind: str
+    description: str
+    status: str
+    created_at: datetime
+
+
+class AssetIssueDetailOut(Schema):
+    """A report with its conversation, for its detail page (IT and reporter)."""
+
+    id: UUID
+    kind: str
+    description: str
+    status: str
+    created_at: datetime
+    resolved_at: datetime | None
+    reported_by: IssueReporterOut | None
+    handled_by: UserRefOut | None
+    assigned_team: TeamRefOut | None
+    assignee: UserRefOut | None
+    asset: IssueDeviceDetailOut
+    entries: list[IssueEntryOut]
+    other_issues: list[IssueSummaryOut]
+    unseen_update: bool
+    # The reporter still has the device (their device page can be opened).
+    still_assigned: bool

@@ -300,6 +300,10 @@ export function activeKey(name: string | undefined, params: Record<string, unkno
       return 'portal-approvals'
     case 'portal-device':
       return 'portal-devices'
+    case 'portal-issue':
+      return 'portal-issues'
+    case 'issue':
+      return 'issues'
     case 'settings-ldap':
       return 'settings'
     case 'masterdata':

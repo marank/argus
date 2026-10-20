@@ -118,7 +118,7 @@ export default {
     reportPlaceholder: 'What does not work, since when, what have you tried?',
     reportSent: 'Report sent to IT',
     send: 'Send to IT',
-    itAnswer: 'Answer from IT',
+    lastMessage: 'Last message',
     device: 'Device',
     returnBy: 'Return',
     reports: 'Problem reports',

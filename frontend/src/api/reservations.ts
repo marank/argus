@@ -1,5 +1,11 @@
 import type { Id, ListParams, Page } from '@/types/common'
-import type { IssueKind, OwnIssue, OwnIssueWithDevice, OwnLicense } from '@/types/inventory'
+import type {
+  AssetIssueDetail,
+  IssueKind,
+  OwnIssue,
+  OwnIssueWithDevice,
+  OwnLicense,
+} from '@/types/inventory'
 import type {
   Candidates,
   CatalogCategory,
@@ -94,7 +100,12 @@ export const portalApi = {
   myAssets: () => http.get<MyAsset[]>('/portal/my-assets'),
   myAsset: (id: Id) => http.get<MyAsset>(`/portal/my-assets/${id}`),
   myIssues: () => http.get<OwnIssueWithDevice[]>('/portal/my-issues'),
-  markIssuesSeen: () => http.post<void>('/portal/my-issues/seen'),
+  myIssue: (id: Id) => http.get<AssetIssueDetail>(`/portal/my-issues/${id}`),
+  myIssueMessage: (id: Id, text: string) =>
+    http.post<AssetIssueDetail>(`/portal/my-issues/${id}/messages`, { text }),
+  /** The reporter marks the problem resolved, optionally saying how. */
+  resolveMyIssue: (id: Id, text = '') =>
+    http.post<AssetIssueDetail>(`/portal/my-issues/${id}/resolve`, { text }),
   myLicenses: () => http.get<OwnLicense[]>('/portal/my-licenses'),
   myConsumables: () => http.get<MyConsumables[]>('/portal/my-consumables'),
   menuCounts: () => http.get<MenuCounts>('/portal/menu-counts'),
