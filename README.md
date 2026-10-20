@@ -203,6 +203,10 @@ cd backend && uv run pytest && uv run ruff check .
 cd frontend && pnpm type-check && pnpm lint && pnpm test:unit --run
 ```
 
+The backend tests run in parallel (pytest-xdist, up to 8 workers). For a single file
+or test, `-n0` skips the worker start-up, e.g.
+`uv run pytest -n0 apps/accounts/tests/test_roles.py`.
+
 ## Translations
 
 ```bash

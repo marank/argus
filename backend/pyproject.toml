@@ -17,6 +17,7 @@ dependencies = [
 dev = [
     "pytest>=9.1.1",
     "pytest-django>=4.14.0",
+    "pytest-xdist>=3.8.0",
     "ruff>=0.17.1",
 ]
 
@@ -36,6 +37,8 @@ select = ["E", "F", "I", "UP", "B", "DJ"]
 DJANGO_SETTINGS_MODULE = "config.settings"
 python_files = ["test_*.py"]
 filterwarnings = ["ignore:(tagMap|typeMap) is deprecated:DeprecationWarning:ldap3"]
+# In parallel (pytest-xdist); more than 8 workers only add start-up time. One file: -n0.
+addopts = "-n auto --maxprocesses=8"
 
 [tool.ruff.lint.per-file-ignores]
 "**/migrations/*" = ["E501"]
