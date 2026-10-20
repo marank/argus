@@ -9,6 +9,7 @@ dependencies = [
     "django-ninja>=1.7.1",
     "gunicorn>=26.2.0",
     "ldap3>=2.9.1",
+    "procrastinate[django]>=3.10.0",
     "psycopg[binary]>=3.3.6",
     "segno>=1.6",
 ]

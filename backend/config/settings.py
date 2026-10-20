@@ -109,6 +109,13 @@ if os.environ.get("DB_HOST"):
 else:
     DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "db.sqlite3"}}
 
+# Background jobs (apps/core/tasks.py): with PostgreSQL a Procrastinate queue in the
+# database, worked off by `manage.py procrastinate worker`. SQLite has no queue;
+# jobs then run in-process right after the transaction commits.
+JOB_QUEUE = DATABASES["default"]["ENGINE"] == "django.db.backends.postgresql"
+if JOB_QUEUE:
+    INSTALLED_APPS.append("procrastinate.contrib.django")
+
 AUTH_USER_MODEL = "accounts.User"
 
 # Local accounts first, then LDAP (configured in the app or via LDAP_* variables).
@@ -148,7 +155,10 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {"plain": {"format": "%(asctime)s %(levelname)s %(name)s: %(message)s"}},
-    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "plain"}},
+    "filters": {"hide_job_arguments": {"()": "apps.core.log_filters.HideJobArguments"}},
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "plain", "filters": ["hide_job_arguments"]}
+    },
     "root": {"handlers": ["console"], "level": os.environ.get("LOG_LEVEL", "INFO")},
     "loggers": {"django.db.backends": {"level": "WARNING"}},
 }

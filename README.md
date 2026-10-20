@@ -43,7 +43,8 @@ purchase orders, licenses and problem reports.
 ## Docker
 
 One image runs nginx (serves the built frontend, proxies `/api` and `/admin`),
-gunicorn (Django) and supervisord; docker compose adds PostgreSQL.
+gunicorn (Django), the background job worker and supervisord; docker compose adds
+PostgreSQL.
 
 ```bash
 cp .env.example .env      # set APP_URLS, SECRET_KEY, ADMIN_PASSWORD, POSTGRES_PASSWORD
@@ -124,8 +125,12 @@ signs in through the app's login, so the second step applies there too.
 - **Email notifications** – via SMTP, configured under Settings → Email: new
   requests and problem reports for IT, confirmations, pickups and return reminders
   for employees, license expiry. Administrators switch kinds on and off site-wide,
-  every user can opt out under Notifications. Time-based reminders come from
-  `python manage.py send_reminders`, which the Docker image runs every hour.
+  every user can opt out under Notifications. Mails go out through a job queue in
+  PostgreSQL (Procrastinate) and are retried for about a day when the mail server
+  fails; the worker in the Docker image also sends time-based reminders every hour.
+  Queued, failed and finished jobs show up in the Django admin. Without PostgreSQL
+  (local SQLite) mails go out directly, and `python manage.py send_reminders` sends
+  reminders.
 - **Site settings** – modules and features can be switched off; deadlines such as
   the default and maximum loan period and warning periods are configurable.
 - **Scanning** – keyboard-wedge barcode scanners work anywhere in the IT views:

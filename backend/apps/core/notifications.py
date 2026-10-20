@@ -3,21 +3,17 @@
 Every notification kind is listed in ``EVENTS`` with its audience. It goes out
 when mail is enabled, the kind is on in the mail settings and the recipient has
 not switched it off for themselves (``User.notification_settings``). Mails are
-sent after the surrounding transaction commits; a failing server is logged and
-never breaks the action that caused the mail.
+queued as background jobs together with the surrounding transaction
+(``apps.core.jobs``); a failing server never breaks the action that caused the mail.
 """
 
-import logging
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 
 from django.conf import settings as django_settings
 from django.core.mail import EmailMessage
-from django.db import IntegrityError, transaction
 from django.utils import translation
 from django.utils.module_loading import import_string
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -114,11 +110,14 @@ def notify(
 ) -> None:
     """Queue ``event`` for each recipient; ``render(user)`` returns (subject, body).
 
-    With ``key``, each recipient gets the notification only once (reminders).
-    ``path`` is appended as a link when the app address is configured.
+    With ``key``, each recipient gets the notification only once (reminders): it
+    counts as sent once delivered, and is not queued again while it waits for a
+    retry. ``path`` is appended as a link when the app address is configured.
     ``direct``: sent on purpose by IT (not listed in ``EVENTS``), so the site-wide
     and personal switches do not apply.
     """
+    from apps.core import tasks
+    from apps.core.jobs import defer
     from apps.core.models import MailSettings, NotificationLog
 
     settings = MailSettings.load()
@@ -127,29 +126,23 @@ def notify(
     if not direct and not site_events(settings.events)[event]:
         return
 
-    messages = []
     for user in recipients:
         if not user.email or not user.is_active or not (direct or user_wants(user, event)):
             continue
-        if key:
-            try:
-                with transaction.atomic():
-                    NotificationLog.objects.create(event=event, key=key, recipient=user)
-            except IntegrityError:
-                continue  # already sent
+        if key and NotificationLog.objects.filter(event=event, key=key, recipient=user).exists():
+            continue  # already sent
         with translation.override(user.language or "de"):
             subject, body = render(user)
             url = link(settings, path)
             if url:
                 body = f"{body}\n\n{url}"
-        messages.append((user.email, subject, body))
-
-    def deliver():
-        for to, subject, body in messages:
-            try:
-                send_mail(settings, to, subject, body)
-            except Exception:  # noqa: BLE001 - mail problems must not break the app
-                logger.exception("Could not send %s notification to %s", event, to)
-
-    if messages:
-        transaction.on_commit(deliver)
+        defer(
+            tasks.send_notification,
+            queueing_lock=f"{event}:{key}:{user.pk}" if key else None,
+            event=event,
+            to=user.email,
+            subject=subject,
+            body=body,
+            key=key,
+            recipient=str(user.pk),
+        )

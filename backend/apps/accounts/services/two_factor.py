@@ -107,7 +107,11 @@ def new_email_code() -> str:
 
 
 def send_email_code(user, code: str) -> bool:
-    """Mails ``code`` right away; False when it could not be sent."""
+    """Mails ``code`` right away; False when it could not be sent.
+
+    Not a background job: the user waits for the code and should learn at once
+    when it did not go out, and the code must not end up in the job table.
+    """
     settings = MailSettings.load()
     if not (user.email and mail_ready(settings)):
         return False
