@@ -7,6 +7,7 @@ import { useI18n } from 'vue-i18n'
 import { ApiError } from '@/api/client'
 import { dashboardApi } from '@/api/dashboard'
 import { reservationsApi } from '@/api/reservations'
+import { useConfirm } from '@/composables/useConfirm'
 import { useFormat } from '@/composables/useFormat'
 import type { OverdueReturn, WidgetProps } from '@/types/dashboard'
 
@@ -15,6 +16,7 @@ defineProps<WidgetProps>()
 const { t } = useI18n()
 const { date } = useFormat()
 const message = useMessage()
+const confirm = useConfirm()
 const rows = ref<OverdueReturn[] | null>(null)
 const sending = ref<string | null>(null)
 
@@ -25,10 +27,13 @@ const daysOverdue = (row: OverdueReturn) =>
   Math.round((Date.now() - new Date(`${row.end_date}T00:00:00`).getTime()) / 86_400_000)
 
 async function remind(row: OverdueReturn) {
+  const name = row.requester.display_name
+  // An email goes out: asked first, as on the request's page.
+  if (!(await confirm(t('reservations.actions.confirmRemind', { name })))) return
   sending.value = row.id
   try {
     await reservationsApi.remind(row.id)
-    message.success(t('reservations.actions.remindSent', { name: row.requester.display_name }))
+    message.success(t('reservations.actions.remindSent', { name }))
     await load()
   } catch (error) {
     message.error(error instanceof ApiError ? error.message : t('common.error'))
