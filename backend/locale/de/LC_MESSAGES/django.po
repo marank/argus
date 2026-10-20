@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-20 00:30+0200\n"
+"POT-Creation-Date: 2026-10-20 00:44+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -313,14 +313,18 @@ msgid "email notifications"
 msgstr "E-Mail-Benachrichtigungen"
 
 #: apps/accounts/models/user.py:69
+msgid "dashboard layout"
+msgstr "Dashboard-Layout"
+
+#: apps/accounts/models/user.py:72
 msgid "user"
 msgstr "Benutzer"
 
-#: apps/accounts/models/user.py:70
+#: apps/accounts/models/user.py:73
 msgid "users"
 msgstr "Benutzer"
 
-#: apps/accounts/models/user.py:77
+#: apps/accounts/models/user.py:80
 msgid "A user with this username already exists."
 msgstr "Ein Benutzer mit diesem Benutzernamen existiert bereits."
 
@@ -2169,12 +2173,15 @@ msgstr "Das neue Rückgabedatum muss nach dem bisherigen liegen."
 
 #: apps/reservations/services/workflow.py:225
 msgid "Email is not set up, so no reminder can be sent."
-msgstr "E-Mail ist nicht eingerichtet, daher kann keine Erinnerung gesendet werden."
+msgstr ""
+"E-Mail ist nicht eingerichtet, daher kann keine Erinnerung gesendet werden."
 
 #: apps/reservations/services/workflow.py:229
 #, python-format
 msgid "%(name)s has no email address, so no reminder can be sent."
-msgstr "%(name)s hat keine E-Mail-Adresse, daher kann keine Erinnerung gesendet werden."
+msgstr ""
+"%(name)s hat keine E-Mail-Adresse, daher kann keine Erinnerung gesendet "
+"werden."
 
 #: apps/reservations/services/workflow.py:243
 msgid "Remove allocated devices before changing the model."

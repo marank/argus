@@ -1,0 +1,34 @@
+/* Lines share one grid (subgrid), so numbers, dates and statuses line up. */
+.lines {
+  display: grid;
+  column-gap: 12px;
+}
+.lines.upcoming {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+.lines.activity {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+.line {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--ar-border);
+  color: inherit;
+  text-decoration: none;
+}
+.line:last-child {
+  border-bottom: none;
+}
+.line:hover .title {
+  color: var(--ar-primary);
+}
+.title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

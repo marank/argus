@@ -3,14 +3,13 @@ import type { Component } from 'vue'
 
 /**
  * A titled panel of related stat cards side by side. `count` (visible cards)
- * sets how much width the panel takes next to its neighbours.
+ * sets the number of columns; a narrow panel shows two per row.
  */
-/** `wide`: takes a row of its own. */
-defineProps<{ title: string; icon?: Component; count: number; wide?: boolean }>()
+defineProps<{ title: string; icon?: Component; count: number }>()
 </script>
 
 <template>
-  <section class="stat-group" :class="{ wide }" :style="{ '--count': count }">
+  <section class="stat-group" :style="{ '--count': count }">
     <header class="eyebrow">
       <component :is="icon" v-if="icon" :size="13" />
       {{ title }}
@@ -25,14 +24,12 @@ defineProps<{ title: string; icon?: Component; count: number; wide?: boolean }>(
 .stat-group {
   display: grid;
   grid-template-rows: auto 1fr;
-  flex: var(--count) 1 calc(var(--count) * 112px);
-}
-.stat-group.wide {
-  flex-basis: 100%;
+  height: 100%;
   min-width: 0;
   border: 1px solid var(--ar-border);
   border-radius: 3px;
   background: var(--ar-surface);
+  container-type: inline-size;
 }
 header {
   display: flex;
@@ -51,11 +48,12 @@ header {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  height: 100%;
   border: none;
   border-radius: 0;
   background: transparent;
 }
-.tiles :deep(.stat + .stat) {
+.tiles > :deep(* + *) {
   border-left: 1px solid var(--ar-border);
 }
 .tiles :deep(.stat::before) {
@@ -67,12 +65,15 @@ header {
 .tiles :deep(a.stat:hover) {
   background: var(--ar-surface-sunken);
 }
-@media (max-width: 720px) {
+@container (max-width: 520px) {
   .tiles {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(min(var(--count), 2), minmax(0, 1fr));
   }
-  .tiles :deep(.stat:nth-child(odd)) {
+  .tiles > :deep(:nth-child(odd)) {
     border-left: none;
+  }
+  .tiles > :deep(:nth-child(n + 3)) {
+    border-top: 1px solid var(--ar-border);
   }
 }
 </style>

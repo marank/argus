@@ -64,6 +64,9 @@ class User(AbstractUser):
     )
     # Email notifications the user switched off: {event: false}; missing means on.
     notification_settings = models.JSONField(_("email notifications"), default=dict, blank=True)
+    # The user's own dashboard layout: {"widgets": [{id, visible, size, hidden_cards}]};
+    # empty means the default layout. Widget ids are defined by the frontend.
+    dashboard_settings = models.JSONField(_("dashboard layout"), default=dict, blank=True)
 
     class Meta:
         verbose_name = _("user")

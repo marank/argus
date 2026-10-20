@@ -46,6 +46,10 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = await authApi.updatePreferences({ notification_settings: settings })
   }
 
+  async function changeDashboard(settings: CurrentUser['dashboard_settings']) {
+    if (user.value) user.value = await authApi.updatePreferences({ dashboard_settings: settings })
+  }
+
   async function changeLanguage(language: 'en' | 'de') {
     setLocale(language)
     if (user.value) user.value = await authApi.updatePreferences({ language })
@@ -63,6 +67,7 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     changeLanguage,
     changeNotifications,
+    changeDashboard,
     clear: () => (user.value = null),
   }
 })

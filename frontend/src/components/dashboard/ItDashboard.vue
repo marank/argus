@@ -1,65 +1,138 @@
 <script setup lang="ts">
-import {
-  AlarmClock,
-  CalendarClock,
-  CircleAlert,
-  ClipboardList,
-  Boxes,
-  KeyRound,
-  MessageSquareWarning,
-  ClipboardCheck,
-  PackageCheck,
-  PackageOpen,
-  ShieldAlert,
-  ShoppingCart,
-  Truck,
-  UserRound,
-  UserRoundX,
-  UsersRound,
-} from '@lucide/vue'
-import { NCard, NSkeleton } from 'naive-ui'
-import { computed, onMounted, ref } from 'vue'
+import { NButton, NSkeleton, useMessage } from 'naive-ui'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { dashboardApi } from '@/api/dashboard'
-import StatCard from '@/components/common/StatCard.vue'
-import StatusTag from '@/components/common/StatusTag.vue'
-import StatGroup from '@/components/dashboard/StatGroup.vue'
-import { useFormat } from '@/composables/useFormat'
-import { ASSET_STATUSES } from '@/types/inventory'
-import type { ITOverview } from '@/types/dashboard'
-import { toneOf } from '@/utils/status'
+import DashboardWidget from '@/components/dashboard/DashboardWidget.vue'
+import StatGroupWidget from '@/components/dashboard/widgets/StatGroupWidget.vue'
+import {
+  WIDGETS,
+  availableCards,
+  defaultLayout,
+  isDefaultLayout,
+  resolveLayout,
+  type WidgetDef,
+} from '@/components/dashboard/widgets'
+import { useAuthStore } from '@/stores/auth'
 import { useFeaturesStore } from '@/stores/features'
+import type { WidgetSettings } from '@/types/accounts'
+import type { ITOverview } from '@/types/dashboard'
+
+/** `editing`: the layout editor is open; the page header switches it on. */
+const editing = defineModel<boolean>('editing', { default: false })
 
 const { t } = useI18n()
+const auth = useAuthStore()
 const features = useFeaturesStore()
-const { date, dateTime, enumLabel } = useFormat()
+const message = useMessage()
 const data = ref<ITOverview | null>(null)
 
 onMounted(async () => (data.value = await dashboardApi.it()))
 
-const totalAssets = computed(() =>
-  Object.values(data.value?.asset_status ?? {}).reduce((sum, n) => sum + n, 0),
+const defs = new Map(WIDGETS.map((def) => [def.id, def]))
+const def = (widget: WidgetSettings) => defs.get(widget.id) as WidgetDef
+
+/** The saved layout; while editing a copy of it is changed and stored on "Done". */
+const saved = computed(() => resolveLayout(WIDGETS, auth.user?.dashboard_settings?.widgets))
+const draft = ref<WidgetSettings[] | null>(null)
+watch(
+  editing,
+  (on) =>
+    (draft.value = on
+      ? saved.value.map((w) => ({
+          ...w,
+          hidden_cards: [...w.hidden_cards],
+          card_order: [...w.card_order],
+        }))
+      : null),
+  { immediate: true },
 )
-const statusBars = computed(() =>
-  ASSET_STATUSES.map((status) => ({
-    status,
-    count: data.value?.asset_status[status] ?? 0,
-    share: totalAssets.value
-      ? ((data.value?.asset_status[status] ?? 0) / totalAssets.value) * 100
-      : 0,
-  })),
+const layout = computed(() => draft.value ?? saved.value)
+
+/** Panels whose modules are all switched off do not exist for this site. */
+const available = (widget: WidgetSettings) =>
+  !def(widget).cards || availableCards(def(widget), features.isOn).length > 0
+/** A panel with every card hidden is left out like a hidden widget. */
+const hasContent = (widget: WidgetSettings) =>
+  !def(widget).cards ||
+  availableCards(def(widget), features.isOn).some((c) => !widget.hidden_cards.includes(c.key))
+
+const widgets = computed(() =>
+  layout.value.filter((w) => available(w) && (editing.value || (w.visible && hasContent(w)))),
 )
 
-/** Visible cards per panel (modules can be switched off). */
-const requestCount = 4
-const stockCount = computed(
-  () => (features.isOn('procurement') ? 2 : 0) + (features.isOn('consumables') ? 1 : 0),
-)
-const mineCount = computed(() => 3 + (features.isOn('issues') ? 1 : 0))
-const attentionCount = computed(
-  () => 1 + (features.isOn('issues') ? 1 : 0) + (features.isOn('licenses') ? 1 : 0),
-)
+function moveTo(id: string, targetId: string) {
+  const list = draft.value
+  if (!list) return
+  const from = list.findIndex((w) => w.id === id)
+  const to = list.findIndex((w) => w.id === targetId)
+  if (from < 0 || to < 0 || from === to) return
+  const [widget] = list.splice(from, 1)
+  list.splice(to, 0, widget!)
+}
+
+function move(widget: WidgetSettings, delta: number) {
+  const index = widgets.value.findIndex((w) => w.id === widget.id)
+  const neighbour = widgets.value[index + delta]
+  if (neighbour) moveTo(widget.id, neighbour.id)
+}
+
+function toggleCard(widget: WidgetSettings, key: string) {
+  widget.hidden_cards = widget.hidden_cards.includes(key)
+    ? widget.hidden_cards.filter((k) => k !== key)
+    : [...widget.hidden_cards, key]
+}
+
+function reorderCards(widget: WidgetSettings, order: string[]) {
+  const defaults = def(widget).cards?.map((c) => c.key) ?? []
+  // The default order is stored as none, so a later change of the default still applies.
+  widget.card_order = order.join() === defaults.join() ? [] : order
+}
+
+/* Drag and drop: the dragged widget takes the place of the one it is dragged over. */
+const dragged = ref<string | null>(null)
+let lastOver: string | null = null
+
+function onDragStart(event: DragEvent, widget: WidgetSettings) {
+  dragged.value = widget.id
+  lastOver = widget.id
+  event.dataTransfer?.setData('text/plain', widget.id)
+  if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move'
+}
+
+function onDragOver(event: DragEvent, widget: WidgetSettings) {
+  if (!dragged.value) return
+  event.preventDefault()
+  // Only on entering another widget, so a smaller one does not flip back and forth.
+  if (widget.id !== lastOver && widget.id !== dragged.value) moveTo(dragged.value, widget.id)
+  lastOver = widget.id
+}
+
+function onDragEnd() {
+  dragged.value = null
+  lastOver = null
+}
+
+const saving = ref(false)
+
+async function save() {
+  if (!draft.value) return
+  saving.value = true
+  try {
+    await auth.changeDashboard(
+      isDefaultLayout(WIDGETS, draft.value) ? {} : { widgets: draft.value },
+    )
+    editing.value = false
+    message.success(t('common.saved'))
+  } catch {
+    message.error(t('common.error'))
+  } finally {
+    saving.value = false
+  }
+}
+
+const reset = () => (draft.value = defaultLayout(WIDGETS))
 </script>
 
 <template>
@@ -67,301 +140,84 @@ const attentionCount = computed(
     <NSkeleton height="90px" :repeat="2" />
   </div>
   <div v-else class="stack">
-    <!-- Key figures: the own queue and the request pipeline on top, procurement/stock and deadlines side by side below. -->
-    <section class="stat-groups">
-      <!-- The viewer's own queue: open requests and reports by who is responsible. -->
-      <StatGroup wide :title="t('dashboard.groups.mine')" :icon="UserRound" :count="mineCount">
-        <StatCard
-          :label="t('dashboard.assignedToMe')"
-          :value="data.requests_mine"
-          :icon="UserRound"
-          tone="primary"
-          :to="{ name: 'reservations', query: { assigned: 'me' } }"
-        />
-        <StatCard
-          :label="t('dashboard.myTeams')"
-          :value="data.requests_my_teams"
-          :icon="UsersRound"
-          tone="info"
-          :to="{ name: 'reservations', query: { assigned: 'my_teams' } }"
-        />
-        <StatCard
-          :label="t('dashboard.unassigned')"
-          :value="data.requests_unassigned"
-          :icon="UserRoundX"
-          :tone="data.requests_unassigned ? 'warning' : 'default'"
-          :to="{ name: 'reservations', query: { assigned: 'nobody' } }"
-        />
-        <StatCard
-          v-if="features.isOn('issues')"
-          :label="t('dashboard.issuesMine')"
-          :value="data.issues_mine"
-          :icon="MessageSquareWarning"
-          :tone="data.issues_mine ? 'warning' : 'default'"
-          :to="{ name: 'issues', query: { assigned: 'me' } }"
-        />
-      </StatGroup>
-      <StatGroup
-        wide
-        :title="t('dashboard.groups.requests')"
-        :icon="ClipboardList"
-        :count="requestCount"
-      >
-        <StatCard
-          :label="t('dashboard.toApprove')"
-          :value="data.reservations_submitted"
-          :icon="ClipboardCheck"
-          tone="warning"
-          :alert="!!data.reservations_submitted"
-          :to="{ name: 'reservations', query: { status: 'submitted' } }"
-        />
-        <StatCard
-          :label="t('dashboard.toPrepare')"
-          :value="data.reservations_to_prepare"
-          :icon="PackageOpen"
-          tone="primary"
-          :to="{ name: 'reservations', query: { status: 'approved' } }"
-        />
-        <StatCard
-          :label="t('dashboard.readyForPickup')"
-          :value="data.reservations_ready"
-          :icon="PackageCheck"
-          tone="success"
-          :to="{ name: 'reservations', query: { status: 'ready' } }"
-        />
-        <StatCard
-          :label="t('dashboard.overdue')"
-          :value="data.reservations_overdue"
-          :icon="AlarmClock"
-          :tone="data.reservations_overdue ? 'error' : 'default'"
-          :alert="!!data.reservations_overdue"
-          :to="{ name: 'reservations', query: { overdue: '1' } }"
-        />
-      </StatGroup>
-      <StatGroup
-        v-if="stockCount"
-        :title="t('dashboard.groups.stock')"
-        :icon="Boxes"
-        :count="stockCount"
-      >
-        <StatCard
-          v-if="features.isOn('procurement')"
-          :label="t('dashboard.ordersToPlace')"
-          :value="data.orders_to_place"
-          :icon="ShoppingCart"
-          :to="{ name: 'orders', query: { status: 'draft' } }"
-        />
-        <StatCard
-          v-if="features.isOn('procurement')"
-          :label="t('dashboard.ordersInTransit')"
-          :value="data.orders_in_transit"
-          :icon="Truck"
-          tone="info"
-          :to="{ name: 'orders', query: { status: 'ordered' } }"
-        />
-        <StatCard
-          v-if="features.isOn('consumables')"
-          :label="t('dashboard.belowMinimum')"
-          :value="data.low_consumables"
-          :icon="CircleAlert"
-          :tone="data.low_consumables ? 'warning' : 'default'"
-          :alert="!!data.low_consumables"
-          :to="{ name: 'consumables', query: { below_minimum: '1' } }"
-        />
-      </StatGroup>
-      <StatGroup
-        :title="t('dashboard.groups.attention')"
-        :icon="CalendarClock"
-        :count="attentionCount"
-      >
-        <StatCard
-          v-if="features.isOn('issues')"
-          :label="t('dashboard.openIssues')"
-          :value="data.open_issues"
-          :icon="MessageSquareWarning"
-          :tone="data.open_issues ? 'warning' : 'default'"
-          :alert="!!data.open_issues"
-          :to="{ name: 'issues' }"
-        />
-        <StatCard
-          v-if="features.isOn('licenses')"
-          :label="t('dashboard.licensesExpiring', { days: features.rules.license_warning_days })"
-          :value="data.licenses_expiring"
-          :icon="KeyRound"
-          :tone="data.licenses_expiring ? 'warning' : 'default'"
-          :to="{ name: 'licenses', query: { expiring: '1' } }"
-        />
-        <StatCard
-          :label="t('dashboard.warrantyExpiring', { days: features.rules.warranty_warning_days })"
-          :value="data.warranty_expiring"
-          :icon="ShieldAlert"
-        />
-      </StatGroup>
-    </section>
-
-    <NCard :title="t('dashboard.devicesByStatus')" size="small">
-      <template #header-extra
-        ><span class="mono muted">Σ {{ totalAssets }}</span></template
-      >
-      <div class="bar">
-        <RouterLink
-          v-for="bar in statusBars.filter((b) => b.count)"
-          :key="bar.status"
-          :to="{ name: 'assets', query: { status: bar.status } }"
-          :style="{ width: `${bar.share}%` }"
-          :data-tone="toneOf('assetStatus', bar.status)"
-          :title="`${enumLabel('assetStatus', bar.status)}: ${bar.count}`"
-        />
+    <div v-if="editing" class="editor-bar">
+      <p class="muted">{{ t('dashboard.edit.hint') }}</p>
+      <div class="row">
+        <NButton size="small" quaternary @click="reset">{{ t('dashboard.edit.reset') }}</NButton>
+        <NButton size="small" @click="editing = false">{{ t('common.cancel') }}</NButton>
+        <NButton size="small" type="primary" :loading="saving" @click="save">
+          {{ t('dashboard.edit.done') }}
+        </NButton>
       </div>
-      <div class="legend">
-        <RouterLink
-          v-for="bar in statusBars"
-          :key="bar.status"
-          :to="{ name: 'assets', query: { status: bar.status } }"
-          class="legend-item"
-        >
-          <StatusTag group="assetStatus" :value="bar.status" />
-          <span class="mono">{{ bar.count }}</span>
-        </RouterLink>
-      </div>
-    </NCard>
-
-    <div class="grid-2">
-      <NCard :title="t('dashboard.upcoming')" size="small">
-        <p v-if="!data.upcoming.length" class="muted">{{ t('dashboard.noUpcoming') }}</p>
-        <div v-else class="lines upcoming">
-          <RouterLink
-            v-for="r in data.upcoming"
-            :key="r.id"
-            :to="{ name: 'reservation', params: { id: r.id } }"
-            class="line"
-          >
-            <span class="mono">{{ r.number }}</span>
-            <span class="title"
-              >{{ r.title }}<small class="muted"> · {{ r.requester.display_name }}</small></span
-            >
-            <span class="mono muted">{{
-              r.pickup_at ? dateTime(r.pickup_at) : date(r.start_date)
-            }}</span>
-            <!-- Pending hand-outs wait for IT: the dot pulses. -->
-            <StatusTag group="reservationStatus" :value="r.status" pulse />
-          </RouterLink>
-        </div>
-      </NCard>
-      <NCard :title="t('dashboard.recentActivity')" size="small">
-        <div class="lines activity">
-          <RouterLink
-            v-for="e in data.recent_events"
-            :key="e.id"
-            :to="{ name: 'asset', params: { id: e.asset.id } }"
-            class="line"
-          >
-            <span class="mono">{{ e.asset.inventory_number }}</span>
-            <span class="title"
-              >{{ enumLabel('eventKind', e.kind)
-              }}<small class="muted"> · {{ e.asset.model.full_name }}</small></span
-            >
-            <span class="mono muted">{{ dateTime(e.occurred_at) }}</span>
-          </RouterLink>
-        </div>
-      </NCard>
     </div>
+    <p v-if="!editing && !widgets.length" class="empty muted">{{ t('dashboard.edit.empty') }}</p>
+    <TransitionGroup tag="div" name="widget" class="widget-grid">
+      <DashboardWidget
+        v-for="(widget, index) in widgets"
+        :key="widget.id"
+        :title="t(def(widget).title)"
+        :icon="def(widget).icon"
+        :settings="widget"
+        :editing="editing"
+        :interactive="!!def(widget).cards"
+        :first="index === 0"
+        :last="index === widgets.length - 1"
+        :class="{ dragged: dragged === widget.id }"
+        @toggle="widget.visible = !widget.visible"
+        @resize="widget.size = $event"
+        @move="move(widget, $event)"
+        @dragstart="onDragStart($event, widget)"
+        @dragover="onDragOver($event, widget)"
+        @drop.prevent
+        @dragend="onDragEnd"
+      >
+        <StatGroupWidget
+          v-if="def(widget).cards"
+          :def="def(widget)"
+          :data="data"
+          :hidden-cards="widget.hidden_cards"
+          :card-order="widget.card_order"
+          :editing="editing"
+          @toggle-card="toggleCard(widget, $event)"
+          @reorder="reorderCards(widget, $event)"
+        />
+        <component :is="def(widget).component" v-else :data="data" />
+      </DashboardWidget>
+    </TransitionGroup>
   </div>
 </template>
 
 <style scoped>
-.stat-groups {
+.widget-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px 16px;
+  align-items: stretch;
+}
+.widget-move {
+  transition: transform 0.2s ease;
+}
+.dragged {
+  opacity: 0.5;
+}
+.editor-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-}
-.bar {
-  display: flex;
-  height: 10px;
-  gap: 2px;
-  border-radius: 2px;
-  overflow: hidden;
-  background: var(--ar-surface-sunken);
-}
-.bar a {
-  --tone: var(--ar-text-subtle);
-  background: var(--tone);
-}
-.bar a[data-tone='info'] {
-  --tone: var(--ar-info);
-}
-.bar a[data-tone='success'] {
-  --tone: var(--ar-success);
-}
-.bar a[data-tone='warning'] {
-  --tone: var(--ar-warning);
-}
-.bar a[data-tone='error'] {
-  --tone: var(--ar-error);
-}
-.bar a[data-tone='primary'] {
-  --tone: var(--ar-primary);
-}
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 18px;
-  margin-top: 12px;
-}
-/* Links to the filtered device list: highlighted as a chip instead of underlined. */
-.legend-item {
-  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  margin: -3px -6px;
-  padding: 3px 6px;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--ar-primary);
   border-radius: 3px;
-  color: inherit;
-  text-decoration: none;
-  transition: background-color 0.15s ease;
+  background: color-mix(in srgb, var(--ar-primary) 8%, var(--ar-surface));
 }
-.legend-item:hover,
-.legend-item:focus-visible {
-  background: var(--ar-surface-sunken);
-  text-decoration: none;
+.editor-bar p {
+  margin: 0;
 }
-.legend-item:hover .status-tag,
-.legend-item:focus-visible .status-tag {
-  background: color-mix(in srgb, var(--tone) 18%, transparent);
-  border-color: var(--tone);
+.editor-bar .row {
+  flex-wrap: wrap;
 }
-/* Lines share one grid (subgrid), so numbers, dates and statuses line up. */
-.lines {
-  display: grid;
-  column-gap: 12px;
-}
-.lines.upcoming {
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
-}
-.lines.activity {
-  grid-template-columns: auto minmax(0, 1fr) auto;
-}
-.line {
-  display: grid;
-  grid-column: 1 / -1;
-  grid-template-columns: subgrid;
-  align-items: center;
-  gap: 12px;
-  padding: 7px 0;
-  border-bottom: 1px solid var(--ar-border);
-  color: inherit;
-  text-decoration: none;
-}
-.line:last-child {
-  border-bottom: none;
-}
-.line:hover .title {
-  color: var(--ar-primary);
-}
-.title {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.empty {
+  margin: 0;
 }
 </style>

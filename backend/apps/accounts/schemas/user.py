@@ -34,6 +34,7 @@ class UserOut(Schema):
 class CurrentUserOut(UserOut):
     language: str
     notification_settings: dict[str, bool]
+    dashboard_settings: dict
     is_superuser: bool
 
 
@@ -56,3 +57,5 @@ class PreferencesIn(Schema):
     language: User.Language | None = None
     # Email notifications the user switches off ({event: false}).
     notification_settings: dict[str, bool] | None = None
+    # The own dashboard layout; an empty object restores the default.
+    dashboard_settings: dict | None = None

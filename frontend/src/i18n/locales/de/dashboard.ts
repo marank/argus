@@ -25,6 +25,20 @@ export default {
   myTeams: 'Meine Teams',
   unassigned: 'Nicht zugewiesen',
   issuesMine: 'Meldungen bei mir',
+  edit: {
+    open: 'Dashboard anpassen',
+    hint: 'Blöcke und Kennzahlen ziehen oder mit den Pfeilen verschieben, Breite wählen und über das Auge ein- oder ausblenden.',
+    done: 'Fertig',
+    reset: 'Standard wiederherstellen',
+    empty:
+      'Alle Blöcke sind ausgeblendet. Über „Dashboard anpassen“ lassen sie sich wieder einblenden.',
+    width: 'Breite',
+    sizes: { small: 'Drittel', medium: 'Halb', large: 'Voll' },
+    moveUp: 'Nach vorne',
+    moveDown: 'Nach hinten',
+    hide: 'Ausblenden',
+    show: 'Einblenden',
+  },
   groups: {
     mine: 'Meine Arbeit',
     requests: 'Anforderungen',
