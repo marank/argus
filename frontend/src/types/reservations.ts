@@ -119,6 +119,9 @@ export interface Reservation extends ReservationListItem {
   created_by: UserRef | null
   handled_by: UserRef | null
   prepared_by: UserRef | null
+  /** When IT last emailed the employee to return the devices. */
+  reminded_at: string | null
+  reminded_by: UserRef | null
   approved_at: string | null
   handed_out_at: string | null
   completed_at: string | null

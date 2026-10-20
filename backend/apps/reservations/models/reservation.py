@@ -128,6 +128,20 @@ class Reservation(TimeStampedModel):
         related_name="+",
         help_text=_("Who marked the request ready; shown as handing out at the pickup terminal."),
     )
+    reminded_at = models.DateTimeField(
+        _("reminded at"),
+        null=True,
+        blank=True,
+        help_text=_("When IT last reminded the employee to return the devices."),
+    )
+    reminded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("reminded by"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+    )
     approved_at = models.DateTimeField(_("approved at"), null=True, blank=True)
     handed_out_at = models.DateTimeField(_("handed out at"), null=True, blank=True)
     completed_at = models.DateTimeField(_("completed at"), null=True, blank=True)

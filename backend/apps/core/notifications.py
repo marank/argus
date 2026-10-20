@@ -95,23 +95,37 @@ def send_mail(settings, to: str, subject: str, body: str) -> None:
 Render = Callable[[object], tuple[str, str]]
 
 
-def notify(event: str, recipients: Iterable, render: Render, *, key: str = "", path: str = "") -> None:
+def mail_ready(settings) -> bool:
+    return bool(settings.enabled and settings.host and settings.from_email)
+
+
+def notify(
+    event: str,
+    recipients: Iterable,
+    render: Render,
+    *,
+    key: str = "",
+    path: str = "",
+    direct: bool = False,
+) -> None:
     """Queue ``event`` for each recipient; ``render(user)`` returns (subject, body).
 
     With ``key``, each recipient gets the notification only once (reminders).
     ``path`` is appended as a link when the app address is configured.
+    ``direct``: sent on purpose by IT (not listed in ``EVENTS``), so the site-wide
+    and personal switches do not apply.
     """
     from apps.core.models import MailSettings, NotificationLog
 
     settings = MailSettings.load()
-    if not (settings.enabled and settings.host and settings.from_email):
+    if not mail_ready(settings):
         return
-    if not site_events(settings.events)[event]:
+    if not direct and not site_events(settings.events)[event]:
         return
 
     messages = []
     for user in recipients:
-        if not user.email or not user.is_active or not user_wants(user, event):
+        if not user.email or not user.is_active or not (direct or user_wants(user, event)):
             continue
         if key:
             try:

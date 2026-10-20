@@ -102,6 +102,13 @@ a:hover {
   cursor: pointer;
 }
 
+/* Naive UI fades the row highlight over 0.3s, which trails a little behind the mouse
+   when sweeping over a table. */
+.n-data-table .n-data-table-tbody .n-data-table-tr,
+.n-data-table .n-data-table-tbody .n-data-table-td {
+  transition-duration: 0.2s;
+}
+
 .nowrap {
   white-space: nowrap;
 }

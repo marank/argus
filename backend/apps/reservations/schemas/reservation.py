@@ -148,6 +148,8 @@ class ReservationOut(ReservationListOut):
     created_by: UserRefOut | None
     handled_by: UserRefOut | None
     prepared_by: UserRefOut | None
+    reminded_at: datetime | None
+    reminded_by: UserRefOut | None
     approved_at: datetime | None
     handed_out_at: datetime | None
     completed_at: datetime | None
@@ -206,6 +208,10 @@ class AssignIn(Schema):
 
 class RejectIn(Schema):
     comment: str = Field(..., min_length=1)
+
+
+class ExtendIn(Schema):
+    end_date: date
 
 
 class ScheduleIn(Schema):

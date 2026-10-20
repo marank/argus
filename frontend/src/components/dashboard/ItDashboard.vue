@@ -67,7 +67,7 @@ const attentionCount = computed(
     <NSkeleton height="90px" :repeat="2" />
   </div>
   <div v-else class="stack">
-    <!-- Key figures: the own queue on top, procurement/stock and deadlines side by side, requests in a row of their own. -->
+    <!-- Key figures: the own queue and the request pipeline on top, procurement/stock and deadlines side by side below. -->
     <section class="stat-groups">
       <!-- The viewer's own queue: open requests and reports by who is responsible. -->
       <StatGroup wide :title="t('dashboard.groups.mine')" :icon="UserRound" :count="mineCount">
@@ -99,6 +99,43 @@ const attentionCount = computed(
           :icon="MessageSquareWarning"
           :tone="data.issues_mine ? 'warning' : 'default'"
           :to="{ name: 'issues', query: { assigned: 'me' } }"
+        />
+      </StatGroup>
+      <StatGroup
+        wide
+        :title="t('dashboard.groups.requests')"
+        :icon="ClipboardList"
+        :count="requestCount"
+      >
+        <StatCard
+          :label="t('dashboard.toApprove')"
+          :value="data.reservations_submitted"
+          :icon="ClipboardCheck"
+          tone="warning"
+          :alert="!!data.reservations_submitted"
+          :to="{ name: 'reservations', query: { status: 'submitted' } }"
+        />
+        <StatCard
+          :label="t('dashboard.toPrepare')"
+          :value="data.reservations_to_prepare"
+          :icon="PackageOpen"
+          tone="primary"
+          :to="{ name: 'reservations', query: { status: 'approved' } }"
+        />
+        <StatCard
+          :label="t('dashboard.readyForPickup')"
+          :value="data.reservations_ready"
+          :icon="PackageCheck"
+          tone="success"
+          :to="{ name: 'reservations', query: { status: 'ready' } }"
+        />
+        <StatCard
+          :label="t('dashboard.overdue')"
+          :value="data.reservations_overdue"
+          :icon="AlarmClock"
+          :tone="data.reservations_overdue ? 'error' : 'default'"
+          :alert="!!data.reservations_overdue"
+          :to="{ name: 'reservations', query: { overdue: '1' } }"
         />
       </StatGroup>
       <StatGroup
@@ -158,43 +195,6 @@ const attentionCount = computed(
           :label="t('dashboard.warrantyExpiring', { days: features.rules.warranty_warning_days })"
           :value="data.warranty_expiring"
           :icon="ShieldAlert"
-        />
-      </StatGroup>
-      <StatGroup
-        wide
-        :title="t('dashboard.groups.requests')"
-        :icon="ClipboardList"
-        :count="requestCount"
-      >
-        <StatCard
-          :label="t('dashboard.toApprove')"
-          :value="data.reservations_submitted"
-          :icon="ClipboardCheck"
-          tone="warning"
-          :alert="!!data.reservations_submitted"
-          :to="{ name: 'reservations', query: { status: 'submitted' } }"
-        />
-        <StatCard
-          :label="t('dashboard.toPrepare')"
-          :value="data.reservations_to_prepare"
-          :icon="PackageOpen"
-          tone="primary"
-          :to="{ name: 'reservations', query: { status: 'approved' } }"
-        />
-        <StatCard
-          :label="t('dashboard.readyForPickup')"
-          :value="data.reservations_ready"
-          :icon="PackageCheck"
-          tone="success"
-          :to="{ name: 'reservations', query: { status: 'ready' } }"
-        />
-        <StatCard
-          :label="t('dashboard.overdue')"
-          :value="data.reservations_overdue"
-          :icon="AlarmClock"
-          :tone="data.reservations_overdue ? 'error' : 'default'"
-          :alert="!!data.reservations_overdue"
-          :to="{ name: 'reservations', query: { overdue: '1' } }"
         />
       </StatGroup>
     </section>

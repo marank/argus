@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from django.utils import timezone
 
@@ -188,9 +188,8 @@ def test_ready_confirms_date_and_place(employee_client, it_client):
     )
     assert reservation["status"] == "ready"
     assert reservation["pickup_location"]["id"] == str(place.pk)
-    assert reservation["pickup_at"].startswith(
-        pickup.astimezone(timezone.get_current_timezone()).date().isoformat()
-    )
+    # Compare instants: the API answers in UTC, which is another day around local midnight.
+    assert datetime.fromisoformat(reservation["pickup_at"]) == pickup
 
 
 def test_simple_pickup_is_recorded_by_it(employee_client, it_client, terminal_client):

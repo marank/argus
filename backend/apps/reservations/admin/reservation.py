@@ -74,7 +74,16 @@ class ReservationAdmin(admin.ModelAdmin):
         "assignee",
     ]
     date_hierarchy = "start_date"
-    readonly_fields = ["number", "approved_at", "handed_out_at", "completed_at", "created_at", "updated_at"]
+    readonly_fields = [
+        "number",
+        "approved_at",
+        "handed_out_at",
+        "reminded_at",
+        "reminded_by",
+        "completed_at",
+        "created_at",
+        "updated_at",
+    ]
     fieldsets = [
         (None, {"fields": ["number", "title", "requester", "created_by", "status"]}),
         (_("Period"), {"fields": ["duration", "start_date", "end_date"]}),
@@ -84,7 +93,15 @@ class ReservationAdmin(admin.ModelAdmin):
         (
             _("History"),
             {
-                "fields": ["approved_at", "handed_out_at", "completed_at", "created_at", "updated_at"],
+                "fields": [
+                    "approved_at",
+                    "handed_out_at",
+                    "reminded_at",
+                    "reminded_by",
+                    "completed_at",
+                    "created_at",
+                    "updated_at",
+                ],
                 "classes": ["collapse"],
             },
         ),

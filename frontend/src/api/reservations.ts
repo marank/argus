@@ -75,6 +75,9 @@ export const reservationsApi = {
   ) => http.post<Reservation>(`${base}/${id}/ready`, data),
   assign: (id: Id, data: { team: Id | null; assignee: Id | null }) =>
     http.post<Reservation>(`${base}/${id}/assign`, data),
+  extend: (id: Id, endDate: string) =>
+    http.post<Reservation>(`${base}/${id}/extend`, { end_date: endDate }),
+  remind: (id: Id) => http.post<Reservation>(`${base}/${id}/remind`),
   reopen: (id: Id) => http.post<Reservation>(`${base}/${id}/reopen`),
   handOut: (id: Id, data: HandOutInput) => http.post<Reservation>(`${base}/${id}/hand-out`, data),
   returnDevices: (id: Id, data: Partial<ReturnInput> = {}) =>

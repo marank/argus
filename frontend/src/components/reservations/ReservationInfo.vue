@@ -8,7 +8,7 @@ import type { Reservation } from '@/types/reservations'
 
 const props = defineProps<{ reservation: Reservation }>()
 const { t } = useI18n()
-const { date, weekday, enumLabel } = useFormat()
+const { date, dateTime, weekday, enumLabel } = useFormat()
 
 const period = computed(() => {
   const r = props.reservation
@@ -53,6 +53,14 @@ const entries = computed<DetailEntry[]>(() => {
         ]
       : []),
     { label: t('reservations.handledBy'), value: r.handled_by?.display_name },
+    ...(r.reminded_at
+      ? [
+          {
+            label: t('reservations.remindedAt'),
+            value: `${dateTime(r.reminded_at)} · ${r.reminded_by?.display_name ?? '—'}`,
+          },
+        ]
+      : []),
     { label: t('common.createdAt'), value: date(r.created_at), mono: true },
     ...(r.notes ? [{ label: t('reservations.notes'), value: r.notes, wide: true }] : []),
     ...(r.it_comment

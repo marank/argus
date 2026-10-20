@@ -3,8 +3,10 @@ import type { Id } from '@/types/common'
 import {
   Ban,
   CalendarClock,
+  CalendarPlus,
   Check,
   EllipsisVertical,
+  Mail,
   PackageCheck,
   PackageOpen,
   ShoppingCart,
@@ -27,13 +29,14 @@ import {
 import { computed, h, onMounted, ref, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { reservationsApi } from '@/api/reservations'
+import { portalApi, reservationsApi } from '@/api/reservations'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import CreateOrderModal, { type DraftLine } from '@/components/procurement/CreateOrderModal.vue'
 import AllocationPanel from '@/components/reservations/AllocationPanel.vue'
 import ApproveModal from '@/components/reservations/ApproveModal.vue'
 import AssignmentCard from '@/components/reservations/AssignmentCard.vue'
+import ExtendModal from '@/components/reservations/ExtendModal.vue'
 import HandoverCard from '@/components/reservations/HandoverCard.vue'
 import HandOutModal from '@/components/reservations/HandOutModal.vue'
 import ReadyModal from '@/components/reservations/ReadyModal.vue'
@@ -44,7 +47,12 @@ import ReturnsCard from '@/components/reservations/ReturnsCard.vue'
 import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
 import { useFormat } from '@/composables/useFormat'
-import type { Reservation } from '@/types/reservations'
+import type {
+  AvailabilityCounts,
+  PeriodAvailability,
+  Reservation,
+  ReservationItem,
+} from '@/types/reservations'
 import { isReturnable } from '@/utils/reservations'
 
 const props = defineProps<{ id: Id }>()
@@ -52,7 +60,7 @@ const { t } = useI18n()
 const message = useMessage()
 const confirm = useConfirm()
 const { busy, run } = useAction()
-const { date } = useFormat()
+const { date, dateTime } = useFormat()
 
 const reservation = ref<Reservation | null>(null)
 const approveMode = ref<'approve' | 'schedule'>('approve')
@@ -63,8 +71,32 @@ const showOrder = ref(false)
 const showReady = ref(false)
 const showHandOut = ref(false)
 const showReturn = ref(false)
+const showExtend = ref(false)
 
-onMounted(async () => (reservation.value = await reservationsApi.get(props.id)))
+const availability = ref<PeriodAvailability | null>(null)
+
+onMounted(async () => {
+  reservation.value = await reservationsApi.get(props.id)
+  if (reservation.value.status === 'submitted') await loadAvailability(reservation.value)
+})
+
+/** Before approving: what the pool holds in the request's period, from the pickup day on. */
+async function loadAvailability(r: Reservation) {
+  const pickup = r.requested_pickup_date
+  const start = pickup && pickup < r.start_date ? pickup : r.start_date
+  availability.value = await portalApi.availability(
+    r.duration === 'permanent'
+      ? { start, permanent: true }
+      : { start, ...(r.end_date ? { end: r.end_date } : {}) },
+  )
+}
+
+function itemAvailability(item: ReservationItem): AvailabilityCounts | null {
+  if (status.value !== 'submitted' || !availability.value || item.is_free_text) return null
+  if (item.asset_model) return availability.value.models[item.asset_model.id] ?? null
+  if (item.category) return availability.value.categories[item.category.id] ?? null
+  return null
+}
 
 const status = computed(() => reservation.value?.status)
 const missing = computed(() => reservation.value?.items.some((i) => i.quantity_missing) ?? false)
@@ -144,6 +176,17 @@ async function reopen() {
   }
 }
 
+const canRemind = computed(
+  () => status.value === 'handed_out' && reservation.value?.duration === 'temporary',
+)
+
+async function remind() {
+  const name = reservation.value!.requester.display_name
+  if (await confirm(t('reservations.actions.confirmRemind', { name }))) {
+    await act(() => reservationsApi.remind(props.id), t('reservations.actions.remindSent', { name }))
+  }
+}
+
 /** Rare actions, kept out of the header so the next step stands out. */
 const menuOptions = computed<DropdownOption[]>(() => {
   const option = (key: string, label: string, icon: Component, danger = false) => ({
@@ -161,6 +204,9 @@ const menuOptions = computed<DropdownOption[]>(() => {
     options.push(option('schedule', t('reservations.actions.schedule'), CalendarClock))
     options.push(option('reopen', t('reservations.actions.reopen'), PackageOpen))
   }
+  // Overdue, the alert offers it.
+  if (canRemind.value && !reservation.value?.is_overdue)
+    options.push(option('remind', t('reservations.actions.remind'), Mail))
   if (['submitted', 'approved', 'ready'].includes(s ?? '')) {
     if (options.length) options.push({ type: 'divider', key: 'cancel-divider' })
     options.push(option('cancel', t('reservations.actions.cancel'), Ban, true))
@@ -173,6 +219,7 @@ function onMenu(key: string) {
   else if (key === 'schedule') openApprove('schedule')
   else if (key === 'reopen') reopen()
   else if (key === 'cancel') cancel()
+  else if (key === 'remind') remind()
 }
 
 async function cancel() {
@@ -228,6 +275,13 @@ async function cancel() {
             {{ t('reservations.actions.handOut') }}
           </NButton>
           <NButton
+            v-if="status === 'handed_out' && reservation.duration === 'temporary'"
+            @click="showExtend = true"
+          >
+            <template #icon><CalendarPlus :size="15" /></template>
+            {{ t('reservations.actions.extend') }}
+          </NButton>
+          <NButton
             v-if="lent"
             :type="status === 'handed_out' ? 'primary' : 'default'"
             @click="showReturn = true"
@@ -259,7 +313,23 @@ async function cancel() {
           type="error"
           :title="t('reservations.overdueAlert.title', { date: date(reservation.end_date) })"
         >
-          {{ t('reservations.overdueAlert.text', { name: reservation.requester.display_name }) }}
+          <div class="overdue">
+            <span>
+              {{ t('reservations.overdueAlert.text', { name: reservation.requester.display_name }) }}
+              <template v-if="reservation.reminded_at">
+                {{
+                  t('reservations.overdueAlert.reminded', {
+                    date: dateTime(reservation.reminded_at),
+                    name: reservation.reminded_by?.display_name ?? '—',
+                  })
+                }}
+              </template>
+            </span>
+            <NButton size="small" :loading="busy" @click="remind">
+              <template #icon><Mail :size="14" /></template>
+              {{ t('reservations.actions.remind') }}
+            </NButton>
+          </div>
         </NAlert>
         <NCard size="small"><ReservationSteps :reservation="reservation" /></NCard>
         <div class="layout">
@@ -274,6 +344,7 @@ async function cancel() {
               :reservation="reservation"
               :item="item"
               :editable="preparing"
+              :availability="itemAvailability(item)"
               @updated="(r) => (reservation = r)"
             />
           </NCard>
@@ -321,6 +392,11 @@ async function cancel() {
         :reservation="reservation"
         @saved="(r) => (reservation = r)"
       />
+      <ExtendModal
+        v-model:show="showExtend"
+        :reservation="reservation"
+        @saved="(r) => (reservation = r)"
+      />
       <ReturnModal
         v-model:show="showReturn"
         :reservation="reservation"
@@ -365,6 +441,13 @@ async function cancel() {
 }
 .hint {
   margin: -4px 0 4px;
+}
+.overdue {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
 }
 .layout {
   display: grid;

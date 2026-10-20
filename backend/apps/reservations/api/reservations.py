@@ -19,6 +19,7 @@ from apps.reservations.models import Reservation
 from apps.reservations.schemas.reservation import (
     ApproveIn,
     AssignIn,
+    ExtendIn,
     HandOutIn,
     ReadyIn,
     RejectIn,
@@ -159,6 +160,20 @@ def mark_ready(request: HttpRequest, pk: UUID, payload: ReadyIn):
 def reopen(request: HttpRequest, pk: UUID):
     """Take a ready request back into preparation."""
     workflow.reopen(get_for_update(pk), request.user)
+    return get_reservation(request, pk)
+
+
+@router.post("/{uuid:pk}/extend", response=ReservationOut, auth=it_staff_auth)
+def extend(request: HttpRequest, pk: UUID, payload: ExtendIn):
+    """Move the return date of a handed-out request."""
+    workflow.extend(get_for_update(pk), request.user, payload.end_date)
+    return get_reservation(request, pk)
+
+
+@router.post("/{uuid:pk}/remind", response=ReservationOut, auth=it_staff_auth)
+def remind(request: HttpRequest, pk: UUID):
+    """Email the employee to return the devices."""
+    workflow.remind(get_for_update(pk), request.user)
     return get_reservation(request, pk)
 
 

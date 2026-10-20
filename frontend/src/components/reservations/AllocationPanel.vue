@@ -8,13 +8,24 @@ import { useI18n } from 'vue-i18n'
 import { reservationsApi } from '@/api/reservations'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { useAction } from '@/composables/useAction'
-import type { Candidates, Reservation, ReservationItem } from '@/types/reservations'
+import type {
+  AvailabilityCounts,
+  Candidates,
+  Reservation,
+  ReservationItem,
+} from '@/types/reservations'
 import { itemLabel } from '@/utils/reservations'
 
 import ResolveFreeText from './ResolveFreeText.vue'
 
 /** One reservation item: its allocated devices plus tools to allocate more. */
-const props = defineProps<{ reservation: Reservation; item: ReservationItem; editable: boolean }>()
+const props = defineProps<{
+  reservation: Reservation
+  item: ReservationItem
+  editable: boolean
+  /** Pool counts for the request's period, shown before approval. */
+  availability?: AvailabilityCounts | null
+}>()
 const emit = defineEmits<{ updated: [reservation: Reservation] }>()
 const { t } = useI18n()
 const { busy, run } = useAction()
@@ -117,6 +128,18 @@ async function remove(allocationId: Id) {
         >
           ({{ item.quantity_requested }})
         </span>
+        <div
+          v-if="availability"
+          class="availability small"
+          :class="availability.available >= target ? 'enough' : 'short'"
+          :title="
+            availability.reserved
+              ? t('reservations.allocation.periodReserved', { count: availability.reserved })
+              : undefined
+          "
+        >
+          {{ t('reservations.allocation.periodFree', { count: availability.available }) }}
+        </div>
       </div>
     </div>
     <NProgress
@@ -314,6 +337,16 @@ async function remove(allocationId: Id) {
 }
 .small {
   font-size: 11.5px;
+}
+.availability {
+  font-weight: 500;
+  text-align: right;
+}
+.enough {
+  color: var(--ar-success);
+}
+.short {
+  color: var(--ar-warning);
 }
 .allocations {
   margin: 0;

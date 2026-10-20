@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 23:19+0200\n"
+"POT-Creation-Date: 2026-10-20 00:30+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -233,7 +233,9 @@ msgstr "Standard-Team"
 #: apps/accounts/models/team.py:30
 msgid ""
 "Gets new requests and reports that no category or model routes elsewhere."
-msgstr "Bekommt neue Anfragen und Meldungen, die keine Kategorie und kein Modell einem anderen Team zuordnet."
+msgstr ""
+"Bekommt neue Anfragen und Meldungen, die keine Kategorie und kein Modell "
+"einem anderen Team zuordnet."
 
 #: apps/accounts/models/team.py:37 apps/inventory/models/asset_issue.py:48
 #: apps/reservations/models/reservation.py:108
@@ -384,7 +386,7 @@ msgid "State"
 msgstr "Stand"
 
 #: apps/core/admin/number_sequence.py:17 apps/inventory/admin/asset.py:96
-#: apps/reservations/admin/reservation.py:85
+#: apps/reservations/admin/reservation.py:94
 msgid "History"
 msgstr "Verlauf"
 
@@ -677,7 +679,7 @@ msgstr "Kauf & Garantie"
 msgid "Consumables"
 msgstr "Verbrauchsmaterial"
 
-#: apps/inventory/admin/asset.py:95 apps/reservations/admin/reservation.py:83
+#: apps/inventory/admin/asset.py:95 apps/reservations/admin/reservation.py:92
 msgid "Notes"
 msgstr "Notizen"
 
@@ -972,7 +974,7 @@ msgstr "Mitarbeiter"
 #: apps/inventory/models/consumable_movement.py:43
 #: apps/reservations/models/device_return.py:13
 #: apps/reservations/models/handover.py:23
-#: apps/reservations/models/reservation.py:136
+#: apps/reservations/models/reservation.py:150
 #: apps/reservations/models/reservation_item.py:19
 msgid "reservation"
 msgstr "Reservierung"
@@ -1241,7 +1243,7 @@ msgstr ""
 "Diese Lizenz wird Mitarbeitern zugewiesen. Wählen Sie einen Mitarbeiter."
 
 #: apps/inventory/services/licenses.py:36
-#: apps/reservations/services/workflow.py:295
+#: apps/reservations/services/workflow.py:338
 msgid "This license is assigned to devices. Choose a device."
 msgstr "Diese Lizenz wird Geräten zugewiesen. Wählen Sie ein Gerät."
 
@@ -1281,7 +1283,9 @@ msgstr "Ihnen zugewiesen: Meldung zu %(device)s"
 #, python-format
 msgid ""
 "You are now responsible for this report on %(device)s (%(model)s): %(kind)s"
-msgstr "Sie sind jetzt zuständig für diese Meldung zu %(device)s (%(model)s): %(kind)s"
+msgstr ""
+"Sie sind jetzt zuständig für diese Meldung zu %(device)s (%(model)s): "
+"%(kind)s"
 
 #: apps/inventory/services/notifications.py:45
 #, python-format
@@ -1392,7 +1396,9 @@ msgstr "zuständiges Team"
 msgid ""
 "New requests and reports for this model go to this team. Empty: as the "
 "category."
-msgstr "Neue Anfragen und Meldungen zu diesem Modell gehen an dieses Team. Leer: wie die Kategorie."
+msgstr ""
+"Neue Anfragen und Meldungen zu diesem Modell gehen an dieses Team. Leer: wie "
+"die Kategorie."
 
 #: apps/masterdata/models/asset_model.py:66
 #: apps/masterdata/models/category.py:60
@@ -1461,7 +1467,9 @@ msgstr ""
 msgid ""
 "New requests and reports for this category go to this team. Falls back to "
 "the parent."
-msgstr "Neue Anfragen und Meldungen zu dieser Kategorie gehen an dieses Team. Leer: wie die übergeordnete Kategorie."
+msgstr ""
+"Neue Anfragen und Meldungen zu dieser Kategorie gehen an dieses Team. Leer: "
+"wie die übergeordnete Kategorie."
 
 #: apps/masterdata/models/category.py:60
 msgid "Shown in the employee portal."
@@ -1688,15 +1696,15 @@ msgstr "Wählen Sie einen Lagerort für das Verbrauchsmaterial."
 msgid "signature"
 msgstr "Unterschrift"
 
-#: apps/reservations/admin/reservation.py:80
+#: apps/reservations/admin/reservation.py:89
 msgid "Period"
 msgstr "Zeitraum"
 
-#: apps/reservations/admin/reservation.py:81
+#: apps/reservations/admin/reservation.py:90
 msgid "Pickup"
 msgstr "Abholung"
 
-#: apps/reservations/admin/reservation.py:82
+#: apps/reservations/admin/reservation.py:91
 msgid "Responsible"
 msgstr "Zuständig"
 
@@ -1740,7 +1748,7 @@ msgstr "Z. B. ein Kratzer am Deckel."
 
 #: apps/reservations/models/allocation.py:66
 #: apps/reservations/models/handover.py:62
-#: apps/reservations/models/reservation.py:132
+#: apps/reservations/models/reservation.py:146
 msgid "handed out at"
 msgstr "ausgegeben am"
 
@@ -1944,15 +1952,27 @@ msgstr ""
 "Wer die Anforderung bereitgemeldet hat; erscheint bei Abholung am Terminal "
 "als ausgebend."
 
-#: apps/reservations/models/reservation.py:131
+#: apps/reservations/models/reservation.py:132
+msgid "reminded at"
+msgstr "erinnert am"
+
+#: apps/reservations/models/reservation.py:135
+msgid "When IT last reminded the employee to return the devices."
+msgstr "Wann die IT den Mitarbeiter zuletzt an die Rückgabe erinnert hat."
+
+#: apps/reservations/models/reservation.py:139
+msgid "reminded by"
+msgstr "erinnert von"
+
+#: apps/reservations/models/reservation.py:145
 msgid "approved at"
 msgstr "bestätigt am"
 
-#: apps/reservations/models/reservation.py:133
+#: apps/reservations/models/reservation.py:147
 msgid "completed at"
 msgstr "abgeschlossen am"
 
-#: apps/reservations/models/reservation.py:137
+#: apps/reservations/models/reservation.py:151
 msgid "reservations"
 msgstr "Reservierungen"
 
@@ -2045,16 +2065,19 @@ msgid "Return due on %(date)s: %(number)s"
 msgstr "Rückgabe am %(date)s: %(number)s"
 
 #: apps/reservations/services/notifications.py:99
+#: apps/reservations/services/notifications.py:143
 #, python-format
 msgid "Please return the devices for “%(title)s” by %(date)s."
 msgstr "Bitte geben Sie die Geräte für „%(title)s“ bis zum %(date)s zurück."
 
 #: apps/reservations/services/notifications.py:116
+#: apps/reservations/services/notifications.py:137
 #, python-format
 msgid "Return overdue: %(number)s"
 msgstr "Rückgabe überfällig: %(number)s"
 
 #: apps/reservations/services/notifications.py:117
+#: apps/reservations/services/notifications.py:141
 #, python-format
 msgid ""
 "The devices for “%(title)s” were due back on %(date)s. Please return them to "
@@ -2062,6 +2085,16 @@ msgid ""
 msgstr ""
 "Die Geräte für „%(title)s“ waren am %(date)s zurückzugeben. Bitte bringen "
 "Sie sie zur IT."
+
+#: apps/reservations/services/notifications.py:137
+#, python-format
+msgid "Reminder: return of %(number)s"
+msgstr "Erinnerung: Rückgabe von %(number)s"
+
+#: apps/reservations/services/notifications.py:145
+#, python-format
+msgid "Sent by %(name)s, IT"
+msgstr "Gesendet von %(name)s, IT"
 
 #: apps/reservations/services/workflow.py:35
 #, python-format
@@ -2121,89 +2154,111 @@ msgid "Approve at least one device or reject the request."
 msgstr ""
 "Bestätigen Sie mindestens ein Gerät oder lehnen Sie die Anforderung ab."
 
-#: apps/reservations/services/workflow.py:200
+#: apps/reservations/services/workflow.py:204
+#: apps/reservations/services/workflow.py:223
+msgid "Only temporary reservations have a return date."
+msgstr "Nur befristete Reservierungen haben ein Rückgabedatum."
+
+#: apps/reservations/services/workflow.py:206
+msgid "The new return date must not be in the past."
+msgstr "Das neue Rückgabedatum darf nicht in der Vergangenheit liegen."
+
+#: apps/reservations/services/workflow.py:208
+msgid "The new return date must be after the current one."
+msgstr "Das neue Rückgabedatum muss nach dem bisherigen liegen."
+
+#: apps/reservations/services/workflow.py:225
+msgid "Email is not set up, so no reminder can be sent."
+msgstr "E-Mail ist nicht eingerichtet, daher kann keine Erinnerung gesendet werden."
+
+#: apps/reservations/services/workflow.py:229
+#, python-format
+msgid "%(name)s has no email address, so no reminder can be sent."
+msgstr "%(name)s hat keine E-Mail-Adresse, daher kann keine Erinnerung gesendet werden."
+
+#: apps/reservations/services/workflow.py:243
 msgid "Remove allocated devices before changing the model."
 msgstr "Entfernen Sie zugewiesene Geräte, bevor Sie das Modell ändern."
 
-#: apps/reservations/services/workflow.py:213
+#: apps/reservations/services/workflow.py:256
 #, python-format
 msgid "“%(item)s” is free text. Create or assign a model first."
 msgstr ""
 "„%(item)s“ ist Freitext. Legen Sie zuerst ein Modell an oder ordnen Sie "
 "eines zu."
 
-#: apps/reservations/services/workflow.py:234
+#: apps/reservations/services/workflow.py:277
 #, python-format
 msgid "%(asset)s does not match “%(item)s”."
 msgstr "%(asset)s passt nicht zu „%(item)s“."
 
-#: apps/reservations/services/workflow.py:238
+#: apps/reservations/services/workflow.py:281
 #, python-format
 msgid "%(asset)s is not in stock (%(status)s)."
 msgstr "%(asset)s ist nicht im Lager (%(status)s)."
 
-#: apps/reservations/services/workflow.py:243
+#: apps/reservations/services/workflow.py:286
 #, python-format
 msgid "All approved devices for “%(item)s” are already allocated."
 msgstr "Alle bestätigten Geräte für „%(item)s“ sind bereits zugewiesen."
 
-#: apps/reservations/services/workflow.py:265
-#: apps/reservations/services/workflow.py:287
+#: apps/reservations/services/workflow.py:308
+#: apps/reservations/services/workflow.py:330
 #, python-format
 msgid "%(model)s does not match “%(item)s”."
 msgstr "%(model)s passt nicht zu „%(item)s“."
 
-#: apps/reservations/services/workflow.py:269
+#: apps/reservations/services/workflow.py:312
 #, python-format
 msgid "Only %(missing)s more units are needed for “%(item)s”."
 msgstr "Für „%(item)s“ werden nur noch %(missing)s Stück benötigt."
 
-#: apps/reservations/services/workflow.py:291
+#: apps/reservations/services/workflow.py:334
 #, python-format
 msgid "All approved licenses for “%(item)s” are already allocated."
 msgstr "Alle bestätigten Lizenzen für „%(item)s“ sind bereits zugewiesen."
 
-#: apps/reservations/services/workflow.py:298
+#: apps/reservations/services/workflow.py:341
 #, python-format
 msgid "%(asset)s is not used by %(name)s."
 msgstr "%(asset)s wird nicht von %(name)s genutzt."
 
-#: apps/reservations/services/workflow.py:366
+#: apps/reservations/services/workflow.py:409
 #, python-format
 msgid "Released from %(number)s"
 msgstr "Freigegeben aus %(number)s"
 
-#: apps/reservations/services/workflow.py:396
+#: apps/reservations/services/workflow.py:439
 #, python-format
 msgid "Devices are still missing for: %(items)s"
 msgstr "Es fehlen noch Geräte für: %(items)s"
 
-#: apps/reservations/services/workflow.py:429
+#: apps/reservations/services/workflow.py:472
 msgid "Please sign in the signature field."
 msgstr "Bitte unterschreiben Sie im Unterschriftsfeld."
 
-#: apps/reservations/services/workflow.py:431
+#: apps/reservations/services/workflow.py:474
 msgid "Enter who is collecting the devices."
 msgstr "Geben Sie an, wer die Geräte abholt."
 
-#: apps/reservations/services/workflow.py:433
+#: apps/reservations/services/workflow.py:476
 msgid "Only pickups at the terminal are signed."
 msgstr "Nur Abholungen am Terminal werden unterschrieben."
 
-#: apps/reservations/services/workflow.py:462
+#: apps/reservations/services/workflow.py:505
 msgid "Choose a member of the IT department."
 msgstr "Wählen Sie jemanden aus der IT-Abteilung."
 
-#: apps/reservations/services/workflow.py:568
+#: apps/reservations/services/workflow.py:611
 msgid "Nothing is left to take back."
 msgstr "Es ist nichts mehr zurückzunehmen."
 
-#: apps/reservations/services/workflow.py:593
+#: apps/reservations/services/workflow.py:636
 #, python-format
 msgid "Returned damaged from %(number)s"
 msgstr "Defekt zurück aus %(number)s"
 
-#: apps/reservations/services/workflow.py:631
+#: apps/reservations/services/workflow.py:674
 #, python-format
 msgid "This is set aside for %(number)s. Remove it there first."
 msgstr "Das ist für %(number)s zurückgelegt. Entfernen Sie es zuerst dort."

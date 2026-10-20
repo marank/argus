@@ -193,6 +193,49 @@ def reschedule(
 
 
 @transaction.atomic
+def extend(reservation: Reservation, user, end_date: date) -> Reservation:
+    """Move the return date of lent devices, e.g. instead of chasing an overdue return.
+
+    IT decides here, so the maximum loan period for requests does not apply. Reminders
+    follow the new date (they are keyed by it).
+    """
+    _require_status(reservation, Status.HANDED_OUT)
+    if reservation.duration != Reservation.Duration.TEMPORARY:
+        raise BusinessError(_("Only temporary reservations have a return date."))
+    if end_date < timezone.localdate():
+        raise BusinessError(_("The new return date must not be in the past."))
+    if end_date <= reservation.end_date:
+        raise BusinessError(_("The new return date must be after the current one."))
+    reservation.end_date = end_date
+    reservation.handled_by = user
+    reservation.save(update_fields=["end_date", "handled_by", "updated_at"])
+    return reservation
+
+
+@transaction.atomic
+def remind(reservation: Reservation, user) -> Reservation:
+    """Email the employee to bring the lent devices back."""
+    from apps.core.models import MailSettings
+    from apps.core.notifications import mail_ready
+
+    _require_status(reservation, Status.HANDED_OUT)
+    if reservation.duration != Reservation.Duration.TEMPORARY:
+        raise BusinessError(_("Only temporary reservations have a return date."))
+    if not mail_ready(MailSettings.load()):
+        raise BusinessError(_("Email is not set up, so no reminder can be sent."))
+    requester = reservation.requester
+    if not requester.email or not requester.is_active:
+        raise BusinessError(
+            _("%(name)s has no email address, so no reminder can be sent.") % {"name": requester.display_name}
+        )
+    notifications.return_requested(reservation, user)
+    reservation.reminded_at = timezone.now()
+    reservation.reminded_by = user
+    reservation.save(update_fields=["reminded_at", "reminded_by", "updated_at"])
+    return reservation
+
+
+@transaction.atomic
 def resolve_item(item: ReservationItem, asset_model, user) -> ReservationItem:
     """Map a free-text line (or change an unallocated line) to a catalog model."""
     _require_status(item.reservation, Status.SUBMITTED, Status.APPROVED)

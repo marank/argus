@@ -127,3 +127,28 @@ def return_overdue(reservation: Reservation) -> None:
         key=f"{reservation.pk}:{reservation.end_date}",
         path=f"/portal/requests/{reservation.pk}",
     )
+
+
+def return_requested(reservation: Reservation, sender) -> None:
+    """A reminder IT sends on purpose, e.g. for an overdue return."""
+
+    def render(user):
+        overdue = reservation.is_overdue
+        subject = (_("Return overdue: %(number)s") if overdue else _("Reminder: return of %(number)s")) % {
+            "number": reservation.number
+        }
+        if overdue:
+            body = _("The devices for “%(title)s” were due back on %(date)s. Please return them to IT.")
+        else:
+            body = _("Please return the devices for “%(title)s” by %(date)s.")
+        body %= {"title": reservation.title, "date": _date(reservation.end_date)}
+        signature = _("Sent by %(name)s, IT") % {"name": sender.display_name}
+        return subject, f"{body}\n\n{_items(reservation)}\n\n{signature}"
+
+    notify(
+        "return_requested",
+        [reservation.requester],
+        render,
+        path=f"/portal/requests/{reservation.pk}",
+        direct=True,
+    )
