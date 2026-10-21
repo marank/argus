@@ -46,6 +46,10 @@ const list = useList(licensesApi.list, {
 onMounted(list.load)
 
 const showForm = ref(false)
+// Most digits of the seat numbers on this page, so the seat column lines up without spare room.
+const seatDigits = computed(() =>
+  Math.max(1, ...list.rows.value.map((l) => String(Math.max(l.seats, l.seats_used)).length)),
+)
 const expiringOnly = computed({
   get: () => !!list.filters.expires_before,
   set: (value: boolean) => (list.filters.expires_before = value ? soonDate() : null),
@@ -89,7 +93,7 @@ const columns = computed(() =>
       title: t('inventory.licenses.seats'),
       sorter: true,
       width: 190,
-      render: (l) => h(SeatUsage, { used: l.seats_used, seats: l.seats }),
+      render: (l) => h(SeatUsage, { used: l.seats_used, seats: l.seats, digits: seatDigits.value }),
     },
     {
       key: 'assign_to',
