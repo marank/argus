@@ -60,7 +60,7 @@ async function save() {
     style="max-width: 560px"
   >
     <p class="muted">{{ t('reservations.freeTextResolve.createHint') }}</p>
-    <NForm class="ar-form" label-placement="top" size="small" :show-feedback="false">
+    <NForm class="ar-form" label-placement="top" size="medium" :show-feedback="false">
       <NFormItem>
         <template #label><FieldLabel :label="t('common.name')" required /></template>
         <NInput v-model:value="form.name" />

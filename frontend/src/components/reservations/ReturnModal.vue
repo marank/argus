@@ -75,7 +75,7 @@ async function save() {
     style="max-width: 720px"
   >
     <p class="muted small hint">{{ t('reservations.returning.hint') }}</p>
-    <NForm class="ar-form" label-placement="top" size="small" :show-feedback="false">
+    <NForm class="ar-form" label-placement="top" size="medium" :show-feedback="false">
       <div v-for="allocation in open" :key="allocation.id" class="device">
         <NCheckbox
           :checked="form.selected.includes(allocation.id)"

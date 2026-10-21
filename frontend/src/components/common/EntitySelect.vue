@@ -1,7 +1,7 @@
 <script setup lang="ts" generic="T extends { id: Id }">
 import { useDebounceFn } from '@vueuse/core'
-import { NSelect, type SelectOption } from 'naive-ui'
-import { computed, onMounted, ref, watch } from 'vue'
+import { NSelect, NTag, type SelectOption, type SelectRenderTag } from 'naive-ui'
+import { computed, h, onMounted, ref, watch } from 'vue'
 
 import type { Id, ListParams, Page } from '@/types/common'
 
@@ -32,6 +32,8 @@ const emit = defineEmits<{ select: [item: T | null] }>()
 
 const items = ref<T[]>([]) as { value: T[] }
 const loading = ref(false)
+// The options load in the background on mount; the spinner only matters while the list is open.
+const open = ref(false)
 const known = new Map<Id, T>()
 
 function remember(list: T[]) {
@@ -76,6 +78,25 @@ watch(
 )
 onMounted(() => load())
 
+/** Selected items of a multiple select as soft, round chips instead of bordered boxes. */
+const renderTag: SelectRenderTag = ({ option, handleClose }) =>
+  h(
+    NTag,
+    {
+      class: 'entity-tag',
+      size: 'small',
+      round: true,
+      bordered: false,
+      closable: !props.disabled,
+      color: { color: 'var(--ar-primary-soft)', textColor: 'var(--ar-primary)' },
+      onClose: (e: MouseEvent) => {
+        e.stopPropagation()
+        handleClose()
+      },
+    },
+    { default: () => option.label as string },
+  )
+
 function onUpdate(value: Id | Id[] | null) {
   model.value = value
   if (!Array.isArray(value)) emit('select', value ? (known.get(value) ?? null) : null)
@@ -86,15 +107,17 @@ function onUpdate(value: Id | Id[] | null) {
   <NSelect
     :value="model"
     :options="options"
-    :loading="loading"
+    :loading="loading && open"
     :multiple="multiple"
     :placeholder="placeholder"
     :clearable="clearable"
     :disabled="disabled"
     :size="size"
+    :render-tag="multiple ? renderTag : undefined"
     filterable
     remote
     @search="onSearch"
     @update:value="onUpdate"
+    @update:show="(value: boolean) => (open = value)"
   />
 </template>

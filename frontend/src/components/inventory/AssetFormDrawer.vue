@@ -137,7 +137,7 @@ async function save() {
       <NForm
         class="ar-form"
         label-placement="top"
-        size="small"
+        size="medium"
         :show-feedback="false"
         @submit.prevent="save"
       >

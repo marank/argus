@@ -68,7 +68,7 @@ async function save() {
     style="max-width: 720px"
   >
     <p class="muted">{{ t('procurement.orders.receiveHint') }}</p>
-    <NForm class="ar-form" label-placement="top" size="small" :show-feedback="false">
+    <NForm class="ar-form" label-placement="top" size="medium" :show-feedback="false">
       <NFormItem :label="t('procurement.orders.deliveryLocation')">
         <EntitySelect
           v-model="location"

@@ -88,7 +88,7 @@ async function save() {
     "
     style="max-width: 720px"
   >
-    <NForm class="ar-form" label-placement="top" size="small" :show-feedback="false">
+    <NForm class="ar-form" label-placement="top" size="medium" :show-feedback="false">
       <template v-if="mode === 'confirm'">
         <p class="muted">{{ t('reservations.actions.confirmHint') }}</p>
         <NTable size="small" :bordered="false" class="items">

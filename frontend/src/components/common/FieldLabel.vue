@@ -3,8 +3,8 @@ import { CircleHelp } from '@lucide/vue'
 import { NTooltip } from 'naive-ui'
 
 /**
- * Form label for the `#label` slot of NFormItem: text, required mark and, right-aligned,
- * an optional live value (`#extra`) and a help icon that shows `help` on hover/tap.
+ * Form label for the `#label` slot of NFormItem: text, required mark, a help icon right after
+ * it that shows `help` on hover/tap and, right-aligned, an optional live value (`#extra`).
  */
 defineProps<{ label: string; help?: string; required?: boolean }>()
 </script>
@@ -14,11 +14,10 @@ defineProps<{ label: string; help?: string; required?: boolean }>()
     <span class="text">
       {{ label }}<span v-if="required" class="required" aria-hidden="true">*</span>
     </span>
-    <span v-if="$slots.extra" class="extra mono"><slot name="extra" /></span>
     <NTooltip
       v-if="help"
       trigger="hover"
-      placement="top-end"
+      placement="top"
       :show-arrow="false"
       :style="{ maxWidth: '320px' }"
     >
@@ -29,6 +28,7 @@ defineProps<{ label: string; help?: string; required?: boolean }>()
       </template>
       {{ help }}
     </NTooltip>
+    <span v-if="$slots.extra" class="extra mono"><slot name="extra" /></span>
   </span>
 </template>
 
@@ -36,11 +36,10 @@ defineProps<{ label: string; help?: string; required?: boolean }>()
 .field-label {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
 }
 .text {
-  flex: 1;
   min-width: 0;
 }
 .required {
@@ -48,6 +47,7 @@ defineProps<{ label: string; help?: string; required?: boolean }>()
   color: var(--ar-error);
 }
 .extra {
+  margin-left: auto;
   font-size: 11px;
   color: var(--ar-text-muted);
 }

@@ -58,7 +58,7 @@ async function save() {
     :title="item ? item.model.full_name : t('inventory.consumables.newItem')"
     style="max-width: 460px"
   >
-    <NForm class="ar-form" label-placement="top" size="small" :show-feedback="false">
+    <NForm class="ar-form" label-placement="top" size="medium" :show-feedback="false">
       <NFormItem>
         <template #label><FieldLabel :label="t('inventory.fields.model')" required /></template>
         <EntitySelect

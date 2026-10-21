@@ -143,7 +143,7 @@ function submit() {
       <NForm
         class="details ar-form"
         label-placement="top"
-        size="small"
+        size="medium"
         :show-feedback="false"
         @submit.prevent="submit"
       >

@@ -87,7 +87,7 @@ async function save() {
     :title="t('inventory.recordEvent')"
     style="max-width: 560px"
   >
-    <NForm class="ar-form" label-placement="top" size="small" :show-feedback="false">
+    <NForm class="ar-form" label-placement="top" size="medium" :show-feedback="false">
       <div class="cols">
         <NFormItem :label="t('inventory.event.kind')">
           <NSelect v-model:value="form.kind" :options="kindOptions" />

@@ -14,6 +14,7 @@ import {
 import { computed, h, nextTick, reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import { ApiError } from '@/api/client'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import FieldLabel from '@/components/common/FieldLabel.vue'
 import { useAction } from '@/composables/useAction'
@@ -31,11 +32,23 @@ const { enumLabel } = useFormat()
 const { busy, run } = useAction()
 
 const form = reactive<Record<string, any>>({})
+/** Messages of the last failed save per field, shown at the field until it is changed. */
+const fieldErrors = reactive<Record<string, string>>({})
 
 function resetForm() {
   for (const key of Object.keys(form)) delete form[key]
+  for (const key of Object.keys(fieldErrors)) delete fieldErrors[key]
   Object.assign(form, props.row ? props.resource.toForm(props.row) : props.resource.defaults())
 }
+
+watch(
+  () => ({ ...form }),
+  (now, before) => {
+    for (const key of Object.keys(fieldErrors)) {
+      if (JSON.stringify(now[key]) !== JSON.stringify(before[key])) delete fieldErrors[key]
+    }
+  },
+)
 
 watch(show, (visible) => {
   if (visible) resetForm()
@@ -70,13 +83,21 @@ function span(field: FieldDef): number {
 
 /** Saves; with `another` (new records only) the drawer stays open with an empty form for the next one. */
 async function save(another = false) {
-  const ok = await run(
-    () =>
-      props.row
+  for (const key of Object.keys(fieldErrors)) delete fieldErrors[key]
+  const ok = await run(async () => {
+    try {
+      return await (props.row
         ? props.resource.api.update(props.row.id, { ...form })
-        : props.resource.api.create({ ...form }),
-    t('common.saved'),
-  )
+        : props.resource.api.create({ ...form }))
+    } catch (error) {
+      if (error instanceof ApiError) {
+        for (const [key, messages] of Object.entries(error.errors)) {
+          if (key in form && messages.length) fieldErrors[key] = messages.join(' ')
+        }
+      }
+      throw error
+    }
+  }, t('common.saved'))
   if (!ok) return
   emit('saved')
   if (another && !props.row) {
@@ -95,7 +116,7 @@ async function save(another = false) {
       <NForm
         class="ar-form"
         label-placement="top"
-        size="small"
+        size="medium"
         :show-feedback="false"
         :disabled="readonly"
         @submit.prevent="save()"
@@ -107,13 +128,16 @@ async function save(another = false) {
           :class="{ 'toggles-first': section.togglesFirst }"
         >
           <div v-if="section.title" class="eyebrow section-title">{{ t(section.title) }}</div>
-          <NGrid :cols="2" :x-gap="12">
+          <NGrid class="grid" :cols="2" :x-gap="12">
             <NFormItemGi
               v-for="field in section.fields.filter(
                 (f) => f.type !== 'switch' && isFieldVisible(f, form),
               )"
               :key="field.key"
               :span="span(field)"
+              :show-feedback="!!fieldErrors[field.key]"
+              :feedback="fieldErrors[field.key]"
+              :validation-status="fieldErrors[field.key] ? 'error' : undefined"
             >
               <template #label>
                 <FieldLabel
@@ -180,6 +204,9 @@ async function save(another = false) {
               <span class="toggle-text">
                 <span class="toggle-label">{{ t(field.label) }}</span>
                 <small v-if="helpKey(field)" class="muted">{{ t(helpKey(field)!) }}</small>
+                <small v-if="fieldErrors[field.key]" class="toggle-error">{{
+                  fieldErrors[field.key]
+                }}</small>
               </span>
               <NSwitch v-model:value="form[field.key]" :disabled="readonly" />
             </label>
@@ -223,38 +250,46 @@ async function save(another = false) {
 .mono-input :deep(input) {
   font-family: var(--ar-font-mono);
 }
-.section + .section {
-  margin-top: 8px;
-  padding-top: 18px;
-  border-top: 1px solid var(--ar-border);
-}
+/* Each section a card; switches are rows inside it, divided by lines. */
 .section {
   display: flex;
   flex-direction: column;
+  padding: 14px 16px;
+  background: var(--ar-surface);
+  border: 1px solid var(--ar-border);
+  border-radius: 4px;
+}
+.section + .section {
+  margin-top: 12px;
 }
 .section-title {
   margin-bottom: 12px;
 }
-/* Title, then switches, then the inputs they reveal. */
+.toggles {
+  display: grid;
+}
+.section:not(.toggles-first) .grid:has(.n-form-item) + .toggles {
+  margin-top: 6px;
+  border-top: 1px solid var(--ar-border);
+}
+/* Title, then switches, then the inputs they reveal, indented below them. */
 .toggles-first .section-title {
   order: -2;
 }
 .toggles-first .toggles {
   order: -1;
-  margin: 0 0 12px;
 }
-.toggles {
-  display: grid;
-  margin-top: 4px;
-  border: 1px solid var(--ar-border);
-  border-radius: 3px;
+.toggles-first .grid:has(.n-form-item) {
+  margin-top: 8px;
+  padding-left: 12px;
+  border-left: 2px solid var(--ar-primary-soft);
 }
 .toggle {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 9px 12px;
+  padding: 9px 0;
   cursor: pointer;
 }
 .toggle + .toggle {
@@ -271,5 +306,8 @@ async function save(another = false) {
 .toggle small {
   font-size: 11.5px;
   line-height: 1.4;
+}
+.toggle .toggle-error {
+  color: var(--ar-error);
 }
 </style>

@@ -68,7 +68,7 @@ async function save() {
     :title="t('reservations.actions.handOut')"
     style="max-width: 640px"
   >
-    <NForm class="ar-form" label-placement="top" size="small" :show-feedback="false">
+    <NForm class="ar-form" label-placement="top" size="medium" :show-feedback="false">
       <NFormItem :label="t('handover.method')">
         <NRadioGroup v-model:value="form.method">
           <NRadioButton value="direct">{{ t('enums.handoverMethod.direct') }}</NRadioButton>

@@ -53,7 +53,7 @@ async function submit() {
     style="max-width: 640px"
   >
     <p class="muted">{{ t('inventory.bulk.help') }}</p>
-    <NForm class="ar-form" label-placement="top" size="small" :show-feedback="false">
+    <NForm class="ar-form" label-placement="top" size="medium" :show-feedback="false">
       <NFormItem>
         <template #label><FieldLabel :label="t('inventory.fields.model')" required /></template>
         <EntitySelect

@@ -64,7 +64,7 @@ function assignToMe() {
 </script>
 
 <template>
-  <NForm label-placement="top" size="small" :show-feedback="false">
+  <NForm label-placement="top" size="medium" :show-feedback="false">
     <NGrid :cols="2" :x-gap="12" :y-gap="8" item-responsive responsive="self">
       <NFormItemGi span="2 400:1" :label="t('common.assignment.team')">
         <EntitySelect

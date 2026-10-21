@@ -190,7 +190,7 @@ function openOrdered() {
           <NForm
             class="ar-form"
             label-placement="top"
-            size="small"
+            size="medium"
             :show-feedback="false"
             :disabled="!editable"
           >
@@ -367,7 +367,7 @@ function openOrdered() {
         :title="t('procurement.orders.markOrdered')"
         style="max-width: 440px"
       >
-        <NForm class="ar-form" label-placement="top" size="small" :show-feedback="false">
+        <NForm class="ar-form" label-placement="top" size="medium" :show-feedback="false">
           <NGrid :cols="2" :x-gap="12">
             <NFormItemGi :label="t('procurement.orders.orderDate')">
               <DateField v-model:value="ordered.order_date" type="date" style="width: 100%" />

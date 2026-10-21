@@ -88,7 +88,7 @@ async function save() {
     <p class="muted mono">
       {{ item?.location.full_name }} · {{ t('inventory.consumables.onHand') }}: {{ item?.quantity }}
     </p>
-    <NForm class="ar-form" label-placement="top" size="small" :show-feedback="false">
+    <NForm class="ar-form" label-placement="top" size="medium" :show-feedback="false">
       <NFormItem>
         <NRadioGroup v-model:value="form.direction">
           <NRadioButton value="in">{{ t('inventory.consumables.bookIn') }}</NRadioButton>
