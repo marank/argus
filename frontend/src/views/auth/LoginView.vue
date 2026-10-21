@@ -2,12 +2,12 @@
 import { ArrowLeft, LogIn, ShieldCheck } from '@lucide/vue'
 import { useIntervalFn } from '@vueuse/core'
 import { NAlert, NButton, NForm, NFormItem, NInput } from 'naive-ui'
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
 import { authApi } from '@/api/auth'
-import { ApiError } from '@/api/client'
+import { ApiError, isUnreachable } from '@/api/client'
 import CodeInput from '@/components/common/CodeInput.vue'
 import { useAuthStore } from '@/stores/auth'
 import type { TwoFactorChallenge } from '@/types/accounts'
@@ -30,6 +30,19 @@ const useBackup = ref(false)
 const codeInput = ref<{ focus: () => void } | null>(null)
 const CODE_LENGTH = 6
 const BACKUP_LENGTH = 12
+
+/** The server (or its database) does not answer; checked once on opening and with every attempt. */
+const serverDown = ref(false)
+
+async function checkServer() {
+  try {
+    await authApi.health()
+  } catch (e) {
+    serverDown.value = isUnreachable(e)
+  }
+}
+
+onMounted(checkServer)
 
 const RESEND_AFTER = 30
 const resendIn = ref(0)
@@ -66,7 +79,11 @@ async function attempt(action: () => Promise<void>) {
   busy.value = true
   try {
     await action()
+    serverDown.value = false
   } catch (e) {
+    serverDown.value = isUnreachable(e)
+    // Shown as its own notice instead of an error.
+    if (serverDown.value) return
     error.value = e instanceof ApiError ? e.message : String(e)
     // Expired or too many wrong codes (401, 429): the password has to be entered again.
     if (e instanceof ApiError && [401, 429].includes(e.status) && challenge.value) back()
@@ -154,12 +171,15 @@ function back() {
       <h1>{{ challenge ? t('auth.twoFactor.title') : t('auth.title') }}</h1>
 
       <NAlert
-        v-if="route.query.expired && !error && !challenge"
+        v-if="route.query.expired && !error && !challenge && !serverDown"
         type="warning"
         :bordered="false"
         class="alert"
       >
         {{ t('auth.sessionExpired') }}
+      </NAlert>
+      <NAlert v-if="serverDown" type="warning" :bordered="false" class="alert" role="status">
+        {{ t('auth.serverDown') }}
       </NAlert>
       <NAlert v-if="error" type="error" :bordered="false" class="alert">{{ error }}</NAlert>
       <NAlert
@@ -256,7 +276,9 @@ function back() {
         </NButton>
       </NForm>
     </div>
-    <div class="status mono">SYS · ONLINE</div>
+    <div class="status mono" :class="{ down: serverDown }">
+      {{ serverDown ? 'SYS · OFFLINE' : 'SYS · ONLINE' }}
+    </div>
   </div>
 </template>
 
@@ -338,5 +360,8 @@ h1 {
   margin-right: 6px;
   border-radius: 50%;
   background: var(--ar-success);
+}
+.status.down::before {
+  background: var(--ar-error);
 }
 </style>

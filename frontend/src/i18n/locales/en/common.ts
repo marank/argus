@@ -7,6 +7,7 @@ export default {
     daysAgo: '{count} days ago',
     atTime: '{day}, {time}',
   },
+  unreachable: 'Argus is not reachable right now. Please try again in a moment.',
   save: 'Save',
   cancel: 'Cancel',
   close: 'Close',

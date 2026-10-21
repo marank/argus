@@ -18,6 +18,8 @@ export const authApi = {
   resendLoginCode: () => http.post<TwoFactorChallenge>('/auth/login/resend'),
   logout: () => http.post<void>('/auth/logout'),
   me: () => http.get<CurrentUser>('/auth/me'),
+  /** Whether the server and its database answer; the login page asks before signing in. */
+  health: () => http.get<{ status: string }>('/health'),
   updatePreferences: (
     data: Partial<Pick<CurrentUser, 'language' | 'notification_settings' | 'dashboard_settings'>>,
   ) => http.patch<CurrentUser>('/auth/me', data),

@@ -5,6 +5,8 @@
  * `csrftoken` cookie back as `X-CSRFToken` header.
  */
 
+import { i18n } from '@/i18n'
+
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
@@ -13,6 +15,29 @@ export class ApiError extends Error {
   ) {
     super(message)
     this.name = 'ApiError'
+  }
+}
+
+/**
+ * No connection (status 0), or the proxy in front found no backend: nginx or the
+ * Vite dev server answer 502/504, the health check 503 while the database is down.
+ */
+const UNREACHABLE_STATUSES = new Set([0, 502, 503, 504])
+
+export function isUnreachable(error: unknown): boolean {
+  return error instanceof ApiError && UNREACHABLE_STATUSES.has(error.status)
+}
+
+function unreachable(): ApiError {
+  return new ApiError(0, i18n.global.t('common.unreachable'))
+}
+
+/** ``fetch``, with a failed connection reported as an ApiError (status 0). */
+async function send(url: string, init: RequestInit): Promise<Response> {
+  try {
+    return await fetch(url, init)
+  } catch {
+    throw unreachable()
   }
 }
 
@@ -34,7 +59,7 @@ function readCookie(name: string): string | null {
 
 export async function ensureCsrfCookie(): Promise<void> {
   if (!readCookie('csrftoken')) {
-    await fetch(`${BASE_URL}/auth/csrf`, { credentials: 'same-origin', cache: 'no-store' })
+    await send(`${BASE_URL}/auth/csrf`, { credentials: 'same-origin', cache: 'no-store' })
   }
 }
 
@@ -62,6 +87,7 @@ function errorMessage(body: unknown, status: number): string {
         .join('; ')
     }
   }
+  if (UNREACHABLE_STATUSES.has(status)) return i18n.global.t('common.unreachable')
   return `HTTP ${status}`
 }
 
@@ -81,7 +107,7 @@ export async function request<T>(
   }
   if (options.body !== undefined) headers['Content-Type'] = 'application/json'
 
-  const response = await fetch(buildUrl(path, options.query), {
+  const response = await send(buildUrl(path, options.query), {
     method,
     headers,
     credentials: 'same-origin',

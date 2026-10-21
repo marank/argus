@@ -4,6 +4,7 @@ export default {
   username: 'Benutzername',
   password: 'Passwort',
   signIn: 'Anmelden',
+  serverDown: 'Argus ist gerade nicht erreichbar. Bitte laden Sie die Seite in einem Moment neu.',
   sessionExpired: 'Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.',
   twoFactor: {
     title: 'Anmeldung bestätigen',
