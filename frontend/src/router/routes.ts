@@ -56,7 +56,7 @@ export const routes: RouteRecordRaw[] = [
     name: 'handover-protocol',
     component: () => import('@/views/reservations/HandoverProtocolView.vue'),
     props: (route) => ({ id: String(route.params.id) }),
-    meta: { it: true, title: 'handover.protocol' },
+    meta: { permission: 'reservations', it: true, title: 'handover.protocol' },
   },
   {
     path: '/',

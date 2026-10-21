@@ -216,3 +216,32 @@ def test_site_settings_tell_whether_ldap_is_on(configured, it_client):
     configured.enabled = False
     configured.save()
     assert it_client.get("/api/settings/site").json()["ldap_enabled"] is False
+
+
+def test_changed_server_needs_the_bind_password_again(configured, demo):
+    admin = Client()
+    admin.force_login(User.objects.get(username="admin"))
+    data = admin.get("/api/settings/ldap").json()
+    for key in ("locked", "env_names", "bind_password_set"):
+        data.pop(key)
+
+    # The stored password must not go to another server, neither in a test nor saved.
+    elsewhere = {**data, "server_uri": "ldap://attacker.example.com"}
+    for method, path in ((admin.post, "/api/settings/ldap/test"), (admin.put, "/api/settings/ldap")):
+        response = method(path, elsewhere, content_type="application/json")
+        assert response.status_code == 400, response.content
+        assert "bind password" in response.json()["detail"]
+    configured.refresh_from_db()
+    assert configured.server_uri == "ldap://dc.example.com"
+
+    # With the password typed in, or with the server unchanged, it works as before.
+    response = admin.put(
+        "/api/settings/ldap", {**elsewhere, "bind_password": "svc-secret"}, content_type="application/json"
+    )
+    assert response.status_code == 200
+    response = admin.put(
+        "/api/settings/ldap",
+        {**elsewhere, "user_filter": data["user_filter"]},
+        content_type="application/json",
+    )
+    assert response.status_code == 200

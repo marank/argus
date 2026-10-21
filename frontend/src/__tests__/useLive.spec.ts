@@ -67,6 +67,14 @@ describe('useLive', () => {
     expect(reload).toHaveBeenCalledOnce()
   })
 
+  it('skips a garbled frame and keeps listening', async () => {
+    const { reload, source } = setup(['reservation'])
+    expect(() => source.onmessage?.({ data: 'not json' })).not.toThrow()
+    source.send('reservation', 'r1')
+    await vi.advanceTimersByTimeAsync(500)
+    expect(reload).toHaveBeenCalledOnce()
+  })
+
   it('only counts signals for its own object', async () => {
     const { reload, source } = setup(['reservation'], { id: 'r1' })
     source.send('reservation', 'r2')

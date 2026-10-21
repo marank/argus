@@ -162,6 +162,15 @@ class ReservationEventOut(Schema):
     data: dict
 
 
+def pending_approvers(reservation: Reservation) -> list:
+    """Who may approve while the request waits for approval; asked once per request."""
+    if reservation.status != Reservation.Status.PENDING_APPROVAL:
+        return []
+    if not hasattr(reservation, "_pending_approvers"):
+        reservation._pending_approvers = list(reservation.approvers())
+    return reservation._pending_approvers
+
+
 class ReservationOut(ReservationListOut):
     notes: str
     requested_pickup_date: date | None
@@ -205,16 +214,12 @@ class ReservationOut(ReservationListOut):
 
     @staticmethod
     def resolve_approvers(obj) -> list:
-        if obj.status != Reservation.Status.PENDING_APPROVAL:
-            return []
-        return list(obj.approvers())
+        return pending_approvers(obj)
 
     @staticmethod
     def resolve_can_approve(obj, context) -> bool:
         request = (context or {}).get("request")
-        return bool(
-            request and obj.status == Reservation.Status.PENDING_APPROVAL and obj.may_approve(request.user)
-        )
+        return bool(request) and any(user.pk == request.user.pk for user in pending_approvers(obj))
 
     @staticmethod
     def resolve_returns(obj):
@@ -244,7 +249,7 @@ class ReservationIn(Schema):
     start_date: date
     end_date: date | None = None
     requested_pickup_date: date | None = None
-    items: list[ReservationItemIn] = Field(..., min_length=1)
+    items: list[ReservationItemIn] = Field(..., min_length=1, max_length=100)
     requester: UUID | None = Field(None, description="IT only: create on behalf of an employee")
     follows: UUID | None = Field(None, description="The earlier request this one asks again for")
 

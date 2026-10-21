@@ -54,9 +54,12 @@ class Location(TimeStampedModel):
 
     def descendant_ids(self) -> set:
         """IDs of this location and all locations below it."""
+        # One query for the whole (small) tree instead of one per level.
+        children: dict = {}
+        for pk, parent_id in Location.objects.filter(parent__isnull=False).values_list("pk", "parent_id"):
+            children.setdefault(parent_id, []).append(pk)
         ids, frontier = {self.pk}, [self.pk]
         while frontier:
-            children = Location.objects.filter(parent_id__in=frontier).values_list("pk", flat=True)
-            frontier = [pk for pk in children if pk not in ids]
+            frontier = [pk for parent in frontier for pk in children.get(parent, []) if pk not in ids]
             ids.update(frontier)
         return ids

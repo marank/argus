@@ -24,7 +24,13 @@ from apps.inventory.schemas.asset_issue import (
 )
 from apps.inventory.schemas.license import OwnLicenseOut
 from apps.inventory.services.availability import Counts, period_availability
-from apps.inventory.services.issues import mark_seen, post_message, report_issue, update_issue
+from apps.inventory.services.issues import (
+    mark_seen,
+    post_message,
+    report_issue,
+    update_issue,
+    with_messages,
+)
 from apps.masterdata.models import AssetModel, Category
 from apps.reservations.api.queries import approvable_reservations
 from apps.reservations.models import Reservation, ReservationAllocation
@@ -101,14 +107,36 @@ def my_consumables(request: HttpRequest):
     A consumable fits when it is assigned to the device itself or marked as
     compatible with the device's model.
     """
+    assets = list(
+        Asset.objects.filter(assigned_to=request.user)
+        .select_related("model__manufacturer")
+        .order_by("inventory_number")
+    )
+    # What fits which device, in two queries for all devices (see Asset.consumable_models).
+    own: dict[UUID, set[UUID]] = {}
+    for asset_id, model_id in Asset.consumables.through.objects.filter(asset__in=assets).values_list(
+        "asset_id", "assetmodel_id"
+    ):
+        own.setdefault(asset_id, set()).add(model_id)
+    compatible: dict[UUID, set[UUID]] = {}
+    for model_id, other_id in AssetModel.compatible_with.through.objects.filter(
+        from_assetmodel_id__in={asset.model_id for asset in assets}
+    ).values_list("from_assetmodel_id", "to_assetmodel_id"):
+        compatible.setdefault(model_id, set()).add(other_id)
+    offered = {
+        model.pk: model
+        for model in AssetModel.objects.filter(
+            pk__in=set().union(*own.values(), *compatible.values()),
+            tracking=AssetModel.Tracking.BULK,
+            is_requestable=True,
+            is_active=True,
+        ).select_related("manufacturer")
+    }
     result = []
-    assets = Asset.objects.filter(assigned_to=request.user).select_related("model__manufacturer")
-    for asset in assets.order_by("inventory_number"):
-        consumables = list(
-            asset.consumable_models()
-            .filter(is_requestable=True, is_active=True)
-            .select_related("manufacturer")
-            .order_by("manufacturer__name", "name")
+    for asset in assets:
+        ids = own.get(asset.pk, set()) | compatible.get(asset.model_id, set())
+        consumables = sorted(
+            (offered[pk] for pk in ids if pk in offered), key=lambda m: (m.manufacturer.name, m.name)
         )
         if consumables:
             result.append({"asset": asset, "consumables": consumables})
@@ -118,7 +146,9 @@ def my_consumables(request: HttpRequest):
 def _own_assets(user, assets, issues) -> list[dict]:
     """Devices of the employee with their open reservation and the given reports."""
     assets = assets.filter(assigned_to=user).select_related("model__manufacturer", "model__category")
-    assets = assets.prefetch_related(Prefetch("issues", queryset=issues, to_attr="visible_issues"))
+    assets = assets.prefetch_related(
+        Prefetch("issues", queryset=with_messages(issues), to_attr="visible_issues")
+    )
     allocations = {
         a.asset_id: a.item.reservation
         for a in ReservationAllocation.objects.filter(
@@ -175,8 +205,10 @@ def report(request: HttpRequest, pk: UUID, payload: AssetIssueIn):
 @router.get("/my-issues", response=list[OwnIssueWithDeviceOut])
 def my_issues(request: HttpRequest):
     """All problems the employee has reported, newest first."""
-    issues = AssetIssue.objects.filter(reported_by=request.user).select_related(
-        "asset__model__manufacturer", "asset__model__category"
+    issues = with_messages(
+        AssetIssue.objects.filter(reported_by=request.user).select_related(
+            "asset__model__manufacturer", "asset__model__category"
+        )
     )
     for issue in issues:
         issue.still_assigned = issue.asset.assigned_to_id == request.user.pk

@@ -12,7 +12,6 @@ from ninja.pagination import paginate
 
 from apps.accounts.models import User
 from apps.accounts.permissions import WRITE, can
-from apps.accounts.services import assignment
 from apps.accounts.services.assignment import Assigned, assigned_q
 from apps.core.api.pagination import Pagination
 from apps.core.api.querying import order, search
@@ -31,8 +30,7 @@ from apps.reservations.schemas.reservation import (
     ReservationOut,
     ScheduleIn,
 )
-from apps.reservations.services import history, workflow
-from apps.reservations.services import notifications as reservation_notifications
+from apps.reservations.services import workflow
 
 from .queries import get_for_update, get_reservation, visible_reservations
 
@@ -98,15 +96,18 @@ def list_reservations(
 def create_reservation(request: HttpRequest, payload: ReservationIn):
     data = payload.dict(exclude={"items", "requester", "follows"})
     requester = request.user
-    if payload.requester and can(request.user, "reservations", WRITE):
-        requester = User.objects.get(pk=payload.requester)
+    may_record = can(request.user, "reservations", WRITE)
+    if payload.requester and may_record:
+        requester = get_object_or_404(User, pk=payload.requester, is_active=True, is_terminal=False)
     if payload.follows:
         # Only an earlier request of the same employee that the user may see.
         data["follows"] = (
             visible_reservations(request).filter(pk=payload.follows, requester=requester).first()
         )
     items = [item.dict() for item in payload.items]
-    reservation = workflow.submit(requester, data, items, created_by=request.user)
+    reservation = workflow.submit(
+        requester, data, items, created_by=request.user, from_catalog=not may_record
+    )
     return Status(201, get_reservation(request, reservation.pk))
 
 
@@ -132,9 +133,10 @@ def get_reservation_detail(request: HttpRequest, pk: UUID):
 
 
 @router.post("/{uuid:pk}/cancel", response=ReservationOut)
+@transaction.atomic
 def cancel(request: HttpRequest, pk: UUID):
-    reservation = get_reservation(request, pk)
-    workflow.cancel(reservation, request.user)
+    get_reservation(request, pk)  # only a request the user may see
+    workflow.cancel(get_for_update(pk), request.user)
     return get_reservation(request, pk)
 
 
@@ -213,19 +215,7 @@ def remind(request: HttpRequest, pk: UUID):
 @router.post("/{uuid:pk}/assign", response=ReservationOut, auth=reservations_write)
 @transaction.atomic
 def assign(request: HttpRequest, pk: UUID, payload: AssignIn):
-    reservation = get_for_update(pk)
-    before = (reservation.assigned_team_id, reservation.assignee_id)
-    notify = assignment.assign(reservation, payload.team, payload.assignee, request.user)
-    if (reservation.assigned_team_id, reservation.assignee_id) != before:
-        history.record(
-            reservation,
-            history.Kind.ASSIGNED,
-            request.user,
-            team=reservation.assigned_team.name if reservation.assigned_team else None,
-            assignee=reservation.assignee.display_name if reservation.assignee else None,
-        )
-    if notify:
-        reservation_notifications.request_assigned(reservation)
+    workflow.assign(get_for_update(pk), payload.team, payload.assignee, request.user)
     return get_reservation(request, pk)
 
 

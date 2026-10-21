@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.db.models import Prefetch, QuerySet
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -100,3 +101,9 @@ def update_issue(issue: AssetIssue, user, status: str, message: str = "", *, by_
 def mark_seen(user, issue: AssetIssue) -> None:
     """The reporter opened the report: IT's updates are no longer news."""
     AssetIssue.objects.filter(pk=issue.pk, reported_by=user, unseen_update=True).update(unseen_update=False)
+
+
+def with_messages(issues: QuerySet[AssetIssue]) -> QuerySet[AssetIssue]:
+    """Loads the messages of all reports at once, for ``OwnIssueOut.last_message``."""
+    messages = AssetIssueEntry.objects.filter(kind=AssetIssueEntry.Kind.MESSAGE).order_by("created_at")
+    return issues.prefetch_related(Prefetch("entries", queryset=messages, to_attr="messages"))

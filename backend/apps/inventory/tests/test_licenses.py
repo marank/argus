@@ -1,3 +1,4 @@
+import uuid
 from datetime import date, timedelta
 
 from apps.accounts.models import User
@@ -215,3 +216,12 @@ def test_my_licenses_lists_user_and_device_seats(employee_client, it_client):
     assert by_name["AutoCAD LT"]["device"]["inventory_number"] == workstation.inventory_number
     assert "license_key" not in by_name["AutoCAD LT"]
     assert License.objects.filter(model__name="AutoCAD LT").exists()
+
+
+def test_removing_an_unknown_seat_is_a_404(it_client):
+    acrobat = AssetModel.objects.get(name="Acrobat Pro")
+    license_id = it_client.post(
+        "/api/inventory/licenses", license_payload(acrobat), content_type=JSON
+    ).json()["id"]
+    response = it_client.delete(f"/api/inventory/licenses/{license_id}/assignments/{uuid.uuid4()}")
+    assert response.status_code == 404

@@ -17,8 +17,11 @@ from apps.reservations.models import (
 
 def reservation_queryset() -> QuerySet[Reservation]:
     allocations = ReservationAllocation.objects.select_related(
+        # The category gives each allocation its icon.
         "asset__model__manufacturer",
+        "asset__model__category",
         "consumable__model__manufacturer",
+        "consumable__model__category",
         "consumable__location__parent",
         "license__model__manufacturer",
         "license__model__category",

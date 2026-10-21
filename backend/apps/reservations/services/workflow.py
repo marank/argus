@@ -11,12 +11,14 @@ from django.utils.translation import gettext as _
 from apps.accounts.models import User
 from apps.accounts.services import assignment
 from apps.core.exceptions import BusinessError
+from apps.core.features import is_enabled
 from apps.core.models import SiteSettings
 from apps.inventory.models import Asset, AssetEvent, Consumable, ConsumableMovement, License
 from apps.inventory.services.availability import pool_assets, pool_consumables, pool_licenses
 from apps.inventory.services.consumables import move_consumable, release_consumable, reserve_consumable
 from apps.inventory.services.events import log_event
 from apps.inventory.services.licenses import assign_license
+from apps.masterdata.models import AssetModel, Category
 from apps.reservations.models import (
     DeviceReturn,
     Handover,
@@ -63,11 +65,38 @@ def _validate_pickup_wish(day: date | None, start: date) -> None:
 # --- Employee actions --------------------------------------------------------
 
 
+def _require_requestable(line: ReservationItem) -> None:
+    """Employees can only request what the portal catalog offers them (``portal.catalog``)."""
+    software_off = not is_enabled("software_requests")
+    model = line.asset_model
+    categories = {c for c in (line.category, model.category if model else None) if c}
+    model_offered = not model or (
+        model.is_requestable
+        and model.is_active
+        and not (software_off and model.tracking == AssetModel.Tracking.LICENSE)
+    )
+    categories_offered = all(
+        c.is_requestable and not (software_off and c.kind == Category.Kind.SOFTWARE) for c in categories
+    )
+    if not (model_offered and categories_offered):
+        raise BusinessError(_("“%(item)s” cannot be requested.") % {"item": line.label})
+
+
 @transaction.atomic
 def submit(
-    requester, data: dict, items: list[dict], created_by, *, allow_past_start: bool = False
+    requester,
+    data: dict,
+    items: list[dict],
+    created_by,
+    *,
+    allow_past_start: bool = False,
+    from_catalog: bool = False,
 ) -> Reservation:
-    """Create a request; ``allow_past_start`` is for recording history (demo data)."""
+    """Create a request; ``allow_past_start`` is for recording history (demo data).
+
+    With ``from_catalog`` (employees) every line must be on offer in the catalog; IT
+    may record anything.
+    """
     if not items:
         raise BusinessError(_("Add at least one device to the request."))
     if data["start_date"] < timezone.localdate() and not allow_past_start:
@@ -91,6 +120,8 @@ def submit(
             note=item.get("note", ""),
         )
         line.full_clean()
+        if from_catalog:
+            _require_requestable(line)
         if line.category_id and not line.asset_model_id and not line.description:
             if not line.category.allow_any_model:
                 raise BusinessError(
@@ -319,6 +350,24 @@ def extend(reservation: Reservation, user, end_date: date) -> Reservation:
     reservation.end_date = end_date
     reservation.handled_by = user
     reservation.save(update_fields=["end_date", "handled_by", "updated_at"])
+    return reservation
+
+
+@transaction.atomic
+def assign(reservation: Reservation, team_id, assignee_id, user) -> Reservation:
+    """Hand the request to a team and/or person; recorded in the history when it changed."""
+    before = (reservation.assigned_team_id, reservation.assignee_id)
+    notify = assignment.assign(reservation, team_id, assignee_id, user)
+    if (reservation.assigned_team_id, reservation.assignee_id) != before:
+        record(
+            reservation,
+            Kind.ASSIGNED,
+            user,
+            team=reservation.assigned_team.name if reservation.assigned_team else None,
+            assignee=reservation.assignee.display_name if reservation.assignee else None,
+        )
+    if notify:
+        notifications.request_assigned(reservation)
     return reservation
 
 

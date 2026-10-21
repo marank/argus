@@ -17,7 +17,9 @@ class DepartmentOut(ModelSchema):
 
     @staticmethod
     def resolve_member_count(obj: Department) -> int:
-        return getattr(obj, "member_count", None) or obj.members.count()
+        # Annotated by the list endpoint; counted only where it is missing (e.g. after saving).
+        count = getattr(obj, "member_count", None)
+        return obj.members.count() if count is None else count
 
     @staticmethod
     def resolve_approvers(obj: Department) -> list:

@@ -46,3 +46,15 @@ def test_line_of_another_order_is_not_found(it_client):
     for line in (other["lines"][0]["id"], str(uuid.uuid4())):
         response = receive(it_client, order, line, 1)
         assert response.status_code == 404, response.content
+
+
+def test_changing_lines_of_a_placed_order_changes_nothing(it_client):
+    order = ordered(it_client)
+    model = AssetModel.objects.filter(tracking=AssetModel.Tracking.BULK).first()
+    response = it_client.put(
+        f"/api/procurement/orders/{order['id']}",
+        {"notes": "changed", "lines": [{"asset_model": str(model.pk), "quantity": 9}]},
+        content_type=JSON,
+    )
+    assert response.status_code == 409
+    assert it_client.get(f"/api/procurement/orders/{order['id']}").json()["notes"] == ""

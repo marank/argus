@@ -44,7 +44,10 @@ class OwnIssueOut(Schema):
 
     @staticmethod
     def resolve_last_message(obj: AssetIssue) -> str | None:
-        """The latest message of either side; few reports per employee, so a query each is fine."""
+        """The latest message of either side (prefetched with ``with_messages`` in lists)."""
+        messages = getattr(obj, "messages", None)
+        if messages is not None:
+            return messages[-1].text if messages else None
         entry = obj.entries.filter(kind=AssetIssueEntry.Kind.MESSAGE).order_by("created_at").last()
         return entry.text if entry else None
 

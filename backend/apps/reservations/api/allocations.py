@@ -60,17 +60,32 @@ def candidates(request: HttpRequest, item_id: UUID, q: str | None = None):
     return {"assets": list(assets.order_by("inventory_number")[:100]), "consumables": consumables}
 
 
+def _asset_by_code(code: str) -> Asset:
+    """The device with this inventory number, else the one with this serial number.
+
+    Inventory numbers are unique; serial numbers of different manufacturers may
+    collide, and then guessing would hand out the wrong device.
+    """
+    asset = Asset.objects.filter(inventory_number__iexact=code).first()
+    if asset:
+        return asset
+    matches = list(Asset.objects.filter(serial_number__iexact=code)[:2])
+    if not matches:
+        raise BusinessError(_("No device found for “%(code)s”.") % {"code": code})
+    if len(matches) > 1:
+        raise BusinessError(
+            _("Several devices have the serial number “%(code)s”. Scan the inventory number instead.")
+            % {"code": code}
+        )
+    return matches[0]
+
+
 @router.post("/{uuid:pk}/allocations", response=ReservationOut)
 def allocate(request: HttpRequest, pk: UUID, payload: AllocateIn):
     """Bind a device to the reservation, by id or by scanning its code."""
     item = get_object_or_404(ReservationItem, pk=payload.item, reservation_id=pk)
     if payload.code:
-        asset = Asset.objects.filter(
-            Q(inventory_number__iexact=payload.code) | Q(serial_number__iexact=payload.code)
-        ).first()
-        if asset is None:
-            raise BusinessError(_("No device found for “%(code)s”.") % {"code": payload.code})
-        workflow.allocate_asset(item, asset, request.user)
+        workflow.allocate_asset(item, _asset_by_code(payload.code), request.user)
     elif payload.license:
         license = get_object_or_404(License, pk=payload.license)
         device = get_object_or_404(Asset, pk=payload.asset) if payload.asset else None
@@ -101,7 +116,9 @@ def auto_allocate(request: HttpRequest, pk: UUID):
 
 
 @router.delete("/{uuid:pk}/allocations/{uuid:allocation_id}", response=ReservationOut)
+@transaction.atomic
 def remove_allocation(request: HttpRequest, pk: UUID, allocation_id: UUID):
+    get_for_update(pk)  # waits for other changes to the request
     allocation = get_object_or_404(
         ReservationAllocation.objects.select_related("item__reservation", "asset", "consumable"),
         pk=allocation_id,

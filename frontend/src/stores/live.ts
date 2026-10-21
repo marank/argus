@@ -37,7 +37,15 @@ export const useLiveStore = defineStore('live', () => {
       if (gap) emit(RELOAD_ALL)
       gap = false
     }
-    source.onmessage = (message) => emit(JSON.parse(message.data) as LiveEvent)
+    source.onmessage = (message) => {
+      let event: LiveEvent
+      try {
+        event = JSON.parse(message.data) as LiveEvent
+      } catch {
+        return // a garbled frame: skip it, the next signal comes through
+      }
+      emit(event)
+    }
     source.addEventListener('bye', () => (planned = true))
     source.onerror = () => {
       if (connected.value && !planned) gap = true

@@ -59,7 +59,7 @@ class AssetFilter(FilterSchema):
     warranty_until: Annotated[date | None, FilterLookup("warranty_until")] = None
     category: UUID | None = None
 
-    def filter_category(self, value: int | None) -> Q:
+    def filter_category(self, value: UUID | None) -> Q:
         if not value:
             return Q()
         return Q(model__category_id__in=get_object_or_404(Category, pk=value).descendant_ids())

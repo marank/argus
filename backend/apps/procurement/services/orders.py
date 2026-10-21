@@ -59,10 +59,11 @@ def create_order(data: dict, lines: list[dict], user) -> PurchaseOrder:
 
 @transaction.atomic
 def update_order(order: PurchaseOrder, data: dict, lines: list[dict] | None) -> PurchaseOrder:
+    if lines is not None:
+        _require_status(order, Status.DRAFT)
     _apply(order, data)
     order.save()
     if lines is not None:
-        _require_status(order, Status.DRAFT)
         _save_lines(order, lines)
     return order
 
@@ -71,6 +72,8 @@ def _apply(order: PurchaseOrder, data: dict) -> None:
     for name, value in data.items():
         field = order._meta.get_field(name)
         setattr(order, f"{name}_id" if field.is_relation else name, value)
+    # The number is drawn when saving.
+    order.full_clean(exclude=["number"])
 
 
 @transaction.atomic

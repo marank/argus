@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-21 00:28+0200\n"
+"POT-Creation-Date: 2026-10-21 00:45+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -84,6 +84,12 @@ msgstr[0] ""
 "Zwei-Faktor-Authentifizierung für %(count)d Mitarbeiter zurückgesetzt."
 msgstr[1] ""
 "Zwei-Faktor-Authentifizierung für %(count)d Mitarbeiter zurückgesetzt."
+
+#: apps/accounts/api/ldap.py:39
+msgid "Enter the bind password again when changing the server or bind DN."
+msgstr ""
+"Geben Sie das Bind-Passwort erneut ein, wenn Sie den Server oder den Bind-DN "
+"ändern."
 
 #: apps/accounts/api/two_factor.py:29
 msgid "Too many failed attempts. Please try again in 15 minutes."
@@ -403,11 +409,11 @@ msgstr "Backup-Code"
 msgid "backup codes"
 msgstr "Backup-Codes"
 
-#: apps/accounts/models/user.py:26 config/settings.py:143
+#: apps/accounts/models/user.py:26 config/settings.py:141
 msgid "English"
 msgstr "Englisch"
 
-#: apps/accounts/models/user.py:27 config/settings.py:143
+#: apps/accounts/models/user.py:27 config/settings.py:141
 msgid "German"
 msgstr "Deutsch"
 
@@ -1457,19 +1463,19 @@ msgstr "Nicht genug Bestand für %(model)s (verfügbar: %(quantity)s)."
 msgid "Only %(available)s units of %(model)s are available at %(location)s."
 msgstr "Nur %(available)s Stück von %(model)s sind in %(location)s verfügbar."
 
-#: apps/inventory/services/issues.py:19
+#: apps/inventory/services/issues.py:20
 msgid "Describe the problem."
 msgstr "Beschreiben Sie das Problem."
 
-#: apps/inventory/services/issues.py:55
+#: apps/inventory/services/issues.py:56
 msgid "Write a message."
 msgstr "Schreiben Sie eine Nachricht."
 
-#: apps/inventory/services/issues.py:71
+#: apps/inventory/services/issues.py:72
 msgid "Only IT can take a report into work or reopen it."
 msgstr "Nur die IT kann eine Meldung in Bearbeitung nehmen oder wieder öffnen."
 
-#: apps/inventory/services/issues.py:73
+#: apps/inventory/services/issues.py:74
 msgid "The report already has this status."
 msgstr "Die Meldung hat diesen Status bereits."
 
@@ -1493,7 +1499,7 @@ msgstr ""
 "Diese Lizenz wird Mitarbeitern zugewiesen. Wählen Sie einen Mitarbeiter."
 
 #: apps/inventory/services/licenses.py:36
-#: apps/reservations/services/workflow.py:465
+#: apps/reservations/services/workflow.py:514
 msgid "This license is assigned to devices. Choose a device."
 msgstr "Diese Lizenz wird Geräten zugewiesen. Wählen Sie ein Gerät."
 
@@ -1984,18 +1990,18 @@ msgstr "Das ist nicht möglich, solange die Bestellung „%(status)s“ ist."
 msgid "An order needs at least one line."
 msgstr "Eine Bestellung muss mindestens eine Position enthalten."
 
-#: apps/procurement/services/orders.py:128
+#: apps/procurement/services/orders.py:131
 #, python-format
 msgid "Assign a model to “%(line)s” before receiving it."
 msgstr ""
 "Weisen Sie „%(line)s“ ein Modell zu, bevor Sie den Wareneingang buchen."
 
-#: apps/procurement/services/orders.py:136
+#: apps/procurement/services/orders.py:139
 #, python-format
 msgid "Only %(open)s units of “%(line)s” are still open."
 msgstr "Von „%(line)s“ sind nur noch %(open)s Stück offen."
 
-#: apps/procurement/services/orders.py:145
+#: apps/procurement/services/orders.py:148
 msgid "Choose a storage location for consumables."
 msgstr "Wählen Sie einen Lagerort für das Verbrauchsmaterial."
 
@@ -2025,12 +2031,21 @@ msgstr "Zuständig"
 msgid "custom request"
 msgstr "Sonderwunsch"
 
-#: apps/reservations/api/allocations.py:72
+#: apps/reservations/api/allocations.py:74
 #, python-format
 msgid "No device found for “%(code)s”."
 msgstr "Kein Gerät gefunden für „%(code)s“."
 
-#: apps/reservations/api/allocations.py:84
+#: apps/reservations/api/allocations.py:77
+#, python-format
+msgid ""
+"Several devices have the serial number “%(code)s”. Scan the inventory number "
+"instead."
+msgstr ""
+"Mehrere Geräte haben die Seriennummer „%(code)s“. Scannen Sie stattdessen die "
+"Inventarnummer."
+
+#: apps/reservations/api/allocations.py:99
 msgid "Choose a device or consumable."
 msgstr "Wählen Sie ein Gerät oder Verbrauchsmaterial."
 
@@ -2548,195 +2563,200 @@ msgstr "Erinnerung: Rückgabe von %(number)s"
 msgid "Sent by %(name)s, IT"
 msgstr "Gesendet von %(name)s, IT"
 
-#: apps/reservations/services/workflow.py:37
+#: apps/reservations/services/workflow.py:39
 #, python-format
 msgid "This is not possible while the reservation is “%(status)s”."
 msgstr "Das ist nicht möglich, solange die Anforderung „%(status)s“ ist."
 
-#: apps/reservations/services/workflow.py:45
+#: apps/reservations/services/workflow.py:47
 msgid "Temporary reservations need an end date."
 msgstr "Befristete Anforderungen erfordern ein Enddatum."
 
-#: apps/reservations/services/workflow.py:47
+#: apps/reservations/services/workflow.py:49
 msgid "The end date must not be before the start date."
 msgstr "Das Enddatum darf nicht vor dem Startdatum liegen."
 
-#: apps/reservations/services/workflow.py:50
+#: apps/reservations/services/workflow.py:52
 #, python-format
 msgid "Temporary requests can last at most %(days)s days."
 msgstr "Ausleihen dürfen höchstens %(days)s Tage dauern."
 
-#: apps/reservations/services/workflow.py:58
+#: apps/reservations/services/workflow.py:60
 msgid "The preferred pickup day must not be in the past."
 msgstr "Der gewünschte Abholtag darf nicht in der Vergangenheit liegen."
 
-#: apps/reservations/services/workflow.py:60
+#: apps/reservations/services/workflow.py:62
 msgid ""
 "The preferred pickup day must not be after the day the devices are needed."
 msgstr ""
 "Der gewünschte Abholtag darf nicht nach dem Tag liegen, ab dem die Geräte "
 "benötigt werden."
 
-#: apps/reservations/services/workflow.py:72
-#: apps/reservations/services/workflow.py:760
+#: apps/reservations/services/workflow.py:82
+#, python-format
+msgid "“%(item)s” cannot be requested."
+msgstr "„%(item)s“ kann nicht angefordert werden."
+
+#: apps/reservations/services/workflow.py:101
+#: apps/reservations/services/workflow.py:809
 msgid "Add at least one device to the request."
 msgstr "Fügen Sie der Anforderung mindestens ein Gerät hinzu."
 
-#: apps/reservations/services/workflow.py:74
-#: apps/reservations/services/workflow.py:762
+#: apps/reservations/services/workflow.py:103
+#: apps/reservations/services/workflow.py:811
 msgid "The start date must not be in the past."
 msgstr "Das Startdatum darf nicht in der Vergangenheit liegen."
 
-#: apps/reservations/services/workflow.py:97
+#: apps/reservations/services/workflow.py:128
 #, python-format
 msgid "Please choose a specific model for “%(category)s”."
 msgstr "Bitte wählen Sie für „%(category)s“ ein bestimmtes Modell."
 
-#: apps/reservations/services/workflow.py:185
+#: apps/reservations/services/workflow.py:216
 msgid ""
 "Only an approver of the requester's department can decide on this request."
 msgstr ""
 "Nur ein Genehmiger aus der Abteilung des anfordernden Mitarbeiters kann über "
 "diese Anforderung entscheiden."
 
-#: apps/reservations/services/workflow.py:227
+#: apps/reservations/services/workflow.py:258
 msgid "You cannot confirm more devices than were requested."
 msgstr "Es können nicht mehr Geräte bestätigt werden als angefordert."
 
-#: apps/reservations/services/workflow.py:230
+#: apps/reservations/services/workflow.py:261
 #, python-format
 msgid "Remove allocated devices of “%(item)s” before lowering the quantity."
 msgstr ""
 "Entfernen Sie zugewiesene Geräte von „%(item)s“, bevor Sie die Menge "
 "reduzieren."
 
-#: apps/reservations/services/workflow.py:237
+#: apps/reservations/services/workflow.py:268
 msgid "Confirm at least one device or reject the request."
 msgstr ""
 "Bestätigen Sie mindestens ein Gerät oder lehnen Sie die Anforderung ab."
 "Bestätigen Sie mindestens ein Gerät oder lehnen Sie die Anforderung ab."
 
-#: apps/reservations/services/workflow.py:307
-#: apps/reservations/services/workflow.py:333
+#: apps/reservations/services/workflow.py:338
+#: apps/reservations/services/workflow.py:382
 msgid "Only temporary reservations have a return date."
 msgstr "Nur befristete Anforderungen haben ein Rückgabedatum."
 
-#: apps/reservations/services/workflow.py:309
+#: apps/reservations/services/workflow.py:340
 msgid "The new return date must not be in the past."
 msgstr "Das neue Rückgabedatum darf nicht in der Vergangenheit liegen."
 
-#: apps/reservations/services/workflow.py:311
+#: apps/reservations/services/workflow.py:342
 msgid "The new return date must be after the current one."
 msgstr "Das neue Rückgabedatum muss nach dem bisherigen liegen."
 
-#: apps/reservations/services/workflow.py:335
+#: apps/reservations/services/workflow.py:384
 msgid "Email is not set up, so no reminder can be sent."
 msgstr ""
 "E-Mail ist nicht eingerichtet, daher kann keine Erinnerung gesendet werden."
 
-#: apps/reservations/services/workflow.py:339
+#: apps/reservations/services/workflow.py:388
 #, python-format
 msgid "%(name)s has no email address, so no reminder can be sent."
 msgstr ""
 "%(name)s hat keine E-Mail-Adresse, daher kann keine Erinnerung gesendet "
 "werden."
 
-#: apps/reservations/services/workflow.py:354
+#: apps/reservations/services/workflow.py:403
 msgid "Remove allocated devices before changing the model."
 msgstr "Entfernen Sie zugewiesene Geräte, bevor Sie das Modell ändern."
 
-#: apps/reservations/services/workflow.py:367
+#: apps/reservations/services/workflow.py:416
 #, python-format
 msgid "“%(item)s” is free text. Create or assign a model first."
 msgstr ""
 "„%(item)s“ ist Freitext. Legen Sie zuerst ein Modell an oder ordnen Sie "
 "eines zu."
 
-#: apps/reservations/services/workflow.py:401
+#: apps/reservations/services/workflow.py:450
 #, python-format
 msgid "%(asset)s does not match “%(item)s”."
 msgstr "%(asset)s passt nicht zu „%(item)s“."
 
-#: apps/reservations/services/workflow.py:405
+#: apps/reservations/services/workflow.py:454
 #, python-format
 msgid "%(asset)s is not in stock (%(status)s)."
 msgstr "%(asset)s ist nicht im Lager (%(status)s)."
 
-#: apps/reservations/services/workflow.py:410
+#: apps/reservations/services/workflow.py:459
 #, python-format
 msgid "All confirmed devices for “%(item)s” are already allocated."
 msgstr "Alle bestätigten Geräte für „%(item)s“ sind bereits zugewiesen."
 
-#: apps/reservations/services/workflow.py:433
-#: apps/reservations/services/workflow.py:457
+#: apps/reservations/services/workflow.py:482
+#: apps/reservations/services/workflow.py:506
 #, python-format
 msgid "%(model)s does not match “%(item)s”."
 msgstr "%(model)s passt nicht zu „%(item)s“."
 
-#: apps/reservations/services/workflow.py:437
+#: apps/reservations/services/workflow.py:486
 #, python-format
 msgid "Only %(missing)s more units are needed for “%(item)s”."
 msgstr "Für „%(item)s“ werden nur noch %(missing)s Stück benötigt."
 
-#: apps/reservations/services/workflow.py:461
+#: apps/reservations/services/workflow.py:510
 #, python-format
 msgid "All confirmed licenses for “%(item)s” are already allocated."
 msgstr "Alle bestätigten Lizenzen für „%(item)s“ sind bereits zugewiesen."
 
-#: apps/reservations/services/workflow.py:468
+#: apps/reservations/services/workflow.py:517
 #, python-format
 msgid "%(asset)s is not used by %(name)s."
 msgstr "%(asset)s wird nicht von %(name)s genutzt."
 
-#: apps/reservations/services/workflow.py:543
+#: apps/reservations/services/workflow.py:592
 #, python-format
 msgid "Released from %(number)s"
 msgstr "Freigegeben aus %(number)s"
 
-#: apps/reservations/services/workflow.py:573
+#: apps/reservations/services/workflow.py:622
 #, python-format
 msgid "Devices are still missing for: %(items)s"
 msgstr "Es fehlen noch Geräte für: %(items)s"
 
-#: apps/reservations/services/workflow.py:608
+#: apps/reservations/services/workflow.py:657
 msgid "Please sign in the signature field."
 msgstr "Bitte unterschreiben Sie im Unterschriftsfeld."
 
-#: apps/reservations/services/workflow.py:610
+#: apps/reservations/services/workflow.py:659
 msgid "Enter who is collecting the devices."
 msgstr "Geben Sie an, wer die Geräte abholt."
 
-#: apps/reservations/services/workflow.py:612
+#: apps/reservations/services/workflow.py:661
 msgid "Only pickups at the terminal are signed."
 msgstr "Nur Abholungen am Terminal werden unterschrieben."
 
-#: apps/reservations/services/workflow.py:639
+#: apps/reservations/services/workflow.py:688
 msgid "This request has already been handed out."
 msgstr "Diese Anforderung wurde bereits ausgegeben."
 
-#: apps/reservations/services/workflow.py:646
-#: apps/reservations/services/workflow.py:650
+#: apps/reservations/services/workflow.py:695
+#: apps/reservations/services/workflow.py:699
 msgid "Choose a member of the IT department."
 msgstr "Wählen Sie jemanden aus der IT-Abteilung."
 
-#: apps/reservations/services/workflow.py:662
+#: apps/reservations/services/workflow.py:711
 msgid "Choose an active employee as the person collecting the devices."
 msgstr "Wählen Sie einen aktiven Mitarbeiter als abholende Person."
 
-#: apps/reservations/services/workflow.py:785
+#: apps/reservations/services/workflow.py:834
 msgid "A device or consumable was not found."
 msgstr "Ein Gerät oder Verbrauchsmaterial wurde nicht gefunden."
 
-#: apps/reservations/services/workflow.py:845
+#: apps/reservations/services/workflow.py:894
 msgid "Nothing is left to take back."
 msgstr "Es sind keine Positionen mehr zurückzunehmen."
 
-#: apps/reservations/services/workflow.py:870
+#: apps/reservations/services/workflow.py:919
 #, python-format
 msgid "Returned damaged from %(number)s"
 msgstr "Defekt zurück aus %(number)s"
 
-#: apps/reservations/services/workflow.py:917
+#: apps/reservations/services/workflow.py:966
 #, python-format
 msgid "This is set aside for %(number)s. Remove it there first."
 msgstr "Das ist für %(number)s zurückgelegt. Entfernen Sie es zuerst dort."

@@ -115,7 +115,7 @@ class AssetIn(Schema):
 
 class AssetBulkIn(Schema):
     model: UUID
-    serial_numbers: list[str] = Field(..., min_length=1)
+    serial_numbers: list[str] = Field(..., min_length=1, max_length=500)
     condition: Asset.Condition = Asset.Condition.NEW
     is_loanable: bool = True
     location: UUID | None = None
