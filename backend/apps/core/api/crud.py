@@ -49,6 +49,9 @@ class CrudConfig:
     # Called with the request and the existing record before it is changed or deleted;
     # raises HttpError to refuse (e.g. only administrators may change administrators).
     check_change: Callable[[HttpRequest, models.Model], None] | None = None
+    # Called with the request, the input and the existing record (None when creating)
+    # before saving; raises HttpError to refuse values the user may not set.
+    check_input: Callable[[HttpRequest, dict, models.Model | None], None] | None = None
 
     def get_queryset(self) -> QuerySet:
         return self.queryset() if self.queryset else self.model._default_manager.all()
@@ -106,12 +109,19 @@ def build_crud_router(config: CrudConfig, *, tags: list[str]) -> Router:
 
     @router.post("", response={201: Out}, auth=write_auth)
     def create_item(request: HttpRequest, payload: In):
-        instance = apply_input(config.model(), config.prepare(payload.dict()))
+        data = payload.dict()
+        if config.check_input:
+            config.check_input(request, data, None)
+        instance = apply_input(config.model(), config.prepare(data))
         return Status(201, get_instance(instance.pk))
 
     @router.put("/{uuid:pk}", response=Out, auth=write_auth)
     def update_item(request: HttpRequest, pk: UUID, payload: In):
-        instance = apply_input(get_for_change(request, pk), config.prepare(payload.dict()))
+        instance = get_for_change(request, pk)
+        data = payload.dict()
+        if config.check_input:
+            config.check_input(request, data, instance)
+        instance = apply_input(instance, config.prepare(data))
         return get_instance(instance.pk)
 
     @router.delete("/{uuid:pk}", response={204: None}, auth=write_auth)

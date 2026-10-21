@@ -26,6 +26,7 @@ class UserOut(Schema):
     phone: str
     department: RefOut | None
     is_it_staff: bool
+    is_superuser: bool
     is_terminal: bool
     terminal_location: LocationRefOut | None
     is_active: bool
@@ -33,12 +34,17 @@ class UserOut(Schema):
     approval_exempt: bool
     # Method of the second sign-in step ("email", "totp") or None; only for IT and the user.
     two_factor: str | None = None
-    # IT staff's roles; only sent to IT staff.
+    # IT staff's roles and teams; only sent to IT staff.
     roles: list[RefOut] = []
+    teams: list[RefOut] = []
 
     @staticmethod
     def resolve_roles(obj: User, context) -> list:
         return list(obj.roles.all()) if context_is_it_staff(context) else []
+
+    @staticmethod
+    def resolve_teams(obj: User, context) -> list:
+        return list(obj.teams.all()) if context_is_it_staff(context) else []
 
     @staticmethod
     def resolve_two_factor(obj: User, context):
@@ -55,7 +61,6 @@ class CurrentUserOut(UserOut):
     language: str
     notification_settings: dict[str, bool]
     dashboard_settings: dict
-    is_superuser: bool
     # Decides on requests of at least one department (shows the approvals page).
     is_approver: bool
 
@@ -70,6 +75,11 @@ class UserIn(Schema):
     phone: str = ""
     department: UUID | None = None
     is_staff: bool = False
+    # Administrator; only administrators may change it. None leaves it as it is.
+    is_superuser: bool | None = None
+    # Only administrators assign roles; teams need the right to edit teams. None leaves them.
+    roles: list[UUID] | None = None
+    teams: list[UUID] | None = None
     is_terminal: bool = False
     terminal_location: UUID | None = None
     is_active: bool = True

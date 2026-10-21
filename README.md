@@ -64,7 +64,7 @@ start the container waits for the database and applies migrations.
 | `APP_DEMO_DATA` | `true` seeds an empty database with demo data. |
 | `SECRET_KEY` | Django secret key (required, at least 40 random characters). |
 | `TIME_ZONE`, `LOG_LEVEL` | Defaults `Europe/Berlin`, `INFO`. |
-| `ADMIN_USERNAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` | First administrator, created on first start (later: `set_password`). |
+| `ADMIN_USERNAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` | First administrator, created on first start (later: `set_password`). Made an administrator again on every start; deactivating it in the app sticks. |
 | `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | Database (also used by the Postgres container). |
 | `LDAP_*` | Optional LDAP / AD login, see [LDAP login](#ldap-login). |
 

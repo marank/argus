@@ -190,3 +190,106 @@ def test_employees_cannot_read_master_data(employee_client):
         assert employee_client.get(f"/api/{path}").status_code == 403, path
     admin = User.objects.get(username="admin")
     assert employee_client.get(f"/api/accounts/users/{admin.pk}").status_code == 403
+
+
+def test_only_administrators_appoint_administrators(staff, staff_client):
+    grant(staff, users="write")
+    admin = Client()
+    admin.login(username="admin", password="argus-demo")
+    url = f"/api/accounts/users/{staff.pk}"
+    data = {"username": "staff", "is_staff": True}
+
+    # The right to edit users is not enough, not even for oneself.
+    response = staff_client.put(url, {**data, "is_superuser": True}, content_type=JSON)
+    assert response.status_code == 403
+    response = staff_client.post(
+        "/api/accounts/users", {"username": "boss", "is_superuser": True}, content_type=JSON
+    )
+    assert response.status_code == 403
+    # Sending the unchanged status, or none at all, is fine.
+    assert staff_client.put(url, {**data, "is_superuser": False}, content_type=JSON).status_code == 200
+    assert staff_client.put(url, {**data, "job_title": "Support"}, content_type=JSON).status_code == 200
+
+    response = admin.put(url, {**data, "is_superuser": True}, content_type=JSON)
+    assert response.status_code == 200, response.content
+    assert response.json()["is_superuser"] is True
+    staff.refresh_from_db()
+    assert staff.is_superuser
+
+    # Leaving the field out keeps the status.
+    assert admin.put(url, data, content_type=JSON).status_code == 200
+    staff.refresh_from_db()
+    assert staff.is_superuser
+
+    # Administrators demote others, but never themselves.
+    own = User.objects.get(username="admin")
+    response = admin.put(
+        f"/api/accounts/users/{own.pk}", {"username": "admin", "is_superuser": False}, content_type=JSON
+    )
+    assert response.status_code == 409
+    assert User.objects.get(pk=own.pk).is_superuser
+    assert admin.put(url, {**data, "is_superuser": False}, content_type=JSON).status_code == 200
+    staff.refresh_from_db()
+    assert not staff.is_superuser
+
+
+def test_nobody_deactivates_themselves(demo):
+    admin = Client()
+    admin.login(username="admin", password="argus-demo")
+    own = User.objects.get(username="admin")
+    url = f"/api/accounts/users/{own.pk}"
+    data = {"username": "admin", "is_staff": True}
+    assert admin.put(url, {**data, "is_active": False}, content_type=JSON).status_code == 409
+    assert User.objects.get(pk=own.pk).is_active
+
+    # Another administrator may deactivate them, e.g. the one from ADMIN_USERNAME.
+    User.objects.create_superuser("other", password="argus-demo")
+    other = Client()
+    other.login(username="other", password="argus-demo")
+    assert other.put(url, {**data, "is_active": False}, content_type=JSON).status_code == 200
+    assert not User.objects.get(pk=own.pk).is_active
+
+
+def test_roles_and_teams_in_the_user_form(staff, staff_client):
+    from apps.accounts.models import Team
+
+    grant(staff, users="write")
+    admin = Client()
+    admin.login(username="admin", password="argus-demo")
+    role = Role.objects.create(name="Support", permissions={"inventory": "read"})
+    team = Team.objects.create(name="Ledgerline")
+    colleague = User.objects.create_user("colleague", is_staff=True)
+    url = f"/api/accounts/users/{colleague.pk}"
+    data = {"username": "colleague", "is_staff": True}
+
+    # Roles only from administrators, teams only with the right to edit teams.
+    assert staff_client.put(url, {**data, "roles": [str(role.pk)]}, content_type=JSON).status_code == 403
+    assert staff_client.put(url, {**data, "teams": [str(team.pk)]}, content_type=JSON).status_code == 403
+    grant(staff, "Teams", teams="write")
+    response = staff_client.put(url, {**data, "teams": [str(team.pk)], "roles": []}, content_type=JSON)
+    assert response.status_code == 200, response.content
+    assert [t["name"] for t in response.json()["teams"]] == ["Ledgerline"]
+
+    response = admin.put(url, {**data, "roles": [str(role.pk)]}, content_type=JSON)
+    assert response.status_code == 200, response.content
+    assert [r["name"] for r in response.json()["roles"]] == ["Support"]
+    # Leaving both out keeps them.
+    assert staff_client.put(url, data, content_type=JSON).status_code == 200
+    assert list(colleague.roles.all()) == [role]
+    assert list(colleague.teams.all()) == [team]
+
+
+def test_terminal_location_only_for_terminals(demo):
+    from apps.masterdata.models import Location
+
+    admin = Client()
+    admin.login(username="admin", password="argus-demo")
+    location = Location.objects.first()
+    user = User.objects.create_user("kiosk")
+    url = f"/api/accounts/users/{user.pk}"
+    data = {"username": "kiosk", "terminal_location": str(location.pk)}
+
+    terminal = admin.put(url, {**data, "is_terminal": True}, content_type=JSON).json()
+    assert terminal["terminal_location"]
+    employee = admin.put(url, {**data, "is_terminal": False}, content_type=JSON).json()
+    assert employee["terminal_location"] is None

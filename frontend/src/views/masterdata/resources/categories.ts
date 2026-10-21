@@ -79,7 +79,13 @@ export default defineResource<Category>({
   sections: [
     {
       fields: [
-        { key: 'name', label: 'common.name', type: 'text', required: true },
+        {
+          key: 'name',
+          label: 'masterdata.fields.categoryName',
+          type: 'text',
+          required: true,
+          help: 'masterdata.fields.categoryNameHelp',
+        },
         { key: 'code', label: 'common.code', type: 'mono', required: true },
         {
           key: 'item_name',

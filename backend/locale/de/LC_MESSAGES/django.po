@@ -140,6 +140,26 @@ msgstr "Nur Administratoren können einen Administrator ändern oder löschen."
 msgid "You cannot delete your own account."
 msgstr "Ihr eigenes Konto können Sie nicht löschen."
 
+#: apps/accounts/api/users.py
+msgid "Only administrators can assign roles."
+msgstr "Nur Administratoren können Rollen vergeben."
+
+#: apps/accounts/api/users.py
+msgid "You may not change teams."
+msgstr "Sie dürfen Teams nicht ändern."
+
+#: apps/accounts/api/users.py
+msgid "You cannot deactivate your own account."
+msgstr "Ihr eigenes Konto können Sie nicht deaktivieren."
+
+#: apps/accounts/api/users.py
+msgid "Only administrators can appoint administrators."
+msgstr "Nur Administratoren können Administratoren ernennen."
+
+#: apps/accounts/api/users.py
+msgid "You cannot remove your own administrator rights."
+msgstr "Ihre eigenen Administratorrechte können Sie nicht entziehen."
+
 #: apps/accounts/api/users.py:65
 msgid "Disable your own two-factor authentication in your profile."
 msgstr ""

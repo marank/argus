@@ -11,7 +11,7 @@ import {
   NSelect,
   NSwitch,
 } from 'naive-ui'
-import { computed, h, reactive, watch } from 'vue'
+import { computed, h, nextTick, reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import EntitySelect from '@/components/common/EntitySelect.vue'
@@ -20,7 +20,7 @@ import { useAction } from '@/composables/useAction'
 import { useFormat } from '@/composables/useFormat'
 import { CATEGORY_ICONS } from '@/utils/icons'
 
-import { helpKey, isVisible, sectionFields, type FieldDef, type ResourceDef } from './types'
+import { helpKey, isFieldVisible, sectionFields, type FieldDef, type ResourceDef } from './types'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const props = defineProps<{ resource: ResourceDef<any>; row: any | null; readonly?: boolean }>()
@@ -32,10 +32,13 @@ const { busy, run } = useAction()
 
 const form = reactive<Record<string, any>>({})
 
-watch(show, (visible) => {
-  if (!visible) return
+function resetForm() {
   for (const key of Object.keys(form)) delete form[key]
   Object.assign(form, props.row ? props.resource.toForm(props.row) : props.resource.defaults())
+}
+
+watch(show, (visible) => {
+  if (visible) resetForm()
 })
 
 const title = computed(() =>
@@ -65,7 +68,8 @@ function span(field: FieldDef): number {
   return 1
 }
 
-async function save() {
+/** Saves; with `another` (new records only) the drawer stays open with an empty form for the next one. */
+async function save(another = false) {
   const ok = await run(
     () =>
       props.row
@@ -73,9 +77,14 @@ async function save() {
         : props.resource.api.create({ ...form }),
     t('common.saved'),
   )
-  if (ok) {
+  if (!ok) return
+  emit('saved')
+  if (another && !props.row) {
+    resetForm()
+    await nextTick()
+    document.querySelector<HTMLInputElement>('.ar-form input')?.focus()
+  } else {
     show.value = false
-    emit('saved')
   }
 }
 </script>
@@ -89,7 +98,7 @@ async function save() {
         size="small"
         :show-feedback="false"
         :disabled="readonly"
-        @submit.prevent="save"
+        @submit.prevent="save()"
       >
         <section
           v-for="(section, index) in resource.sections"
@@ -99,7 +108,9 @@ async function save() {
           <div v-if="section.title" class="eyebrow section-title">{{ t(section.title) }}</div>
           <NGrid :cols="2" :x-gap="12">
             <NFormItemGi
-              v-for="field in section.fields.filter((f) => f.type !== 'switch' && isVisible(f))"
+              v-for="field in section.fields.filter(
+                (f) => f.type !== 'switch' && isFieldVisible(f, form),
+              )"
               :key="field.key"
               :span="span(field)"
             >
@@ -155,11 +166,13 @@ async function save() {
           </NGrid>
           <!-- Switches as a list below the inputs: label and explanation left, switch right. -->
           <div
-            v-if="section.fields.some((f) => f.type === 'switch' && isVisible(f))"
+            v-if="section.fields.some((f) => f.type === 'switch' && isFieldVisible(f, form))"
             class="toggles"
           >
             <label
-              v-for="field in section.fields.filter((f) => f.type === 'switch' && isVisible(f))"
+              v-for="field in section.fields.filter(
+                (f) => f.type === 'switch' && isFieldVisible(f, form),
+              )"
               :key="field.key"
               class="toggle"
             >
@@ -185,11 +198,18 @@ async function save() {
             readonly ? t('common.close') : t('common.cancel')
           }}</NButton>
           <NButton
+            v-if="!readonly && !row"
+            :loading="busy"
+            :disabled="missingRequired"
+            @click="save(true)"
+            >{{ t('common.createAndNew') }}</NButton
+          >
+          <NButton
             v-if="!readonly"
             type="primary"
             :loading="busy"
             :disabled="missingRequired"
-            @click="save"
+            @click="save()"
             >{{ t('common.save') }}</NButton
           >
         </div>

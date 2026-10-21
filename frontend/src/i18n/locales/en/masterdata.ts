@@ -122,6 +122,17 @@ export default {
     lastName: 'Last name',
     employeeNumber: 'Employee no.',
     ldap: 'LDAP',
+    accountFlags: 'Account',
+    itStaffShort: 'IT',
+    administratorShort: 'Admin',
+    userTeamsLdapHelp:
+      'Teams with an LDAP group follow the directory: membership is adjusted at the next sign-in.',
+    userRolesHelp:
+      'Determine which IT areas are visible and editable. Rights of several roles add up.',
+    administrator: 'Administrator',
+    administratorHelp:
+      'All rights regardless of roles, and access to the administration. You cannot change your own status.',
+    terminalShort: 'Terminal',
     jobTitle: 'Job title',
     department: 'Department',
     numberSequenceHelp:
@@ -129,6 +140,9 @@ export default {
     trackingHelp:
       'Individual devices: with serial number and history. Consumables: by quantity. Software: as licenses.',
     categoryKind: 'Type',
+    categoryName: 'Name (plural)',
+    categoryNameHelp:
+      'In the plural, e.g. “Laptops” or “Monitors”: a category groups many items. The singular goes into “Singular name”.',
     itemName: 'Singular name',
     itemNameHelp:
       'Name of a single item, e.g. “Laptop”. Shown in the portal as “Laptop · any model”.',

@@ -14,6 +14,7 @@ export default {
   delete: 'Delete',
   edit: 'Edit',
   create: 'Create',
+  createAndNew: 'Create + New',
   add: 'Add',
   remove: 'Remove',
   confirm: 'Confirm',

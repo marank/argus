@@ -1,7 +1,8 @@
 import { Building2 } from '@lucide/vue'
+import { NTag } from 'naive-ui'
 import { h } from 'vue'
 
-import { departmentsApi, usersApi } from '@/api/accounts'
+import { departmentsApi, rolesApi, teamsApi, usersApi } from '@/api/accounts'
 import { locationsApi } from '@/api/masterdata'
 import { bool, mono, text } from '@/components/crud/cells'
 import TwoFactorReset from '@/components/masterdata/TwoFactorReset.vue'
@@ -10,7 +11,26 @@ import { i18n } from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useFeaturesStore } from '@/stores/features'
 import type { User } from '@/types/accounts'
+import type { Ref } from '@/types/common'
 import type { Location } from '@/types/masterdata'
+
+/** Administrator, IT staff, terminal, LDAP and 2FA as small tags in one column. */
+function accountFlags(u: User) {
+  const t = i18n.global.t
+  const flags = [
+    u.is_superuser && t('masterdata.fields.administratorShort'),
+    u.is_it_staff && !u.is_superuser && t('masterdata.fields.itStaffShort'),
+    u.is_terminal && t('masterdata.fields.terminalShort'),
+    u.is_ldap_user && t('masterdata.fields.ldap'),
+    u.two_factor && t('masterdata.twoFactor.column'),
+  ].filter((flag): flag is string => !!flag)
+  if (!flags.length) return h('span', { class: 'muted' }, '—')
+  return h(
+    'span',
+    { class: 'row', style: 'gap:4px;flex-wrap:wrap' },
+    flags.map((flag) => h(NTag, { size: 'small', bordered: false }, () => flag)),
+  )
+}
 
 export default defineResource<User>({
   key: 'users',
@@ -28,13 +48,15 @@ export default defineResource<User>({
   ordering: 'last_name',
   title: (u) => u.display_name,
   columns: [
-    { key: 'display_name', label: 'common.name', sorter: 'last_name' },
     {
-      key: 'username',
-      label: 'masterdata.fields.username',
-      sorter: 'username',
-      width: 150,
-      render: (u) => mono(u.username),
+      key: 'display_name',
+      label: 'common.name',
+      sorter: 'last_name',
+      render: (u) =>
+        h('div', [
+          u.display_name,
+          h('small', { class: 'mono muted', style: 'display:block' }, u.username),
+        ]),
     },
     {
       key: 'employee_number',
@@ -44,22 +66,16 @@ export default defineResource<User>({
       render: (u) => mono(u.employee_number),
     },
     {
-      key: 'department',
-      label: 'masterdata.fields.department',
-      width: 160,
-      render: (u) => u.department?.name ?? '—',
-    },
-    {
       key: 'email',
       label: 'masterdata.fields.email',
       sorter: 'email',
       render: (u) => text(u.email),
     },
     {
-      key: 'is_it_staff',
-      label: 'masterdata.fields.itStaff',
-      width: 100,
-      render: (u) => bool(u.is_it_staff),
+      key: 'account',
+      label: 'masterdata.fields.accountFlags',
+      width: 150,
+      render: (u) => accountFlags(u),
     },
     {
       key: 'roles',
@@ -67,24 +83,6 @@ export default defineResource<User>({
       width: 160,
       render: (u) => text(u.roles.map((r) => r.name).join(', ')),
       visible: () => useAuthStore().isItStaff,
-    },
-    {
-      key: 'is_terminal',
-      label: 'masterdata.fields.terminal',
-      width: 100,
-      render: (u) => bool(u.is_terminal),
-    },
-    {
-      key: 'is_ldap_user',
-      label: 'masterdata.fields.ldap',
-      width: 80,
-      render: (u) => bool(u.is_ldap_user),
-    },
-    {
-      key: 'two_factor',
-      label: 'masterdata.twoFactor.column',
-      width: 80,
-      render: (u) => bool(!!u.two_factor),
     },
     { key: 'is_active', label: 'common.active', width: 80, render: (u) => bool(u.is_active) },
   ],
@@ -141,7 +139,38 @@ export default defineResource<User>({
           help: () =>
             useFeaturesStore().ldapEnabled ? 'masterdata.fields.usernameLdapHelp' : undefined,
         },
+        {
+          key: 'teams',
+          label: 'masterdata.resources.teams',
+          type: 'entity',
+          multiple: true,
+          fetcher: teamsApi.list,
+          display: (t: Ref) => t.name,
+          initial: (u: User) => u.teams,
+          help: () =>
+            useFeaturesStore().ldapEnabled ? 'masterdata.fields.userTeamsLdapHelp' : undefined,
+          visible: (form) => !!form.is_staff && useAuthStore().can('teams', 'write'),
+        },
+        {
+          key: 'roles',
+          label: 'masterdata.resources.roles',
+          type: 'entity',
+          multiple: true,
+          fetcher: rolesApi.list,
+          display: (r: Ref) => r.name,
+          initial: (u: User) => u.roles,
+          help: 'masterdata.fields.userRolesHelp',
+          // Administrators have every right anyway.
+          visible: (form) => !!form.is_staff && !form.is_superuser && useAuthStore().isSuperuser,
+        },
         { key: 'is_active', label: 'common.active', type: 'switch' },
+        {
+          key: 'is_superuser',
+          label: 'masterdata.fields.administrator',
+          type: 'switch',
+          help: 'masterdata.fields.administratorHelp',
+          visible: () => useAuthStore().isSuperuser,
+        },
         {
           key: 'is_staff',
           label: 'masterdata.fields.itStaff',
@@ -162,6 +191,7 @@ export default defineResource<User>({
           display: (l: Location) => l.full_name,
           initial: (u: User) => u.terminal_location,
           help: 'masterdata.fields.terminalLocationHelp',
+          visible: (form) => !!form.is_terminal,
         },
       ],
       extra: TwoFactorReset,
@@ -177,8 +207,11 @@ export default defineResource<User>({
     phone: '',
     department: null,
     is_staff: false,
+    is_superuser: false,
     is_terminal: false,
     terminal_location: null,
+    teams: [],
+    roles: [],
     is_active: true,
     approval_exempt: false,
   }),
@@ -192,8 +225,11 @@ export default defineResource<User>({
     phone: u.phone,
     department: u.department?.id ?? null,
     is_staff: u.is_it_staff,
+    is_superuser: u.is_superuser,
     is_terminal: u.is_terminal,
     terminal_location: u.terminal_location?.id ?? null,
+    teams: u.teams.map((t) => t.id),
+    roles: u.roles.map((r) => r.id),
     is_active: u.is_active,
     approval_exempt: u.approval_exempt,
   }),

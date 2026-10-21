@@ -1,7 +1,8 @@
-"""Create the initial administrator from environment variables, once.
+"""Create the initial administrator from environment variables, and keep it an administrator.
 
-Reads ADMIN_USERNAME, ADMIN_PASSWORD and optionally ADMIN_EMAIL. Does nothing if
-the variables are missing or the user already exists, so it is safe to run on every container start.
+Reads ADMIN_USERNAME, ADMIN_PASSWORD and optionally ADMIN_EMAIL; does nothing if the
+variables are missing. Runs on every container start: an existing user of that name is
+made an administrator again, but its password and whether it is active stay as they are.
 The password is taken as given (no password rules); to change it later use ``set_password``.
 """
 
@@ -12,7 +13,7 @@ from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
-    help = "Create a superuser from ADMIN_* variables if it does not exist."
+    help = "Create a superuser from ADMIN_* variables, or make the existing user one again."
 
     def handle(self, *args, **options):
         username = os.environ.get("ADMIN_USERNAME", "").strip()
@@ -22,11 +23,18 @@ class Command(BaseCommand):
             return
 
         User = get_user_model()
-        if User.objects.filter(username=username).exists():
+        user = User.objects.filter(username=username).first()
+        if user:
+            if not (user.is_superuser and user.is_staff):
+                user.is_superuser = user.is_staff = True
+                user.save(update_fields=["is_superuser", "is_staff"])
+                self.stdout.write(self.style.WARNING(f"“{username}” is an administrator again."))
             self.stdout.write(
                 f"Superuser “{username}” already exists; ADMIN_PASSWORD is only used to create it "
                 "(change it with `python manage.py set_password`)."
             )
+            if not user.is_active:
+                self.stdout.write(self.style.WARNING("The account is deactivated and cannot sign in."))
             return
         User.objects.create_superuser(
             username=username, email=os.environ.get("ADMIN_EMAIL", ""), password=password

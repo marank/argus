@@ -18,6 +18,8 @@ export interface User extends UserRef {
   phone: string
   department: Ref | null
   is_it_staff: boolean
+  /** Administrator: all rights; only administrators appoint administrators. */
+  is_superuser: boolean
   is_terminal: boolean
   /** Pickup terminal only: lists pickups at this location and below. */
   terminal_location: LocationRef | null
@@ -30,6 +32,8 @@ export interface User extends UserRef {
   two_factor: TwoFactorMethod | null
   /** Roles of IT staff; only sent to IT staff. */
   roles: Ref[]
+  /** Teams of IT staff; only sent to IT staff. */
+  teams: Ref[]
 }
 
 /** Areas of the app that roles grant rights on (see backend apps.accounts.permissions). */
@@ -101,7 +105,6 @@ export interface CurrentUser extends User {
   notification_settings: Partial<Record<NotificationKey, boolean>>
   /** The own dashboard layout; empty means the default. */
   dashboard_settings: DashboardSettings
-  is_superuser: boolean
   /** Approves requests for at least one department. */
   is_approver: boolean
   /** Rights from the user's roles; everything for administrators. */

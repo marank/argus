@@ -61,6 +61,22 @@ def test_initial_administrator_takes_any_password(db, monkeypatch):
     assert root.is_superuser and root.check_password("123")
 
 
+def test_initial_administrator_stays_an_administrator_but_not_active(db, monkeypatch):
+    monkeypatch.setenv("ADMIN_USERNAME", "root")
+    monkeypatch.setenv("ADMIN_PASSWORD", "first")
+    call_command("ensure_superuser", stdout=StringIO())
+    User.objects.filter(username="root").update(is_superuser=False, is_staff=False, is_active=False)
+
+    monkeypatch.setenv("ADMIN_PASSWORD", "second")
+    out = StringIO()
+    call_command("ensure_superuser", stdout=out)
+    root = User.objects.get(username="root")
+    assert root.is_superuser and root.is_staff
+    assert not root.is_active
+    assert root.check_password("first")
+    assert "deactivated" in out.getvalue()
+
+
 def test_set_password_accepts_any_password_and_lifts_locks(demo):
     admin = User.objects.get(username="admin")
     TwoFactor.objects.create(user=admin, method="totp", totp_secret=two_factor.new_totp_secret())

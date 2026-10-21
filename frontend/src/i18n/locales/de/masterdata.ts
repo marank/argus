@@ -123,6 +123,17 @@ export default {
     lastName: 'Nachname',
     employeeNumber: 'Personalnummer',
     ldap: 'LDAP',
+    accountFlags: 'Konto',
+    itStaffShort: 'IT',
+    administratorShort: 'Admin',
+    userTeamsLdapHelp:
+      'Teams mit LDAP-Gruppe folgen dem Verzeichnis: Die Mitgliedschaft wird bei der nächsten Anmeldung angepasst.',
+    userRolesHelp:
+      'Legen fest, welche IT-Bereiche sichtbar und änderbar sind. Rechte mehrerer Rollen addieren sich.',
+    administrator: 'Administrator',
+    administratorHelp:
+      'Alle Rechte, unabhängig von Rollen, und Zugriff auf die Administration. Den eigenen Status kann man nicht ändern.',
+    terminalShort: 'Terminal',
     jobTitle: 'Position',
     department: 'Abteilung',
     numberSequenceHelp:
@@ -130,6 +141,9 @@ export default {
     trackingHelp:
       'Einzelgeräte: mit Seriennummer und Historie. Verbrauchsmaterial: nach Menge. Software: über Lizenzen.',
     categoryKind: 'Typ',
+    categoryName: 'Name (Plural)',
+    categoryNameHelp:
+      'Im Plural, z. B. „Laptops“ oder „Monitore“: Die Kategorie fasst viele Geräte zusammen. Die Einzahl gehört in „Einzelbezeichnung“.',
     itemName: 'Einzelbezeichnung',
     itemNameHelp:
       'Bezeichnung für ein einzelnes Stück, z. B. „Laptop“. Wird im Portal als „Laptop · beliebiges Modell“ angezeigt.',

@@ -14,8 +14,8 @@ interface BaseField {
   span?: 1 | 2
   /** i18n key of an explanation, or a function returning one (undefined = none). */
   help?: string | (() => string | undefined)
-  /** Show the field only while this returns true (e.g. LDAP fields while LDAP is on). */
-  visible?: () => boolean
+  /** Show the field only while this returns true (e.g. LDAP fields while LDAP is on); gets the live form. */
+  visible?: (form: Record<string, any>) => boolean
 }
 
 export type FieldDef = BaseField &
@@ -93,6 +93,10 @@ export interface ResourceDef<T extends { id: Id }> {
 }
 
 export const isVisible = (def: { visible?: () => boolean }) => def.visible?.() ?? true
+
+/** Whether a form field shows for the current form values. */
+export const isFieldVisible = (field: FieldDef, form: Record<string, any>) =>
+  field.visible?.(form) ?? true
 
 /** The i18n key of a field's explanation, if any. */
 export const helpKey = (field: FieldDef) =>
