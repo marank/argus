@@ -139,5 +139,7 @@ class Asset(TimeStampedModel):
             from apps.core.services.numbering import next_number
 
             sequence = self.model.category.effective_number_sequence() or "asset"
-            self.inventory_number = next_number(sequence)
+            self.inventory_number = next_number(
+                sequence, taken=lambda n: Asset.objects.filter(inventory_number=n).exists()
+            )
         super().save(*args, **kwargs)

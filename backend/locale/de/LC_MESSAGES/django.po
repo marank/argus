@@ -841,6 +841,22 @@ msgstr "Nummernserien"
 msgid "The pattern must contain the {seq} placeholder."
 msgstr "Das Muster muss den Platzhalter {seq} enthalten."
 
+#: apps/core/models/number_sequence.py:54
+msgid "system sequence"
+msgstr "System-Nummernserie"
+
+#: apps/core/api/number_sequences.py:18
+msgid "Argus draws numbers from this sequence; it cannot be deleted."
+msgstr "Argus vergibt Nummern aus dieser Serie; sie lässt sich nicht löschen."
+
+#: apps/core/models/number_sequence.py:66
+msgid "A number sequence with this code already exists."
+msgstr "Eine Nummernserie mit diesem Kürzel existiert bereits."
+
+#: apps/core/models/number_sequence.py:80
+msgid "Argus draws numbers from this sequence by its code; it cannot be changed."
+msgstr "Argus vergibt Nummern über das Kürzel dieser Serie; es lässt sich nicht ändern."
+
 #: apps/core/models/number_sequence.py:67
 #, python-format
 msgid "Invalid placeholder: %(error)s"

@@ -86,17 +86,19 @@ const baseColumns = computed<DataTableColumns<any>>(() => [
               },
               { icon: () => h(Pencil, { size: 13 }) },
             ),
-            h(
-              NButton,
-              {
-                quaternary: true,
-                size: 'tiny',
-                type: 'error',
-                title: t('common.delete'),
-                onClick: (e: Event) => (e.stopPropagation(), remove(row)),
-              },
-              { icon: () => h(Trash2, { size: 13 }) },
-            ),
+            (props.resource.deletable?.(row) ?? true)
+              ? h(
+                  NButton,
+                  {
+                    quaternary: true,
+                    size: 'tiny',
+                    type: 'error',
+                    title: t('common.delete'),
+                    onClick: (e: Event) => (e.stopPropagation(), remove(row)),
+                  },
+                  { icon: () => h(Trash2, { size: 13 }) },
+                )
+              : null,
           ]),
   },
 ])

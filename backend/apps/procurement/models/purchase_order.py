@@ -63,7 +63,9 @@ class PurchaseOrder(TimeStampedModel):
         if not self.number:
             from apps.core.services.numbering import next_number
 
-            self.number = next_number("purchase-order")
+            self.number = next_number(
+                "purchase-order", taken=lambda n: PurchaseOrder.objects.filter(number=n).exists()
+            )
         super().save(*args, **kwargs)
 
     @property

@@ -83,3 +83,69 @@ def test_preview_needs_the_right_to_edit_number_sequences(it_client):
     staff.login(username="staff", password="argus-demo")
     response = staff.post("/api/masterdata/number-sequences/preview", payload, content_type=JSON)
     assert response.status_code == 403
+
+
+def test_sequence_code_is_optional_but_unique_and_fixed_for_system_sequences(demo):
+    admin = Client()
+    admin.login(username="admin", password="argus-demo")
+    url = "/api/masterdata/number-sequences"
+    for name in ("Headsets", "Docks"):
+        response = admin.post(url, {"name": name}, content_type=JSON)
+        assert response.status_code == 201, response.content
+
+    response = admin.post(url, {"name": "Copy", "code": "asset"}, content_type=JSON)
+    assert response.status_code == 422, response.content
+    assert "code" in response.json()["errors"]
+
+    # Argus draws inventory numbers by the code "asset"; renaming it would start a new range.
+    asset = NumberSequence.objects.get(code="asset")
+    response = admin.put(
+        f"{url}/{asset.pk}", {"name": asset.name, "code": "", "pattern": asset.pattern}, content_type=JSON
+    )
+    assert response.status_code == 422, response.content
+    assert "code" in response.json()["errors"]
+
+
+def test_system_sequences_exist_from_the_start(db):
+    # Created by a migration, so they can be set up before the first number is drawn.
+    system = NumberSequence.objects.filter(is_system=True)
+    assert set(system.values_list("code", flat=True)) == {"asset", "reservation", "purchase-order"}
+
+
+def test_system_sequences_cannot_be_deleted(demo):
+    admin = Client()
+    admin.login(username="admin", password="argus-demo")
+    url = "/api/masterdata/number-sequences"
+    asset = NumberSequence.objects.get(code="asset")
+    assert admin.delete(f"{url}/{asset.pk}").status_code == 409
+    own = NumberSequence.objects.create(name="Headsets")
+    assert admin.delete(f"{url}/{own.pk}").status_code == 204
+
+
+def test_numbers_already_taken_are_skipped(db):
+    sequence = NumberSequence.objects.create(name="Test", prefix="N", padding=3)
+    taken = {"N001", "N002"}
+    assert next_number(sequence, taken=taken.__contains__) == "N003"
+    # Changing the format afterwards (N001 -> N0001) starts no clash: the strings differ.
+    sequence.refresh_from_db()
+    sequence.padding = 4
+    sequence.save()
+    assert next_number(sequence, taken=taken.__contains__) == "N0004"
+
+
+def test_a_hand_entered_inventory_number_is_skipped_by_the_sequence(it_client):
+    # Used to fail with HTTP 500 when the sequence reached the number entered by hand.
+    from apps.inventory.models import Asset
+    from apps.masterdata.models import AssetModel
+
+    model = AssetModel.objects.filter(tracking="serialized").first()
+    sequence = model.category.effective_number_sequence() or NumberSequence.objects.get(code="asset")
+    sequence.refresh_from_db()
+    upcoming = sequence.preview()
+    url = "/api/inventory/assets"
+    response = it_client.post(url, {"model": str(model.pk), "inventory_number": upcoming}, content_type=JSON)
+    assert response.status_code == 201, response.content
+    response = it_client.post(url, {"model": str(model.pk)}, content_type=JSON)
+    assert response.status_code == 201, response.content
+    assert response.json()["inventory_number"] != upcoming
+    assert Asset.objects.filter(inventory_number=upcoming).count() == 1

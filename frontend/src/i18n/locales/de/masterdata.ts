@@ -153,7 +153,9 @@ export default {
     compatibleWithHelp: 'Zubehör, Ersatzteile und Verbrauchsmaterial, die zu diesem Modell passen.',
     pickupPointHelp: 'Wird bei der Abholplanung angeboten.',
     itStaffHelp: 'Zugang zum IT-Bereich. Welche Bereiche, legen die Rollen fest.',
-    sequenceCodeHelp: 'Technischer Schlüssel. Reserviert: asset, reservation, purchase-order.',
+    sequenceCodeHelp:
+      'Optional, zum Wiederfinden. System-Serien behalten ihr Kürzel: Argus vergibt darüber Inventar-, Reservierungs- und Bestellnummern.',
+    systemSequence: 'System',
     allowAnyModel: '„Beliebiges Modell“ anforderbar',
     allowAnyModelHelp:
       'Mitarbeiter dürfen „beliebig“ aus dieser Kategorie anfordern. Für Zubehör oder Verbrauchsmaterial deaktivieren, wenn nur ein bestimmtes Modell sinnvoll ist.',

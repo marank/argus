@@ -152,7 +152,9 @@ export default {
     compatibleWithHelp: 'Accessories, spare parts and consumables that fit this model.',
     pickupPointHelp: 'Offered when scheduling a pickup.',
     itStaffHelp: 'Access to the IT area. Roles determine which areas.',
-    sequenceCodeHelp: 'Technical key. Reserved: asset, reservation, purchase-order.',
+    sequenceCodeHelp:
+      'Optional, for finding it again. System sequences keep their code: Argus draws inventory, reservation and order numbers by it.',
+    systemSequence: 'System',
     allowAnyModel: '“Any model” requestable',
     allowAnyModelHelp:
       'Employees may request “any” model of this category. Disable for accessories or consumables where only a specific model makes sense.',

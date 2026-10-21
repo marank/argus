@@ -39,7 +39,7 @@ class NumberSequence(TimeStampedModel):
         YEARLY = "yearly", _("Yearly")
         MONTHLY = "monthly", _("Monthly")
 
-    code = models.SlugField(_("code"), max_length=50, unique=True)
+    code = models.SlugField(_("code"), max_length=50, blank=True)
     name = models.CharField(_("name"), max_length=100)
     prefix = models.CharField(_("prefix"), max_length=20, blank=True)
     pattern = models.CharField(_("pattern"), max_length=100, default="{prefix}{seq}")
@@ -49,16 +49,36 @@ class NumberSequence(TimeStampedModel):
         _("reset period"), max_length=10, choices=ResetPeriod.choices, default=ResetPeriod.NEVER
     )
     period_key = models.CharField(_("current period"), max_length=10, blank=True, editable=False)
+    # Argus draws inventory, reservation and order numbers from these by code
+    # (apps.core.services.numbering); their code stays fixed and they cannot be deleted.
+    is_system = models.BooleanField(_("system sequence"), default=False, editable=False)
 
     class Meta:
         verbose_name = _("number sequence")
         verbose_name_plural = _("number sequences")
         ordering = ["name"]
+        constraints = [
+            # The code is optional; given codes stay unique.
+            models.UniqueConstraint(
+                fields=["code"],
+                condition=~models.Q(code=""),
+                name="unique_number_sequence_code",
+                violation_error_message=_("A number sequence with this code already exists."),
+                # Reported at the code field rather than for the whole form.
+                violation_error_code="unique",
+            ),
+        ]
 
     def __str__(self) -> str:
         return f"{self.name} ({self.preview()})"
 
     def clean(self) -> None:
+        if self.is_system and not self._state.adding:
+            saved = NumberSequence.objects.filter(pk=self.pk).values_list("code", flat=True).first()
+            if self.code != saved:
+                raise ValidationError(
+                    {"code": _("Argus draws numbers from this sequence by its code; it cannot be changed.")}
+                )
         if "{seq}" not in self.pattern:
             raise ValidationError({"pattern": _("The pattern must contain the {seq} placeholder.")})
         try:

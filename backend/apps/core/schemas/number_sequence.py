@@ -17,6 +17,7 @@ class NumberSequenceOut(ModelSchema):
             "padding",
             "next_value",
             "reset_period",
+            "is_system",
         ]
 
     @staticmethod
@@ -25,8 +26,8 @@ class NumberSequenceOut(ModelSchema):
 
 
 class NumberSequenceIn(Schema):
-    code: str
     name: str
+    code: str = ""
     prefix: str = ""
     pattern: str = "{prefix}{seq}"
     padding: int = Field(5, ge=1, le=12)

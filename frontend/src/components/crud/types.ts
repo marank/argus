@@ -16,6 +16,8 @@ interface BaseField {
   help?: string | (() => string | undefined)
   /** Show the field only while this returns true (e.g. LDAP fields while LDAP is on); gets the live form. */
   visible?: (form: Record<string, any>) => boolean
+  /** Read-only for existing records where this returns true; gets the edited row. */
+  locked?: (row: any) => boolean
 }
 
 export type FieldDef = BaseField &
@@ -92,6 +94,8 @@ export interface ResourceDef<T extends { id: Id }> {
   permission?: PermissionKey
   /** Only administrators see and change these records (e.g. roles). */
   superuser?: boolean
+  /** Whether a record offers deleting; by default all do. */
+  deletable?: (row: T) => boolean
 }
 
 export const isVisible = (def: { visible?: () => boolean }) => def.visible?.() ?? true

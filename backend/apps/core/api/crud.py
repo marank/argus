@@ -54,6 +54,8 @@ class CrudConfig:
     # Called with the request, the input and the existing record (None when creating)
     # before saving; raises HttpError to refuse values the user may not set.
     check_input: Callable[[HttpRequest, dict, models.Model | None], None] | None = None
+    # Called with the request and the record before it is deleted; raises HttpError to refuse.
+    check_delete: Callable[[HttpRequest, models.Model], None] | None = None
 
     def get_queryset(self) -> QuerySet:
         return self.queryset() if self.queryset else self.model._default_manager.all()
@@ -129,8 +131,11 @@ def build_crud_router(config: CrudConfig, *, tags: list[str]) -> Router:
 
     @router.delete("/{uuid:pk}", response={204: None}, auth=write_auth)
     def delete_item(request: HttpRequest, pk: UUID):
+        instance = get_for_change(request, pk)
+        if config.check_delete:
+            config.check_delete(request, instance)
         try:
-            get_for_change(request, pk).delete()
+            instance.delete()
         except ProtectedError as exc:
             raise HttpError(409, _("This record is still in use and cannot be deleted.")) from exc
         return Status(204, None)

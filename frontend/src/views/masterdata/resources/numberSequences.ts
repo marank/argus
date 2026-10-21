@@ -1,3 +1,4 @@
+import { NTag } from 'naive-ui'
 import { h } from 'vue'
 
 import { numberSequencesApi } from '@/api/masterdata'
@@ -13,8 +14,22 @@ export default defineResource<NumberSequence>({
   api: numberSequencesApi,
   ordering: 'name',
   title: (s) => s.name,
+  deletable: (s) => !s.is_system,
   columns: [
-    { key: 'name', label: 'common.name', sorter: 'name' },
+    {
+      key: 'name',
+      label: 'common.name',
+      sorter: 'name',
+      render: (s) =>
+        h('span', { class: 'row', style: 'gap:8px' }, [
+          s.name,
+          s.is_system
+            ? h(NTag, { size: 'small', bordered: false }, () =>
+                i18n.global.t('masterdata.fields.systemSequence'),
+              )
+            : null,
+        ]),
+    },
     { key: 'code', label: 'common.code', sorter: 'code', width: 180, render: (s) => mono(s.code) },
     {
       key: 'pattern',
@@ -48,8 +63,8 @@ export default defineResource<NumberSequence>({
           key: 'code',
           label: 'common.code',
           type: 'mono',
-          required: true,
           help: 'masterdata.fields.sequenceCodeHelp',
+          locked: (s: NumberSequence) => s.is_system,
         },
       ],
     },

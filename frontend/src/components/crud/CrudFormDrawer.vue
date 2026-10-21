@@ -128,11 +128,16 @@ async function save(another = false) {
                   :help="helpKey(field) ? t(helpKey(field)!) : undefined"
                 />
               </template>
-              <NInput v-if="field.type === 'text'" v-model:value="form[field.key]" />
+              <NInput
+                v-if="field.type === 'text'"
+                v-model:value="form[field.key]"
+                :disabled="!!row && !!field.locked?.(row)"
+              />
               <NInput
                 v-else-if="field.type === 'mono'"
                 v-model:value="form[field.key]"
                 class="mono-input"
+                :disabled="!!row && !!field.locked?.(row)"
               />
               <NInput
                 v-else-if="field.type === 'textarea'"

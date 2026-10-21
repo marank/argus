@@ -114,5 +114,7 @@ export interface NumberSequence {
   padding: number
   next_value: number
   reset_period: 'never' | 'yearly' | 'monthly'
+  /** Argus draws inventory, reservation or order numbers from it; code fixed, not deletable. */
+  is_system: boolean
   preview: string
 }

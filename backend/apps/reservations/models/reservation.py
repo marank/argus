@@ -207,7 +207,9 @@ class Reservation(TimeStampedModel):
         if not self.number:
             from apps.core.services.numbering import next_number
 
-            self.number = next_number("reservation")
+            self.number = next_number(
+                "reservation", taken=lambda n: Reservation.objects.filter(number=n).exists()
+            )
         super().save(*args, **kwargs)
 
     def approvers(self):
