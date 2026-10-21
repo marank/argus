@@ -32,12 +32,15 @@ DEBUG = env_bool("DEBUG", "SECRET_KEY" not in os.environ)
 # "https://argus.example.com,http://argus.intranet:8080". Hosts, CSRF and CORS
 # origins and cookie security are all derived from it.
 APP_URLS = [urlsplit(url) for url in env_list("APP_URLS")]
-_app_origins = [f"{url.scheme}://{url.netloc}" for url in APP_URLS if url.scheme and url.netloc]
+# Browsers send origins in lower case and Django compares them exactly.
+_app_origins = [f"{url.scheme}://{url.netloc}".lower() for url in APP_URLS if url.scheme and url.netloc]
 # Local dev servers (Vite, runserver) only while debugging.
 _dev_origins = ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:8000"] if DEBUG else []
 
-# localhost is always allowed: the container health check calls itself.
-ALLOWED_HOSTS = sorted({url.hostname for url in APP_URLS if url.hostname} | {"localhost", "127.0.0.1"})
+# localhost is always allowed: the container health check calls itself. urlsplit
+# drops the brackets of IPv6 hosts, but Django compares them bracketed.
+_app_hosts = {f"[{url.hostname}]" if ":" in url.hostname else url.hostname for url in APP_URLS if url.hostname}
+ALLOWED_HOSTS = sorted(_app_hosts | {"localhost", "127.0.0.1"})
 CSRF_TRUSTED_ORIGINS = _app_origins + _dev_origins
 CORS_ALLOWED_ORIGINS = _app_origins + _dev_origins
 CORS_ALLOW_CREDENTIALS = True
