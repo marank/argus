@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ChevronDown } from '@lucide/vue'
-import { NMenu, type MenuOption } from 'naive-ui'
+import { NMenu, NScrollbar, type MenuOption } from 'naive-ui'
 import { useIntervalFn, useStorage } from '@vueuse/core'
-import { computed, h, watch } from 'vue'
+import { computed, h, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
 
@@ -20,6 +20,9 @@ const { t } = useI18n()
 const route = useRoute()
 const auth = useAuthStore()
 const features = useFeaturesStore()
+
+// Once the menu is scrolled, its entries fade out under the brand instead of being cut off.
+const scrolled = ref(false)
 
 const active = computed(() => activeKey(route.name?.toString(), route.params))
 
@@ -185,15 +188,22 @@ const nodeProps = (option: MenuOption) => {
       </svg>
       <span v-if="!collapsed" class="wordmark">ARGUS</span>
     </RouterLink>
-    <NMenu
-      :value="active"
-      :options="options"
-      :collapsed="collapsed"
-      :collapsed-width="56"
-      :collapsed-icon-size="18"
-      :indent="16"
-      :node-props="nodeProps"
-    />
+    <!-- Only the menu scrolls on low screens; the brand stays at the top. -->
+    <NScrollbar
+      class="menu-scroll"
+      :class="{ scrolled }"
+      @scroll="(e: Event) => (scrolled = (e.target as HTMLElement).scrollTop > 0)"
+    >
+      <NMenu
+        :value="active"
+        :options="options"
+        :collapsed="collapsed"
+        :collapsed-width="56"
+        :collapsed-icon-size="18"
+        :indent="16"
+        :node-props="nodeProps"
+      />
+    </NScrollbar>
   </nav>
 </template>
 
@@ -213,6 +223,24 @@ const nodeProps = (option: MenuOption) => {
   color: var(--ar-primary);
   text-decoration: none;
   flex-shrink: 0;
+}
+.menu-scroll {
+  flex: 1;
+  min-height: 0;
+}
+.menu-scroll::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 1;
+  height: 28px;
+  pointer-events: none;
+  background: linear-gradient(var(--ar-surface), transparent);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.menu-scroll.scrolled::before {
+  opacity: 1;
 }
 .wordmark {
   font-family: var(--ar-font-mono);

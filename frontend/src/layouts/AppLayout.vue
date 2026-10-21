@@ -38,7 +38,7 @@ function toggleSidebar() {
       :collapsed-width="56"
       :width="232"
       :collapsed="collapsed"
-      :native-scrollbar="false"
+      content-style="height: 100%; overflow: hidden"
     >
       <AppSidebar :collapsed="collapsed" />
     </NLayoutSider>

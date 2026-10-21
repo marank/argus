@@ -79,6 +79,8 @@ function build(p: Palette): GlobalThemeOverrides {
       buttonTextColorActive: p.primary,
       buttonBorderColorActive: p.primary,
     },
+    // Quiet scrollbars: in the border colour, a little stronger on hover.
+    Scrollbar: { color: p.borderStrong, colorHover: p.textSubtle },
     Input: { border: `1px solid ${p.borderStrong}` },
     InternalSelection: { border: `1px solid ${p.borderStrong}` },
     // Bordered surface tooltips instead of the default solid dark bubble.
