@@ -46,7 +46,7 @@ def test_app_urls_with_ip_addresses_are_allowed_hosts():
     assert origins == ["http://192.168.1.10:8080", "https://[fd00::1]:8443"]
 
 
-@pytest.mark.parametrize("key",["change-me", "short-but-not-a-placeholder", "django-insecure-" + "x" * 40])
+@pytest.mark.parametrize("key", ["change-me", "short-but-not-a-placeholder", "django-insecure-" + "x" * 40])
 def test_weak_secret_keys_are_refused_without_debug(key):
     result = load_settings(SECRET_KEY=key)
     assert result.returncode != 0
