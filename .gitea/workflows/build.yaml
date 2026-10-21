@@ -63,7 +63,8 @@ jobs:
       - uses: builtin:checkout
 
       - name: Install dependencies
-        run: uv sync --frozen
+        # --locked also fails when uv.lock no longer matches pyproject.toml.
+        run: uv sync --locked
 
       - name: Lint
         run: |
@@ -162,7 +163,10 @@ jobs:
 
       - name: Login
         if: env.PUSH == 'true'
-        run: echo "${{ secrets.REGISTRY_TOKEN }}" | docker login "$REGISTRY" -u "${{ secrets.REGISTRY_USER }}" --password-stdin
+        env:
+          REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
+          REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+        run: echo "$REGISTRY_TOKEN" | docker login "$REGISTRY" -u "$REGISTRY_USER" --password-stdin
 
       - name: Build
         run: |
@@ -180,7 +184,9 @@ jobs:
 
       # Start the image against a throwaway PostgreSQL (like docker-compose.yml)
       # and wait for the health endpoint, so an image that cannot boot (entrypoint,
-      # migrations, nginx/gunicorn) is never pushed.
+      # migrations, nginx/gunicorn) is never pushed. Then check that it stays up and
+      # that the job worker and the live update process (uvicorn) run: a program that
+      # keeps failing stops the container (docker/exit_on_fatal.py).
       - name: Smoke test
         run: |
           IMAGE="${{ steps.meta.outputs.image }}:sha-${{ steps.meta.outputs.short_sha }}"
@@ -195,14 +201,51 @@ jobs:
             -e SECRET_KEY=ci-smoke-test -e DB_HOST=db \
             -e POSTGRES_DB=argus -e POSTGRES_USER=argus -e POSTGRES_PASSWORD=argus \
             "$IMAGE"
+          healthy=false
           for i in $(seq 1 45); do
             if docker exec "$NAME" curl -fsS http://127.0.0.1:8080/api/health; then
-              echo; echo "Healthy after ${i}x2s"; exit 0
+              echo; echo "Healthy after ${i}x2s"; healthy=true; break
             fi
             sleep 2
           done
-          echo "Container did not become healthy" >&2
-          exit 1
+          if [ "$healthy" != true ]; then
+            echo "Container did not become healthy" >&2
+            exit 1
+          fi
+
+          # Long enough for supervisord to give up on a crashing program.
+          sleep 20
+          docker exec "$NAME" curl -fsS http://127.0.0.1:8080/api/health
+          echo
+          # [x]yz: the pattern does not match the grep process itself.
+          for program in "[p]rocrastinate" "[u]vicorn"; do
+            if ! docker exec "$NAME" sh -c "grep -qa '$program' /proc/[0-9]*/cmdline"; then
+              echo "Not running: $program" >&2
+              exit 1
+            fi
+          done
+          # Routed by nginx to uvicorn; without a session the stream refuses.
+          status=$(docker exec "$NAME" curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/api/events)
+          if [ "$status" != 401 ]; then
+            echo "/api/events answered $status instead of 401" >&2
+            exit 1
+          fi
+          echo "Worker and live update stream are up"
+
+      # Known vulnerabilities (OS packages, Python wheels) and secrets baked into the image.
+      # Report only for now: add `--exit-code 1` to block the push once the findings are triaged.
+      # The vulnerability database is cached in a volume of the runner's Docker.
+      - name: Vulnerability scan
+        run: |
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v argus-trivy-cache:/root/.cache/trivy \
+            aquasec/trivy:0.76.0 image \
+            --scanners vuln,secret \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --no-progress \
+            "${{ steps.meta.outputs.image }}:sha-${{ steps.meta.outputs.short_sha }}"
 
       - name: Push
         if: env.PUSH == 'true'

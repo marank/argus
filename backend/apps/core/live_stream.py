@@ -36,6 +36,8 @@ class Hub:
     def __init__(self):
         self.queues: set[asyncio.Queue] = set()
         self.listener: asyncio.Task | None = None
+        # Set while LISTEN is active, i.e. signals reach the streams.
+        self.listening = asyncio.Event()
 
     def subscribe(self) -> asyncio.Queue:
         queue = asyncio.Queue(maxsize=100)
@@ -66,12 +68,14 @@ class Hub:
             try:
                 async with await psycopg.AsyncConnection.connect(**params, autocommit=True) as conn:
                     await conn.execute(f"LISTEN {CHANNEL}")
+                    self.listening.set()
                     if reconnected:
                         self.broadcast(RELOAD_ALL)  # signals sent in the meantime are lost
                     async for notify in conn.notifies():
                         self.broadcast(json.loads(notify.payload))
             except Exception:  # noqa: BLE001 - keep trying; the streams stay open meanwhile
                 logger.exception("Live updates: lost the database connection, retrying")
+            self.listening.clear()
             reconnected = True
             await asyncio.sleep(RECONNECT_SECONDS)
 

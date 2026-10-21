@@ -6,8 +6,14 @@ from apps.core.management.commands.seed_demo import Command
 
 @pytest.fixture(autouse=True)
 def in_memory_mail(settings):
-    """Notifications never reach a real SMTP server in tests (see django.core.mail.outbox)."""
+    """Notifications never reach a real SMTP server in tests (see django.core.mail.outbox).
+
+    They also go out right after the commit instead of through the job queue, so
+    tests read them from the outbox on PostgreSQL too; the queue itself is
+    covered by apps/core/tests/test_jobs.py (with ``job_queue``).
+    """
     settings.ARGUS_EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+    settings.JOB_QUEUE = False
 
 
 @pytest.fixture(autouse=True)
