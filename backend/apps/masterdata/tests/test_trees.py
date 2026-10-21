@@ -72,3 +72,19 @@ def test_categories_and_locations_can_be_created_through_the_api(demo):
         content_type="application/json",
     )
     assert response.status_code == 201, response.content
+
+
+def test_category_code_is_optional_but_unique_when_given(demo):
+    admin = Client()
+    admin.login(username="admin", password="argus-demo")
+    for name in ("Headsets", "Docking stations"):
+        response = admin.post("/api/masterdata/categories", {"name": name}, content_type="application/json")
+        assert response.status_code == 201, response.content
+        assert response.json()["code"] == ""
+
+    taken = Category.objects.exclude(code="").first().code
+    response = admin.post(
+        "/api/masterdata/categories", {"name": "Copy", "code": taken}, content_type="application/json"
+    )
+    assert response.status_code == 422, response.content
+    assert "code" in response.json()["errors"]

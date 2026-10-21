@@ -86,7 +86,7 @@ export default defineResource<Category>({
           required: true,
           help: 'masterdata.fields.categoryNameHelp',
         },
-        { key: 'code', label: 'common.code', type: 'mono', required: true },
+        { key: 'code', label: 'common.code', type: 'mono' },
         {
           key: 'item_name',
           label: 'masterdata.fields.itemName',

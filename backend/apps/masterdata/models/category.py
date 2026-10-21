@@ -27,7 +27,7 @@ class Category(TimeStampedModel):
         blank=True,
         help_text=_("Name of a single item, e.g. “Laptop”. Shown for “any model” requests."),
     )
-    code = models.SlugField(_("code"), max_length=30, unique=True)
+    code = models.SlugField(_("code"), max_length=30, blank=True)
     parent = models.ForeignKey(
         "self",
         verbose_name=_("parent category"),
@@ -81,6 +81,17 @@ class Category(TimeStampedModel):
         verbose_name = _("category")
         verbose_name_plural = _("categories")
         ordering = ["sort_order", "name"]
+        constraints = [
+            # The code is optional; given codes stay unique.
+            models.UniqueConstraint(
+                fields=["code"],
+                condition=~models.Q(code=""),
+                name="unique_category_code",
+                violation_error_message=_("A category with this code already exists."),
+                # Reported at the code field rather than for the whole form.
+                violation_error_code="unique",
+            ),
+        ]
 
     def __str__(self) -> str:
         return self.name

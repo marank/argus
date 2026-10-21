@@ -39,7 +39,7 @@ class CategoryIn(Schema):
     name: str
     kind: Category.Kind = Category.Kind.HARDWARE
     item_name: str = ""
-    code: str
+    code: str = ""
     parent: UUID | None = None
     description: str = ""
     icon: str = ""

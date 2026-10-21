@@ -202,6 +202,10 @@ msgstr "Sortierung"
 msgid "Lower numbers come first; equal numbers by name."
 msgstr "Kleinere Zahlen zuerst, gleiche Zahlen nach Name."
 
+#: apps/masterdata/models/category.py:90
+msgid "A category with this code already exists."
+msgstr "Eine Kategorie mit diesem Kürzel existiert bereits."
+
 #: apps/accounts/models/department.py:17
 msgid "approvers"
 msgstr "Genehmiger"
