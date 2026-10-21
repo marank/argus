@@ -3,6 +3,7 @@ export default {
   assetsSubtitle: 'Every individually tracked device with serial number and history.',
   newAsset: 'New device',
   bulkCreate: 'Scan in multiple',
+  seriesCreate: 'Create series',
   editAsset: 'Edit device',
   fields: {
     inventoryNumber: 'Inventory no.',
@@ -49,6 +50,18 @@ export default {
     serials: 'Serial numbers',
     count: '{count} serial numbers',
     created: '{count} devices created',
+  },
+  series: {
+    title: 'Create a series of devices',
+    help: 'Creates several identical devices of one model at once. Inventory numbers are drawn in a row from the category’s number sequence; serial numbers can be added on each device later.',
+    section: 'Series',
+    count: 'Quantity',
+    numbers: 'Inventory numbers',
+    pickModel: 'Pick a model – only models whose category has a number sequence.',
+    priceHelp: 'Price per device. Defaults to the model’s list price.',
+    warrantyHelp: 'Follows from the purchase date and the model’s warranty period.',
+    submit: 'Create {count} devices',
+    created: '{count} devices created ({first} – {last})',
   },
   event: {
     kind: 'Type',

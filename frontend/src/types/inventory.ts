@@ -82,6 +82,26 @@ export interface AssetInput {
   notes: string
 }
 
+/** Several identical devices numbered in a row from the category's number sequence. */
+export type AssetSeriesInput = Pick<
+  AssetInput,
+  | 'model'
+  | 'condition'
+  | 'is_loanable'
+  | 'location'
+  | 'supplier'
+  | 'purchase_date'
+  | 'purchase_price'
+  | 'warranty_until'
+  | 'notes'
+> & { count: number | null }
+
+export interface AssetSeriesPreview {
+  sequence: string
+  first: string
+  last: string
+}
+
 export type AssetEventKind =
   | 'created'
   | 'status_changed'

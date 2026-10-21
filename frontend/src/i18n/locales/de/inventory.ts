@@ -3,6 +3,7 @@ export default {
   assetsSubtitle: 'Alle einzeln geführten Geräte mit Seriennummer und Historie.',
   newAsset: 'Neues Gerät',
   bulkCreate: 'Mehrere einscannen',
+  seriesCreate: 'Serie anlegen',
   editAsset: 'Gerät bearbeiten',
   fields: {
     inventoryNumber: 'Inventar-Nr.',
@@ -49,6 +50,18 @@ export default {
     serials: 'Seriennummern',
     count: '{count} Seriennummern',
     created: '{count} Geräte angelegt',
+  },
+  series: {
+    title: 'Geräteserie anlegen',
+    help: 'Legt mehrere gleiche Geräte eines Modells auf einmal an. Die Inventarnummern kommen fortlaufend aus der Nummernserie der Kategorie; Seriennummern lassen sich später am Gerät nachtragen.',
+    section: 'Serie',
+    count: 'Anzahl',
+    numbers: 'Inventarnummern',
+    pickModel: 'Modell wählen – nur Modelle, deren Kategorie eine Nummernserie hat.',
+    priceHelp: 'Preis je Gerät. Vorbelegt mit dem Listenpreis des Modells.',
+    warrantyHelp: 'Ergibt sich aus Kaufdatum und Garantiedauer des Modells.',
+    submit: '{count} Geräte anlegen',
+    created: '{count} Geräte angelegt ({first} – {last})',
   },
   event: {
     kind: 'Art',

@@ -1,10 +1,11 @@
 from typing import Annotated
 from uuid import UUID
 
+from django.db.models import Q
 from ninja import FilterLookup, FilterSchema
 
 from apps.core.api.crud import CrudConfig, build_crud_router
-from apps.masterdata.models import AssetModel
+from apps.masterdata.models import AssetModel, Category
 from apps.masterdata.schemas.asset_model import AssetModelIn, AssetModelOut
 
 
@@ -15,6 +16,14 @@ class AssetModelFilter(FilterSchema):
     ean: str | None = None
     is_active: bool | None = None
     is_requestable: bool | None = None
+    # Only models whose category draws inventory numbers from a number sequence.
+    numbered: bool | None = None
+
+    def filter_numbered(self, value: bool | None) -> Q:
+        if value is None:
+            return Q()
+        q = Q(category_id__in=Category.numbered_ids())
+        return q if value else ~q
 
 
 router = build_crud_router(

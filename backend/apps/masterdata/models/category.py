@@ -145,6 +145,19 @@ class Category(TimeStampedModel):
                 return node.number_sequence
         return None
 
+    @classmethod
+    def numbered_ids(cls) -> set[UUID]:
+        """IDs of the categories with a number sequence of their own or from a parent."""
+        rows = list(cls.objects.values_list("pk", "parent_id", "number_sequence_id"))
+        children: dict = {}
+        for pk, parent_id, _sequence in rows:
+            children.setdefault(parent_id, []).append(pk)
+        ids, frontier = set(), [pk for pk, _parent, sequence in rows if sequence]
+        while frontier:
+            ids.update(frontier)
+            frontier = [pk for parent in frontier for pk in children.get(parent, []) if pk not in ids]
+        return ids
+
     def needs_approval(self) -> bool:
         """Whether this category or one above it requires the department's approval."""
         return any(node.requires_approval for node in [self, *self.ancestors()])

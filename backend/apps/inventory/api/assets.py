@@ -14,9 +14,17 @@ from apps.core.api.querying import order, search
 from apps.core.api.security import permission_auth
 from apps.core.exceptions import BusinessError
 from apps.inventory.models import Asset
-from apps.inventory.schemas.asset import AssetBulkIn, AssetDetailOut, AssetIn, AssetOut, AssignIn
+from apps.inventory.schemas.asset import (
+    AssetBulkIn,
+    AssetDetailOut,
+    AssetIn,
+    AssetOut,
+    AssetSeriesIn,
+    AssetSeriesPreviewOut,
+    AssignIn,
+)
 from apps.inventory.services import assets as asset_service
-from apps.masterdata.models import Category
+from apps.masterdata.models import AssetModel, Category
 
 router = Router(tags=["assets"], auth=permission_auth("assets"))
 
@@ -105,6 +113,22 @@ def bulk_create_assets(request: HttpRequest, payload: AssetBulkIn):
     data = payload.dict()
     serials = data.pop("serial_numbers")
     created = asset_service.bulk_create_assets(data, serials, request.user)
+    return Status(201, list(asset_queryset().filter(pk__in=[a.pk for a in created])))
+
+
+@router.get("/series/preview", response=AssetSeriesPreviewOut)
+def preview_series(request: HttpRequest, model: UUID, count: int = 1):
+    """The inventory numbers a series of ``count`` devices of ``model`` would get."""
+    asset_model = get_object_or_404(AssetModel.objects.select_related("category", "manufacturer"), pk=model)
+    return asset_service.preview_series(asset_model, count)
+
+
+@router.post("/series", response={201: list[AssetOut]})
+def create_series(request: HttpRequest, payload: AssetSeriesIn):
+    """Create several identical devices of one model, numbered in a row from its sequence."""
+    data = payload.dict()
+    count = data.pop("count")
+    created = asset_service.create_series(data, count, request.user)
     return Status(201, list(asset_queryset().filter(pk__in=[a.pk for a in created])))
 
 

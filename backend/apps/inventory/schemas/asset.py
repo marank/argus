@@ -126,6 +126,25 @@ class AssetBulkIn(Schema):
     notes: str = ""
 
 
+class AssetSeriesIn(Schema):
+    model: UUID
+    count: int = Field(..., ge=1, le=500)
+    condition: Asset.Condition = Asset.Condition.NEW
+    is_loanable: bool = True
+    location: UUID | None = None
+    supplier: UUID | None = None
+    purchase_date: date | None = None
+    purchase_price: Decimal | None = None
+    warranty_until: date | None = None
+    notes: str = ""
+
+
+class AssetSeriesPreviewOut(Schema):
+    sequence: str
+    first: str
+    last: str
+
+
 class AssignIn(Schema):
     user: UUID | None
 

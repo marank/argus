@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Id } from '@/types/common'
-import { Plus, ScanBarcode } from '@lucide/vue'
+import { Layers, Plus, ScanBarcode } from '@lucide/vue'
 import { NButton, NDataTable, NInput, NSelect, type DataTableColumns } from 'naive-ui'
 import { useStorage } from '@vueuse/core'
 import { computed, h, onMounted, ref, watch } from 'vue'
@@ -16,6 +16,7 @@ import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import AssetFormDrawer from '@/components/inventory/AssetFormDrawer.vue'
 import BulkCreateModal from '@/components/inventory/BulkCreateModal.vue'
+import SeriesCreateModal from '@/components/inventory/SeriesCreateModal.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useGroupedRows, withGroupHeaders } from '@/composables/useGroupedRows'
 import { useList } from '@/composables/useList'
@@ -55,6 +56,7 @@ watch(grouped, list.reload)
 
 const showForm = ref(false)
 const showBulk = ref(false)
+const showSeries = ref(false)
 const statusOptions = computed(() =>
   ASSET_STATUSES.map((s) => ({ value: s, label: enumLabel('assetStatus', s) })),
 )
@@ -146,6 +148,10 @@ function onSaved(asset: { id: Id }) {
           <template #icon><ScanBarcode :size="16" /></template>
           {{ t('inventory.bulkCreate') }}
         </NButton>
+        <NButton @click="showSeries = true">
+          <template #icon><Layers :size="16" /></template>
+          {{ t('inventory.seriesCreate') }}
+        </NButton>
         <NButton type="primary" @click="showForm = true">
           <template #icon><Plus :size="16" /></template>
           {{ t('inventory.newAsset') }}
@@ -222,6 +228,7 @@ function onSaved(asset: { id: Id }) {
 
     <AssetFormDrawer v-model:show="showForm" @saved="onSaved" />
     <BulkCreateModal v-model:show="showBulk" @created="list.reload" />
+    <SeriesCreateModal v-model:show="showSeries" @created="list.reload" />
   </div>
 </template>
 

@@ -123,6 +123,35 @@ def bulk_create_assets(common: dict, serial_numbers: list[str], user) -> list[As
     return [create_asset({**common, "serial_number": serial}, user) for serial in serials]
 
 
+def series_sequence(model: AssetModel):
+    """The number sequence a series of ``model`` draws from; series need one of their own."""
+    sequence = model.category.effective_number_sequence()
+    if sequence is None:
+        raise BusinessError(
+            _("The category of %(model)s has no number sequence. Assign one to create a series.")
+            % {"model": model.full_name}
+        )
+    return sequence
+
+
+def preview_series(model: AssetModel, count: int) -> dict:
+    """The first and last inventory number a series of ``count`` devices would get."""
+    sequence = series_sequence(model)
+    start = 1 if sequence.period_key != sequence.current_period_key() else sequence.next_value
+    return {
+        "sequence": sequence.name,
+        "first": sequence.format(start),
+        "last": sequence.format(start + max(count, 1) - 1),
+    }
+
+
+@transaction.atomic
+def create_series(common: dict, count: int, user) -> list[Asset]:
+    """Create ``count`` identical devices numbered in a row from the category's sequence."""
+    series_sequence(AssetModel.objects.select_related("category", "manufacturer").get(pk=common["model"]))
+    return [create_asset(common, user) for _ in range(count)]
+
+
 @transaction.atomic
 def record_event(asset: Asset, data: dict, user, consume: dict | None = None) -> AssetEvent:
     """Record a manual event, optionally booking the used consumable out."""

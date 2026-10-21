@@ -6,6 +6,8 @@ import type {
   AssetEventWithAsset,
   AssetInput,
   AssetIssue,
+  AssetSeriesInput,
+  AssetSeriesPreview,
   AssetIssueDetail,
   IssueStatus,
   LicenseDetail,
@@ -25,6 +27,9 @@ export const assetsApi = {
   create: (data: AssetInput) => http.post<AssetDetail>('/inventory/assets', data),
   bulkCreate: (data: Partial<AssetInput> & { serial_numbers: string[] }) =>
     http.post<Asset[]>('/inventory/assets/bulk', data),
+  seriesPreview: (model: Id, count: number) =>
+    http.get<AssetSeriesPreview>('/inventory/assets/series/preview', { model, count }),
+  createSeries: (data: AssetSeriesInput) => http.post<Asset[]>('/inventory/assets/series', data),
   update: (id: Id, data: AssetInput) => http.put<AssetDetail>(`/inventory/assets/${id}`, data),
   assign: (id: Id, user: Id | null) =>
     http.post<AssetDetail>(`/inventory/assets/${id}/assign`, { user }),
