@@ -109,7 +109,7 @@ def test_sequence_code_is_optional_but_unique_and_fixed_for_system_sequences(dem
 def test_system_sequences_exist_from_the_start(db):
     # Created by a migration, so they can be set up before the first number is drawn.
     system = NumberSequence.objects.filter(is_system=True)
-    assert set(system.values_list("code", flat=True)) == {"asset", "reservation", "purchase-order"}
+    assert set(system.values_list("code", flat=True)) == {"asset", "request", "purchase-order"}
 
 
 def test_system_sequences_cannot_be_deleted(demo):
@@ -149,3 +149,34 @@ def test_a_hand_entered_inventory_number_is_skipped_by_the_sequence(it_client):
     assert response.status_code == 201, response.content
     assert response.json()["inventory_number"] != upcoming
     assert Asset.objects.filter(inventory_number=upcoming).count() == 1
+
+
+def test_migration_renames_the_request_sequence_and_moves_hyphens(db):
+    from importlib import import_module
+
+    from django.apps import apps
+
+    migration = import_module("apps.core.migrations.0005_request_sequence_hyphen_in_pattern")
+    # The state before: the system sequences as 0004 created them, one of them changed by hand.
+    NumberSequence.objects.filter(code="request").update(
+        code="reservation", name="Reservations", prefix="RES-", pattern="{prefix}{year}-{seq}"
+    )
+    NumberSequence.objects.filter(code="asset").update(prefix="INV-", pattern="{prefix}{seq}")
+    NumberSequence.objects.filter(code="purchase-order").update(prefix="B-", pattern="{prefix}{yy}/{seq}")
+    before = {s.code: s.format(7) for s in NumberSequence.objects.all()}
+
+    migration.forward(apps, None)
+
+    request = NumberSequence.objects.get(code="request")
+    assert (request.name, request.prefix, request.pattern) == ("Requests", "RES", "{prefix}-{year}-{seq}")
+    asset = NumberSequence.objects.get(code="asset")
+    assert (asset.prefix, asset.pattern) == ("INV", "{prefix}-{seq}")
+    order = NumberSequence.objects.get(code="purchase-order")
+    assert (order.prefix, order.pattern) == ("B-", "{prefix}{yy}/{seq}")
+    # The numbers themselves stay the same.
+    after = {s.code: s.format(7) for s in NumberSequence.objects.all()}
+    assert after == {"request" if code == "reservation" else code: v for code, v in before.items()}
+
+    migration.backward(apps, None)
+    reservation = NumberSequence.objects.get(code="reservation")
+    assert (reservation.name, reservation.prefix) == ("Reservations", "RES-")

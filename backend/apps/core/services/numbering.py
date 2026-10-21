@@ -5,18 +5,18 @@ from django.db import transaction
 from apps.core.models import NumberSequence
 
 DEFAULT_SEQUENCES = {
-    "asset": {"name": "Assets", "prefix": "INV-", "pattern": "{prefix}{seq}", "padding": 6},
-    "reservation": {
-        "name": "Reservations",
-        "prefix": "RES-",
-        "pattern": "{prefix}{year}-{seq}",
+    "asset": {"name": "Assets", "prefix": "INV", "pattern": "{prefix}-{seq}", "padding": 6},
+    "request": {
+        "name": "Requests",
+        "prefix": "RES",
+        "pattern": "{prefix}-{year}-{seq}",
         "padding": 5,
         "reset_period": NumberSequence.ResetPeriod.YEARLY,
     },
     "purchase-order": {
         "name": "Purchase orders",
-        "prefix": "PO-",
-        "pattern": "{prefix}{year}-{seq}",
+        "prefix": "PO",
+        "pattern": "{prefix}-{year}-{seq}",
         "padding": 4,
         "reset_period": NumberSequence.ResetPeriod.YEARLY,
     },

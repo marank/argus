@@ -41,14 +41,14 @@ DEMO_PASSWORD = "argus-demo"
 
 CATEGORIES = [
     # code, name, icon, prefix, parent
-    ("laptops", "Laptops", "laptop", "LT-", None),
-    ("workstations", "Workstations", "desktop", "WS-", None),
-    ("phones", "Smartphones", "mobile", "PH-", None),
-    ("headsets", "Headsets", "headphones", "HS-", None),
-    ("input", "Mouse & keyboard", "keyboard", "IN-", None),
-    ("mde", "Mobile data terminals", "barcode", "MDE-", None),
-    ("mde-accessories", "MDE accessories", "plug", "MDA-", "mde"),
-    ("printers", "Printers", "printer", "PR-", None),
+    ("laptops", "Laptops", "laptop", "LT", None),
+    ("workstations", "Workstations", "desktop", "WS", None),
+    ("phones", "Smartphones", "mobile", "PH", None),
+    ("headsets", "Headsets", "headphones", "HS", None),
+    ("input", "Mouse & keyboard", "keyboard", "IN", None),
+    ("mde", "Mobile data terminals", "barcode", "MDE", None),
+    ("mde-accessories", "MDE accessories", "plug", "MDA", "mde"),
+    ("printers", "Printers", "printer", "PR", None),
     ("consumables", "Consumables", "box", None, None),
     ("office-software", "Office & collaboration", "app", None, None),
     ("design-software", "Design & engineering", "app", None, None),
@@ -114,7 +114,7 @@ class Command(BaseCommand):
         The tests start from this part only, so they stay fast and their
         expectations (counts, seats) stable; the command adds ``seed_extra``."""
 
-        for code in ("asset", "reservation", "purchase-order"):
+        for code in ("asset", "request", "purchase-order"):
             get_sequence(code)
 
         departments = {
@@ -168,7 +168,7 @@ class Command(BaseCommand):
                     code=f"category-{code}",
                     name=name,
                     prefix=prefix,
-                    pattern="{prefix}{seq}",
+                    pattern="{prefix}-{seq}",
                     padding=4,
                 )
             categories[code] = Category.objects.create(
@@ -421,9 +421,9 @@ EXTRA_PEOPLE = [
 
 EXTRA_CATEGORIES = [
     # code, name, icon, inventory prefix, parent, singular, kind
-    ("tablets", "Tablets", "tablet", "TB-", None, "Tablet", "hardware"),
-    ("monitors", "Monitors", "desktop", "MO-", None, "Monitor", "hardware"),
-    ("laptop-accessories", "Laptop accessories", "plug", "LA-", "laptops", "", "hardware"),
+    ("tablets", "Tablets", "tablet", "TB", None, "Tablet", "hardware"),
+    ("monitors", "Monitors", "desktop", "MO", None, "Monitor", "hardware"),
+    ("laptop-accessories", "Laptop accessories", "plug", "LA", "laptops", "", "hardware"),
     ("operating-systems", "Operating systems", "shield", None, None, "", "software"),
 ]
 
@@ -527,7 +527,7 @@ def seed_extra(base: dict, stdout) -> None:
         sequence = None
         if prefix:
             sequence = NumberSequence.objects.create(
-                code=f"category-{code}", name=name, prefix=prefix, pattern="{prefix}{seq}", padding=4
+                code=f"category-{code}", name=name, prefix=prefix, pattern="{prefix}-{seq}", padding=4
             )
         categories[code] = Category.objects.create(
             code=code,
