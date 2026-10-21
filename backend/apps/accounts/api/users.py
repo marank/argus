@@ -65,6 +65,14 @@ def check_user_input(request: HttpRequest, data: dict, user: User | None) -> Non
             raise HttpError(409, _("You cannot remove your own administrator rights."))
 
 
+def new_user() -> User:
+    # Accounts created here sign in via LDAP or get a password with `manage.py set_password`;
+    # until then no password matches (an empty one would fail validation).
+    user = User()
+    user.set_unusable_password()
+    return user
+
+
 def prepare_user(data: dict) -> dict:
     # Fields left out (None) stay as they are.
     for name in ("is_superuser", "teams", "roles"):
@@ -85,6 +93,7 @@ router = build_crud_router(
         permission="users",
         check_change=protect_administrators,
         check_input=check_user_input,
+        new=new_user,
         prepare=prepare_user,
         search_fields=("username", "first_name", "last_name", "email", "employee_number"),
         ordering_fields=(

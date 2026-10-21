@@ -37,6 +37,8 @@ class CrudConfig:
     search_fields: tuple[str, ...] = ()
     ordering_fields: tuple[str, ...] = ("name",)
     queryset: Callable[[], QuerySet] | None = None
+    # Builds the unsaved record that creating fills in; by default ``model()``.
+    new: Callable[[], models.Model] | None = None
     # Hook to translate/validate the input before saving (e.g. resolving FKs).
     prepare: Callable[[dict], dict] = field(default=lambda data: data)
     # Area of the role rights (apps.accounts.permissions) that creating, changing
@@ -112,7 +114,8 @@ def build_crud_router(config: CrudConfig, *, tags: list[str]) -> Router:
         data = payload.dict()
         if config.check_input:
             config.check_input(request, data, None)
-        instance = apply_input(config.model(), config.prepare(data))
+        new = config.new() if config.new else config.model()
+        instance = apply_input(new, config.prepare(data))
         return Status(201, get_instance(instance.pk))
 
     @router.put("/{uuid:pk}", response=Out, auth=write_auth)
