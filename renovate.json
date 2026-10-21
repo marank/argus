@@ -1,0 +1,72 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":dependencyDashboard", ":semanticCommits"],
+  "timezone": "Europe/Berlin",
+  "schedule": ["before 6am on monday"],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on the first day of the month"]
+  },
+  "customManagers": [
+    {
+      "description": "Images started with `docker run` inside workflow steps (Trivy scan)",
+      "customType": "regex",
+      "managerFilePatterns": ["/^\\.gitea/workflows/.+\\.ya?ml$/"],
+      "matchStrings": ["(?<depName>aquasec/trivy):(?<currentValue>\\d+\\.\\d+\\.\\d+)"],
+      "datasourceTemplate": "docker"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Non-major updates in one PR per side",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchPackageNames": ["!pnpm"],
+      "groupName": "frontend (non-major)"
+    },
+    {
+      "description": "Non-major updates in one PR per side",
+      "matchManagers": ["pep621"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchPackageNames": ["!django"],
+      "groupName": "backend (non-major)"
+    },
+    {
+      "description": "pnpm comes from `packageManager` via corepack, in CI and in the Dockerfile; its own PR",
+      "matchPackageNames": ["pnpm"],
+      "groupName": "pnpm"
+    },
+    {
+      "description": "Base and CI images in one PR (Node, Python, uv, Trivy)",
+      "matchManagers": ["dockerfile", "docker-compose", "github-actions", "custom.regex"],
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "groupName": "images (non-major)"
+    },
+    {
+      "description": "Python minor upgrades (3.14 -> 3.15) need wheels of all dependencies and the CI image (uv:python3.x-...) updated by hand; only after approval on the dashboard",
+      "matchPackageNames": ["python"],
+      "matchDatasources": ["docker"],
+      "matchUpdateTypes": ["major", "minor"],
+      "groupName": "python",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "TypeScript 7 is the native compiler; vue-tsc builds on the JavaScript API of TypeScript 6. Only after approval on the dashboard",
+      "matchPackageNames": ["typescript"],
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "PostgreSQL major upgrades need a dump/restore of the data; CI stays on the major of docker-compose.yml",
+      "matchPackageNames": ["postgres"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "description": "Django feature releases (6.1 -> 6.2) in their own PR, only after approval on the dashboard; read the release notes first",
+      "matchPackageNames": ["django"],
+      "matchUpdateTypes": ["major", "minor"],
+      "dependencyDashboardApproval": true
+    }
+  ]
+}
