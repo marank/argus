@@ -73,6 +73,12 @@ function build(p: Palette): GlobalThemeOverrides {
       itemIconColorActiveHover: p.primary,
       borderRadius: '3px',
     },
+    // Segmented choices: the active option soft like the select chips, not a solid fill.
+    Radio: {
+      buttonColorActive: p.primarySoft,
+      buttonTextColorActive: p.primary,
+      buttonBorderColorActive: p.primary,
+    },
     Input: { border: `1px solid ${p.borderStrong}` },
     InternalSelection: { border: `1px solid ${p.borderStrong}` },
     // Bordered surface tooltips instead of the default solid dark bubble.

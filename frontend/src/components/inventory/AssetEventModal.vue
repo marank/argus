@@ -1,20 +1,12 @@
 <script setup lang="ts">
 import type { Id } from '@/types/common'
-import {
-  NButton,
-  NCheckbox,
-  NForm,
-  NFormItem,
-  NInput,
-  NInputNumber,
-  NModal,
-  NSelect,
-} from 'naive-ui'
+import { NButton, NForm, NFormItem, NInput, NInputNumber, NModal, NSelect } from 'naive-ui'
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { assetsApi, consumablesApi } from '@/api/inventory'
 import EntitySelect from '@/components/common/EntitySelect.vue'
+import ToggleRow from '@/components/common/ToggleRow.vue'
 import DateField from '@/components/common/DateField.vue'
 import { useAction } from '@/composables/useAction'
 import { useFormat } from '@/composables/useFormat'
@@ -116,9 +108,12 @@ async function save() {
           :autosize="{ minRows: 2, maxRows: 6 }"
         />
       </NFormItem>
-      <NCheckbox v-if="features.isOn('consumables')" v-model:checked="consume">{{
-        t('inventory.event.consume')
-      }}</NCheckbox>
+      <ToggleRow
+        v-if="features.isOn('consumables')"
+        v-model="consume"
+        class="consume-toggle"
+        :label="t('inventory.event.consume')"
+      />
       <div v-if="consume" class="cols consume">
         <NFormItem :label="t('inventory.event.consumeItem')">
           <EntitySelect
@@ -147,7 +142,12 @@ async function save() {
   grid-template-columns: 1fr 1fr;
   gap: 0 12px;
 }
+.consume-toggle {
+  margin-top: 6px;
+}
+/* The fields the switch reveals, indented below it like in the master data forms. */
 .consume {
-  margin-top: 10px;
+  padding-left: 12px;
+  border-left: 2px solid var(--ar-primary-soft);
 }
 </style>

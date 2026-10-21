@@ -9,15 +9,16 @@ import {
   NInput,
   NInputNumber,
   NSelect,
-  NSwitch,
 } from 'naive-ui'
 import { computed, h, nextTick, reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { ApiError } from '@/api/client'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import FieldLabel from '@/components/common/FieldLabel.vue'
+import FormSection from '@/components/common/FormSection.vue'
+import ToggleRow from '@/components/common/ToggleRow.vue'
 import { useAction } from '@/composables/useAction'
+import { useFieldErrors } from '@/composables/useFieldErrors'
 import { useFormat } from '@/composables/useFormat'
 import { CATEGORY_ICONS } from '@/utils/icons'
 
@@ -32,23 +33,13 @@ const { enumLabel } = useFormat()
 const { busy, run } = useAction()
 
 const form = reactive<Record<string, any>>({})
-/** Messages of the last failed save per field, shown at the field until it is changed. */
-const fieldErrors = reactive<Record<string, string>>({})
+const fieldErrors = useFieldErrors(form)
 
 function resetForm() {
   for (const key of Object.keys(form)) delete form[key]
-  for (const key of Object.keys(fieldErrors)) delete fieldErrors[key]
+  fieldErrors.clear()
   Object.assign(form, props.row ? props.resource.toForm(props.row) : props.resource.defaults())
 }
-
-watch(
-  () => ({ ...form }),
-  (now, before) => {
-    for (const key of Object.keys(fieldErrors)) {
-      if (JSON.stringify(now[key]) !== JSON.stringify(before[key])) delete fieldErrors[key]
-    }
-  },
-)
 
 watch(show, (visible) => {
   if (visible) resetForm()
@@ -83,21 +74,15 @@ function span(field: FieldDef): number {
 
 /** Saves; with `another` (new records only) the drawer stays open with an empty form for the next one. */
 async function save(another = false) {
-  for (const key of Object.keys(fieldErrors)) delete fieldErrors[key]
-  const ok = await run(async () => {
-    try {
-      return await (props.row
+  fieldErrors.clear()
+  const ok = await run(
+    () =>
+      (props.row
         ? props.resource.api.update(props.row.id, { ...form })
-        : props.resource.api.create({ ...form }))
-    } catch (error) {
-      if (error instanceof ApiError) {
-        for (const [key, messages] of Object.entries(error.errors)) {
-          if (key in form && messages.length) fieldErrors[key] = messages.join(' ')
-        }
-      }
-      throw error
-    }
-  }, t('common.saved'))
+        : props.resource.api.create({ ...form })
+      ).catch(fieldErrors.capture),
+    t('common.saved'),
+  )
   if (!ok) return
   emit('saved')
   if (another && !props.row) {
@@ -121,13 +106,12 @@ async function save(another = false) {
         :disabled="readonly"
         @submit.prevent="save()"
       >
-        <section
+        <FormSection
           v-for="(section, index) in resource.sections"
           :key="section.title ?? index"
-          class="section"
+          :title="section.title ? t(section.title) : undefined"
           :class="{ 'toggles-first': section.togglesFirst }"
         >
-          <div v-if="section.title" class="eyebrow section-title">{{ t(section.title) }}</div>
           <NGrid class="grid" :cols="2" :x-gap="12">
             <NFormItemGi
               v-for="field in section.fields.filter(
@@ -135,9 +119,7 @@ async function save(another = false) {
               )"
               :key="field.key"
               :span="span(field)"
-              :show-feedback="!!fieldErrors[field.key]"
-              :feedback="fieldErrors[field.key]"
-              :validation-status="fieldErrors[field.key] ? 'error' : undefined"
+              v-bind="fieldErrors.item(field.key)"
             >
               <template #label>
                 <FieldLabel
@@ -194,22 +176,17 @@ async function save(another = false) {
             v-if="section.fields.some((f) => f.type === 'switch' && isFieldVisible(f, form))"
             class="toggles"
           >
-            <label
+            <ToggleRow
               v-for="field in section.fields.filter(
                 (f) => f.type === 'switch' && isFieldVisible(f, form),
               )"
               :key="field.key"
-              class="toggle"
-            >
-              <span class="toggle-text">
-                <span class="toggle-label">{{ t(field.label) }}</span>
-                <small v-if="helpKey(field)" class="muted">{{ t(helpKey(field)!) }}</small>
-                <small v-if="fieldErrors[field.key]" class="toggle-error">{{
-                  fieldErrors[field.key]
-                }}</small>
-              </span>
-              <NSwitch v-model:value="form[field.key]" :disabled="readonly" />
-            </label>
+              v-model="form[field.key]"
+              :label="t(field.label)"
+              :help="helpKey(field) ? t(helpKey(field)!) : undefined"
+              :error="fieldErrors.errors[field.key]"
+              :disabled="readonly"
+            />
           </div>
           <component
             :is="section.extra"
@@ -218,7 +195,7 @@ async function save(another = false) {
             :row="row"
             :readonly="readonly"
           />
-        </section>
+        </FormSection>
       </NForm>
       <template #footer>
         <div class="row">
@@ -250,32 +227,14 @@ async function save(another = false) {
 .mono-input :deep(input) {
   font-family: var(--ar-font-mono);
 }
-/* Each section a card; switches are rows inside it, divided by lines. */
-.section {
-  display: flex;
-  flex-direction: column;
-  padding: 14px 16px;
-  background: var(--ar-surface);
-  border: 1px solid var(--ar-border);
-  border-radius: 4px;
-}
-.section + .section {
-  margin-top: 12px;
-}
-.section-title {
-  margin-bottom: 12px;
-}
 .toggles {
   display: grid;
 }
-.section:not(.toggles-first) .grid:has(.n-form-item) + .toggles {
+.form-section:not(.toggles-first) .grid:has(.n-form-item) + .toggles {
   margin-top: 6px;
   border-top: 1px solid var(--ar-border);
 }
-/* Title, then switches, then the inputs they reveal, indented below them. */
-.toggles-first .section-title {
-  order: -2;
-}
+/* Switches first, then the inputs they reveal, indented below them. */
 .toggles-first .toggles {
   order: -1;
 }
@@ -283,31 +242,5 @@ async function save(another = false) {
   margin-top: 8px;
   padding-left: 12px;
   border-left: 2px solid var(--ar-primary-soft);
-}
-.toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 9px 0;
-  cursor: pointer;
-}
-.toggle + .toggle {
-  border-top: 1px solid var(--ar-border);
-}
-.toggle-text {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-.toggle-label {
-  font-size: 13px;
-}
-.toggle small {
-  font-size: 11.5px;
-  line-height: 1.4;
-}
-.toggle .toggle-error {
-  color: var(--ar-error);
 }
 </style>
