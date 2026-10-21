@@ -90,7 +90,9 @@ class Category(TimeStampedModel):
         return self.kind == self.Kind.SOFTWARE
 
     def clean(self) -> None:
-        if self.pk and self.parent_id and self.parent_id in self.descendant_ids():
+        # The UUID is set on creation, so ``self.pk`` does not tell a new category apart.
+        saved = not self._state.adding
+        if saved and self.parent_id and self.parent_id in self.descendant_ids():
             raise ValidationError(
                 {"parent": _("A category cannot be placed below itself or one of its subcategories.")}
             )
@@ -98,9 +100,9 @@ class Category(TimeStampedModel):
             raise ValidationError(
                 {"kind": _("A subcategory must have the same type as its parent category.")}
             )
-        if self.pk and self.children.exclude(kind=self.kind).exists():
+        if saved and self.children.exclude(kind=self.kind).exists():
             raise ValidationError({"kind": _("Change the type of the subcategories first.")})
-        if self.pk and self.kind != Category.objects.get(pk=self.pk).kind:
+        if saved and self.kind != Category.objects.get(pk=self.pk).kind:
             if self.asset_models.exists():
                 raise ValidationError(
                     {"kind": _("The type cannot be changed while models belong to this category.")}

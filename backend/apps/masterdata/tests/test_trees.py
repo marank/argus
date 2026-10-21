@@ -1,6 +1,8 @@
 import pytest
 from django.core.exceptions import ValidationError
+from django.test import Client
 
+from apps.accounts.models import Team
 from apps.masterdata.models import Category, Location
 
 
@@ -35,3 +37,38 @@ def test_a_loop_in_the_database_does_not_hang(demo):
     x.refresh_from_db()
     assert x.full_name == "Y / X"
     assert x.descendant_ids() == {x.pk, y.pk}
+
+
+def test_categories_and_locations_can_be_created_through_the_api(demo):
+    # The UUID is set before saving; clean() must not look up the unsaved record (was a 500).
+    admin = Client()
+    admin.login(username="admin", password="argus-demo")
+    team = Team.objects.create(name="Logistics IT")
+    payload = {
+        "name": "MDEs",
+        "item_name": "MDE",
+        "kind": "hardware",
+        "code": "MDE",
+        "parent": None,
+        "description": "",
+        "icon": "barcode",
+        "number_sequence": None,
+        "team": str(team.pk),
+        "is_requestable": True,
+        "allow_any_model": True,
+        "requires_approval": False,
+        "sort_order": 0,
+    }
+    response = admin.post("/api/masterdata/categories", payload, content_type="application/json")
+    assert response.status_code == 201, response.content
+    child = {**payload, "name": "Ring scanners", "code": "MDE-R", "parent": response.json()["id"]}
+    response = admin.post("/api/masterdata/categories", child, content_type="application/json")
+    assert response.status_code == 201, response.content
+
+    root = Location.objects.first()
+    response = admin.post(
+        "/api/masterdata/locations",
+        {"name": "Store room", "code": "t-store", "parent": str(root.pk)},
+        content_type="application/json",
+    )
+    assert response.status_code == 201, response.content

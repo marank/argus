@@ -37,7 +37,8 @@ class Location(TimeStampedModel):
         return self.full_name
 
     def clean(self) -> None:
-        if self.pk and self.parent_id and self.parent_id in self.descendant_ids():
+        # The UUID is set on creation, so ``self.pk`` does not tell a new location apart.
+        if not self._state.adding and self.parent_id and self.parent_id in self.descendant_ids():
             raise ValidationError(
                 {"parent": _("A location cannot be placed inside itself or one of its sub-locations.")}
             )
