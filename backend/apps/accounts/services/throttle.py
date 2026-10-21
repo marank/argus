@@ -7,7 +7,9 @@ new email code does not reset it; only the end of the window does.
 
 from datetime import timedelta
 
+from django.conf import settings
 from django.db import transaction
+from django.db.models import F
 from django.utils import timezone
 
 from apps.accounts.models import SignInThrottle
@@ -15,6 +17,9 @@ from apps.accounts.models import SignInThrottle
 WINDOW = timedelta(minutes=15)
 PASSWORD_LIMIT = 10
 CODE_LIMIT = 10
+# Wrong passwords per client address, whichever accounts they try. Generous, since
+# several people may sign in from behind one address.
+ADDRESS_LIMIT = 30
 
 
 def password_key(username: str) -> str:
@@ -24,6 +29,17 @@ def password_key(username: str) -> str:
 
 def code_key(user) -> str:
     return f"code:{user.pk}"
+
+
+def address_key(request) -> str:
+    return f"address:{client_address(request)}"
+
+
+def client_address(request) -> str:
+    """The client's IP address; behind nginx from X-Real-IP, which nginx always sets."""
+    if settings.BEHIND_PROXY and request.META.get("HTTP_X_REAL_IP"):
+        return request.META["HTTP_X_REAL_IP"]
+    return request.META.get("REMOTE_ADDR", "")
 
 
 def attempt(key: str, limit: int) -> bool:
@@ -45,3 +61,8 @@ def attempt(key: str, limit: int) -> bool:
 
 def clear(key: str) -> None:
     SignInThrottle.objects.filter(key=key).delete()
+
+
+def refund(key: str) -> None:
+    """Takes back one attempt that succeeded (for counts shared by several accounts)."""
+    SignInThrottle.objects.filter(key=key, failures__gt=0).update(failures=F("failures") - 1)

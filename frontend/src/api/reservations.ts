@@ -24,6 +24,7 @@ import type {
   SignInput,
   TerminalPerson,
   TerminalPickup,
+  TerminalPickupDetail,
   TerminalStaff,
 } from '@/types/reservations'
 
@@ -124,8 +125,9 @@ export const approvalsApi = {
 
 export const terminalApi = {
   pickups: (q?: string) => http.get<TerminalPickup[]>('/terminal/pickups', { q }),
-  get: (id: Id) => http.get<Reservation>(`/terminal/pickups/${id}`),
-  sign: (id: Id, data: SignInput) => http.post<Reservation>(`/terminal/pickups/${id}/sign`, data),
+  get: (id: Id) => http.get<TerminalPickupDetail>(`/terminal/pickups/${id}`),
+  sign: (id: Id, data: SignInput) =>
+    http.post<TerminalPickupDetail>(`/terminal/pickups/${id}/sign`, data),
   people: (q: string) => http.get<TerminalPerson[]>('/terminal/people', { q }),
   staff: () => http.get<TerminalStaff[]>('/terminal/staff'),
 }

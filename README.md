@@ -29,7 +29,7 @@ pnpm dev                               # http://localhost:5173, proxies /api to 
 
 If the backend runs elsewhere, set `BACKEND_URL` (e.g.
 `BACKEND_URL=http://127.0.0.1:8010 pnpm dev`). Local development needs no
-`.env`: without variables Django runs with debug on and SQLite.
+`.env`: without variables (no `SECRET_KEY`) Django runs with debug on and SQLite.
 
 VS Code: *Terminal → Run Task…* offers all of this as tasks (`.vscode/tasks.json`),
 e.g. **Dev: start all**, **Check: all**, **DB: seed demo data**, **Docker: build and start**.
@@ -58,18 +58,31 @@ start the container waits for the database and applies migrations.
 | Variable | Purpose |
 | --- | --- |
 | `APP_URLS` | All URLs users open Argus under, comma separated. Allowed hosts, CSRF/CORS origins and secure cookies (all `https`) are derived from it. |
+| `TRUSTED_PROXIES` | Addresses or CIDR ranges of a TLS proxy in front; only these may pass on the client's address and scheme. |
 | `APP_PORT` | Host port (default `8080`). |
 | `APP_WORKERS` | Gunicorn workers (default 2 × CPU + 1, max 5). |
 | `APP_DEMO_DATA` | `true` seeds an empty database with demo data. |
-| `SECRET_KEY` | Django secret key (required). |
+| `SECRET_KEY` | Django secret key (required, at least 40 random characters). |
 | `TIME_ZONE`, `LOG_LEVEL` | Defaults `Europe/Berlin`, `INFO`. |
-| `ADMIN_USERNAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` | First administrator. |
+| `ADMIN_USERNAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` | First administrator, created on first start (later: `set_password`). |
 | `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | Database (also used by the Postgres container). |
 | `LDAP_*` | Optional LDAP / AD login, see [LDAP login](#ldap-login). |
 
 The app container runs unprivileged with a read-only root filesystem; health
-checks use `/api/health`. Behind a TLS proxy, forward `X-Forwarded-Proto` and list
-the `https://` URL in `APP_URLS`.
+checks use `/api/health`. Behind a TLS proxy, forward `X-Forwarded-For` and
+`X-Forwarded-Proto`, set `TRUSTED_PROXIES` to the proxy's address and list the
+`https://` URL in `APP_URLS`. Without `TRUSTED_PROXIES` these headers are ignored, so
+clients cannot fake their address (used to limit failed sign-ins) or HTTPS. A
+`SECRET_KEY` turns debug off unless `DEBUG=true` is set. The API docs (`/api/docs`)
+are only served with debug on. HSTS is up to the TLS proxy; Argus does not send it.
+
+Forgotten password, or locked out after too many failed sign-ins: set a new one in
+the running container (any password is accepted; `--reset-two-factor` also switches
+off the second sign-in step):
+
+```bash
+docker compose exec app python manage.py set_password admin
+```
 
 ## LDAP login
 

@@ -10,6 +10,7 @@ browser to reload everything it shows, e.g. after signals may have been missed.
 import asyncio
 import json
 import logging
+from collections import Counter
 
 import psycopg
 from django.conf import settings
@@ -27,6 +28,9 @@ PING_SECONDS = 20
 # Streams end after a while and the browser reconnects, so sign-outs and changed rights take effect.
 STREAM_SECONDS = 30 * 60
 RECONNECT_SECONDS = 5
+# Open streams per user (one per browser tab); beyond that a tab refreshes as without
+# live updates, instead of one user holding any number of connections.
+MAX_STREAMS_PER_USER = 20
 RELOAD_ALL = {"topic": "*", "id": None}
 
 
@@ -35,6 +39,7 @@ class Hub:
 
     def __init__(self):
         self.queues: set[asyncio.Queue] = set()
+        self.streams_per_user: Counter[str] = Counter()
         self.listener: asyncio.Task | None = None
         # Set while LISTEN is active, i.e. signals reach the streams.
         self.listening = asyncio.Event()
@@ -85,6 +90,7 @@ hub = Hub()
 
 async def stream(user_id: str, staff: bool):
     queue = hub.subscribe()
+    hub.streams_per_user[user_id] += 1
     loop = asyncio.get_running_loop()
     end = loop.time() + STREAM_SECONDS
     try:
@@ -101,6 +107,9 @@ async def stream(user_id: str, staff: bool):
         yield "event: bye\ndata:\n\n"
     finally:
         hub.unsubscribe(queue)
+        hub.streams_per_user[user_id] -= 1
+        if hub.streams_per_user[user_id] <= 0:
+            del hub.streams_per_user[user_id]
 
 
 async def events(request):
@@ -111,6 +120,9 @@ async def events(request):
     user = await request.auser()
     if not user.is_authenticated:
         return HttpResponse(status=401)
+    if hub.streams_per_user[str(user.pk)] >= MAX_STREAMS_PER_USER:
+        # EventSource does not retry after this; the page refreshes as without live updates.
+        return HttpResponse(status=429)
     response = StreamingHttpResponse(
         stream(str(user.pk), is_it_staff(user)), content_type="text/event-stream"
     )

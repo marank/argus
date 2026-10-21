@@ -69,3 +69,27 @@ def test_password_confirmation_is_limited_too(employee_client):
         "/api/auth/two-factor/disable", {"password": PASSWORD}, content_type="application/json"
     )
     assert response.status_code == 429
+
+
+def test_wrong_passwords_from_one_address_are_limited_across_accounts(demo, settings):
+    settings.BEHIND_PROXY = True
+    attacker = Client(HTTP_X_REAL_IP="203.0.113.7")
+    for i in range(throttle.ADDRESS_LIMIT):
+        assert login(attacker, username=f"user{i}", password="wrong").status_code == 401
+    assert login(attacker).status_code == 429
+    # Someone else (another address) still signs in.
+    assert login(Client(HTTP_X_REAL_IP="203.0.113.8")).status_code == 200
+
+
+def test_successful_sign_ins_do_not_use_up_the_address(demo, settings):
+    settings.BEHIND_PROXY = True
+    for _i in range(throttle.ADDRESS_LIMIT + 5):
+        assert login(Client(HTTP_X_REAL_IP="203.0.113.9")).status_code == 200
+
+
+def test_client_address_comes_from_nginx_only_behind_the_proxy(rf, settings):
+    request = rf.get("/", HTTP_X_REAL_IP="203.0.113.7", REMOTE_ADDR="127.0.0.1")
+    settings.BEHIND_PROXY = False
+    assert throttle.client_address(request) == "127.0.0.1"
+    settings.BEHIND_PROXY = True
+    assert throttle.client_address(request) == "203.0.113.7"

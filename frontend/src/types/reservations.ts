@@ -382,3 +382,34 @@ export interface TerminalStaff {
   id: Id
   display_name: string
 }
+
+/** What the terminal shows of an allocation: no IT-internal details. */
+export type TerminalAllocation = Pick<
+  Allocation,
+  'id' | 'asset' | 'consumable' | 'license' | 'quantity' | 'handout_note' | 'category_icon'
+>
+
+/** A pickup as the shared terminal shows it while signing (no notes, comments or history). */
+export interface TerminalPickupDetail {
+  id: Id
+  number: string
+  title: string
+  status: ReservationStatus
+  requester: TerminalStaff
+  department: Ref | null
+  duration: Duration
+  start_date: string
+  end_date: string | null
+  pickup_at: string | null
+  pickup_location: LocationRef | null
+  skip_device_check: boolean
+  /** Preselected as who hands out. */
+  prepared_by: TerminalStaff | null
+  handled_by: TerminalStaff | null
+  items: { id: Id; label: string; allocations: TerminalAllocation[] }[]
+  handover:
+    | (Pick<Handover, 'method' | 'received_by_name' | 'handed_out_at'> & {
+        handed_out_by: TerminalStaff | null
+      })
+    | null
+}

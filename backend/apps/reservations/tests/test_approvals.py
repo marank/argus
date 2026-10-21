@@ -119,10 +119,10 @@ def test_only_the_departments_approvers_decide(approval_setup, employee_client, 
     # The requester sees the request, but does not decide on it.
     assert employee_client.get(url).json()["can_approve"] is False
     response = employee_client.post(f"/api/approvals/{reservation['id']}/approve", {}, content_type=JSON)
-    assert response.status_code == 409
+    assert response.status_code == 404
     # IT staff are no approvers either.
     response = it_client.post(f"/api/approvals/{reservation['id']}/approve", {}, content_type=JSON)
-    assert response.status_code == 409
+    assert response.status_code == 404
 
     # Approvers of another department neither see nor decide it.
     other = Client()

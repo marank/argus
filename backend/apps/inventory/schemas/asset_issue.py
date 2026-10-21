@@ -4,6 +4,7 @@ from uuid import UUID
 from ninja import Field, Schema
 
 from apps.accounts.schemas import TeamRefOut, UserRefOut
+from apps.core.api.security import context_is_it_staff
 from apps.inventory.models import AssetIssue, AssetIssueEntry
 from apps.masterdata.schemas.refs import AssetModelRefOut, LocationRefOut
 
@@ -104,6 +105,16 @@ class IssueReporterOut(Schema):
     department: str | None = Field(None, alias="department.name")
 
 
+def _shows_holder(asset, context) -> bool:
+    """IT sees who has a device; the reporter only themselves (not who got it since)."""
+    if context_is_it_staff(context):
+        return True
+    request = (context or {}).get("request")
+    return (
+        request is not None and asset.assigned_to_id is not None and asset.assigned_to_id == request.user.pk
+    )
+
+
 class IssueDeviceDetailOut(Schema):
     id: UUID
     inventory_number: str
@@ -118,6 +129,14 @@ class IssueDeviceDetailOut(Schema):
     location: LocationRefOut | None
     purchase_date: date | None
     warranty_until: date | None
+
+    @staticmethod
+    def resolve_assigned_to(obj, context):
+        return obj.assigned_to if _shows_holder(obj, context) else None
+
+    @staticmethod
+    def resolve_assigned_since(obj, context):
+        return obj.assigned_since if _shows_holder(obj, context) else None
 
 
 class IssueSummaryOut(Schema):
@@ -141,6 +160,7 @@ class AssetIssueDetailOut(Schema):
     resolved_at: datetime | None
     reported_by: IssueReporterOut | None
     handled_by: UserRefOut | None
+    # IT-internal: always empty for the reporter.
     assigned_team: TeamRefOut | None
     assignee: UserRefOut | None
     asset: IssueDeviceDetailOut
@@ -149,3 +169,11 @@ class AssetIssueDetailOut(Schema):
     unseen_update: bool
     # The reporter still has the device (their device page can be opened).
     still_assigned: bool
+
+    @staticmethod
+    def resolve_assigned_team(obj, context):
+        return obj.assigned_team if context_is_it_staff(context) else None
+
+    @staticmethod
+    def resolve_assignee(obj, context):
+        return obj.assignee if context_is_it_staff(context) else None

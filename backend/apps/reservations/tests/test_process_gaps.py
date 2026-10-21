@@ -5,7 +5,7 @@ from django.test import Client
 from apps.accounts.models import User
 from apps.inventory.models import Asset
 from apps.masterdata.models import AssetModel, Category, Location
-from apps.reservations.models import Reservation
+from apps.reservations.models import Handover, Reservation
 
 JSON = "application/json"
 
@@ -114,9 +114,9 @@ def test_terminal_names_who_prepared_the_pickup(employee_client, it_client, term
 
     sign = {"signature": "data:image/png;base64,AAAA", "notes": ""}
     data = terminal_client.post(f"/api/terminal/pickups/{rid}/sign", sign, content_type=JSON).json()
-    assert data["prepared_by"]["username"] == "it"
-    assert data["handover"]["handed_out_by"]["username"] == "it"
-    assert data["handover"]["recorded_by"]["username"] == "terminal"
+    assert data["prepared_by"]["id"] == str(it_user.pk)
+    assert data["handover"]["handed_out_by"]["id"] == str(it_user.pk)
+    assert Handover.objects.get(reservation_id=rid).recorded_by.username == "terminal"
 
 
 def test_terminal_can_name_someone_else_from_it(employee_client, it_client, terminal_client):
@@ -129,7 +129,7 @@ def test_terminal_can_name_someone_else_from_it(employee_client, it_client, term
     )
     sign["handed_out_by"] = str(admin.pk)
     data = terminal_client.post(f"/api/terminal/pickups/{rid}/sign", sign, content_type=JSON).json()
-    assert data["handover"]["handed_out_by"]["username"] == "admin"
+    assert data["handover"]["handed_out_by"]["id"] == str(admin.pk)
 
 
 def test_terminal_with_a_site_lists_only_its_pickups(employee_client, it_client, terminal_client):

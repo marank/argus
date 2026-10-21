@@ -81,5 +81,9 @@ def get_reservation(request: HttpRequest, pk: UUID, *, as_approver: bool = False
 
 
 def get_for_update(pk: UUID) -> Reservation:
-    """Plain instance for workflow transitions (no prefetch caches that could go stale)."""
-    return get_object_or_404(Reservation, pk=pk)
+    """Locked plain instance for workflow transitions (no prefetch caches that could go stale).
+
+    The row lock makes concurrent transitions (e.g. signing twice) wait and then see
+    the new status; callers must run inside ``transaction.atomic``.
+    """
+    return get_object_or_404(Reservation.objects.select_for_update(), pk=pk)

@@ -79,3 +79,38 @@ def test_quick_pick_skips_consumables_that_cannot_be_requested(employee_client):
     entries = employee_client.get("/api/portal/my-consumables").json()
     names = {c["name"] for entry in entries for c in entry["consumables"]}
     assert names == {"305 tri-colour ink cartridge"}
+
+
+def test_manual_booking_leaves_reserved_units_alone(it_client):
+    from django.utils import timezone
+
+    from apps.accounts.models import User
+    from apps.inventory.models import Consumable
+
+    consumable = next(c for c in Consumable.objects.all() if c.available_quantity >= 3)
+    response = it_client.post(
+        "/api/reservations/direct",
+        {
+            "title": "New colleague",
+            "duration": "permanent",
+            "start_date": str(timezone.localdate()),
+            "requester": str(User.objects.get(username="employee").pk),
+            "consumables": [{"consumable": str(consumable.pk), "quantity": 2}],
+        },
+        content_type=JSON,
+    )
+    assert response.status_code == 201, response.content
+    consumable.refresh_from_db()
+    available = consumable.available_quantity
+    url = f"/api/inventory/consumables/{consumable.pk}/move"
+
+    response = it_client.post(url, {"delta": -(available + 1), "reason": "issue"}, content_type=JSON)
+    assert response.status_code == 409
+    assert "2 are reserved" in response.json()["detail"]
+    consumable.refresh_from_db()
+    assert consumable.quantity == available + 2
+
+    response = it_client.post(url, {"delta": -available, "reason": "issue"}, content_type=JSON)
+    assert response.status_code == 200, response.content
+    consumable.refresh_from_db()
+    assert (consumable.quantity, consumable.reserved_quantity) == (2, 2)

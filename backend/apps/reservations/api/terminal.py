@@ -2,17 +2,19 @@
 
 from uuid import UUID
 
+from django.db import transaction
 from django.db.models import Q
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
 from ninja import Router
 
 from apps.accounts.models import User
+from apps.core.api.querying import search, search_words
 from apps.core.api.security import terminal_auth
 from apps.reservations.models import Reservation
-from apps.reservations.schemas.reservation import ReservationOut
 from apps.reservations.schemas.terminal import (
     TerminalPersonOut,
+    TerminalPickupDetailOut,
     TerminalPickupOut,
     TerminalSignIn,
     TerminalStaffOut,
@@ -38,23 +40,21 @@ def pickups(user):
 @router.get("/pickups", response=list[TerminalPickupOut])
 def list_pickups(request: HttpRequest, q: str | None = None):
     """Prepared pickups, next pickup first."""
-    queryset = pickups(request.user)
-    if q:
-        queryset = queryset.filter(
-            Q(number__icontains=q)
-            | Q(requester__first_name__icontains=q)
-            | Q(requester__last_name__icontains=q)
-            | Q(requester__username__icontains=q)
-        )
+    queryset = search(
+        pickups(request.user),
+        q,
+        ("number", "requester__first_name", "requester__last_name", "requester__username"),
+    )
     return list(queryset.order_by("pickup_at", "start_date"))
 
 
-@router.get("/pickups/{uuid:pk}", response=ReservationOut)
+@router.get("/pickups/{uuid:pk}", response=TerminalPickupDetailOut)
 def get_pickup(request: HttpRequest, pk: UUID):
     return get_object_or_404(pickups(request.user), pk=pk)
 
 
-@router.post("/pickups/{uuid:pk}/sign", response=ReservationOut)
+@router.post("/pickups/{uuid:pk}/sign", response=TerminalPickupDetailOut)
+@transaction.atomic
 def sign(request: HttpRequest, pk: UUID, payload: TerminalSignIn):
     """Complete the hand-out with the collecting person's signature."""
     reservation = get_object_or_404(pickups(request.user), pk=pk)
@@ -88,7 +88,7 @@ def people(request: HttpRequest, q: str = ""):
     if len(q.strip()) < 2:
         return []
     people = User.objects.filter(is_active=True, is_terminal=False)
-    for word in q.split():
+    for word in search_words(q):
         people = people.filter(
             Q(first_name__icontains=word)
             | Q(last_name__icontains=word)

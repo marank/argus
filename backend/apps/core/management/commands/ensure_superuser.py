@@ -2,6 +2,7 @@
 
 Reads ADMIN_USERNAME, ADMIN_PASSWORD and optionally ADMIN_EMAIL. Does nothing if
 the variables are missing or the user already exists, so it is safe to run on every container start.
+The password is taken as given (no password rules); to change it later use ``set_password``.
 """
 
 import os
@@ -22,7 +23,10 @@ class Command(BaseCommand):
 
         User = get_user_model()
         if User.objects.filter(username=username).exists():
-            self.stdout.write(f"Superuser “{username}” already exists.")
+            self.stdout.write(
+                f"Superuser “{username}” already exists; ADMIN_PASSWORD is only used to create it "
+                "(change it with `python manage.py set_password`)."
+            )
             return
         User.objects.create_superuser(
             username=username, email=os.environ.get("ADMIN_EMAIL", ""), password=password

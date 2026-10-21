@@ -41,6 +41,9 @@ services:
       - /tmp
     security_opt:
       - no-new-privileges:true
+    # Everything runs unprivileged on port 8080, so no Linux capabilities are needed.
+    cap_drop:
+      - ALL
 
 volumes:
   db-data:

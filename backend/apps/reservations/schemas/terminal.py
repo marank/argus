@@ -1,12 +1,13 @@
-from datetime import datetime
+from datetime import date, datetime
 from uuid import UUID
 
 from ninja import Field, Schema
 
 from apps.core.schemas import RefOut
+from apps.inventory.schemas.refs import AssetRefOut
 from apps.masterdata.schemas.refs import LocationRefOut
 
-from .reservation import AllocationNoteIn
+from .reservation import AllocationNoteIn, AllocationOut, ConsumableRefOut, LicenseSeatOut
 
 
 class TerminalPersonOut(Schema):
@@ -41,6 +42,72 @@ class TerminalPickupOut(Schema):
 class TerminalStaffOut(Schema):
     id: UUID
     display_name: str
+
+
+class TerminalAllocationOut(Schema):
+    """What is handed out, with IT's note for the employee; not who allocated it when."""
+
+    id: UUID
+    asset: AssetRefOut | None
+    consumable: ConsumableRefOut | None
+    license: LicenseSeatOut | None
+    quantity: int
+    handout_note: str
+    category_icon: str
+
+    resolve_license = staticmethod(AllocationOut.resolve_license)
+    resolve_category_icon = staticmethod(AllocationOut.resolve_category_icon)
+
+
+class TerminalPickupItemOut(Schema):
+    id: UUID
+    label: str
+    allocations: list[TerminalAllocationOut]
+
+    @staticmethod
+    def resolve_allocations(obj):
+        return list(obj.allocations.all())
+
+
+class TerminalHandoverOut(Schema):
+    method: str
+    received_by_name: str
+    handed_out_by: TerminalStaffOut | None
+    handed_out_at: datetime
+
+
+class TerminalPickupDetailOut(Schema):
+    """A pickup as the terminal shows it while signing.
+
+    The terminal is a shared device, so IT-internal details (notes, comments,
+    history, assignment, earlier requests) stay out.
+    """
+
+    id: UUID
+    number: str
+    title: str
+    status: str
+    requester: TerminalStaffOut
+    department: RefOut | None = Field(None, alias="requester.department")
+    duration: str
+    start_date: date
+    end_date: date | None
+    pickup_at: datetime | None
+    pickup_location: LocationRefOut | None
+    skip_device_check: bool
+    # Preselects who hands out: whoever prepared the pickup.
+    prepared_by: TerminalStaffOut | None
+    handled_by: TerminalStaffOut | None
+    items: list[TerminalPickupItemOut]
+    handover: TerminalHandoverOut | None = None
+
+    @staticmethod
+    def resolve_items(obj):
+        return list(obj.items.all())
+
+    @staticmethod
+    def resolve_handover(obj):
+        return getattr(obj, "handover", None) if hasattr(obj, "handover") else None
 
 
 class TerminalSignIn(Schema):

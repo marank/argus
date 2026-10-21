@@ -42,13 +42,16 @@ def login_view(request: HttpRequest, payload: LoginIn):
     """Signs in, or (202) asks for the second step when the user switched it on."""
     require_csrf(request)
     request.session.pop(two_factor.PENDING_LOGIN, None)
-    key = throttle.password_key(payload.username)
-    if not throttle.attempt(key, throttle.PASSWORD_LIMIT):
+    key, address = throttle.password_key(payload.username), throttle.address_key(request)
+    if not (
+        throttle.attempt(address, throttle.ADDRESS_LIMIT) and throttle.attempt(key, throttle.PASSWORD_LIMIT)
+    ):
         raise HttpError(429, _("Too many failed sign-ins. Please try again in 15 minutes."))
     user = authenticate(request, username=payload.username, password=payload.password)
     if user is None or not user.is_active:
         raise HttpError(401, _("Invalid username or password."))
     throttle.clear(key)
+    throttle.refund(address)
     second = TwoFactor.objects.filter(user=user).first()
     if second is not None:
         return Status(202, two_factor.start_login(request.session, user, second))

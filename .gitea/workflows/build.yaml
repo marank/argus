@@ -46,6 +46,8 @@ jobs:
       UV_LINK_MODE: copy
       UV_PYTHON_DOWNLOADS: never
       SECRET_KEY: ci-only-not-secret
+      # With a SECRET_KEY set, debug would default to off; the tests expect the dev setup.
+      DEBUG: "true"
       DB_HOST: postgres
       POSTGRES_DB: argus
       POSTGRES_USER: argus
@@ -198,7 +200,7 @@ jobs:
             postgres:18-alpine
           docker run -d --name "$NAME" --network "$NAME" \
             --read-only --tmpfs /tmp --security-opt no-new-privileges:true \
-            -e SECRET_KEY=ci-smoke-test -e DB_HOST=db \
+            -e SECRET_KEY=ci-smoke-test-not-secret-but-long-enough-for-the-check -e DB_HOST=db \
             -e POSTGRES_DB=argus -e POSTGRES_USER=argus -e POSTGRES_PASSWORD=argus \
             "$IMAGE"
           healthy=false

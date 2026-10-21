@@ -23,7 +23,9 @@ def env_list(name: str, default: str = "") -> list[str]:
 
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-dev-only-change-me")
-DEBUG = env_bool("DEBUG", True)
+# Debug only by default where no secret key is set, i.e. local development: any real
+# installation sets SECRET_KEY and so runs without debug unless DEBUG says otherwise.
+DEBUG = env_bool("DEBUG", "SECRET_KEY" not in os.environ)
 
 # --- Public addresses -----------------------------------------------------------
 # APP_URLS lists every URL users open Argus under, e.g.
@@ -42,6 +44,7 @@ CORS_ALLOW_CREDENTIALS = True
 # Cookies only over HTTPS when Argus is reachable exclusively via HTTPS.
 SESSION_COOKIE_SECURE = bool(APP_URLS) and all(url.scheme == "https" for url in APP_URLS)
 CSRF_COOKIE_SECURE = SESSION_COOKIE_SECURE
+# HSTS is left to the TLS proxy in front of Argus.
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -146,8 +149,11 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Behind nginx in the container (and possibly a TLS proxy in front of it).
-if env_bool("BEHIND_PROXY", False):
+# Behind nginx in the container (and possibly a TLS proxy in front of it). nginx
+# passes the scheme and the client address (X-Real-IP) only from trusted proxies,
+# see TRUSTED_PROXIES in docker/entrypoint.sh.
+BEHIND_PROXY = env_bool("BEHIND_PROXY", False)
+if BEHIND_PROXY:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     USE_X_FORWARDED_HOST = True
 
@@ -165,7 +171,15 @@ LOGGING = {
     "loggers": {"django.db.backends": {"level": "WARNING"}},
 }
 
-if not DEBUG and SECRET_KEY.startswith("django-insecure"):
+# Placeholders from .env.example and the docs must not end up in production.
+WEAK_SECRET_KEYS = {"change-me", "changeme", "secret", "secret-key"}
+
+if not DEBUG and (
+    SECRET_KEY.startswith("django-insecure") or SECRET_KEY in WEAK_SECRET_KEYS or len(SECRET_KEY) < 40
+):
     from django.core.exceptions import ImproperlyConfigured
 
-    raise ImproperlyConfigured("Set SECRET_KEY when DEBUG is false.")
+    raise ImproperlyConfigured(
+        "Set SECRET_KEY to a long random value (at least 40 characters), e.g. "
+        '`python3 -c "import secrets; print(secrets.token_urlsafe(50))"`.'
+    )

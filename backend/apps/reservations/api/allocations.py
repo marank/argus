@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from django.db import transaction
 from django.db.models import Q
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
@@ -93,6 +94,7 @@ def resolve_item(request: HttpRequest, pk: UUID, item_id: UUID, payload: Resolve
 
 
 @router.post("/{uuid:pk}/auto-allocate", response=AutoAllocateOut)
+@transaction.atomic
 def auto_allocate(request: HttpRequest, pk: UUID):
     allocated = workflow.auto_allocate(get_for_update(pk), request.user)
     return {"allocated": allocated, "reservation": get_reservation(request, pk)}
@@ -110,6 +112,7 @@ def remove_allocation(request: HttpRequest, pk: UUID, allocation_id: UUID):
 
 
 @router.post("/{uuid:pk}/return", response=ReservationOut)
+@transaction.atomic
 def return_devices(request: HttpRequest, pk: UUID, payload: ReturnIn):
     workflow.return_devices(
         get_for_update(pk),

@@ -139,6 +139,7 @@ def cancel(request: HttpRequest, pk: UUID):
 
 
 @router.post("/{uuid:pk}/confirm", response=ReservationOut, auth=reservations_write)
+@transaction.atomic
 def confirm(request: HttpRequest, pk: UUID, payload: ConfirmIn):
     quantities = {item.id: item.quantity_confirmed for item in payload.items}
     workflow.confirm(
@@ -153,12 +154,14 @@ def confirm(request: HttpRequest, pk: UUID, payload: ConfirmIn):
 
 
 @router.post("/{uuid:pk}/reject", response=ReservationOut, auth=reservations_write)
+@transaction.atomic
 def reject(request: HttpRequest, pk: UUID, payload: RejectIn):
     workflow.reject(get_for_update(pk), request.user, payload.comment)
     return get_reservation(request, pk)
 
 
 @router.post("/{uuid:pk}/schedule", response=ReservationOut, auth=reservations_write)
+@transaction.atomic
 def schedule(request: HttpRequest, pk: UUID, payload: ScheduleIn):
     workflow.reschedule(
         get_for_update(pk), request.user, payload.pickup_at, payload.pickup_location, payload.handover_mode
@@ -184,6 +187,7 @@ def mark_ready(request: HttpRequest, pk: UUID, payload: ReadyIn):
 
 
 @router.post("/{uuid:pk}/reopen", response=ReservationOut, auth=reservations_write)
+@transaction.atomic
 def reopen(request: HttpRequest, pk: UUID):
     """Take a ready request back into preparation."""
     workflow.reopen(get_for_update(pk), request.user)
@@ -191,6 +195,7 @@ def reopen(request: HttpRequest, pk: UUID):
 
 
 @router.post("/{uuid:pk}/extend", response=ReservationOut, auth=reservations_write)
+@transaction.atomic
 def extend(request: HttpRequest, pk: UUID, payload: ExtendIn):
     """Move the return date of a handed-out request."""
     workflow.extend(get_for_update(pk), request.user, payload.end_date)
@@ -198,6 +203,7 @@ def extend(request: HttpRequest, pk: UUID, payload: ExtendIn):
 
 
 @router.post("/{uuid:pk}/remind", response=ReservationOut, auth=reservations_write)
+@transaction.atomic
 def remind(request: HttpRequest, pk: UUID):
     """Email the employee to return the devices."""
     workflow.remind(get_for_update(pk), request.user)
@@ -205,6 +211,7 @@ def remind(request: HttpRequest, pk: UUID):
 
 
 @router.post("/{uuid:pk}/assign", response=ReservationOut, auth=reservations_write)
+@transaction.atomic
 def assign(request: HttpRequest, pk: UUID, payload: AssignIn):
     reservation = get_for_update(pk)
     before = (reservation.assigned_team_id, reservation.assignee_id)
@@ -223,6 +230,7 @@ def assign(request: HttpRequest, pk: UUID, payload: AssignIn):
 
 
 @router.post("/{uuid:pk}/hand-out", response=ReservationOut, auth=reservations_write)
+@transaction.atomic
 def hand_out(request: HttpRequest, pk: UUID, payload: HandOutIn):
     """Hand out without the pickup terminal; documented by the IT staff member."""
     workflow.hand_out(

@@ -378,8 +378,21 @@ def _matches(item: ReservationItem, model) -> bool:
     return model.category_id == item.category_id
 
 
+def _lock_item(item: ReservationItem) -> ReservationItem:
+    """The line read again under a lock (request first, then line).
+
+    Concurrent allocations to the same line wait here and then see what the other
+    one allocated, so a line is never filled beyond its confirmed quantity.
+    """
+    reservation = Reservation.objects.select_for_update().get(pk=item.reservation_id)
+    item = ReservationItem.objects.select_for_update().get(pk=item.pk)
+    item.reservation = reservation
+    return item
+
+
 @transaction.atomic
 def allocate_asset(item: ReservationItem, asset: Asset, user) -> ReservationAllocation:
+    item = _lock_item(item)
     reservation = item.reservation
     _require_status(reservation, Status.CONFIRMED)
     asset = Asset.objects.select_for_update().get(pk=asset.pk)
@@ -413,6 +426,7 @@ def allocate_asset(item: ReservationItem, asset: Asset, user) -> ReservationAllo
 def allocate_consumable(
     item: ReservationItem, consumable: Consumable, quantity: int, user
 ) -> ReservationAllocation:
+    item = _lock_item(item)
     _require_status(item.reservation, Status.CONFIRMED)
     if not _matches(item, consumable.model):
         raise BusinessError(
@@ -435,6 +449,7 @@ def allocate_license(
     item: ReservationItem, license: License, user, asset: Asset | None = None
 ) -> ReservationAllocation:
     """Give the requester a seat of ``license`` (or one of their devices, for device licenses)."""
+    item = _lock_item(item)
     reservation = item.reservation
     _require_status(reservation, Status.CONFIRMED)
     if not _matches(item, license.model):
@@ -620,17 +635,36 @@ def hand_out(
     prepared the pickup.
     """
     _require_status(reservation, Status.READY)
+    if Handover.objects.filter(reservation=reservation).exists():
+        raise BusinessError(_("This request has already been handed out."))
     if method == Handover.Method.SIGNATURE:
-        handed_out_by_id = handed_out_by_id or reservation.prepared_by_id or reservation.handled_by_id
-        if handed_out_by_id and not User.objects.filter(pk=handed_out_by_id, is_staff=True).exists():
-            raise BusinessError(_("Choose a member of the IT department."))
+        if handed_out_by_id:
+            # Chosen at the terminal: must be someone from IT who can still be named.
+            if not User.objects.filter(
+                pk=handed_out_by_id, is_active=True, is_staff=True, is_terminal=False
+            ).exists():
+                raise BusinessError(_("Choose a member of the IT department."))
+        else:
+            handed_out_by_id = reservation.prepared_by_id or reservation.handled_by_id
+            if handed_out_by_id and not User.objects.filter(pk=handed_out_by_id, is_staff=True).exists():
+                raise BusinessError(_("Choose a member of the IT department."))
     else:
         handed_out_by_id = user.pk
     requester = reservation.requester
-    if not received_by_id and not received_by_name.strip():
+    if received_by_id:
+        # The requester always may; anyone else must be a current employee (not a terminal).
+        received_by = (
+            requester
+            if received_by_id == requester.pk
+            else User.objects.filter(pk=received_by_id, is_active=True, is_terminal=False).first()
+        )
+        if received_by is None:
+            raise BusinessError(_("Choose an active employee as the person collecting the devices."))
+        if not received_by_name.strip():
+            received_by_name = received_by.display_name
+    elif not received_by_name.strip():
         received_by_id = requester.pk
-    if received_by_id and not received_by_name.strip():
-        received_by_name = User.objects.get(pk=received_by_id).display_name
+        received_by_name = requester.display_name
     _validate_handover(method, received_by_name, signature)
 
     now = timezone.now()

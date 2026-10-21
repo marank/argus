@@ -51,14 +51,15 @@ RUN apt-get update \
 
 WORKDIR /app
 COPY --from=backend /app/.venv /app/.venv
-COPY --chown=argus:argus backend/ /app/
+# Code and configuration stay owned by root: the app user can read but not change them.
+COPY backend/ /app/
 COPY --from=frontend /build/dist /app/frontend
-COPY --chown=argus:argus docker/ /app/docker/
+COPY docker/ /app/docker/
 
-# Static files for the Django admin and API docs; a throwaway key is enough here.
-RUN SECRET_KEY=collectstatic-only python manage.py collectstatic --noinput --verbosity 0 \
-    && chmod +x /app/docker/entrypoint.sh \
-    && chown -R argus:argus /app/staticfiles
+# Static files for the Django admin; a throwaway (random) key is enough here.
+RUN SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(50))')" \
+    python manage.py collectstatic --noinput --verbosity 0 \
+    && chmod +x /app/docker/entrypoint.sh
 
 USER argus
 EXPOSE 8080

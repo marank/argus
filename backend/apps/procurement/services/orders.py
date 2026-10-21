@@ -4,6 +4,7 @@ import calendar
 from datetime import date
 
 from django.db import transaction
+from django.http import Http404
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -106,13 +107,22 @@ def receive(order: PurchaseOrder, receipts: list[dict], user) -> PurchaseOrder:
     Devices that were ordered for a reservation are allocated to it right away
     while the reservation is still being prepared.
     """
+    # Locked and read again: two deliveries booked at once must not both see the
+    # same open quantity.
+    order = PurchaseOrder.objects.select_for_update().get(pk=order.pk)
     _require_status(order, Status.ORDERED, Status.PARTIALLY_RECEIVED)
     today = timezone.localdate()
+    order_lines = {
+        line.pk: line
+        for line in order.lines.select_for_update(of=("self",)).select_related(
+            "asset_model", "reservation_item__reservation"
+        )
+    }
 
     for receipt in receipts:
-        line = order.lines.select_related("asset_model", "reservation_item__reservation").get(
-            pk=receipt["line"]
-        )
+        line = order_lines.get(receipt["line"])
+        if line is None:
+            raise Http404
         model = line.asset_model
         if model is None:
             raise BusinessError(_("Assign a model to “%(line)s” before receiving it.") % {"line": line.label})

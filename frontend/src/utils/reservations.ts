@@ -16,7 +16,9 @@ export function itemLabel(
 }
 
 /** Model name of what was allocated: device, consumable or license seat. */
-export function allocationModel(allocation: Allocation): string {
+export function allocationModel(
+  allocation: Pick<Allocation, 'asset' | 'consumable' | 'license'>,
+): string {
   return (
     allocation.asset?.model.full_name ??
     allocation.consumable?.model.full_name ??
@@ -26,7 +28,9 @@ export function allocationModel(allocation: Allocation): string {
 }
 
 /** Short code of an allocation: inventory number, quantity or the device a seat is on. */
-export function allocationCode(allocation: Allocation): string {
+export function allocationCode(
+  allocation: Pick<Allocation, 'asset' | 'license' | 'quantity'>,
+): string {
   if (allocation.asset) return allocation.asset.inventory_number
   if (allocation.license) return allocation.license.device?.inventory_number ?? ''
   return `${allocation.quantity}×`

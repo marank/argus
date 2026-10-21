@@ -2,7 +2,8 @@
 
 from uuid import UUID
 
-from django.http import HttpRequest
+from django.db import transaction
+from django.http import Http404, HttpRequest
 from ninja import Router
 from ninja.pagination import paginate
 
@@ -38,13 +39,26 @@ def list_approvals(request: HttpRequest, q: str | None = None):
     )
 
 
+def _decidable(request: HttpRequest, pk: UUID) -> Reservation:
+    """A locked request the user approves for; others are not found.
+
+    Checked before any status check, so nobody learns the state of a request
+    outside their departments.
+    """
+    if not approvable_reservations(request.user).filter(pk=pk).exists():
+        raise Http404
+    return get_for_update(pk)
+
+
 @router.post("/{uuid:pk}/approve", response=ReservationOut)
+@transaction.atomic
 def approve(request: HttpRequest, pk: UUID, payload: ApproveIn):
-    workflow.approve(get_for_update(pk), request.user, payload.comment)
+    workflow.approve(_decidable(request, pk), request.user, payload.comment)
     return get_reservation(request, pk, as_approver=True)
 
 
 @router.post("/{uuid:pk}/decline", response=ReservationOut)
+@transaction.atomic
 def decline(request: HttpRequest, pk: UUID, payload: DeclineIn):
-    workflow.decline(get_for_update(pk), request.user, payload.comment)
+    workflow.decline(_decidable(request, pk), request.user, payload.comment)
     return get_reservation(request, pk, as_approver=True)

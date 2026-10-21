@@ -5,7 +5,7 @@ import psycopg
 import pytest
 from asgiref.sync import sync_to_async
 from django.db import connection, connections
-from django.test import AsyncClient
+from django.test import AsyncClient, AsyncRequestFactory
 
 from apps.accounts.models import User
 from apps.core import live_stream
@@ -84,3 +84,19 @@ def test_the_stream_passes_signals_only_to_whom_they_concern(demo, monkeypatch):
         await sync_to_async(connections.close_all)()
 
     asyncio.run(scenario())
+
+
+def test_one_user_cannot_open_streams_without_end(demo, settings, monkeypatch):
+    settings.LIVE_EVENTS = True
+    employee = User.objects.get(username="employee")
+    hub = live_stream.Hub()
+    hub.streams_per_user[str(employee.pk)] = live_stream.MAX_STREAMS_PER_USER
+    monkeypatch.setattr(live_stream, "hub", hub)
+    request = AsyncRequestFactory().get("/api/events")
+
+    async def auser():
+        return employee
+
+    request.auser = auser
+    assert asyncio.run(live_stream.events(request)).status_code == 429
+    assert not hub.queues

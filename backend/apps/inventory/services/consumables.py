@@ -28,13 +28,26 @@ def move_consumable(
     reserved goods are handed out.
     """
     item = Consumable.objects.select_for_update().get(pk=consumable.pk)
-    if item.quantity + delta < 0:
+    item.reserved_quantity = max(item.reserved_quantity - release_reserved, 0)
+    # Units reserved for open requests are spoken for: only the rest may be booked out.
+    if delta < 0 and -delta > item.available_quantity:
+        if item.reserved_quantity:
+            raise BusinessError(
+                _(
+                    "Not enough stock for %(model)s: only %(available)s available, "
+                    "%(reserved)s are reserved for requests."
+                )
+                % {
+                    "model": item.model,
+                    "available": item.available_quantity,
+                    "reserved": item.reserved_quantity,
+                }
+            )
         raise BusinessError(
             _("Not enough stock for %(model)s (available: %(quantity)s).")
             % {"model": item.model, "quantity": item.quantity}
         )
     item.quantity += delta
-    item.reserved_quantity = max(item.reserved_quantity - release_reserved, 0)
     item.save(update_fields=["quantity", "reserved_quantity", "updated_at"])
     return ConsumableMovement.objects.create(
         consumable=item, delta=delta, reason=reason, performed_by=user, **fields

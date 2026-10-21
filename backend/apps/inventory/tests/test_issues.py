@@ -184,3 +184,32 @@ def test_reports_of_others_stay_private(employee_client, it_client):
     url = f"/api/portal/my-issues/{foreign.pk}/messages"
     assert employee_client.post(url, {"text": "Hi"}, content_type=JSON).status_code == 404
     assert employee_client.get(f"/api/inventory/issues/{foreign.pk}").status_code == 403
+
+
+def test_reporter_does_not_see_who_has_the_device_now(employee_client, it_client):
+    from apps.accounts.models import Team, User
+    from apps.inventory.models import AssetIssue
+
+    asset = own_device()
+    issue_id = report(employee_client)
+    own_url = f"/api/portal/my-issues/{issue_id}"
+    employee = User.objects.get(username="employee")
+    # While the device is theirs, the reporter sees themselves as its holder.
+    assert employee_client.get(own_url).json()["asset"]["assigned_to"]["id"] == str(employee.pk)
+
+    sales = User.objects.get(username="sales")
+    Asset.objects.filter(pk=asset.pk).update(assigned_to=sales)
+    team = Team.objects.create(name="Second level", code="2ND")
+    AssetIssue.objects.filter(pk=issue_id).update(
+        assigned_team=team, assignee=User.objects.get(username="it")
+    )
+
+    body = employee_client.get(own_url).json()
+    assert body["asset"]["assigned_to"] is None and body["asset"]["assigned_since"] is None
+    assert body["assigned_team"] is None and body["assignee"] is None
+    assert "Seller" not in str(body)
+
+    body = it_client.get(f"/api/inventory/issues/{issue_id}").json()
+    assert body["asset"]["assigned_to"]["id"] == str(sales.pk)
+    assert body["assigned_team"]["id"] == str(team.pk)
+    assert body["assignee"]["username"] == "it"

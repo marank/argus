@@ -22,7 +22,12 @@ import SignaturePad from '@/components/terminal/SignaturePad.vue'
 import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
 import { useFormat } from '@/composables/useFormat'
-import type { Allocation, Reservation, TerminalPerson, TerminalStaff } from '@/types/reservations'
+import type {
+  TerminalAllocation,
+  TerminalPerson,
+  TerminalPickupDetail,
+  TerminalStaff,
+} from '@/types/reservations'
 import { categoryIcon } from '@/utils/icons'
 import { allocationCode, allocationModel } from '@/utils/reservations'
 
@@ -39,7 +44,7 @@ const confirmDialog = useConfirm()
 
 type Step = 'devices' | 'person' | 'sign' | 'done'
 
-const reservation = ref<Reservation | null>(null)
+const reservation = ref<TerminalPickupDetail | null>(null)
 const step = ref<Step>('devices')
 const notes = reactive<Record<Id, string>>({})
 const openNote = ref<Id | null>(null)
@@ -123,7 +128,7 @@ const dropdownOpen = ref(false)
 watch(personQuery, () => (dropdownOpen.value = true))
 onClickOutside(personBox, () => (dropdownOpen.value = false))
 
-function deviceLabel(allocation: Allocation) {
+function deviceLabel(allocation: TerminalAllocation) {
   return allocationModel(allocation)
 }
 
