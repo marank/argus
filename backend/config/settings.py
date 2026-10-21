@@ -39,7 +39,9 @@ _dev_origins = ["http://localhost:5173", "http://127.0.0.1:5173", "http://localh
 
 # localhost is always allowed: the container health check calls itself. urlsplit
 # drops the brackets of IPv6 hosts, but Django compares them bracketed.
-_app_hosts = {f"[{url.hostname}]" if ":" in url.hostname else url.hostname for url in APP_URLS if url.hostname}
+_app_hosts = {
+    f"[{url.hostname}]" if ":" in url.hostname else url.hostname for url in APP_URLS if url.hostname
+}
 ALLOWED_HOSTS = sorted(_app_hosts | {"localhost", "127.0.0.1"})
 CSRF_TRUSTED_ORIGINS = _app_origins + _dev_origins
 CORS_ALLOWED_ORIGINS = _app_origins + _dev_origins
