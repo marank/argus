@@ -41,6 +41,8 @@ export interface FormSection {
   /** i18n key of the section title; omit for the first, untitled block. */
   title?: string
   fields: FieldDef[]
+  /** Switches above the inputs, for sections whose switches reveal the inputs below them. */
+  togglesFirst?: boolean
   /** Optional component rendered below the fields; receives the live `form` and the edited `row`. */
   extra?: Component
 }

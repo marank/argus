@@ -139,11 +139,21 @@ export default defineResource<User>({
           help: () =>
             useFeaturesStore().ldapEnabled ? 'masterdata.fields.usernameLdapHelp' : undefined,
         },
+        { key: 'is_active', label: 'common.active', type: 'switch' },
+      ],
+      extra: TwoFactorReset,
+    },
+    {
+      title: 'masterdata.sections.permissions',
+      // Teams and roles only apply to IT staff, so they appear below that switch.
+      togglesFirst: true,
+      fields: [
         {
           key: 'teams',
           label: 'masterdata.resources.teams',
           type: 'entity',
           multiple: true,
+          span: 1,
           fetcher: teamsApi.list,
           display: (t: Ref) => t.name,
           initial: (u: User) => u.teams,
@@ -156,6 +166,7 @@ export default defineResource<User>({
           label: 'masterdata.resources.roles',
           type: 'entity',
           multiple: true,
+          span: 1,
           fetcher: rolesApi.list,
           display: (r: Ref) => r.name,
           initial: (u: User) => u.roles,
@@ -163,7 +174,6 @@ export default defineResource<User>({
           // Administrators have every right anyway.
           visible: (form) => !!form.is_staff && !form.is_superuser && useAuthStore().isSuperuser,
         },
-        { key: 'is_active', label: 'common.active', type: 'switch' },
         {
           key: 'is_superuser',
           label: 'masterdata.fields.administrator',
@@ -177,6 +187,12 @@ export default defineResource<User>({
           type: 'switch',
           help: 'masterdata.fields.itStaffHelp',
         },
+      ],
+    },
+    {
+      title: 'masterdata.sections.terminal',
+      togglesFirst: true,
+      fields: [
         {
           key: 'is_terminal',
           label: 'masterdata.fields.terminal',
@@ -187,6 +203,7 @@ export default defineResource<User>({
           key: 'terminal_location',
           label: 'masterdata.fields.terminalLocation',
           type: 'entity',
+          span: 2,
           fetcher: locationsApi.list,
           display: (l: Location) => l.full_name,
           initial: (u: User) => u.terminal_location,
@@ -194,7 +211,6 @@ export default defineResource<User>({
           visible: (form) => !!form.is_terminal,
         },
       ],
-      extra: TwoFactorReset,
     },
   ],
   defaults: () => ({

@@ -65,7 +65,9 @@ export default {
     details: 'Details & compatibility',
     person: 'Person',
     organisation: 'Organisation',
-    account: 'Account & permissions',
+    account: 'Account',
+    permissions: 'Permissions',
+    terminal: 'Pickup terminal',
     format: 'Format',
   },
   fields: {

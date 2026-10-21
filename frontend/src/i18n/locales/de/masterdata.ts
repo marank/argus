@@ -66,7 +66,9 @@ export default {
     details: 'Details & Kompatibilität',
     person: 'Person',
     organisation: 'Organisation',
-    account: 'Konto & Berechtigungen',
+    account: 'Konto',
+    permissions: 'Berechtigungen',
+    terminal: 'Abholterminal',
     format: 'Format',
   },
   fields: {

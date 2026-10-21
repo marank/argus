@@ -104,6 +104,7 @@ async function save(another = false) {
           v-for="(section, index) in resource.sections"
           :key="section.title ?? index"
           class="section"
+          :class="{ 'toggles-first': section.togglesFirst }"
         >
           <div v-if="section.title" class="eyebrow section-title">{{ t(section.title) }}</div>
           <NGrid :cols="2" :x-gap="12">
@@ -227,8 +228,20 @@ async function save(another = false) {
   padding-top: 18px;
   border-top: 1px solid var(--ar-border);
 }
+.section {
+  display: flex;
+  flex-direction: column;
+}
 .section-title {
   margin-bottom: 12px;
+}
+/* Title, then switches, then the inputs they reveal. */
+.toggles-first .section-title {
+  order: -2;
+}
+.toggles-first .toggles {
+  order: -1;
+  margin: 0 0 12px;
 }
 .toggles {
   display: grid;
