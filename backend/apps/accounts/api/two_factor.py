@@ -15,7 +15,7 @@ from apps.accounts.schemas import (
     TwoFactorSetupOut,
     TwoFactorStatusOut,
 )
-from apps.accounts.services import two_factor
+from apps.accounts.services import throttle, two_factor
 from apps.core.api.security import employee_auth
 
 router = Router(tags=["auth"], auth=employee_auth)
@@ -24,10 +24,14 @@ router = Router(tags=["auth"], auth=employee_auth)
 def confirm_password(request: HttpRequest, password: str) -> None:
     """Changes to the sign-in need the password, not just an open session."""
     user = request.user
+    key = throttle.password_key(user.username)
+    if not throttle.attempt(key, throttle.PASSWORD_LIMIT):
+        raise HttpError(429, _("Too many failed attempts. Please try again in 15 minutes."))
     checked = authenticate(request, username=user.username, password=password)
     if checked is None or checked.pk != user.pk:
         # Not 401: that would end the session in the frontend.
         raise HttpError(403, _("The password is not correct."))
+    throttle.clear(key)
 
 
 def status(user) -> dict:
@@ -73,6 +77,9 @@ def confirm_setup(request: HttpRequest, payload: CodeIn):
     state = two_factor.pending_setup(request.session)
     if state is None:
         raise HttpError(409, _("The setup has expired. Please start again."))
+    if not throttle.attempt(throttle.code_key(request.user), throttle.CODE_LIMIT):
+        request.session.pop(two_factor.PENDING_SETUP, None)
+        raise HttpError(429, _("Too many wrong codes. Please try again in 15 minutes."))
     codes = two_factor.finish_setup(request.user, state, payload.code)
     if codes is None:
         state["attempts"] += 1
@@ -82,6 +89,7 @@ def confirm_setup(request: HttpRequest, payload: CodeIn):
         request.session[two_factor.PENDING_SETUP] = state
         raise HttpError(400, _("The code is not correct or has expired."))
     request.session.pop(two_factor.PENDING_SETUP, None)
+    throttle.clear(throttle.code_key(request.user))
     return {"backup_codes": codes}
 
 

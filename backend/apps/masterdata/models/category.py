@@ -90,6 +90,10 @@ class Category(TimeStampedModel):
         return self.kind == self.Kind.SOFTWARE
 
     def clean(self) -> None:
+        if self.pk and self.parent_id and self.parent_id in self.descendant_ids():
+            raise ValidationError(
+                {"parent": _("A category cannot be placed below itself or one of its subcategories.")}
+            )
         if self.parent_id and self.parent.kind != self.kind:
             raise ValidationError(
                 {"kind": _("A subcategory must have the same type as its parent category.")}
@@ -104,7 +108,8 @@ class Category(TimeStampedModel):
 
     def ancestors(self) -> list[Category]:
         chain, node = [], self.parent
-        while node is not None:
+        # The pk check stops at a loop in the tree, should one ever get into the database.
+        while node is not None and node.pk != self.pk and node not in chain:
             chain.append(node)
             node = node.parent
         return chain
@@ -113,7 +118,8 @@ class Category(TimeStampedModel):
         """IDs of this category and all categories below it."""
         ids, frontier = {self.pk}, [self.pk]
         while frontier:
-            frontier = list(Category.objects.filter(parent_id__in=frontier).values_list("pk", flat=True))
+            children = Category.objects.filter(parent_id__in=frontier).values_list("pk", flat=True)
+            frontier = [pk for pk in children if pk not in ids]
             ids.update(frontier)
         return ids
 

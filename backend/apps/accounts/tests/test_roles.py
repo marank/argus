@@ -148,3 +148,45 @@ def test_dashboard_shows_only_readable_areas(staff, staff_client, it_client):
     grant(staff, assets="read")
     overview = staff_client.get("/api/dashboard/it").json()
     assert overview["asset_status"] == full["asset_status"]
+
+
+def test_only_administrators_change_or_delete_administrators(staff, staff_client):
+    grant(staff, users="write")
+    admin = User.objects.get(username="admin")
+    payload = {"username": "admin", "first_name": "Ada", "last_name": "Admin", "is_active": False}
+    response = staff_client.put(f"/api/accounts/users/{admin.pk}", payload, content_type=JSON)
+    assert response.status_code == 403
+    assert staff_client.delete(f"/api/accounts/users/{admin.pk}").status_code == 403
+    admin.refresh_from_db()
+    assert admin.is_active
+
+    # Other employees stay editable, and administrators can still edit administrators.
+    employee = User.objects.get(username="employee")
+    payload = {"username": "employee", "first_name": "Erika", "last_name": "Neu"}
+    response = staff_client.put(f"/api/accounts/users/{employee.pk}", payload, content_type=JSON)
+    assert response.status_code == 200, response.content
+    admin_client = Client()
+    admin_client.login(username="admin", password="argus-demo")
+    payload = {"username": "admin", "first_name": "Ada", "last_name": "Lovelace"}
+    response = admin_client.put(f"/api/accounts/users/{admin.pk}", payload, content_type=JSON)
+    assert response.status_code == 200, response.content
+
+
+def test_nobody_deletes_their_own_account(demo):
+    admin = User.objects.get(username="admin")
+    client = Client()
+    client.login(username="admin", password="argus-demo")
+    assert client.delete(f"/api/accounts/users/{admin.pk}").status_code == 409
+
+
+def test_employees_cannot_read_master_data(employee_client):
+    for path in (
+        "accounts/users",
+        "accounts/departments",
+        "masterdata/suppliers",
+        "masterdata/locations",
+        "masterdata/number-sequences",
+    ):
+        assert employee_client.get(f"/api/{path}").status_code == 403, path
+    admin = User.objects.get(username="admin")
+    assert employee_client.get(f"/api/accounts/users/{admin.pk}").status_code == 403

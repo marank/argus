@@ -12,7 +12,7 @@ from ninja.utils import check_csrf
 
 from apps.accounts.models import TwoFactor
 from apps.accounts.schemas import CodeIn, CurrentUserOut, PreferencesIn, TwoFactorChallengeOut
-from apps.accounts.services import two_factor
+from apps.accounts.services import throttle, two_factor
 from apps.core.api.security import session_auth
 from apps.core.notifications import EVENT_KEYS
 
@@ -42,9 +42,13 @@ def login_view(request: HttpRequest, payload: LoginIn):
     """Signs in, or (202) asks for the second step when the user switched it on."""
     require_csrf(request)
     request.session.pop(two_factor.PENDING_LOGIN, None)
+    key = throttle.password_key(payload.username)
+    if not throttle.attempt(key, throttle.PASSWORD_LIMIT):
+        raise HttpError(429, _("Too many failed sign-ins. Please try again in 15 minutes."))
     user = authenticate(request, username=payload.username, password=payload.password)
     if user is None or not user.is_active:
         raise HttpError(401, _("Invalid username or password."))
+    throttle.clear(key)
     second = TwoFactor.objects.filter(user=user).first()
     if second is not None:
         return Status(202, two_factor.start_login(request.session, user, second))
@@ -64,6 +68,9 @@ def verify_login(request: HttpRequest, payload: CodeIn):
     """Second step: the app or email code, or a backup code."""
     require_csrf(request)
     state, user = pending_or_401(request)
+    if not throttle.attempt(throttle.code_key(user), throttle.CODE_LIMIT):
+        request.session.pop(two_factor.PENDING_LOGIN, None)
+        raise HttpError(429, _("Too many wrong codes. Please try again in 15 minutes."))
     if not two_factor.check_login_code(user, state, payload.code):
         state["attempts"] += 1
         if state["attempts"] >= two_factor.MAX_ATTEMPTS:
@@ -72,6 +79,7 @@ def verify_login(request: HttpRequest, payload: CodeIn):
         request.session[two_factor.PENDING_LOGIN] = state
         raise HttpError(400, _("The code is not correct or has expired."))
     request.session.pop(two_factor.PENDING_LOGIN, None)
+    throttle.clear(throttle.code_key(user))
     login(request, user, backend=state["backend"])
     return user
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-20 21:35+0200\n"
+"POT-Creation-Date: 2026-10-21 00:07+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -85,11 +85,15 @@ msgstr[0] ""
 msgstr[1] ""
 "Zwei-Faktor-Authentifizierung für %(count)d Mitarbeiter zurückgesetzt."
 
-#: apps/accounts/api/two_factor.py:30
+#: apps/accounts/api/two_factor.py:29
+msgid "Too many failed attempts. Please try again in 15 minutes."
+msgstr "Zu viele Fehlversuche. Bitte versuchen Sie es in 15 Minuten erneut."
+
+#: apps/accounts/api/two_factor.py:33
 msgid "The password is not correct."
 msgstr "Das Passwort ist falsch."
 
-#: apps/accounts/api/two_factor.py:53
+#: apps/accounts/api/two_factor.py:57
 msgid ""
 "Codes by email require an email address on file and configured email "
 "delivery."
@@ -97,33 +101,45 @@ msgstr ""
 "Codes per E-Mail erfordern eine hinterlegte E-Mail-Adresse und einen "
 "eingerichteten E-Mail-Versand."
 
-#: apps/accounts/api/two_factor.py:62 apps/accounts/api/two_factor.py:75
+#: apps/accounts/api/two_factor.py:66 apps/accounts/api/two_factor.py:79
 msgid "The setup has expired. Please start again."
 msgstr "Die Einrichtung ist abgelaufen. Bitte beginnen Sie erneut."
 
-#: apps/accounts/api/two_factor.py:64 apps/core/api/session.py:87
+#: apps/accounts/api/two_factor.py:68 apps/core/api/session.py:95
 msgid "Please wait a moment before requesting another code."
 msgstr ""
 "Bitte warten Sie einen Moment, bevor Sie einen weiteren Code anfordern."
 
-#: apps/accounts/api/two_factor.py:81
+#: apps/accounts/api/two_factor.py:82 apps/core/api/session.py:73
+msgid "Too many wrong codes. Please try again in 15 minutes."
+msgstr "Zu viele falsche Codes. Bitte versuchen Sie es in 15 Minuten erneut."
+
+#: apps/accounts/api/two_factor.py:88
 msgid "Too many wrong codes. Please start again."
 msgstr "Zu viele falsche Codes. Bitte beginnen Sie erneut."
 
-#: apps/accounts/api/two_factor.py:83 apps/core/api/session.py:73
+#: apps/accounts/api/two_factor.py:90 apps/core/api/session.py:80
 msgid "The code is not correct or has expired."
 msgstr "Der Code ist falsch oder abgelaufen."
 
-#: apps/accounts/api/two_factor.py:93
+#: apps/accounts/api/two_factor.py:101
 msgid "Enable two-factor authentication first."
 msgstr "Aktivieren Sie zuerst die Zwei-Faktor-Authentifizierung."
 
-#: apps/accounts/api/users.py:57
+#: apps/accounts/api/users.py:29
+msgid "Only administrators can change or delete an administrator."
+msgstr "Nur Administratoren können einen Administrator ändern oder löschen."
+
+#: apps/accounts/api/users.py:31
+msgid "You cannot delete your own account."
+msgstr "Ihr eigenes Konto können Sie nicht löschen."
+
+#: apps/accounts/api/users.py:65
 msgid "Disable your own two-factor authentication in your profile."
 msgstr ""
 "Ihre eigene Zwei-Faktor-Authentifizierung deaktivieren Sie in Ihrem Profil."
 
-#: apps/accounts/api/users.py:59
+#: apps/accounts/api/users.py:67
 msgid "Only administrators can reset the sign-in of an administrator."
 msgstr ""
 "Nur Administratoren können die Anmeldung eines Administrators zurücksetzen."
@@ -133,17 +149,17 @@ msgid "Accounts"
 msgstr "Benutzerkonten"
 
 #: apps/accounts/models/department.py:9 apps/accounts/models/role.py:16
-#: apps/accounts/models/team.py:16 apps/core/models/number_sequence.py:25
+#: apps/accounts/models/team.py:16 apps/core/models/number_sequence.py:43
 #: apps/masterdata/models/asset_model.py:21
-#: apps/masterdata/models/category.py:22 apps/masterdata/models/location.py:14
+#: apps/masterdata/models/category.py:22 apps/masterdata/models/location.py:15
 #: apps/masterdata/models/manufacturer.py:8
 #: apps/masterdata/models/supplier.py:8
 msgid "name"
 msgstr "Name"
 
 #: apps/accounts/models/department.py:10 apps/accounts/models/team.py:17
-#: apps/core/models/number_sequence.py:24 apps/masterdata/models/category.py:30
-#: apps/masterdata/models/location.py:15
+#: apps/core/models/number_sequence.py:42 apps/masterdata/models/category.py:30
+#: apps/masterdata/models/location.py:16
 msgid "code"
 msgstr "Kürzel"
 
@@ -297,7 +313,7 @@ msgstr "LDAP-Einstellungen"
 #: apps/accounts/models/role.py:17 apps/inventory/models/asset_event.py:42
 #: apps/inventory/models/asset_issue.py:30
 #: apps/masterdata/models/asset_model.py:39
-#: apps/masterdata/models/category.py:39 apps/masterdata/models/location.py:25
+#: apps/masterdata/models/category.py:39 apps/masterdata/models/location.py:26
 #: apps/procurement/models/purchase_order_line.py:25
 #: apps/reservations/models/reservation_item.py:40
 msgid "description"
@@ -387,11 +403,11 @@ msgstr "Backup-Code"
 msgid "backup codes"
 msgstr "Backup-Codes"
 
-#: apps/accounts/models/user.py:26 config/settings.py:129
+#: apps/accounts/models/user.py:26 config/settings.py:138
 msgid "English"
 msgstr "Englisch"
 
-#: apps/accounts/models/user.py:27 config/settings.py:129
+#: apps/accounts/models/user.py:27 config/settings.py:138
 msgid "German"
 msgstr "Deutsch"
 
@@ -517,12 +533,12 @@ msgstr "Keine Suchbasis für Benutzer konfiguriert."
 msgid "Connected, but no unique entry found for “%(username)s”."
 msgstr "Verbunden, aber kein eindeutiger Eintrag für „%(username)s“ gefunden."
 
-#: apps/accounts/services/two_factor.py:115
+#: apps/accounts/services/two_factor.py:119
 #, python-format
 msgid "Your Argus sign-in code: %(code)s"
 msgstr "Ihr Argus-Anmeldecode: %(code)s"
 
-#: apps/accounts/services/two_factor.py:117
+#: apps/accounts/services/two_factor.py:121
 #, python-format
 msgid ""
 "Hello %(name)s,\n"
@@ -571,7 +587,7 @@ msgstr "Verlauf"
 msgid "next number"
 msgstr "nächste Nummer"
 
-#: apps/core/api/crud.py:110 config/api.py:78
+#: apps/core/api/crud.py:122 config/api.py:87
 msgid "This record is still in use and cannot be deleted."
 msgstr "Dieser Eintrag wird noch verwendet und kann nicht gelöscht werden."
 
@@ -626,18 +642,22 @@ msgid "CSRF verification failed. Please reload the page."
 msgstr "CSRF-Prüfung fehlgeschlagen. Bitte laden Sie die Seite neu."
 
 #: apps/core/api/session.py:47
+msgid "Too many failed sign-ins. Please try again in 15 minutes."
+msgstr "Zu viele fehlgeschlagene Anmeldungen. Bitte versuchen Sie es in 15 Minuten erneut."
+
+#: apps/core/api/session.py:50
 msgid "Invalid username or password."
 msgstr "Benutzername oder Passwort ist falsch."
 
-#: apps/core/api/session.py:58
+#: apps/core/api/session.py:62
 msgid "The sign-in has expired. Please enter your password again."
 msgstr "Die Anmeldung ist abgelaufen. Bitte geben Sie Ihr Passwort erneut ein."
 
-#: apps/core/api/session.py:71
+#: apps/core/api/session.py:78
 msgid "Too many wrong codes. Please enter your password again."
 msgstr "Zu viele falsche Codes. Bitte geben Sie Ihr Passwort erneut ein."
 
-#: apps/core/api/session.py:85
+#: apps/core/api/session.py:93
 msgid "This sign-in uses an authenticator app."
 msgstr "Diese Anmeldung verwendet eine Authenticator-App."
 
@@ -740,56 +760,56 @@ msgstr "gesendete Benachrichtigung"
 msgid "sent notifications"
 msgstr "gesendete Benachrichtigungen"
 
-#: apps/core/models/number_sequence.py:20
+#: apps/core/models/number_sequence.py:38
 msgid "Never"
 msgstr "Nie"
 
-#: apps/core/models/number_sequence.py:21
+#: apps/core/models/number_sequence.py:39
 msgid "Yearly"
 msgstr "Jährlich"
 
-#: apps/core/models/number_sequence.py:22
+#: apps/core/models/number_sequence.py:40
 msgid "Monthly"
 msgstr "Monatlich"
 
-#: apps/core/models/number_sequence.py:26
+#: apps/core/models/number_sequence.py:44
 msgid "prefix"
 msgstr "Präfix"
 
-#: apps/core/models/number_sequence.py:27
+#: apps/core/models/number_sequence.py:45
 msgid "pattern"
 msgstr "Muster"
 
-#: apps/core/models/number_sequence.py:28
+#: apps/core/models/number_sequence.py:46
 msgid "padding"
 msgstr "Stellen"
 
-#: apps/core/models/number_sequence.py:29
+#: apps/core/models/number_sequence.py:47
 msgid "next value"
 msgstr "nächster Wert"
 
-#: apps/core/models/number_sequence.py:31
+#: apps/core/models/number_sequence.py:49
 msgid "reset period"
 msgstr "Neustart"
 
-#: apps/core/models/number_sequence.py:33
+#: apps/core/models/number_sequence.py:51
 msgid "current period"
 msgstr "aktueller Zeitraum"
 
-#: apps/core/models/number_sequence.py:36 apps/masterdata/models/category.py:43
+#: apps/core/models/number_sequence.py:54 apps/masterdata/models/category.py:43
 msgid "number sequence"
 msgstr "Nummernserie"
 
-#: apps/core/models/number_sequence.py:37
+#: apps/core/models/number_sequence.py:55
 msgid "number sequences"
 msgstr "Nummernserien"
 
-#: apps/core/models/number_sequence.py:45
+#: apps/core/models/number_sequence.py:63
 #, python-brace-format
 msgid "The pattern must contain the {seq} placeholder."
 msgstr "Das Muster muss den Platzhalter {seq} enthalten."
 
-#: apps/core/models/number_sequence.py:49
+#: apps/core/models/number_sequence.py:67
 #, python-format
 msgid "Invalid placeholder: %(error)s"
 msgstr "Ungültiger Platzhalter: %(error)s"
@@ -995,7 +1015,7 @@ msgid "Part of the pool employees can reserve from."
 msgstr "Teil des Pools, aus dem Mitarbeiter anfordern können."
 
 #: apps/inventory/models/asset.py:49 apps/inventory/models/consumable.py:18
-#: apps/masterdata/models/location.py:31
+#: apps/masterdata/models/location.py:32
 msgid "location"
 msgstr "Standort"
 
@@ -1127,7 +1147,7 @@ msgstr "Problem behoben"
 #: apps/inventory/models/asset_event.py:40
 #: apps/inventory/models/asset_issue.py:29
 #: apps/inventory/models/asset_issue.py:93
-#: apps/masterdata/models/location.py:16 apps/reservations/models/event.py:64
+#: apps/masterdata/models/location.py:17 apps/reservations/models/event.py:64
 msgid "kind"
 msgstr "Art"
 
@@ -1758,52 +1778,60 @@ msgid "categories"
 msgstr "Kategorien"
 
 #: apps/masterdata/models/category.py:95
+msgid "A category cannot be placed below itself or one of its subcategories."
+msgstr "Eine Kategorie kann nicht unter sich selbst oder einer ihrer Unterkategorien eingeordnet werden."
+
+#: apps/masterdata/models/category.py:99
 msgid "A subcategory must have the same type as its parent category."
 msgstr ""
 "Eine Unterkategorie muss denselben Typ haben wie ihre übergeordnete "
 "Kategorie."
 
-#: apps/masterdata/models/category.py:98
+#: apps/masterdata/models/category.py:102
 msgid "Change the type of the subcategories first."
 msgstr "Ändern Sie zuerst den Typ der Unterkategorien."
 
-#: apps/masterdata/models/category.py:102
+#: apps/masterdata/models/category.py:106
 msgid "The type cannot be changed while models belong to this category."
 msgstr ""
 "Der Typ kann nicht geändert werden, solange Modelle zu dieser Kategorie "
 "gehören."
 
-#: apps/masterdata/models/location.py:9
+#: apps/masterdata/models/location.py:10
 msgid "Site"
 msgstr "Standort"
 
-#: apps/masterdata/models/location.py:10
+#: apps/masterdata/models/location.py:11
 msgid "Building"
 msgstr "Gebäude"
 
-#: apps/masterdata/models/location.py:11
+#: apps/masterdata/models/location.py:12
 msgid "Room"
 msgstr "Raum"
 
-#: apps/masterdata/models/location.py:12
+#: apps/masterdata/models/location.py:13
 msgid "Storage"
 msgstr "Lager"
 
-#: apps/masterdata/models/location.py:19
+#: apps/masterdata/models/location.py:20
 msgid "parent location"
 msgstr "übergeordneter Standort"
 
-#: apps/masterdata/models/location.py:27
+#: apps/masterdata/models/location.py:28
 msgid "pickup point"
 msgstr "Abholort"
 
-#: apps/masterdata/models/location.py:27
+#: apps/masterdata/models/location.py:28
 msgid "Employees can collect devices here."
 msgstr "Mitarbeiter können hier Geräte abholen."
 
-#: apps/masterdata/models/location.py:32
+#: apps/masterdata/models/location.py:33
 msgid "locations"
 msgstr "Standorte"
+
+#: apps/masterdata/models/location.py:42
+msgid "A location cannot be placed inside itself or one of its sub-locations."
+msgstr "Ein Standort kann nicht in sich selbst oder einem seiner untergeordneten Standorte liegen."
 
 #: apps/masterdata/models/manufacturer.py:9
 #: apps/masterdata/models/supplier.py:13
@@ -2689,7 +2717,7 @@ msgstr "Defekt zurück aus %(number)s"
 msgid "This is set aside for %(number)s. Remove it there first."
 msgstr "Das ist für %(number)s zurückgelegt. Entfernen Sie es zuerst dort."
 
-#: config/api.py:72
+#: config/api.py:81
 msgid "Not found."
 msgstr "Nicht gefunden."
 

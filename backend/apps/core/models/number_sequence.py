@@ -1,4 +1,5 @@
 from datetime import date
+from string import Formatter
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -7,6 +8,23 @@ from django.utils.translation import gettext_lazy as _
 from .base import TimeStampedModel
 
 PLACEHOLDERS = ("prefix", "year", "yy", "month", "seq")
+
+
+def render_pattern(pattern: str, values: dict[str, str]) -> str:
+    """Fills the placeholders of ``pattern``; anything beyond a bare known name is refused.
+
+    Not ``str.format``: the pattern is user input, and format specs or attribute access
+    (``{seq:>999999999}``, ``{prefix.__class__}``) would allocate memory or reach internals.
+    """
+    parts = []
+    for literal, name, spec, conversion in Formatter().parse(pattern):
+        parts.append(literal)
+        if name is None:
+            continue
+        if name not in PLACEHOLDERS or spec or conversion:
+            raise ValueError(f"{{{name}}}")
+        parts.append(values[name])
+    return "".join(parts)
 
 
 class NumberSequence(TimeStampedModel):
@@ -45,7 +63,7 @@ class NumberSequence(TimeStampedModel):
             raise ValidationError({"pattern": _("The pattern must contain the {seq} placeholder.")})
         try:
             self.format(1)
-        except (KeyError, IndexError, ValueError) as exc:
+        except ValueError as exc:
             raise ValidationError({"pattern": _("Invalid placeholder: %(error)s") % {"error": exc}}) from exc
 
     def current_period_key(self, on: date | None = None) -> str:
@@ -60,12 +78,15 @@ class NumberSequence(TimeStampedModel):
 
     def format(self, value: int, on: date | None = None) -> str:
         on = on or date.today()
-        return self.pattern.format(
-            prefix=self.prefix,
-            year=on.year,
-            yy=f"{on.year % 100:02d}",
-            month=f"{on.month:02d}",
-            seq=str(value).zfill(self.padding),
+        return render_pattern(
+            self.pattern,
+            {
+                "prefix": self.prefix,
+                "year": str(on.year),
+                "yy": f"{on.year % 100:02d}",
+                "month": f"{on.month:02d}",
+                "seq": str(value).zfill(self.padding),
+            },
         )
 
     def preview(self) -> str:

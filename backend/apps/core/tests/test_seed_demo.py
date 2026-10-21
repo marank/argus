@@ -31,3 +31,12 @@ def test_full_demo_data_covers_every_state(db):
     assert Reservation.objects.filter(assigned_team__isnull=True, assignee__isnull=True).exists()
     assert Reservation.objects.filter(assignee__username="jkoch").exists()
     assert AssetIssue.objects.filter(assignee__username="it").exists()
+
+
+def test_seeding_keeps_the_password_of_existing_accounts(db):
+    User.objects.create_superuser("admin", password="the-real-one")
+    call_command("seed_demo", verbosity=0)
+    admin = User.objects.get(username="admin")
+    assert admin.check_password("the-real-one")
+    assert not admin.check_password("argus-demo")
+    assert User.objects.get(username="employee").check_password("argus-demo")

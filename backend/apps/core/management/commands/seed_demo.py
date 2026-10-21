@@ -364,7 +364,7 @@ class Command(BaseCommand):
         }
 
     def _user(self, username, first, last, department, staff=False, superuser=False) -> User:
-        user, _ = User.objects.get_or_create(
+        user, created = User.objects.get_or_create(
             username=username,
             defaults={
                 "first_name": first,
@@ -375,8 +375,11 @@ class Command(BaseCommand):
                 "is_superuser": superuser,
             },
         )
-        user.set_password(DEMO_PASSWORD)
-        user.save()
+        # Existing accounts keep their password: on a real installation "admin" is the
+        # administrator from ADMIN_USERNAME, not a demo account.
+        if created:
+            user.set_password(DEMO_PASSWORD)
+            user.save()
         return user
 
 

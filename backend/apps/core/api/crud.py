@@ -40,10 +40,15 @@ class CrudConfig:
     # Hook to translate/validate the input before saving (e.g. resolving FKs).
     prepare: Callable[[dict], dict] = field(default=lambda data: data)
     # Area of the role rights (apps.accounts.permissions) that creating, changing
-    # and deleting needs; reading stays with the router's auth.
+    # and deleting needs.
     permission: str | None = None
     # Instead of ``permission``: the auth for writing, e.g. administrators only.
     write_auth: object | None = None
+    # Auth for reading; by default IT staff, since master data is IT's working material.
+    read_auth: object | None = None
+    # Called with the request and the existing record before it is changed or deleted;
+    # raises HttpError to refuse (e.g. only administrators may change administrators).
+    check_change: Callable[[HttpRequest, models.Model], None] | None = None
 
     def get_queryset(self) -> QuerySet:
         return self.queryset() if self.queryset else self.model._default_manager.all()
@@ -71,12 +76,19 @@ def build_crud_router(config: CrudConfig, *, tags: list[str]) -> Router:
     write_auth = config.write_auth or (
         permission_auth(config.permission, WRITE) if config.permission else it_staff_auth
     )
+    read_auth = config.read_auth or it_staff_auth
     Out, In, Filter = config.out_schema, config.in_schema, config.filter_schema
 
     def get_instance(pk: UUID):
         return get_object_or_404(config.get_queryset(), pk=pk)
 
-    @router.get("", response=list[Out])
+    def get_for_change(request: HttpRequest, pk: UUID):
+        instance = get_instance(pk)
+        if config.check_change:
+            config.check_change(request, instance)
+        return instance
+
+    @router.get("", response=list[Out], auth=read_auth)
     @paginate(Pagination)
     def list_items(
         request: HttpRequest,
@@ -88,7 +100,7 @@ def build_crud_router(config: CrudConfig, *, tags: list[str]) -> Router:
         queryset = search(queryset, q, config.search_fields)
         return order(queryset, ordering, config.ordering_fields)
 
-    @router.get("/{uuid:pk}", response=Out)
+    @router.get("/{uuid:pk}", response=Out, auth=read_auth)
     def get_item(request: HttpRequest, pk: UUID):
         return get_instance(pk)
 
@@ -99,13 +111,13 @@ def build_crud_router(config: CrudConfig, *, tags: list[str]) -> Router:
 
     @router.put("/{uuid:pk}", response=Out, auth=write_auth)
     def update_item(request: HttpRequest, pk: UUID, payload: In):
-        instance = apply_input(get_instance(pk), config.prepare(payload.dict()))
+        instance = apply_input(get_for_change(request, pk), config.prepare(payload.dict()))
         return get_instance(instance.pk)
 
     @router.delete("/{uuid:pk}", response={204: None}, auth=write_auth)
     def delete_item(request: HttpRequest, pk: UUID):
         try:
-            get_instance(pk).delete()
+            get_for_change(request, pk).delete()
         except ProtectedError as exc:
             raise HttpError(409, _("This record is still in use and cannot be deleted.")) from exc
         return Status(204, None)

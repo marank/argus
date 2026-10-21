@@ -68,8 +68,8 @@ async function attempt(action: () => Promise<void>) {
     await action()
   } catch (e) {
     error.value = e instanceof ApiError ? e.message : String(e)
-    // Expired or too many wrong codes: the password has to be entered again.
-    if (e instanceof ApiError && e.status === 401 && challenge.value) back()
+    // Expired or too many wrong codes (401, 429): the password has to be entered again.
+    if (e instanceof ApiError && [401, 429].includes(e.status) && challenge.value) back()
   } finally {
     busy.value = false
   }

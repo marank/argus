@@ -13,6 +13,7 @@ router = build_crud_router(
         model=Role,
         out_schema=RoleOut,
         in_schema=RoleIn,
+        read_auth=superuser_auth,
         write_auth=superuser_auth,
         search_fields=("name", "description"),
         ordering_fields=("name",),

@@ -24,6 +24,13 @@ class UserFilter(FilterSchema):
     is_staff: bool | None = None
 
 
+def protect_administrators(request: HttpRequest, user: User) -> None:
+    if user.is_superuser and not request.user.is_superuser:
+        raise HttpError(403, _("Only administrators can change or delete an administrator."))
+    if request.method == "DELETE" and user.pk == request.user.pk:
+        raise HttpError(409, _("You cannot delete your own account."))
+
+
 router = build_crud_router(
     CrudConfig(
         model=User,
@@ -31,6 +38,7 @@ router = build_crud_router(
         in_schema=UserIn,
         filter_schema=UserFilter,
         permission="users",
+        check_change=protect_administrators,
         search_fields=("username", "first_name", "last_name", "email", "employee_number"),
         ordering_fields=(
             "username",

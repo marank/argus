@@ -202,7 +202,7 @@ def test_employees_cannot_reset_or_see_two_factor(employee_client, it_client):
     it = User.objects.get(username="it")
     TwoFactor.objects.create(user=it, method="totp", totp_secret=two_factor.new_totp_secret())
     assert employee_client.post(f"/api/accounts/users/{it.pk}/two-factor/reset").status_code == 403
-    assert employee_client.get(f"/api/accounts/users/{it.pk}").json()["two_factor"] is None
+    assert employee_client.get(f"/api/accounts/users/{it.pk}").status_code == 403
 
 
 def test_it_cannot_reset_an_administrator(it_client):

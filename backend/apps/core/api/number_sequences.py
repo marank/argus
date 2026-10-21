@@ -4,8 +4,9 @@ from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
 from ninja import Schema
 
+from apps.accounts.permissions import WRITE
 from apps.core.api.crud import CrudConfig, build_crud_router
-from apps.core.api.security import it_staff_auth
+from apps.core.api.security import permission_auth
 from apps.core.models import NumberSequence
 from apps.core.schemas.number_sequence import NumberSequenceIn, NumberSequenceOut
 
@@ -26,7 +27,7 @@ class PreviewOut(Schema):
     examples: list[str]
 
 
-@router.post("/preview", response=PreviewOut, auth=it_staff_auth)
+@router.post("/preview", response=PreviewOut, auth=permission_auth("number_sequences", WRITE))
 def preview(request: HttpRequest, payload: NumberSequenceIn):
     """Render a few example numbers for an unsaved configuration."""
     sequence = NumberSequence(**payload.dict())

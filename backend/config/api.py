@@ -1,5 +1,6 @@
 """Assembles the REST API from the routers of the individual apps."""
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import connection
 from django.db.models import ProtectedError
@@ -17,7 +18,15 @@ from apps.masterdata.api import asset_models, categories, locations, manufacture
 from apps.procurement.api import router as procurement_router
 from apps.reservations.api import router as reservations_router
 
-api = NinjaAPI(title="Argus API", version="1.0.0", auth=employee_auth, urls_namespace="api")
+# The API docs only in development: in production they would describe every endpoint
+# to anyone and load Swagger UI from a CDN onto the Argus origin.
+api = NinjaAPI(
+    title="Argus API",
+    version="1.0.0",
+    auth=employee_auth,
+    urls_namespace="api",
+    openapi_url="/openapi.json" if settings.DEBUG else None,
+)
 
 api.add_router("/auth", session.router)
 api.add_router("/auth/two-factor", two_factor.router)

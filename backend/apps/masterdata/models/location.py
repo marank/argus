@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -35,10 +36,18 @@ class Location(TimeStampedModel):
     def __str__(self) -> str:
         return self.full_name
 
+    def clean(self) -> None:
+        if self.pk and self.parent_id and self.parent_id in self.descendant_ids():
+            raise ValidationError(
+                {"parent": _("A location cannot be placed inside itself or one of its sub-locations.")}
+            )
+
     @property
     def full_name(self) -> str:
-        parts, node = [self.name], self.parent
-        while node is not None:
+        parts, seen, node = [self.name], {self.pk}, self.parent
+        # The seen set stops at a loop in the tree, should one ever get into the database.
+        while node is not None and node.pk not in seen:
+            seen.add(node.pk)
             parts.append(node.name)
             node = node.parent
         return " / ".join(reversed(parts))
@@ -47,6 +56,7 @@ class Location(TimeStampedModel):
         """IDs of this location and all locations below it."""
         ids, frontier = {self.pk}, [self.pk]
         while frontier:
-            frontier = list(Location.objects.filter(parent_id__in=frontier).values_list("pk", flat=True))
+            children = Location.objects.filter(parent_id__in=frontier).values_list("pk", flat=True)
+            frontier = [pk for pk in children if pk not in ids]
             ids.update(frontier)
         return ids
