@@ -149,6 +149,8 @@ export default {
       'New devices of this model draw their inventory number from this sequence. Empty: the category’s sequence, otherwise the general asset sequence.',
     nextNumber: 'next number',
     useSequence: 'Use this number sequence',
+    inheritedFromParent: 'Taken over from the parent category',
+    inheritedSequence: 'Taken over from the category or the general asset sequence',
     trackingHelp:
       'Individual devices: with serial number and history. Consumables: by quantity. Software: as licenses.',
     categoryKind: 'Type',

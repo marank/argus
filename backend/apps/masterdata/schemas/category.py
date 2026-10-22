@@ -21,14 +21,26 @@ class CategoryOut(Schema):
     is_requestable: bool
     allow_any_model: bool
     requires_approval: bool
+    # Whether requests need approval, here or because of a category above.
+    needs_approval: bool
     sort_order: int
     path: list[str]
     # IT-internal: empty for employees.
     team: TeamRefOut | None = None
+    # The team that applies, the own or the nearest parent's; IT-internal as well.
+    effective_team: TeamRefOut | None = None
 
     @staticmethod
     def resolve_team(obj, context):
         return obj.team if context_is_it_staff(context) else None
+
+    @staticmethod
+    def resolve_needs_approval(obj: Category) -> bool:
+        return obj.needs_approval()
+
+    @staticmethod
+    def resolve_effective_team(obj: Category, context):
+        return obj.effective_team() if context_is_it_staff(context) else None
 
     @staticmethod
     def resolve_path(obj) -> list[str]:

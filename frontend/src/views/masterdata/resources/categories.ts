@@ -1,9 +1,9 @@
-import { AppWindow, Cpu } from '@lucide/vue'
+import { AppWindow, Check, Cpu } from '@lucide/vue'
 import { h } from 'vue'
 
 import { teamsApi } from '@/api/accounts'
 import { categoriesApi, numberSequencesApi } from '@/api/masterdata'
-import { bool, mono, withIcon } from '@/components/crud/cells'
+import { bool, inherited, mono, ownOrInherited, withIcon } from '@/components/crud/cells'
 import { defineResource } from '@/components/crud/types'
 import { numberSequenceHints } from '@/components/masterdata/numberSequenceHints'
 import { i18n } from '@/i18n'
@@ -46,7 +46,12 @@ export default defineResource<Category>({
       key: 'team',
       label: 'masterdata.fields.responsibleTeam',
       width: 160,
-      render: (c) => c.team?.name ?? '—',
+      render: (c) =>
+        ownOrInherited(
+          c.team?.name,
+          c.effective_team?.name,
+          t('masterdata.fields.inheritedFromParent'),
+        ),
     },
     {
       key: 'is_requestable',
@@ -58,7 +63,10 @@ export default defineResource<Category>({
       key: 'requires_approval',
       label: 'masterdata.fields.requiresApproval',
       width: 170,
-      render: (c) => bool(c.requires_approval),
+      render: (c) =>
+        !c.requires_approval && c.needs_approval
+          ? inherited(h(Check, { size: 15 }), t('masterdata.fields.inheritedFromParent'))
+          : bool(c.requires_approval),
     },
     {
       key: 'sort_order',

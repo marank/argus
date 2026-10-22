@@ -150,6 +150,8 @@ export default {
       'Neue Geräte dieses Modells erhalten ihre Inventarnummer aus dieser Serie. Leer: Es gilt die Serie der Kategorie, ersatzweise die allgemeine Serie für Assets.',
     nextNumber: 'nächste Nummer',
     useSequence: 'Diese Nummernserie übernehmen',
+    inheritedFromParent: 'Übernommen von der übergeordneten Kategorie',
+    inheritedSequence: 'Übernommen von der Kategorie bzw. allgemein für Assets',
     trackingHelp:
       'Einzelgeräte: mit Seriennummer und Historie. Verbrauchsmaterial: nach Menge. Software: über Lizenzen.',
     categoryKind: 'Typ',

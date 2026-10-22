@@ -1,5 +1,5 @@
 from apps.inventory.models import Asset, AssetEvent
-from apps.masterdata.models import AssetModel, Location
+from apps.masterdata.models import AssetModel, Category, Location
 
 JSON = "application/json"
 
@@ -57,7 +57,7 @@ def test_model_sequence_comes_before_the_category_sequence(it_client):
     AssetModel.objects.filter(pk__in=[handle.pk, unnumbered.pk]).update(number_sequence=quad)
     handle.refresh_from_db()
     detail = it_client.get(f"/api/masterdata/models/{handle.pk}").json()
-    assert detail["number_sequence"]["id"] == str(quad.pk)
+    assert detail["number_sequence"]["id"] == detail["effective_number_sequence"]["id"] == str(quad.pk)
 
     response = it_client.get(f"/api/inventory/assets/series/preview?model={handle.pk}&count=2")
     assert response.json()["first"] == "Q001"
@@ -66,6 +66,19 @@ def test_model_sequence_comes_before_the_category_sequence(it_client):
     # A model with a sequence of its own counts as numbered, whatever its category.
     numbered = it_client.get("/api/masterdata/models?numbered=true&page_size=100").json()["items"]
     assert unnumbered.name in {m["name"] for m in numbered}
+
+
+def test_models_show_the_sequence_that_applies(it_client):
+    items = it_client.get("/api/masterdata/models?page_size=100").json()["items"]
+    sx58 = next(m for m in items if m["name"] == "SX58")
+    assert sx58["number_sequence"] is None
+    assert sx58["effective_number_sequence"]["name"] == "Mobile data terminals"
+    # Consumables get no inventory numbers.
+    assert all(m["effective_number_sequence"] is None for m in items if m["tracking"] == "bulk")
+
+    Category.objects.filter(code="mde").update(number_sequence=None)
+    sx58 = it_client.get(f"/api/masterdata/models/{sx58['id']}").json()
+    assert sx58["effective_number_sequence"]["name"] == "Assets"
 
 
 def test_series_needs_a_number_sequence(it_client):

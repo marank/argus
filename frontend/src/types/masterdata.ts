@@ -66,10 +66,14 @@ export interface Category {
   number_sequence: Ref | null
   /** Gets new requests and reports; empty = as the parent. IT only. */
   team: TeamRef | null
+  /** The own team, otherwise the nearest parent's. IT only. */
+  effective_team: TeamRef | null
   is_requestable: boolean
   allow_any_model: boolean
   /** The requester's department approves first; applies to subcategories too. */
   requires_approval: boolean
+  /** Approval required here or by a category above. */
+  needs_approval: boolean
   sort_order: number
   path: string[]
 }
@@ -104,6 +108,8 @@ export interface AssetModel {
   compatible_with: AssetModelRef[]
   /** Inventory numbers for new devices; empty = the category's, otherwise the general one. */
   number_sequence: Ref | null
+  /** The sequence that applies: own, the category's or the general one; empty unless individual devices. */
+  effective_number_sequence: Ref | null
   /** Gets new requests and reports; empty = as the category. IT only. */
   team: TeamRef | null
   is_requestable: boolean

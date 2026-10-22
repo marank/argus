@@ -107,3 +107,18 @@ def test_categories_list_parents_before_their_subcategories(demo):
         for index, path in enumerate(paths[1:], 1):
             if " / " in path:
                 assert paths[index - 1].startswith(path.rsplit(" / ", 1)[0])
+
+
+def test_categories_show_the_team_and_approval_that_apply(demo):
+    admin = Client()
+    admin.login(username="admin", password="argus-demo")
+    team = Team.objects.create(name="Logistics IT")
+    mde = Category.objects.create(name="MDEs", code="t-mde", team=team, requires_approval=True)
+    docks = Category.objects.create(name="Docks", code="t-docks", parent=mde)
+    cradles = Category.objects.create(name="Cradles", code="t-cradles", parent=docks)
+
+    body = admin.get(f"/api/masterdata/categories/{cradles.pk}").json()
+    assert body["team"] is None and body["effective_team"]["id"] == str(team.pk)
+    assert body["requires_approval"] is False and body["needs_approval"] is True
+    body = admin.get(f"/api/masterdata/categories/{mde.pk}").json()
+    assert body["effective_team"]["id"] == str(team.pk) and body["needs_approval"] is True

@@ -6,6 +6,7 @@ from ninja import Field, Schema
 from apps.accounts.schemas import TeamRefOut
 from apps.core.api.security import context_is_it_staff
 from apps.core.schemas import RefOut
+from apps.core.services.numbering import get_sequence
 from apps.masterdata.models import AssetModel
 
 from .refs import AssetModelRefOut, CategoryRefOut
@@ -28,6 +29,9 @@ class AssetModelOut(Schema):
     warranty_months: int
     compatible_with: list[AssetModelRefOut]
     number_sequence: RefOut | None
+    # The sequence new devices draw from: the model's own, the category's or the general one.
+    # Empty for consumables and licenses, which get no inventory numbers.
+    effective_number_sequence: RefOut | None = None
     is_requestable: bool
     is_active: bool
     # IT-internal: empty for employees.
@@ -36,6 +40,20 @@ class AssetModelOut(Schema):
     @staticmethod
     def resolve_team(obj, context):
         return obj.team if context_is_it_staff(context) else None
+
+    @staticmethod
+    def resolve_effective_number_sequence(obj: AssetModel, context):
+        if obj.tracking != AssetModel.Tracking.SERIALIZED:
+            return None
+        if sequence := obj.effective_number_sequence():
+            return sequence
+        # Looked up once per response rather than once per model.
+        request = (context or {}).get("request")
+        if request is None:
+            return get_sequence("asset")
+        if not hasattr(request, "_general_asset_sequence"):
+            request._general_asset_sequence = get_sequence("asset")
+        return request._general_asset_sequence
 
     @staticmethod
     def resolve_compatible_with(obj: AssetModel):

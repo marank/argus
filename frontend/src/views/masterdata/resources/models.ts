@@ -8,7 +8,7 @@ import {
   numberSequencesApi,
   suppliersApi,
 } from '@/api/masterdata'
-import { bool, mono } from '@/components/crud/cells'
+import { bool, mono, ownOrInherited } from '@/components/crud/cells'
 import { defineResource } from '@/components/crud/types'
 import { numberSequenceHints } from '@/components/masterdata/numberSequenceHints'
 import { i18n } from '@/i18n'
@@ -53,7 +53,12 @@ export default defineResource<AssetModel>({
       key: 'number_sequence',
       label: 'masterdata.fields.numberSequence',
       width: 170,
-      render: (m) => m.number_sequence?.name ?? '—',
+      render: (m) =>
+        ownOrInherited(
+          m.number_sequence?.name,
+          m.effective_number_sequence?.name,
+          t('masterdata.fields.inheritedSequence'),
+        ),
     },
     {
       key: 'tracking',
