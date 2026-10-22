@@ -94,9 +94,7 @@ const columns = computed<DataTableColumns<AssetRequestListItem>>(() => [
       h('div', [
         h('div', [
           r.title,
-          r.origin === 'direct'
-            ? h('span', { class: 'origin' }, t('requests.direct.badge'))
-            : null,
+          r.origin === 'direct' ? h('span', { class: 'origin' }, t('requests.direct.badge')) : null,
         ]),
         h('small', { class: 'muted' }, r.summary),
       ]),

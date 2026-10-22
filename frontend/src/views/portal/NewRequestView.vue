@@ -302,7 +302,11 @@ async function submit(data: AssetRequestInput) {
     message.success(t('requests.new.submitted', { number: assetRequest.number }))
     router.push({ name: 'request', params: { id: assetRequest.id } })
   } else {
-    router.push({ name: 'portal-request', params: { id: assetRequest.id }, query: { created: '1' } })
+    router.push({
+      name: 'portal-request',
+      params: { id: assetRequest.id },
+      query: { created: '1' },
+    })
   }
 }
 
@@ -316,10 +320,7 @@ const header = computed(() =>
 <template>
   <div class="page">
     <template v-if="mode === null">
-      <PageHeader
-        :title="t('requests.new.title')"
-        :subtitle="t('requests.direct.choose')"
-      />
+      <PageHeader :title="t('requests.new.title')" :subtitle="t('requests.direct.choose')" />
       <div class="choices">
         <button
           v-for="choice in choices"

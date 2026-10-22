@@ -70,11 +70,7 @@ const details = computed<DetailEntry[]>(() => {
           </div>
         </NCard>
 
-        <NCard
-          v-if="features.isOn('issues')"
-          :title="t('requests.myDevices.reports')"
-          size="small"
-        >
+        <NCard v-if="features.isOn('issues')" :title="t('requests.myDevices.reports')" size="small">
           <p v-if="!asset.issues.length" class="muted">
             {{ t('requests.myDevices.noReports') }}
           </p>

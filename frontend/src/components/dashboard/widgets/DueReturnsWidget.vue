@@ -79,12 +79,7 @@ function extend(row: DueReturn) {
           :title="other(row.end_date)"
           >{{ when(row.end_date) }}</span
         >
-        <NButton
-          size="tiny"
-          quaternary
-          :title="t('requests.actions.extend')"
-          @click="extend(row)"
-        >
+        <NButton size="tiny" quaternary :title="t('requests.actions.extend')" @click="extend(row)">
           <template #icon><CalendarPlus /></template>
         </NButton>
         <NButton

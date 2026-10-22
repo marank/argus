@@ -164,7 +164,8 @@ const columns: DataTableColumns<AssetRequestItem> = [
             />
             <HandoverPlanCard
               v-else-if="
-                ['confirmed', 'ready'].includes(assetRequest.status) && handoverPlanned(assetRequest)
+                ['confirmed', 'ready'].includes(assetRequest.status) &&
+                handoverPlanned(assetRequest)
               "
               :assetRequest="assetRequest"
               for-employee

@@ -94,11 +94,7 @@ function nextStep(r: AssetRequestListItem): string {
       <section>
         <div class="section-head">
           <h2 class="eyebrow section">{{ t('requests.mine.active') }}</h2>
-          <NRadioGroup
-            v-model:value="sortBy"
-            size="small"
-            :aria-label="t('requests.mine.sortBy')"
-          >
+          <NRadioGroup v-model:value="sortBy" size="small" :aria-label="t('requests.mine.sortBy')">
             <NRadioButton value="status">{{ t('requests.mine.byStatus') }}</NRadioButton>
             <NRadioButton value="date">{{ t('requests.mine.byDate') }}</NRadioButton>
           </NRadioGroup>
@@ -121,11 +117,7 @@ function nextStep(r: AssetRequestListItem): string {
                   <strong>{{ r.title }}</strong>
                   <span class="mono muted small">{{ r.number }}</span>
                 </div>
-                <StatusTag
-                  group="requestStatus"
-                  :value="r.status"
-                  :pulse="r.status === 'ready'"
-                />
+                <StatusTag group="requestStatus" :value="r.status" :pulse="r.status === 'ready'" />
               </div>
               <p class="summary small">{{ r.summary }}</p>
               <div class="progress" :aria-label="t('common.status')">

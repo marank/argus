@@ -213,10 +213,7 @@ const canRemind = computed(
 async function remind() {
   const name = assetRequest.value!.requester.display_name
   if (await confirm(t('requests.actions.confirmRemind', { name }))) {
-    await act(
-      () => requestsApi.remind(props.id),
-      t('requests.actions.remindSent', { name }),
-    )
+    await act(() => requestsApi.remind(props.id), t('requests.actions.remindSent', { name }))
   }
 }
 
@@ -295,9 +292,7 @@ async function cancel() {
             <NButton v-if="!missing" type="primary" :loading="busy" @click="markReady">
               <template #icon><PackageCheck :size="15" /></template>
               {{
-                seatsOnly
-                  ? t('requests.actions.completeSeats')
-                  : t('requests.actions.markReady')
+                seatsOnly ? t('requests.actions.completeSeats') : t('requests.actions.markReady')
               }}
             </NButton>
           </template>
@@ -353,9 +348,7 @@ async function cancel() {
         >
           <div class="overdue">
             <span>
-              {{
-                t('requests.overdueAlert.text', { name: assetRequest.requester.display_name })
-              }}
+              {{ t('requests.overdueAlert.text', { name: assetRequest.requester.display_name }) }}
               <template v-if="assetRequest.reminded_at">
                 {{
                   t('requests.overdueAlert.reminded', {
@@ -400,7 +393,8 @@ async function cancel() {
             <HandoverCard v-if="assetRequest.handover" :assetRequest="assetRequest" />
             <HandoverPlanCard
               v-else-if="
-                ['confirmed', 'ready'].includes(assetRequest.status) && handoverPlanned(assetRequest)
+                ['confirmed', 'ready'].includes(assetRequest.status) &&
+                handoverPlanned(assetRequest)
               "
               :assetRequest="assetRequest"
             />

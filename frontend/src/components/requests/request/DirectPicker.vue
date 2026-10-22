@@ -126,9 +126,7 @@ const empty = computed(() => !loading.value && !assets.value.length && !consumab
     <EmptyState
       v-if="empty"
       :text="
-        query.trim() || category
-          ? t('requests.direct.noStock')
-          : t('requests.direct.pickHint')
+        query.trim() || category ? t('requests.direct.noStock') : t('requests.direct.pickHint')
       "
     />
 
@@ -154,9 +152,7 @@ const empty = computed(() => !loading.value && !assets.value.length && !consumab
         <span class="text">
           <span class="label">{{ consumable.model.full_name }}</span>
           <span class="muted meta">
-            {{
-              t('requests.allocation.consumableFrom', { location: consumable.location.name })
-            }}
+            {{ t('requests.allocation.consumableFrom', { location: consumable.location.name }) }}
           </span>
         </span>
         <span v-if="picked(`s${consumable.id}`)" class="in-cart mono">

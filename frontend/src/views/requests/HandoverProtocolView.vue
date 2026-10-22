@@ -145,7 +145,11 @@ const returns = computed(() => {
 
     <section class="sign">
       <div class="signature">
-        <img v-if="assetRequest.handover?.signature" :src="assetRequest.handover.signature" alt="" />
+        <img
+          v-if="assetRequest.handover?.signature"
+          :src="assetRequest.handover.signature"
+          alt=""
+        />
         <div class="line" />
         <span>{{ t('handover.signature') }} · {{ assetRequest.handover?.received_by_name }}</span>
       </div>

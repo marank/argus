@@ -41,10 +41,7 @@ useLive(['request', 'issue'], load)
     </p>
     <div v-else class="lines dated">
       <template v-if="tasks.requests_total">
-        <RouterLink
-          :to="{ name: 'requests', query: { assigned: 'me' } }"
-          class="section eyebrow"
-        >
+        <RouterLink :to="{ name: 'requests', query: { assigned: 'me' } }" class="section eyebrow">
           {{ t('dashboard.widgets.myTasks.requests', { count: tasks.requests_total }) }}
         </RouterLink>
         <RouterLink

@@ -101,9 +101,7 @@ async function save() {
     <NForm class="ar-form" label-placement="top" size="medium" :show-feedback="false">
       <template v-if="mode === 'confirm'">
         <p class="muted">
-          {{
-            editing ? t('requests.confirming.editHint') : t('requests.actions.confirmHint')
-          }}
+          {{ editing ? t('requests.confirming.editHint') : t('requests.actions.confirmHint') }}
         </p>
         <NTable size="small" :bordered="false" class="items">
           <thead>
@@ -186,9 +184,7 @@ async function save() {
       <div class="row" style="justify-content: flex-end">
         <NButton @click="show = false">{{ t('common.cancel') }}</NButton>
         <NButton type="primary" :loading="busy" @click="save">
-          {{
-            mode === 'confirm' && !editing ? t('requests.actions.confirm') : t('common.save')
-          }}
+          {{ mode === 'confirm' && !editing ? t('requests.actions.confirm') : t('common.save') }}
         </NButton>
       </div>
     </template>

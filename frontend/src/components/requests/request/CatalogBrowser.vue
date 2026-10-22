@@ -137,10 +137,7 @@ const results = computed<CatalogOption[]>(() => {
             <h2>{{ t('requests.new.results') }}</h2>
             <span class="muted mono">{{ results.length }}</span>
           </header>
-          <EmptyState
-            v-if="!results.length"
-            :text="t('requests.new.searchEmpty', { q: query })"
-          />
+          <EmptyState v-if="!results.length" :text="t('requests.new.searchEmpty', { q: query })" />
           <CatalogOptionRow
             v-for="option in results"
             :key="option.key"

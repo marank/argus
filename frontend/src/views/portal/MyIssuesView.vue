@@ -103,10 +103,7 @@ const columns = computed(() =>
 
 <template>
   <div class="page">
-    <PageHeader
-      :title="t('requests.myIssues.title')"
-      :subtitle="t('requests.myIssues.subtitle')"
-    />
+    <PageHeader :title="t('requests.myIssues.title')" :subtitle="t('requests.myIssues.subtitle')" />
     <EmptyState v-if="issues && !issues.length" :text="t('requests.myIssues.empty')" />
     <NDataTable
       v-else

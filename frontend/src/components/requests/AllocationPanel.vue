@@ -98,9 +98,7 @@ async function allocate(data: {
 }
 
 async function remove(allocationId: Id) {
-  const updated = await run(() =>
-    requestsApi.removeAllocation(props.assetRequest.id, allocationId),
-  )
+  const updated = await run(() => requestsApi.removeAllocation(props.assetRequest.id, allocationId))
   if (updated) emit('updated', updated)
 }
 </script>
@@ -263,9 +261,7 @@ async function remove(allocationId: Id) {
         :on-update:value="(id: Id) => allocate({ asset: id })"
         @update:show="(open: boolean) => open && loadCandidates()"
       >
-        <NButton size="small" :loading="busy">{{
-          t('requests.allocation.candidates')
-        }}</NButton>
+        <NButton size="small" :loading="busy">{{ t('requests.allocation.candidates') }}</NButton>
         <template #empty
           ><span class="muted">{{ t('requests.allocation.noCandidates') }}</span></template
         >

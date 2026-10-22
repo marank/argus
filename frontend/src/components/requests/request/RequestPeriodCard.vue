@@ -41,10 +41,7 @@ function setPickup(value: number | [number, number] | null) {
     </header>
     <div class="fields">
       <div class="field">
-        <FieldLabel
-          :label="t('requests.duration')"
-          :help="t('requests.new.durationHelp')"
-        />
+        <FieldLabel :label="t('requests.duration')" :help="t('requests.new.durationHelp')" />
         <NRadioGroup v-model:value="period.duration" size="small" class="duration">
           <NRadioButton value="temporary">{{ t('enums.duration.temporary') }}</NRadioButton>
           <NRadioButton value="permanent">{{ t('enums.duration.permanent') }}</NRadioButton>
@@ -52,9 +49,7 @@ function setPickup(value: number | [number, number] | null) {
       </div>
       <div class="field">
         <FieldLabel
-          :label="
-            period.duration === 'temporary' ? t('requests.period') : t('requests.startDate')
-          "
+          :label="period.duration === 'temporary' ? t('requests.period') : t('requests.startDate')"
         />
         <DateField
           v-if="period.duration === 'temporary'"

@@ -59,9 +59,7 @@ const entries = computed<DetailEntry[]>(() => {
       : []),
     { label: t('common.createdAt'), value: date(r.created_at), mono: true },
     ...(r.notes ? [{ label: t('requests.notes'), value: r.notes, wide: true }] : []),
-    ...(r.it_comment
-      ? [{ label: t('requests.itComment'), value: r.it_comment, wide: true }]
-      : []),
+    ...(r.it_comment ? [{ label: t('requests.itComment'), value: r.it_comment, wide: true }] : []),
   ]
 })
 </script>
@@ -71,9 +69,7 @@ const entries = computed<DetailEntry[]>(() => {
     <DetailGrid :entries="entries">
       <template #period>
         <span class="mono">{{ period }}</span>
-        <span v-if="assetRequest.is_overdue" class="overdue">
-          · {{ t('requests.overdue') }}</span
-        >
+        <span v-if="assetRequest.is_overdue" class="overdue"> · {{ t('requests.overdue') }}</span>
       </template>
     </DetailGrid>
   </NCard>

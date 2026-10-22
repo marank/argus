@@ -58,9 +58,7 @@ const returns = computed(() => {
     <DetailGrid v-if="withDue" :entries="due" :class="{ spaced: returns.length }">
       <template #due>
         <span class="mono">{{ date(assetRequest.end_date) }}</span>
-        <span v-if="assetRequest.is_overdue" class="overdue">
-          · {{ t('requests.overdue') }}</span
-        >
+        <span v-if="assetRequest.is_overdue" class="overdue"> · {{ t('requests.overdue') }}</span>
       </template>
     </DetailGrid>
     <section v-for="r in returns" :key="r.id" class="return">
@@ -72,9 +70,7 @@ const returns = computed(() => {
         <li v-for="a in r.allocations" :key="a.id">
           <span class="mono">{{ allocationCode(a) }}</span>
           <span>{{ allocationModel(a) }}</span>
-          <span v-if="a.returned_damaged" class="warn">{{
-            t('requests.returning.damaged')
-          }}</span>
+          <span v-if="a.returned_damaged" class="warn">{{ t('requests.returning.damaged') }}</span>
           <span v-if="a.return_note" class="note">{{ a.return_note }}</span>
         </li>
       </ul>

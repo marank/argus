@@ -210,10 +210,7 @@ const defaultSupplier = computed(() => {
     <div class="stack">
       <p class="muted">{{ t('procurement.needs.selectHint') }}</p>
       <NCard :title="t('procurement.needs.fromRequests')" size="small">
-        <EmptyState
-          v-if="needs && !needs.requests.length"
-          :text="t('procurement.needs.empty')"
-        />
+        <EmptyState v-if="needs && !needs.requests.length" :text="t('procurement.needs.empty')" />
         <NDataTable
           v-else
           v-model:checked-row-keys="selectedAssetRequests"
