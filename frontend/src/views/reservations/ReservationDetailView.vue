@@ -43,6 +43,7 @@ import HandOutModal from '@/components/reservations/HandOutModal.vue'
 import ReadyModal from '@/components/reservations/ReadyModal.vue'
 import ReservationSteps from '@/components/reservations/ReservationSteps.vue'
 import ReturnModal from '@/components/reservations/ReturnModal.vue'
+import OriginTag from '@/components/reservations/OriginTag.vue'
 import ReturnsCard from '@/components/reservations/ReturnsCard.vue'
 import ApprovalCard from '@/components/reservations/detail/ApprovalCard.vue'
 import HandoverPlanCard from '@/components/reservations/detail/HandoverPlanCard.vue'
@@ -57,7 +58,7 @@ import type {
   Reservation,
   ReservationItem,
 } from '@/types/reservations'
-import { isReturnable } from '@/utils/reservations'
+import { handoverPlanned, isReturnable } from '@/utils/reservations'
 import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps<{ id: Id }>()
@@ -232,7 +233,7 @@ const menuOptions = computed<DropdownOption[]>(() => {
   if (s === 'submitted' && missing.value)
     options.push(option('order', t('reservations.actions.createOrder'), ShoppingCart))
   if (s === 'ready') {
-    // While preparing, "Edit" covers date and place; once ready this is the way to change them.
+    // How, when and where is set when marking ready; this changes it afterwards.
     options.push(option('schedule', t('reservations.actions.schedule'), CalendarClock))
     options.push(option('reopen', t('reservations.actions.reopen'), PackageOpen))
   }
@@ -270,7 +271,8 @@ async function cancel() {
           ><span class="mono id">{{ reservation.number }}</span></template
         >
         <template #badge
-          ><StatusTag group="reservationStatus" :value="reservation.status"
+          ><StatusTag group="reservationStatus" :value="reservation.status" /><OriginTag
+            :origin="reservation.origin"
         /></template>
         <template v-if="canWrite" #actions>
           <template v-if="status === 'submitted'">
@@ -285,11 +287,12 @@ async function cancel() {
           </template>
           <template v-if="status === 'confirmed'">
             <NButton @click="openConfirm('confirm')">{{ t('common.edit') }}</NButton>
-            <NButton v-if="missing" :loading="busy" @click="autoAllocate">
+            <NButton v-if="missing" type="primary" :loading="busy" @click="autoAllocate">
               <template #icon><Sparkles :size="15" /></template>
               {{ t('reservations.actions.autoAllocate') }}
             </NButton>
-            <NButton type="primary" :disabled="missing" :loading="busy" @click="markReady">
+            <!-- Ready only once everything confirmed is allocated. -->
+            <NButton v-if="!missing" type="primary" :loading="busy" @click="markReady">
               <template #icon><PackageCheck :size="15" /></template>
               {{
                 seatsOnly
@@ -396,7 +399,9 @@ async function cancel() {
             <ApprovalCard v-if="reservation.approval" :reservation="reservation" />
             <HandoverCard v-if="reservation.handover" :reservation="reservation" />
             <HandoverPlanCard
-              v-else-if="['submitted', 'confirmed', 'ready'].includes(reservation.status)"
+              v-else-if="
+                ['confirmed', 'ready'].includes(reservation.status) && handoverPlanned(reservation)
+              "
               :reservation="reservation"
             />
             <ReturnsCard v-if="showReturns" :reservation="reservation" with-due />

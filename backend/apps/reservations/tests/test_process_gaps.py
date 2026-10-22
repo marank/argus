@@ -18,14 +18,14 @@ def submit(client, items, duration="temporary", start=None):
     return client.post("/api/reservations", data, content_type=JSON)
 
 
-def prepare(employee_client, it_client, items, duration="temporary", handover_mode="collect", **confirm):
+def prepare(employee_client, it_client, items, duration="temporary", handover_mode="collect", **ready):
     response = submit(employee_client, items, duration)
     assert response.status_code == 201, response.content
     rid = response.json()["id"]
-    it_client.post(f"/api/reservations/{rid}/confirm", {"items": [], **confirm}, content_type=JSON)
+    it_client.post(f"/api/reservations/{rid}/confirm", {"items": []}, content_type=JSON)
     it_client.post(f"/api/reservations/{rid}/auto-allocate")
     response = it_client.post(
-        f"/api/reservations/{rid}/ready", {"handover_mode": handover_mode}, content_type=JSON
+        f"/api/reservations/{rid}/ready", {"handover_mode": handover_mode, **ready}, content_type=JSON
     )
     assert response.status_code == 200, response.content
     return rid

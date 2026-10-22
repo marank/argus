@@ -7,7 +7,7 @@ export default {
     approverDescription: 'Für Genehmiger von Abteilungen.',
     mailOff: 'Der E-Mail-Versand ist derzeit deaktiviert.',
     noEmail: 'Für Ihr Konto ist keine E-Mail-Adresse hinterlegt. Bitte wenden Sie sich an die IT.',
-    siteOff: 'von der IT deaktiviert',
+    noneActive: 'Die IT hat derzeit keine Benachrichtigungen für Sie eingeschaltet.',
   },
   security: {
     title: 'Anmeldung & Sicherheit',

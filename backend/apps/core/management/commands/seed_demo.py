@@ -334,7 +334,7 @@ class Command(BaseCommand):
             [{"category": categories["laptops"].pk, "quantity": 4}],
             created_by=employee,
         )
-        workflow.confirm(workshop, it, {}, timezone.now() + timedelta(days=2), None, "Pick up at the desk.")
+        workflow.confirm(workshop, it, {}, "Pick up at the desk.")
 
         # One prepared pickup waiting at the terminal.
         onboarding = workflow.submit(
@@ -347,9 +347,9 @@ class Command(BaseCommand):
             ],
             created_by=sales,
         )
-        workflow.confirm(onboarding, it, {}, timezone.now() + timedelta(hours=2), None, "")
+        workflow.confirm(onboarding, it, {})
         workflow.auto_allocate(onboarding, it)
-        workflow.mark_ready(onboarding, it)
+        workflow.mark_ready(onboarding, it, pickup_at=timezone.now() + timedelta(hours=2))
 
         return {
             "admin": admin,
@@ -751,14 +751,19 @@ def seed_extra(base: dict, stdout) -> None:
             data["end_date"] = today + timedelta(days=start + days - 1)
         return workflow.submit(user, data, items, created_by=user, allow_past_start=start < 0)
 
-    def confirm(reservation, pickup_days=1, location=None, comment=""):
+    def confirm(reservation, comment=""):
+        return workflow.confirm(reservation, it, {}, comment)
+
+    def mark_ready(reservation, pickup_days=1, location=None):
         pickup = now.replace(hour=10, minute=0, second=0, microsecond=0) + timedelta(days=pickup_days)
-        return workflow.confirm(reservation, it, {}, pickup, location.pk if location else None, comment)
+        workflow.auto_allocate(reservation, it)
+        return workflow.mark_ready(
+            reservation, it, pickup_at=pickup, pickup_location_id=location.pk if location else None
+        )
 
     def hand_out(reservation):
-        confirm(reservation, pickup_days=0)
-        workflow.auto_allocate(reservation, it)
-        workflow.mark_ready(reservation, it)
+        confirm(reservation)
+        mark_ready(reservation, pickup_days=0)
         return workflow.hand_out(reservation, it, method=Handover.Method.DIRECT)
 
     tablets, monitors = categories["tablets"], categories["monitors"]
@@ -790,7 +795,6 @@ def seed_extra(base: dict, stdout) -> None:
             start=6,
             days=2,
         ),
-        pickup_days=5,
         comment="Two Latitudes are reserved for you.",
     )
     new_colleague = submit(
@@ -804,9 +808,8 @@ def seed_extra(base: dict, stdout) -> None:
     )
     new_colleague.assignee = jkoch
     new_colleague.save(update_fields=["assignee"])
-    confirm(new_colleague, pickup_days=1, location=munich_desk)
-    workflow.auto_allocate(new_colleague, it)
-    workflow.mark_ready(new_colleague, it)
+    confirm(new_colleague)
+    mark_ready(new_colleague, location=munich_desk)
 
     # Routed to the Ledgerline team by the model, waiting for someone to pick it up.
     submit(

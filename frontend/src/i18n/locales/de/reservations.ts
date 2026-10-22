@@ -127,13 +127,19 @@ export default {
     reportInProgress: 'Meldung in Bearbeitung',
     noReports: 'Zu diesem Gerät gibt es keine Meldungen.',
   },
+  confirming: {
+    editTitle: 'Mengen bearbeiten',
+    editHint: 'Zugewiesene Geräte bleiben zugewiesen; darunter lässt sich eine Menge nicht senken.',
+    allocated: '{count} bereits zugewiesen',
+  },
   actions: {
     cancel: 'Anforderung stornieren',
     confirmCancel:
       'Anforderung stornieren? Zugewiesene Geräte werden wieder in den Pool übernommen.',
     confirm: 'Bestätigen',
     confirmTitle: 'Anforderung bestätigen',
-    confirmHint: 'Mengen reduzieren, falls der Pool die Anforderung nicht abdeckt.',
+    confirmHint:
+      'Der Mitarbeiter erfährt, dass seine Anforderung in Ordnung geht. Reduzieren Sie die Mengen, falls der Pool sie nicht abdeckt. Wann und wo er die Geräte bekommt, legen Sie beim Abholbereit-Melden fest.',
     reject: 'Ablehnen',
     rejectReason: 'Begründung für den Mitarbeiter',
     schedule: 'Übergabe ändern',
@@ -210,6 +216,7 @@ export default {
     event: {
       created: 'Angefordert',
       direct: 'Direktausgabe erfasst',
+      quick: 'Schnellzuweisung erfasst',
       for: 'für {name}',
       approved: 'Genehmigt',
       declined: 'Nicht genehmigt',
@@ -224,6 +231,8 @@ export default {
       reopened: 'Zurück in Vorbereitung',
       rescheduled: 'Übergabe geändert',
       handed_out: 'Ausgegeben',
+      added: 'Hinzugekommen',
+      removed: 'Entfernt',
       returned: 'Zurückgenommen',
       extended: 'Leihfrist verlängert',
       reminded: 'An Rückgabe erinnert',
@@ -238,9 +247,18 @@ export default {
     choose: 'Was möchten Sie erfassen?',
     chooseRequest: 'Anforderung',
     chooseRequestHint:
-      'Geräte aus dem Katalog anfordern, auch im Namen eines Mitarbeiters. Mit Genehmigung (falls erforderlich) und Bestätigung durch die IT.',
-    chooseDirectHint:
-      'Bestimmte Geräte aus dem Lager scannen oder suchen. Sie werden sofort zugewiesen, ohne Genehmigung.',
+      'Geräte aus dem Katalog anfordern – für sich oder im Namen eines Mitarbeiters.',
+    chooseDirectHint: 'Bestimmte Geräte aus dem Lager direkt für einen Mitarbeiter bereitstellen.',
+    requestPoints: {
+      catalog: 'Modelle aus dem Katalog wählen',
+      approval: 'Genehmigung durch die Abteilung, falls nötig',
+      confirm: 'IT bestätigt und stellt bereit',
+    },
+    directPoints: {
+      scan: 'Geräte scannen oder suchen',
+      noApproval: 'Ohne Genehmigung, sofort reserviert',
+      protocol: 'Ausgabe mit Übergabeprotokoll',
+    },
     switch: 'Art wechseln',
     scan: 'Inventar- oder Seriennummer scannen oder suchen',
     inStock: 'im Lager',

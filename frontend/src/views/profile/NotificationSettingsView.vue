@@ -12,7 +12,7 @@ import type { NotificationKey } from '@/types/settings'
 
 /**
  * Which emails the user wants to receive. IT and approver notifications only show
- * to IT staff and approvers; kinds switched off site-wide are shown greyed out.
+ * to IT staff and approvers; kinds switched off site-wide are not shown at all.
  */
 const { t } = useI18n()
 const message = useMessage()
@@ -22,11 +22,12 @@ const features = useFeaturesStore()
 onMounted(() => features.load())
 
 const groups = computed(() => {
-  const events = features.settings?.notifications ?? []
+  const events = (features.settings?.notifications ?? []).filter((e) => e.enabled)
   const shown = { employee: true, it: auth.isItStaff, approver: auth.isApprover }
   return (['employee', 'approver', 'it'] as const)
     .filter((audience) => shown[audience])
     .map((audience) => ({ audience, events: events.filter((e) => e.audience === audience) }))
+    .filter((group) => group.events.length)
 })
 
 const wants = (key: NotificationKey) => auth.user?.notification_settings?.[key] ?? true
@@ -55,6 +56,9 @@ async function toggle(key: NotificationKey, value: boolean) {
       <NAlert v-else-if="!auth.user?.email" type="warning" :bordered="false" class="gap">
         {{ t('profile.notifications.noEmail') }}
       </NAlert>
+      <NAlert v-if="!groups.length" type="info" :bordered="false" class="gap">
+        {{ t('profile.notifications.noneActive') }}
+      </NAlert>
       <SettingsGroup
         v-for="group in groups"
         :key="group.audience"
@@ -68,16 +72,11 @@ async function toggle(key: NotificationKey, value: boolean) {
           :help="t(`notifications.${event.key}Help`)"
           toggle
         >
-          <div class="control">
-            <small v-if="!event.enabled" class="muted">{{
-              t('profile.notifications.siteOff')
-            }}</small>
-            <NSwitch
-              :value="event.enabled && wants(event.key)"
-              :disabled="!event.enabled || !features.settings.mail_enabled"
-              @update:value="(value: boolean) => toggle(event.key, value)"
-            />
-          </div>
+          <NSwitch
+            :value="wants(event.key)"
+            :disabled="!features.settings.mail_enabled"
+            @update:value="(value: boolean) => toggle(event.key, value)"
+          />
         </SettingRow>
       </SettingsGroup>
     </template>
@@ -90,14 +89,5 @@ async function toggle(key: NotificationKey, value: boolean) {
 }
 .gap {
   margin-bottom: 8px;
-}
-.control {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-small {
-  font-size: 11.5px;
-  white-space: nowrap;
 }
 </style>

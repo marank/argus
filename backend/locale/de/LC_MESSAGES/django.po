@@ -2181,6 +2181,9 @@ msgstr "Angefordert"
 msgid "Direct hand-out recorded"
 msgstr "Direktausgabe erfasst"
 
+msgid "Quick assignment recorded"
+msgstr "Schnellzuweisung erfasst"
+
 #: apps/reservations/models/event.py:20
 #: apps/reservations/models/reservation.py:53
 msgid "Approved"
@@ -2362,6 +2365,9 @@ msgstr "Anforderung"
 #: apps/reservations/models/reservation.py:59
 msgid "Direct hand-out"
 msgstr "Direktausgabe"
+
+msgid "Quick assignment"
+msgstr "Schnellzuweisung"
 
 #: apps/reservations/models/reservation.py:75
 msgid "requester"
@@ -2586,6 +2592,61 @@ msgstr "Rückgabe am %(date)s: %(number)s"
 msgid "Please return the devices for “%(title)s” by %(date)s."
 msgstr "Bitte geben Sie die Geräte für „%(title)s“ bis zum %(date)s zurück."
 
+#, python-format
+msgid "Handover changed: %(number)s"
+msgstr "Übergabe geändert: %(number)s"
+
+#, python-format
+msgid "IT changed the handover for “%(title)s”."
+msgstr "Die IT hat die Übergabe für „%(title)s“ geändert."
+
+#, python-format
+msgid "Loan extended: %(number)s"
+msgstr "Leihfrist verlängert: %(number)s"
+
+#, python-format
+msgid "You may keep the devices for “%(title)s” until %(date)s (before: %(previous)s)."
+msgstr "Sie können die Geräte für „%(title)s“ bis zum %(date)s behalten (bisher: %(previous)s)."
+
+#, python-format
+msgid "Your request %(number)s was cancelled"
+msgstr "Ihre Anforderung %(number)s wurde storniert"
+
+#, python-format
+msgid "IT cancelled your request “%(title)s”."
+msgstr "Die IT hat Ihre Anforderung „%(title)s“ storniert."
+
+#, python-format
+msgid "Handed out: %(number)s"
+msgstr "Ausgegeben: %(number)s"
+
+#, python-format
+msgid "These devices for “%(title)s” were handed out on %(when)s:"
+msgstr "Folgende Geräte für „%(title)s“ wurden am %(when)s ausgegeben:"
+
+#, python-format
+msgid "Received by: %(name)s"
+msgstr "Entgegengenommen von: %(name)s"
+
+#, python-format
+msgid "Please return them by %(date)s."
+msgstr "Bitte geben Sie sie bis zum %(date)s zurück."
+
+#, python-format
+msgid "Taken back: %(number)s"
+msgstr "Zurückgenommen: %(number)s"
+
+#, python-format
+msgid "IT took back these devices for “%(title)s” on %(date)s:"
+msgstr "Die IT hat am %(date)s folgende Geräte für „%(title)s“ zurückgenommen:"
+
+#, python-format
+msgid "Noted as damaged: %(devices)s"
+msgstr "Als beschädigt vermerkt: %(devices)s"
+
+msgid "Still to return:"
+msgstr "Noch zurückzugeben:"
+
 #: apps/reservations/services/notifications.py:150
 #: apps/reservations/services/notifications.py:171
 #, python-format
@@ -2655,6 +2716,19 @@ msgstr "Fügen Sie der Anforderung mindestens ein Gerät hinzu."
 #: apps/reservations/services/workflow.py:811
 msgid "The start date must not be in the past."
 msgstr "Das Startdatum darf nicht in der Vergangenheit liegen."
+
+msgid "The start date must not be in the future."
+msgstr "Das Startdatum darf nicht in der Zukunft liegen."
+
+msgid "The return date must not be in the past."
+msgstr "Das Rückgabedatum darf nicht in der Vergangenheit liegen."
+
+#, python-format
+msgid "Quick assignment until %(date)s"
+msgstr "Schnellzuweisung bis %(date)s"
+
+msgid "Quick assignment, permanent"
+msgstr "Schnellzuweisung, dauerhaft"
 
 #: apps/reservations/services/workflow.py:128
 #, python-format
@@ -2791,6 +2865,9 @@ msgstr "Wählen Sie jemanden aus der IT-Abteilung."
 #: apps/reservations/services/workflow.py:711
 msgid "Choose an active employee as the person collecting the devices."
 msgstr "Wählen Sie einen aktiven Mitarbeiter als abholende Person."
+
+msgid "Choose an active employee."
+msgstr "Wählen Sie einen aktiven Mitarbeiter."
 
 #: apps/reservations/services/workflow.py:834
 msgid "A device or consumable was not found."

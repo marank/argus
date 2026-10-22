@@ -156,6 +156,7 @@ function submit() {
           <EntitySelect
             v-model="form.requester"
             :fetcher="usersApi.list"
+            :params="{ is_active: true, is_terminal: false }"
             :label="(u) => u.display_name"
             :initial="(initial?.requester ?? null) as never"
             :placeholder="requesterPlaceholder"

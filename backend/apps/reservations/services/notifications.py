@@ -186,3 +186,84 @@ def return_requested(reservation: Reservation, sender) -> None:
         path=f"/portal/requests/{reservation.pk}",
         direct=True,
     )
+
+
+def _devices(labels: list[str]) -> str:
+    return "\n".join(f"- {label}" for label in labels)
+
+
+def request_rescheduled(reservation: Reservation) -> None:
+    """IT changed how, when or where the devices reach the employee after the ready message."""
+
+    def render(user):
+        subject = _("Handover changed: %(number)s") % {"number": reservation.number}
+        body = _("IT changed the handover for “%(title)s”.") % {"title": reservation.title}
+        how = reservation.get_handover_mode_display()
+        return subject, "\n\n".join(part for part in (body, how, _pickup(reservation)) if part)
+
+    notify("request_rescheduled", [reservation.requester], render, path=f"/portal/requests/{reservation.pk}")
+
+
+def request_extended(reservation: Reservation, previous) -> None:
+    def render(user):
+        subject = _("Loan extended: %(number)s") % {"number": reservation.number}
+        body = _("You may keep the devices for “%(title)s” until %(date)s (before: %(previous)s).") % {
+            "title": reservation.title,
+            "date": _date(reservation.end_date),
+            "previous": _date(previous),
+        }
+        return subject, f"{body}\n\n{_items(reservation)}"
+
+    notify("request_extended", [reservation.requester], render, path=f"/portal/requests/{reservation.pk}")
+
+
+def request_cancelled(reservation: Reservation, by) -> None:
+    """IT withdrew a request; the employee cancelling their own needs no mail."""
+    if by is not None and by.pk == reservation.requester_id:
+        return
+
+    def render(user):
+        subject = _("Your request %(number)s was cancelled") % {"number": reservation.number}
+        body = _("IT cancelled your request “%(title)s”.") % {"title": reservation.title}
+        return subject, f"{body}\n\n{_items(reservation)}"
+
+    notify("request_cancelled", [reservation.requester], render, path=f"/portal/requests/{reservation.pk}")
+
+
+def request_handed_out(reservation: Reservation, devices: list[str], received_by: str) -> None:
+    """A record of what the employee received, e.g. to keep for their own files."""
+
+    def render(user):
+        subject = _("Handed out: %(number)s") % {"number": reservation.number}
+        when = formats.date_format(timezone.localtime(reservation.handed_out_at), "SHORT_DATETIME_FORMAT")
+        body = _("These devices for “%(title)s” were handed out on %(when)s:") % {
+            "title": reservation.title,
+            "when": when,
+        }
+        parts = [body, _devices(devices), _("Received by: %(name)s") % {"name": received_by}]
+        if reservation.duration == Reservation.Duration.TEMPORARY and reservation.end_date:
+            parts.append(_("Please return them by %(date)s.") % {"date": _date(reservation.end_date)})
+        return subject, "\n\n".join(parts)
+
+    notify("request_handed_out", [reservation.requester], render, path=f"/portal/requests/{reservation.pk}")
+
+
+def request_returned(
+    reservation: Reservation, devices: list[str], damaged: list[str], open_: list[str]
+) -> None:
+    """A record of what IT took back, and what is still out."""
+
+    def render(user):
+        subject = _("Taken back: %(number)s") % {"number": reservation.number}
+        body = _("IT took back these devices for “%(title)s” on %(date)s:") % {
+            "title": reservation.title,
+            "date": _date(timezone.localdate()),
+        }
+        parts = [body, _devices(devices)]
+        if damaged:
+            parts.append(_("Noted as damaged: %(devices)s") % {"devices": ", ".join(damaged)})
+        if open_:
+            parts.append(_("Still to return:") + "\n" + _devices(open_))
+        return subject, "\n\n".join(parts)
+
+    notify("request_returned", [reservation.requester], render, path=f"/portal/requests/{reservation.pk}")

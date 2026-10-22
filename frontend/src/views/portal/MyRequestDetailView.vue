@@ -12,6 +12,7 @@ import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import HandoverCard from '@/components/reservations/HandoverCard.vue'
 import ReservationSteps from '@/components/reservations/ReservationSteps.vue'
+import OriginTag from '@/components/reservations/OriginTag.vue'
 import ReturnsCard from '@/components/reservations/ReturnsCard.vue'
 import ApprovalCard from '@/components/reservations/detail/ApprovalCard.vue'
 import HandoverPlanCard from '@/components/reservations/detail/HandoverPlanCard.vue'
@@ -20,7 +21,7 @@ import ReservationHistory from '@/components/reservations/detail/ReservationHist
 import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
 import type { Reservation, ReservationItem } from '@/types/reservations'
-import { allocationCode, allocationModel, itemLabel } from '@/utils/reservations'
+import { allocationCode, allocationModel, handoverPlanned, itemLabel } from '@/utils/reservations'
 
 const props = defineProps<{ id: Id }>()
 const { t } = useI18n()
@@ -105,7 +106,7 @@ const columns: DataTableColumns<ReservationItem> = [
           ><StatusTag
             group="reservationStatus"
             :value="reservation.status"
-            :pulse="reservation.status === 'ready'"
+            :pulse="reservation.status === 'ready'" /><OriginTag :origin="reservation.origin"
         /></template>
         <template #actions>
           <NButton
@@ -162,7 +163,9 @@ const columns: DataTableColumns<ReservationItem> = [
               :printable="false"
             />
             <HandoverPlanCard
-              v-else-if="['confirmed', 'ready'].includes(reservation.status)"
+              v-else-if="
+                ['confirmed', 'ready'].includes(reservation.status) && handoverPlanned(reservation)
+              "
               :reservation="reservation"
               for-employee
             />

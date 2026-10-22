@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Id } from '@/types/common'
-import { NButton, NForm, NFormItem, NInput, NInputNumber, NModal, NTable } from 'naive-ui'
-import { reactive, watch } from 'vue'
+import { NButton, NForm, NFormItem, NInput, NInputNumber, NModal, NSwitch, NTable } from 'naive-ui'
+import { computed, reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { locationsApi } from '@/api/masterdata'
@@ -15,13 +15,19 @@ import { itemLabel } from '@/utils/reservations'
 
 import HandoverModeSelect from './HandoverModeSelect.vue'
 
-/** Confirm a request (possibly with reduced quantities) or just change the pickup. */
+/**
+ * `confirm`: tell the employee the request is fine, possibly with fewer devices; editing a
+ * confirmed request keeps what is already allocated. `schedule`: change how, when and where
+ * the devices reach the employee once it is ready.
+ */
 const props = defineProps<{ reservation: Reservation; mode: 'confirm' | 'schedule' }>()
 const show = defineModel<boolean>('show', { required: true })
 const emit = defineEmits<{ saved: [reservation: Reservation] }>()
 const { t } = useI18n()
 const { weekday } = useFormat()
 const { busy, run } = useAction()
+/** Changing the quantities of a request that is already confirmed. */
+const editing = computed(() => props.reservation.status === 'confirmed')
 
 const form = reactive({
   quantities: {} as Record<Id, number>,
@@ -29,6 +35,7 @@ const form = reactive({
   pickup_location: null as Id | null,
   comment: '',
   handover_mode: 'pickup' as HandoverMode,
+  notify: true,
 })
 
 function defaultPickup(): number {
@@ -47,6 +54,8 @@ watch(show, (visible) => {
   form.pickup_location = r.pickup_location?.id ?? null
   form.comment = r.it_comment
   form.handover_mode = r.handover_mode
+  // As when marking it ready: a direct hand-out is usually done with the employee there.
+  form.notify = r.origin !== 'direct'
 })
 
 async function save() {
@@ -59,14 +68,13 @@ async function save() {
               id,
               quantity_confirmed: quantity,
             })),
-            pickup_at,
-            pickup_location: form.pickup_location,
             comment: form.comment,
           })
         : reservationsApi.schedule(props.reservation.id, {
             pickup_at,
             pickup_location: form.pickup_location,
             handover_mode: form.handover_mode,
+            notify: form.notify,
           }),
     t('common.saved'),
   )
@@ -82,15 +90,21 @@ async function save() {
     v-model:show="show"
     preset="card"
     :title="
-      mode === 'confirm'
-        ? t('reservations.actions.confirmTitle')
-        : t('reservations.actions.schedule')
+      mode === 'schedule'
+        ? t('reservations.actions.schedule')
+        : editing
+          ? t('reservations.confirming.editTitle')
+          : t('reservations.actions.confirmTitle')
     "
     style="max-width: 720px"
   >
     <NForm class="ar-form" label-placement="top" size="medium" :show-feedback="false">
       <template v-if="mode === 'confirm'">
-        <p class="muted">{{ t('reservations.actions.confirmHint') }}</p>
+        <p class="muted">
+          {{
+            editing ? t('reservations.confirming.editHint') : t('reservations.actions.confirmHint')
+          }}
+        </p>
         <NTable size="small" :bordered="false" class="items">
           <thead>
             <tr>
@@ -104,13 +118,16 @@ async function save() {
               <td>
                 {{ itemLabel(item) }}
                 <div v-if="item.note" class="muted small">{{ item.note }}</div>
+                <div v-if="item.quantity_allocated" class="muted small">
+                  {{ t('reservations.confirming.allocated', { count: item.quantity_allocated }) }}
+                </div>
               </td>
               <td class="num mono">{{ item.quantity_requested }}</td>
               <td class="num">
                 <NInputNumber
                   v-model:value="form.quantities[item.id]"
                   class="qty"
-                  :min="0"
+                  :min="item.quantity_allocated"
                   :max="item.quantity_requested"
                   size="small"
                   style="width: 100px"
@@ -119,8 +136,15 @@ async function save() {
             </tr>
           </tbody>
         </NTable>
+        <NFormItem :label="t('reservations.itComment')">
+          <NInput
+            v-model:value="form.comment"
+            type="textarea"
+            :autosize="{ minRows: 2, maxRows: 5 }"
+          />
+        </NFormItem>
       </template>
-      <div class="cols">
+      <div v-else class="cols">
         <NFormItem :label="t('reservations.pickupAt')">
           <div class="when">
             <DateField
@@ -145,22 +169,26 @@ async function save() {
           />
         </NFormItem>
       </div>
-      <NFormItem v-if="mode === 'schedule'" :label="t('handover.method')">
-        <HandoverModeSelect v-model="form.handover_mode" style="width: 100%" />
-      </NFormItem>
-      <NFormItem v-if="mode === 'confirm'" :label="t('reservations.itComment')">
-        <NInput
-          v-model:value="form.comment"
-          type="textarea"
-          :autosize="{ minRows: 2, maxRows: 5 }"
-        />
-      </NFormItem>
+      <template v-if="mode === 'schedule'">
+        <NFormItem :label="t('handover.method')">
+          <HandoverModeSelect v-model="form.handover_mode" style="width: 100%" />
+        </NFormItem>
+        <label class="notify">
+          <span>
+            <span>{{ t('handover.notify') }}</span>
+            <small class="muted">{{ t('handover.notifyChangeHint') }}</small>
+          </span>
+          <NSwitch v-model:value="form.notify" />
+        </label>
+      </template>
     </NForm>
     <template #footer>
       <div class="row" style="justify-content: flex-end">
         <NButton @click="show = false">{{ t('common.cancel') }}</NButton>
         <NButton type="primary" :loading="busy" @click="save">
-          {{ mode === 'confirm' ? t('reservations.actions.confirm') : t('common.save') }}
+          {{
+            mode === 'confirm' && !editing ? t('reservations.actions.confirm') : t('common.save')
+          }}
         </NButton>
       </div>
     </template>
@@ -190,9 +218,29 @@ async function save() {
 .small {
   font-size: 11.5px;
 }
+.notify {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--ar-border);
+  border-radius: 3px;
+  cursor: pointer;
+}
+.notify > span {
+  display: grid;
+  gap: 2px;
+}
 .cols {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0 12px;
+  align-items: start;
+}
+/* The pickup wish below the date must not push the location down. */
+.cols :deep(.n-form-item-blank) {
+  align-items: flex-start;
 }
 </style>

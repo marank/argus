@@ -126,12 +126,18 @@ export default {
     reportInProgress: 'Report in progress',
     noReports: 'There are no reports for this device.',
   },
+  confirming: {
+    editTitle: 'Edit quantities',
+    editHint: 'Allocated devices stay allocated; a quantity cannot go below them.',
+    allocated: '{count} already allocated',
+  },
   actions: {
     cancel: 'Cancel request',
     confirmCancel: 'Cancel this request? Allocated devices are returned to the pool.',
     confirm: 'Confirm',
     confirmTitle: 'Confirm request',
-    confirmHint: 'Reduce quantities if the pool cannot cover the request.',
+    confirmHint:
+      'The employee learns that the request is fine. Reduce quantities if the pool cannot cover it. When and where they get the devices is set when marking it ready.',
     reject: 'Reject',
     rejectReason: 'Reason for the employee',
     schedule: 'Change handover',
@@ -207,6 +213,7 @@ export default {
     event: {
       created: 'Requested',
       direct: 'Direct hand-out recorded',
+      quick: 'Quick assignment recorded',
       for: 'for {name}',
       approved: 'Approved',
       declined: 'Not approved',
@@ -221,6 +228,8 @@ export default {
       reopened: 'Back in preparation',
       rescheduled: 'Handover changed',
       handed_out: 'Handed out',
+      added: 'Added',
+      removed: 'Removed',
       returned: 'Taken back',
       extended: 'Loan extended',
       reminded: 'Reminded to return',
@@ -235,9 +244,18 @@ export default {
     choose: 'What would you like to record?',
     chooseRequest: 'Request',
     chooseRequestHint:
-      'Request devices from the catalog, also on behalf of an employee. With approval (if required) and confirmation by IT.',
-    chooseDirectHint:
-      'Scan or search specific devices in stock. They are allocated right away, without approval.',
+      'Request devices from the catalog – for yourself or on behalf of an employee.',
+    chooseDirectHint: 'Provide specific devices from stock directly to an employee.',
+    requestPoints: {
+      catalog: 'Choose models from the catalog',
+      approval: 'Approved by the department if required',
+      confirm: 'IT confirms and prepares',
+    },
+    directPoints: {
+      scan: 'Scan or search devices',
+      noApproval: 'No approval, allocated right away',
+      protocol: 'Hand-out with a handover record',
+    },
     switch: 'Change type',
     scan: 'Scan or search inventory or serial number',
     inStock: 'in stock',

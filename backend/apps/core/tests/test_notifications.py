@@ -159,3 +159,107 @@ def test_rules_are_part_of_the_site_settings(demo, employee_client):
     data = employee_client.get("/api/settings/site").json()
     assert data["rules"]["default_loan_days"] == 5
     assert {"key": "request_ready", "audience": "employee", "enabled": True} in data["notifications"]
+
+
+@pytest.mark.parametrize("notify", [True, False])
+def test_it_decides_whether_the_ready_message_goes_out(
+    notify, mail_on, employee_client, it_client, django_capture_on_commit_callbacks
+):
+    url = f"/api/reservations/{submit(employee_client).json()['id']}"
+    it_client.post(f"{url}/confirm", {"items": []}, content_type=JSON)
+    it_client.post(f"{url}/auto-allocate")
+    mail.outbox.clear()
+    with django_capture_on_commit_callbacks(execute=True):
+        response = it_client.post(
+            f"{url}/ready", {"handover_mode": "collect", "notify": notify}, content_type=JSON
+        )
+    assert response.status_code == 200, response.content
+    assert (recipients() == {"employee@example.com"}) is notify
+    ready = next(e for e in response.json()["events"] if e["kind"] == "ready")
+    assert ready["data"].get("notified", True) is notify
+
+
+def _ready(employee_client, it_client) -> str:
+    url = f"/api/reservations/{submit(employee_client).json()['id']}"
+    it_client.post(f"{url}/confirm", {"items": []}, content_type=JSON)
+    it_client.post(f"{url}/auto-allocate")
+    it_client.post(f"{url}/ready", {"handover_mode": "collect", "notify": False}, content_type=JSON)
+    return url
+
+
+def test_the_employee_hears_of_every_step_after_ready(
+    mail_on, employee_client, it_client, django_capture_on_commit_callbacks
+):
+    """Changed handover, hand-out, extension and return: each one mail for the record."""
+    url = _ready(employee_client, it_client)
+    steps = [
+        ("schedule", {"handover_mode": "delivery", "pickup_location": None}, "Übergabe geändert"),
+        ("hand-out", {}, "Ausgegeben"),
+        ("extend", {"end_date": (date.today() + timedelta(days=20)).isoformat()}, "Leihfrist verlängert"),
+        ("return", {}, "Zurückgenommen"),
+    ]
+    for action, data, subject in steps:
+        mail.outbox.clear()
+        with django_capture_on_commit_callbacks(execute=True):
+            response = it_client.post(f"{url}/{action}", data, content_type=JSON)
+        assert response.status_code == 200, response.content
+        assert recipients() == {"employee@example.com"}, action
+        assert subject in mail.outbox[0].subject
+    assert "HS-" in mail.outbox[0].body  # the devices, by inventory number
+
+
+def test_a_changed_handover_can_go_unannounced(
+    mail_on, employee_client, it_client, django_capture_on_commit_callbacks
+):
+    url = _ready(employee_client, it_client)
+    mail.outbox.clear()
+    with django_capture_on_commit_callbacks(execute=True):
+        body = it_client.post(
+            f"{url}/schedule", {"handover_mode": "delivery", "notify": False}, content_type=JSON
+        ).json()
+    assert mail.outbox == []
+    assert body["events"][-1]["data"]["notified"] is False
+
+
+def test_only_a_cancellation_by_it_is_mailed(
+    mail_on, employee_client, it_client, django_capture_on_commit_callbacks
+):
+    own = submit(employee_client).json()["id"]
+    by_it = submit(employee_client).json()["id"]
+    mail.outbox.clear()
+    with django_capture_on_commit_callbacks(execute=True):
+        employee_client.post(f"/api/reservations/{own}/cancel")
+    assert mail.outbox == []
+    with django_capture_on_commit_callbacks(execute=True):
+        it_client.post(f"/api/reservations/{by_it}/cancel")
+    assert recipients() == {"employee@example.com"}
+    assert "storniert" in mail.outbox[0].subject
+
+
+def test_new_kinds_follow_the_site_and_personal_switches(
+    mail_on, employee_client, it_client, django_capture_on_commit_callbacks
+):
+    url = _ready(employee_client, it_client)
+    employee_client.patch(
+        "/api/auth/me", {"notification_settings": {"request_handed_out": False}}, content_type=JSON
+    )
+    mail.outbox.clear()
+    with django_capture_on_commit_callbacks(execute=True):
+        it_client.post(f"{url}/hand-out", {}, content_type=JSON)
+    assert mail.outbox == []
+
+    mail_on.events = {"request_returned": False}
+    mail_on.save()
+    with django_capture_on_commit_callbacks(execute=True):
+        it_client.post(f"{url}/return", {}, content_type=JSON)
+    assert mail.outbox == []
+
+
+def test_only_mails_one_can_get_can_be_switched_off(employee_client, it_client):
+    """An employee's profile takes no switches for IT mails; IT staff may turn off their own."""
+    data = {"notification_settings": {"request_ready": False, "request_submitted": False}}
+    response = employee_client.patch("/api/auth/me", data, content_type=JSON)
+    assert response.json()["notification_settings"] == {"request_ready": False}
+
+    response = it_client.patch("/api/auth/me", data, content_type=JSON)
+    assert response.json()["notification_settings"] == {"request_ready": False, "request_submitted": False}

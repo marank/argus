@@ -14,7 +14,7 @@ from apps.accounts.models import TwoFactor
 from apps.accounts.schemas import CodeIn, CurrentUserOut, PreferencesIn, TwoFactorChallengeOut
 from apps.accounts.services import throttle, two_factor
 from apps.core.api.security import session_auth
-from apps.core.notifications import EVENT_KEYS
+from apps.core.notifications import receivable
 
 # Plain session auth: the pickup terminal account must be able to sign in and out too.
 router = Router(tags=["auth"], auth=session_auth)
@@ -165,7 +165,9 @@ def update_preferences(request: HttpRequest, payload: PreferencesIn):
     user = request.user
     for name, value in payload.dict(exclude_unset=True).items():
         if name == "notification_settings":
-            value = {k: bool(v) for k, v in (value or {}).items() if k in EVENT_KEYS}
+            # Only mails the user can get; nobody switches off what goes to others.
+            allowed = receivable(user)
+            value = {k: bool(v) for k, v in (value or {}).items() if k in allowed}
         elif name == "dashboard_settings":
             value = clean_dashboard_settings(value)
         setattr(user, name, value)

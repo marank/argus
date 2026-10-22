@@ -57,6 +57,8 @@ class Reservation(TimeStampedModel):
         REQUEST = "request", _("Request")
         # IT handed out devices on the spot; the request only documents it.
         DIRECT = "direct", _("Direct hand-out")
+        # IT assigned a device from its page in one step: recorded as handed out right away.
+        QUICK = "quick", _("Quick assignment")
 
     OPEN_STATUSES = (
         Status.PENDING_APPROVAL,

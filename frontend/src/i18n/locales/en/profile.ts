@@ -7,7 +7,7 @@ export default {
     approverDescription: 'For department approvers.',
     mailOff: 'Email delivery is currently disabled.',
     noEmail: 'Your account has no email address. Please contact IT.',
-    siteOff: 'disabled by IT',
+    noneActive: 'IT has not switched on any notifications for you at the moment.',
   },
   security: {
     title: 'Sign-in & security',

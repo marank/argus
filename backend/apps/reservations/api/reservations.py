@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.translation import gettext as _
 from ninja import FilterLookup, FilterSchema, Query, Router, Status
 from ninja.pagination import paginate
 
@@ -16,6 +17,8 @@ from apps.accounts.services.assignment import Assigned, assigned_q
 from apps.core.api.pagination import Pagination
 from apps.core.api.querying import order, search
 from apps.core.api.security import permission_auth
+from apps.core.exceptions import BusinessError
+from apps.inventory.models import Asset
 from apps.reservations.models import Reservation
 from apps.reservations.schemas.reservation import (
     AssignIn,
@@ -23,6 +26,7 @@ from apps.reservations.schemas.reservation import (
     DirectRequestIn,
     ExtendIn,
     HandOutIn,
+    QuickAssignIn,
     ReadyIn,
     RejectIn,
     ReservationIn,
@@ -37,6 +41,14 @@ from .queries import get_for_update, get_reservation, visible_reservations
 router = Router(tags=["reservations"])
 # IT's decisions on requests; employees only list, create and cancel their own.
 reservations_write = permission_auth("reservations", WRITE)
+
+
+def _employee(pk: UUID) -> User:
+    """Whom IT records something for: a current employee, not a deactivated account or a terminal."""
+    employee = User.objects.filter(pk=pk, is_active=True, is_terminal=False).first()
+    if employee is None:
+        raise BusinessError(_("Choose an active employee."))
+    return employee
 
 
 class ReservationFilter(FilterSchema):
@@ -98,7 +110,7 @@ def create_reservation(request: HttpRequest, payload: ReservationIn):
     requester = request.user
     may_record = can(request.user, "reservations", WRITE)
     if payload.requester and may_record:
-        requester = get_object_or_404(User, pk=payload.requester, is_active=True, is_terminal=False)
+        requester = _employee(payload.requester)
     if payload.follows:
         # Only an earlier request of the same employee that the user may see.
         data["follows"] = (
@@ -114,15 +126,28 @@ def create_reservation(request: HttpRequest, payload: ReservationIn):
 @router.post("/direct", response={201: ReservationOut}, auth=reservations_write)
 def create_direct(request: HttpRequest, payload: DirectRequestIn):
     """A request with specific devices from stock: confirmed and allocated right away."""
-    requester = (
-        get_object_or_404(User, pk=payload.requester, is_active=True) if payload.requester else request.user
-    )
+    requester = _employee(payload.requester) if payload.requester else request.user
     reservation = workflow.prepare_direct(
         requester,
         request.user,
         payload.dict(exclude={"requester", "assets", "consumables"}),
         assets=payload.assets,
         consumables={c.consumable: c.quantity for c in payload.consumables},
+    )
+    return Status(201, get_reservation(request, reservation.pk))
+
+
+@router.post("/quick", response={201: ReservationOut}, auth=reservations_write)
+def quick_assign(request: HttpRequest, payload: QuickAssignIn):
+    """A device from stock assigned to an employee in one step: recorded as handed out."""
+    requester = _employee(payload.requester)
+    reservation = workflow.quick_assign(
+        get_object_or_404(Asset, pk=payload.asset),
+        requester,
+        request.user,
+        duration=payload.duration,
+        start_date=payload.start_date,
+        end_date=payload.end_date,
     )
     return Status(201, get_reservation(request, reservation.pk))
 
@@ -144,14 +169,7 @@ def cancel(request: HttpRequest, pk: UUID):
 @transaction.atomic
 def confirm(request: HttpRequest, pk: UUID, payload: ConfirmIn):
     quantities = {item.id: item.quantity_confirmed for item in payload.items}
-    workflow.confirm(
-        get_for_update(pk),
-        request.user,
-        quantities,
-        payload.pickup_at,
-        payload.pickup_location,
-        payload.comment,
-    )
+    workflow.confirm(get_for_update(pk), request.user, quantities, payload.comment)
     return get_reservation(request, pk)
 
 
@@ -166,7 +184,12 @@ def reject(request: HttpRequest, pk: UUID, payload: RejectIn):
 @transaction.atomic
 def schedule(request: HttpRequest, pk: UUID, payload: ScheduleIn):
     workflow.reschedule(
-        get_for_update(pk), request.user, payload.pickup_at, payload.pickup_location, payload.handover_mode
+        get_for_update(pk),
+        request.user,
+        payload.pickup_at,
+        payload.pickup_location,
+        payload.handover_mode,
+        notify=payload.notify,
     )
     return get_reservation(request, pk)
 
@@ -174,17 +197,16 @@ def schedule(request: HttpRequest, pk: UUID, payload: ScheduleIn):
 @router.post("/{uuid:pk}/ready", response=ReservationOut, auth=reservations_write)
 @transaction.atomic
 def mark_ready(request: HttpRequest, pk: UUID, payload: ReadyIn):
-    reservation = get_for_update(pk)
-    if {"pickup_at", "pickup_location"} & payload.model_fields_set:
-        workflow.reschedule(
-            reservation,
-            request.user,
-            payload.pickup_at if "pickup_at" in payload.model_fields_set else reservation.pickup_at,
-            payload.pickup_location
-            if "pickup_location" in payload.model_fields_set
-            else reservation.pickup_location_id,
-        )
-    workflow.mark_ready(reservation, request.user, payload.handover_mode, payload.skip_device_check)
+    given = payload.model_fields_set
+    workflow.mark_ready(
+        get_for_update(pk),
+        request.user,
+        payload.handover_mode,
+        payload.skip_device_check,
+        pickup_at=payload.pickup_at if "pickup_at" in given else workflow.KEEP,
+        pickup_location_id=payload.pickup_location if "pickup_location" in given else workflow.KEEP,
+        notify=payload.notify,
+    )
     return get_reservation(request, pk)
 
 

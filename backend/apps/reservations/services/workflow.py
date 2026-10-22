@@ -1,11 +1,11 @@
 """State transitions of a reservation, from submission to return."""
 
-from datetime import date, datetime
+from datetime import date, datetime, time
 from uuid import UUID
 
 from django.db import transaction
 from django.db.models import Q
-from django.utils import timezone
+from django.utils import formats, timezone
 from django.utils.translation import gettext as _
 
 from apps.accounts.models import User
@@ -31,6 +31,8 @@ from apps.reservations.services.history import Kind, allocation_label, record
 
 Status = Reservation.Status
 Approval = Reservation.Approval
+# Leaves a field as it is, where ``None`` would clear it.
+KEEP = object()
 
 
 def _require_status(reservation: Reservation, *allowed: str) -> None:
@@ -204,6 +206,7 @@ def cancel(reservation: Reservation, user) -> Reservation:
     reservation.completed_at = timezone.now()
     reservation.save()
     record(reservation, Kind.CANCELLED, user)
+    notifications.request_cancelled(reservation, user)
     return reservation
 
 
@@ -244,11 +247,12 @@ def confirm(
     reservation: Reservation,
     user,
     quantities: dict[UUID, int],
-    pickup_at: datetime | None,
-    pickup_location_id: UUID | None,
     comment: str = "",
 ) -> Reservation:
-    """Confirm a reservation, possibly with fewer devices than requested."""
+    """Tell the employee their request is fine, possibly with fewer devices than requested.
+
+    How and when the devices reach them is planned later, when marking it ready.
+    """
     _require_status(reservation, Status.SUBMITTED, Status.CONFIRMED)
     # Editing a confirmed request again does not notify a second time.
     first_decision = reservation.status == Status.SUBMITTED
@@ -268,8 +272,6 @@ def confirm(
         raise BusinessError(_("Confirm at least one device or reject the request."))
 
     reservation.status = Status.CONFIRMED
-    reservation.pickup_at = pickup_at
-    reservation.pickup_location_id = pickup_location_id
     reservation.it_comment = comment
     reservation.handled_by = user
     reservation.confirmed_at = reservation.confirmed_at or timezone.now()
@@ -301,7 +303,9 @@ def reschedule(
     pickup_at: datetime | None,
     pickup_location_id: UUID | None,
     handover_mode: str | None = None,
+    notify: bool = True,
 ) -> Reservation:
+    """Change how, when or where; once the employee was told it is ready, ``notify`` tells them again."""
     _require_status(reservation, Status.CONFIRMED, Status.READY)
     reservation.pickup_at = pickup_at
     reservation.pickup_location_id = pickup_location_id
@@ -310,11 +314,15 @@ def reschedule(
     reservation.handled_by = user
     reservation.save()
     reservation.refresh_from_db(fields=["pickup_location"])
-    _record_schedule(reservation, Kind.RESCHEDULED, user)
+    # The employee hears of the handover once it is ready; before that there is nothing to correct.
+    ready = reservation.status == Status.READY
+    _record_schedule(reservation, Kind.RESCHEDULED, user, notified=False if ready and not notify else None)
+    if ready and notify:
+        notifications.request_rescheduled(reservation)
     return reservation
 
 
-def _record_schedule(reservation: Reservation, kind: str, user) -> None:
+def _record_schedule(reservation: Reservation, kind: str, user, **extra) -> None:
     """A step that sets how and when the devices reach the employee."""
     record(
         reservation,
@@ -323,6 +331,7 @@ def _record_schedule(reservation: Reservation, kind: str, user) -> None:
         handover_mode=reservation.handover_mode,
         pickup_at=reservation.pickup_at.isoformat() if reservation.pickup_at else None,
         pickup_location=reservation.pickup_location.full_name if reservation.pickup_location_id else None,
+        **extra,
     )
 
 
@@ -340,16 +349,18 @@ def extend(reservation: Reservation, user, end_date: date) -> Reservation:
         raise BusinessError(_("The new return date must not be in the past."))
     if end_date <= reservation.end_date:
         raise BusinessError(_("The new return date must be after the current one."))
+    previous = reservation.end_date
     record(
         reservation,
         Kind.EXTENDED,
         user,
-        previous=reservation.end_date.isoformat(),
+        previous=previous.isoformat(),
         end_date=end_date.isoformat(),
     )
     reservation.end_date = end_date
     reservation.handled_by = user
     reservation.save(update_fields=["end_date", "handled_by", "updated_at"])
+    notifications.request_extended(reservation, previous)
     return reservation
 
 
@@ -459,16 +470,11 @@ def allocate_asset(item: ReservationItem, asset: Asset, user) -> ReservationAllo
             _("All confirmed devices for “%(item)s” are already allocated.") % {"item": item.label}
         )
 
+    # Set aside only: the device's history starts with the hand-out, the request's lists
+    # the devices once it is ready.
     asset.status = Asset.Status.RESERVED
     asset.save(update_fields=["status", "updated_at"])
-    log_event(
-        asset,
-        AssetEvent.Kind.RESERVED,
-        user,
-        related_user=reservation.requester,
-        reservation=reservation,
-    )
-    return _allocated(ReservationAllocation.objects.create(item=item, asset=asset, allocated_by=user), user)
+    return ReservationAllocation.objects.create(item=item, asset=asset, allocated_by=user)
 
 
 @transaction.atomic
@@ -490,7 +496,7 @@ def allocate_consumable(
     allocation = ReservationAllocation.objects.create(
         item=item, consumable=consumable, quantity=quantity, allocated_by=user
     )
-    return _allocated(allocation, user)
+    return allocation
 
 
 @transaction.atomic
@@ -524,11 +530,6 @@ def allocate_license(
     allocation = ReservationAllocation.objects.create(
         item=item, license=license, license_assignment=assignment, allocated_by=user
     )
-    return _allocated(allocation, user)
-
-
-def _allocated(allocation: ReservationAllocation, user) -> ReservationAllocation:
-    record(allocation.item.reservation, Kind.ALLOCATED, user, items=[allocation_label(allocation)])
     return allocation
 
 
@@ -568,15 +569,17 @@ def auto_allocate(reservation: Reservation, user) -> int:
 def remove_allocation(allocation: ReservationAllocation, user) -> None:
     reservation = allocation.item.reservation
     _require_status(reservation, Status.CONFIRMED, Status.READY)
-    record(reservation, Kind.RELEASED, user, items=[allocation_label(allocation)])
+    # Not noted: marking it ready again lists what changed.
     _release(allocation, user)
     allocation.delete()
     if reservation.status == Status.READY:
         reservation.status = Status.CONFIRMED
         reservation.save(update_fields=["status", "updated_at"])
+        record(reservation, Kind.REOPENED, user)
 
 
 def _release(allocation: ReservationAllocation, user) -> None:
+    """Give back what was set aside; the device was never handed out, so its history stays as it is."""
     if allocation.license_id:
         if allocation.license_assignment_id:
             allocation.license_assignment.delete()
@@ -585,12 +588,6 @@ def _release(allocation: ReservationAllocation, user) -> None:
         if asset.status == Asset.Status.RESERVED:
             asset.status = Asset.Status.IN_STOCK
             asset.save(update_fields=["status", "updated_at"])
-            log_event(
-                asset,
-                AssetEvent.Kind.STATUS_CHANGED,
-                user,
-                description=_("Released from %(number)s") % {"number": allocation.item.reservation.number},
-            )
     else:
         release_consumable(allocation.consumable, allocation.quantity)
 
@@ -610,11 +607,21 @@ def _has_physical(reservation: Reservation) -> bool:
 
 @transaction.atomic
 def mark_ready(
-    reservation: Reservation, user, handover_mode: str | None = None, skip_device_check: bool = False
+    reservation: Reservation,
+    user,
+    handover_mode: str | None = None,
+    skip_device_check: bool = False,
+    *,
+    pickup_at: datetime | None | object = KEEP,
+    pickup_location_id: UUID | None | object = KEEP,
+    notify: bool = True,
 ) -> Reservation:
     """All devices are prepared. Pickup requests now show up on the pickup terminal.
 
-    Without anything to collect (only software), the request is handed out right away.
+    This is where IT sets how, when and where the devices reach the employee; date and
+    place left out stay as they are. ``notify`` sends the ready message; IT turns it off
+    e.g. for a direct hand-out it does right away. Without anything to collect (only
+    software), the request is handed out right away.
     """
     _require_status(reservation, Status.CONFIRMED)
     missing = [item.label for item in reservation.items.all() if item.quantity_missing]
@@ -622,16 +629,52 @@ def mark_ready(
         raise BusinessError(_("Devices are still missing for: %(items)s") % {"items": ", ".join(missing)})
     if handover_mode:
         reservation.handover_mode = handover_mode
+    if pickup_at is not KEEP:
+        reservation.pickup_at = pickup_at
+    if pickup_location_id is not KEEP:
+        reservation.pickup_location_id = pickup_location_id
     reservation.skip_device_check = skip_device_check
     reservation.status = Status.READY
     reservation.handled_by = user
     reservation.prepared_by = user
     reservation.save()
-    _record_schedule(reservation, Kind.READY, user)
-    notifications.request_ready(reservation)
+    reservation.refresh_from_db(fields=["pickup_location"])
+    # Only a skipped message is worth noting; sending it is the normal case.
+    _record_schedule(
+        reservation, Kind.READY, user, notified=None if notify else False, **_ready_items(reservation)
+    )
+    if notify:
+        notifications.request_ready(reservation)
     if not _has_physical(reservation):
         hand_out(reservation, user)
     return reservation
+
+
+def _ready_items(reservation: Reservation) -> dict:
+    """What a ready step notes about the allocation.
+
+    Allocating while preparing is not noted step by step (scanning, taking out, scanning
+    again); the first time it is ready lists everything, a later time only what changed.
+    ``allocated`` keeps the whole list to compare with next time.
+    """
+    current = [
+        allocation_label(a)
+        for a in ReservationAllocation.objects.filter(item__reservation=reservation)
+        .select_related("asset", "consumable", "license")
+        .order_by("item__position", "allocated_at")
+    ]
+    earlier = reservation.events.filter(kind=Kind.READY).order_by("-at").first()
+    before = (earlier.data.get("allocated") or earlier.data.get("items")) if earlier else None
+    if before is None:
+        return {"items": current, "allocated": current}
+    remaining = list(before)
+    added = []
+    for label in current:
+        if label in remaining:
+            remaining.remove(label)
+        else:
+            added.append(label)
+    return {"added": added, "removed": remaining, "allocated": current}
 
 
 @transaction.atomic
@@ -785,6 +828,9 @@ def hand_out(
     else:
         reservation.status = Status.HANDED_OUT
     reservation.save()
+    notifications.request_handed_out(
+        reservation, [allocation_label(a) for a in allocations], received_by_name.strip()
+    )
     return reservation
 
 
@@ -854,6 +900,105 @@ def prepare_direct(
         else:
             allocate_consumable(line, thing, quantity, user)
 
+    return reservation
+
+
+@transaction.atomic
+def quick_assign(
+    asset: Asset,
+    requester,
+    user,
+    *,
+    duration: str,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> Reservation:
+    """IT assigns a device from stock to an employee in one step, without request or approval.
+
+    It is recorded as handed out right away, so a temporary assignment keeps its
+    return date (reminders, overdue returns) and is taken back like any loan.
+    A start date before today records an assignment that began earlier.
+    """
+    today = timezone.localdate()
+    start_date = start_date or today
+    if start_date > today:
+        raise BusinessError(_("The start date must not be in the future."))
+    end_date = end_date if duration == Reservation.Duration.TEMPORARY else None
+    _validate_period(duration, start_date, end_date)
+    if end_date is not None and end_date < today:
+        raise BusinessError(_("The return date must not be in the past."))
+    asset = Asset.objects.select_for_update().select_related("model__category").get(pk=asset.pk)
+    if asset.status != Asset.Status.IN_STOCK:
+        raise BusinessError(
+            _("%(asset)s is not in stock (%(status)s).")
+            % {"asset": asset.inventory_number, "status": asset.get_status_display()}
+        )
+
+    now = timezone.now()
+    lent = duration == Reservation.Duration.TEMPORARY
+    reservation = Reservation.objects.create(
+        origin=Reservation.Origin.QUICK,
+        requester=requester,
+        created_by=user,
+        title=_("Quick assignment"),
+        duration=duration,
+        start_date=start_date,
+        end_date=end_date,
+        handover_mode=Reservation.HandoverMode.COLLECT,
+        status=Status.HANDED_OUT if lent else Status.COMPLETED,
+        handled_by=user,
+        assignee=user,
+        confirmed_at=now,
+        handed_out_at=now,
+        completed_at=None if lent else now,
+    )
+    _record_created(reservation, Kind.QUICK, user)
+    item = ReservationItem.objects.create(
+        reservation=reservation,
+        category=asset.model.category,
+        asset_model=asset.model,
+        quantity_requested=1,
+        quantity_confirmed=1,
+    )
+    ReservationAllocation.objects.create(item=item, asset=asset, allocated_by=user, handed_out_at=now)
+    Handover.objects.create(
+        reservation=reservation,
+        method=Handover.Method.DIRECT,
+        received_by=requester,
+        received_by_name=requester.display_name,
+        handed_out_by=user,
+        recorded_by=user,
+    )
+    record(
+        reservation,
+        Kind.HANDED_OUT,
+        user,
+        method=Handover.Method.DIRECT,
+        received_by=requester.display_name,
+        items=[asset.inventory_number],
+    )
+    notifications.request_handed_out(reservation, [asset.inventory_number], requester.display_name)
+
+    # Begun earlier: the device has been with the employee since that day.
+    since = now if start_date == today else timezone.make_aware(datetime.combine(start_date, time.min))
+    asset.status = Asset.Status.IN_USE
+    asset.assigned_to = requester
+    asset.assigned_since = since
+    asset.save(update_fields=["status", "assigned_to", "assigned_since", "updated_at"])
+    log_event(
+        asset,
+        AssetEvent.Kind.ASSIGNED,
+        user,
+        related_user=requester,
+        reservation=reservation,
+        occurred_at=since,
+        description=(
+            _("Quick assignment until %(date)s")
+            % {"date": formats.date_format(end_date, "SHORT_DATE_FORMAT")}
+            if lent
+            else _("Quick assignment, permanent")
+        ),
+    )
     return reservation
 
 
@@ -935,13 +1080,11 @@ def return_devices(
             ]
         )
 
-    record(
-        reservation,
-        Kind.RETURNED,
-        user,
-        items=[allocation_label(a) for a in selected],
-        damaged=[allocation_label(a) for a in selected if a.returned_damaged],
-        notes=notes.strip(),
+    taken = [allocation_label(a) for a in selected]
+    damaged_labels = [allocation_label(a) for a in selected if a.returned_damaged]
+    record(reservation, Kind.RETURNED, user, items=taken, damaged=damaged_labels, notes=notes.strip())
+    notifications.request_returned(
+        reservation, taken, damaged_labels, [allocation_label(a) for a in returnable]
     )
     if reservation.status == Status.HANDED_OUT and not returnable.exists():
         open_allocations.update(returned_at=now)

@@ -10,6 +10,7 @@ import type {
   Candidates,
   CatalogCategory,
   DirectRequestInput,
+  QuickAssignInput,
   MyAsset,
   MyConsumables,
   PeriodAvailability,
@@ -34,8 +35,6 @@ const base = '/reservations'
 
 export interface ConfirmInput {
   items: { id: Id; quantity_confirmed: number }[]
-  pickup_at: string | null
-  pickup_location: Id | null
   comment: string
 }
 
@@ -44,6 +43,7 @@ export const reservationsApi = {
   get: (id: Id) => http.get<Reservation>(`${base}/${id}`),
   create: (data: ReservationInput) => http.post<Reservation>(base, data),
   createDirect: (data: DirectRequestInput) => http.post<Reservation>(`${base}/direct`, data),
+  quickAssign: (data: QuickAssignInput) => http.post<Reservation>(`${base}/quick`, data),
   cancel: (id: Id) => http.post<Reservation>(`${base}/${id}/cancel`),
   confirm: (id: Id, data: ConfirmInput) => http.post<Reservation>(`${base}/${id}/confirm`, data),
   reject: (id: Id, comment: string) => http.post<Reservation>(`${base}/${id}/reject`, { comment }),
@@ -53,6 +53,8 @@ export const reservationsApi = {
       pickup_at: string | null
       pickup_location: Id | null
       handover_mode?: HandoverMode
+      /** Tell the employee about the change; left out, they are told. */
+      notify?: boolean
     },
   ) => http.post<Reservation>(`${base}/${id}/schedule`, data),
   candidates: (itemId: Id, q?: string) =>
@@ -81,6 +83,8 @@ export const reservationsApi = {
       skip_device_check: boolean
       pickup_at: string | null
       pickup_location: Id | null
+      /** Send the employee the ready message; left out, it is sent. */
+      notify?: boolean
     },
   ) => http.post<Reservation>(`${base}/${id}/ready`, data),
   assign: (id: Id, data: { team: Id | null; assignee: Id | null }) =>

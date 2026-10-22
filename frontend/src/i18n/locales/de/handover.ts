@@ -17,6 +17,11 @@ export default {
   readyHint: 'Wie kommen die Geräte zum Mitarbeiter?',
   skipCheck: 'Geräteprüfung am Terminal überspringen',
   skipCheckHint: 'Das Terminal beginnt direkt mit „Wer holt ab?“.',
+  notify: 'Mitarbeiter benachrichtigen',
+  notifyHint: 'Er erhält eine Nachricht mit Termin und Ort, sofern er sie nicht abgeschaltet hat.',
+  notNotified: 'Mitarbeiter nicht benachrichtigt',
+  notifyChangeHint:
+    'Er erhält eine Nachricht mit der geänderten Übergabe, sofern er sie nicht abgeschaltet hat.',
   checkSkipped: 'Die Geräteprüfung wird übersprungen.',
   withoutCheck: 'ohne Geräteprüfung',
   collectPending:

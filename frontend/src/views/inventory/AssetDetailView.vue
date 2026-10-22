@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useLive } from '@/composables/useLive'
 import type { Id } from '@/types/common'
-import { Pencil, Trash2, UserMinus, UserPlus, Wrench } from '@lucide/vue'
+import { ClipboardList, Pencil, Trash2, UserMinus, UserPlus, Wrench } from '@lucide/vue'
 import { NAlert, NButton, NCard, NModal, NSkeleton, useMessage } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -16,6 +16,7 @@ import StatusTag from '@/components/common/StatusTag.vue'
 import AssetEventModal from '@/components/inventory/AssetEventModal.vue'
 import AssetFormDrawer from '@/components/inventory/AssetFormDrawer.vue'
 import AssetTimeline from '@/components/inventory/AssetTimeline.vue'
+import QuickAssignModal from '@/components/inventory/QuickAssignModal.vue'
 import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
 import { useFormat } from '@/composables/useFormat'
@@ -28,7 +29,8 @@ const props = defineProps<{ id: Id }>()
 const { t } = useI18n()
 // Without the right to change assets, the page is for viewing only.
 const canWrite = computed(() => useAuthStore().can('assets', 'write'))
-// Handing out goes through a direct hand-out, so it gets a protocol and can be taken back.
+// A quick assignment is recorded as a hand-out, so it keeps its return date and can be taken back.
+// Without the right to record hand-outs, the device is only assigned.
 const canHandOut = computed(() => useAuthStore().can('reservations', 'write'))
 const features = useFeaturesStore()
 const router = useRouter()
@@ -42,6 +44,7 @@ const events = ref<AssetEvent[]>([])
 const showForm = ref(false)
 const showEvent = ref(false)
 const showAssign = ref(false)
+const showQuickAssign = ref(false)
 const assignTo = ref<Id | null>(null)
 
 async function load() {
@@ -53,7 +56,7 @@ async function load() {
 onMounted(load)
 useLive(['asset'], load, {
   id: () => props.id,
-  paused: () => showForm.value || showEvent.value || showAssign.value,
+  paused: () => showForm.value || showEvent.value || showAssign.value || showQuickAssign.value,
 })
 
 const identification = computed<DetailEntry[]>(() => {
@@ -149,17 +152,16 @@ async function removeEvent(event: AssetEvent) {
             <template #icon><UserMinus :size="15" /></template>
             {{ t('inventory.unassign') }}
           </NButton>
-          <NButton
-            v-else-if="asset.status === 'in_stock'"
-            @click="
-              canHandOut
-                ? router.push({ name: 'portal-new', query: { mode: 'direct', asset: asset.id } })
-                : (showAssign = true)
-            "
-          >
-            <template #icon><UserPlus :size="15" /></template>
-            {{ t('inventory.assign') }}
-          </NButton>
+          <template v-else-if="asset.status === 'in_stock'">
+            <NButton @click="router.push({ name: 'portal-new', query: { asset: asset.id } })">
+              <template #icon><ClipboardList :size="15" /></template>
+              {{ t('inventory.createRequest') }}
+            </NButton>
+            <NButton @click="canHandOut ? (showQuickAssign = true) : (showAssign = true)">
+              <template #icon><UserPlus :size="15" /></template>
+              {{ t('inventory.quickAssign.title') }}
+            </NButton>
+          </template>
           <NButton @click="showEvent = true">
             <template #icon><Wrench :size="15" /></template>
             {{ t('inventory.recordEvent') }}
@@ -278,16 +280,17 @@ async function removeEvent(event: AssetEvent) {
 
       <AssetFormDrawer v-model:show="showForm" :asset="asset" @saved="load" />
       <AssetEventModal v-model:show="showEvent" :asset-id="asset.id" @saved="load" />
+      <QuickAssignModal v-model:show="showQuickAssign" :asset-id="asset.id" @saved="load" />
       <NModal
         v-model:show="showAssign"
         preset="card"
-        :title="t('inventory.assignTo')"
+        :title="t('inventory.quickAssign.title')"
         style="max-width: 420px"
       >
         <EntitySelect
           v-model="assignTo"
           :fetcher="usersApi.list"
-          :params="{ is_active: true }"
+          :params="{ is_active: true, is_terminal: false }"
           :label="(u) => u.display_name"
         />
         <template #footer>
@@ -298,7 +301,7 @@ async function removeEvent(event: AssetEvent) {
               :disabled="!assignTo"
               :loading="busy"
               @click="assign(assignTo)"
-              >{{ t('inventory.assign') }}</NButton
+              >{{ t('inventory.quickAssign.submit') }}</NButton
             >
           </div>
         </template>

@@ -36,8 +36,15 @@ const entries = computed<DetailEntry[]>(() => {
           },
         ]
       : []),
-    ...(r.origin === 'direct'
-      ? [{ label: t('reservations.detail.origin'), value: t('reservations.direct.title') }]
+    ...(r.origin !== 'request'
+      ? [
+          {
+            label: t('reservations.detail.origin'),
+            value: t(
+              r.origin === 'quick' ? 'inventory.quickAssign.title' : 'reservations.direct.title',
+            ),
+          },
+        ]
       : []),
     { label: t('reservations.duration'), value: enumLabel('duration', r.duration) },
     { label: t('reservations.period'), value: period.value, slot: 'period' },

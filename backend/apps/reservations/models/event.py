@@ -17,6 +17,7 @@ class ReservationEvent(UUIDModel):
     class Kind(models.TextChoices):
         CREATED = "created", _("Requested")
         DIRECT = "direct", _("Direct hand-out recorded")
+        QUICK = "quick", _("Quick assignment recorded")
         APPROVED = "approved", _("Approved")
         DECLINED = "declined", _("Not approved")
         CONFIRMED = "confirmed", _("Confirmed")
@@ -38,6 +39,7 @@ class ReservationEvent(UUIDModel):
     EMPLOYEE_KINDS = (
         Kind.CREATED,
         Kind.DIRECT,
+        Kind.QUICK,
         Kind.APPROVED,
         Kind.DECLINED,
         Kind.CONFIRMED,

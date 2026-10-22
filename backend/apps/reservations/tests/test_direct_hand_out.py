@@ -111,3 +111,13 @@ def test_list_filters_by_origin(it_client):
     post(it_client, assets=[str(asset.pk)])
     listed = it_client.get("/api/reservations", {"origin": "direct"}).json()["items"]
     assert [r["origin"] for r in listed] == ["direct"]
+
+
+def test_deactivated_employee_gets_a_clear_message(it_client):
+    (asset,) = in_stock()
+    gone = employee()
+    gone.is_active = False
+    gone.save(update_fields=["is_active"])
+    response = post(it_client, assets=[str(asset.pk)])
+    assert response.status_code == 409
+    assert "active employee" in response.json()["detail"]

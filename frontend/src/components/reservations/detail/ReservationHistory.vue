@@ -78,6 +78,7 @@ function details(entry: Entry): string[] {
   switch (entry.kind) {
     case 'created':
     case 'direct':
+    case 'quick':
       if (d.requester) lines.push(t('reservations.detail.event.for', { name: d.requester }))
       if (d.follows) lines.push(t('reservations.again.follows') + ' ' + d.follows)
       break
@@ -93,10 +94,16 @@ function details(entry: Entry): string[] {
           d.handover_mode ? t(`handover.mode.${d.handover_mode}`) : '',
           d.pickup_at ? weekday(d.pickup_at) : '',
           d.pickup_location ?? '',
+          d.notified === false ? t('handover.notNotified') : '',
         ]
           .filter(Boolean)
           .join(' · '),
       )
+      // Ready again after a change: only what changed (the first time lists everything).
+      if (d.added?.length)
+        lines.push(`${t('reservations.detail.event.added')}: ${d.added.join(', ')}`)
+      if (d.removed?.length)
+        lines.push(`${t('reservations.detail.event.removed')}: ${d.removed.join(', ')}`)
       break
     case 'handed_out':
       lines.push(

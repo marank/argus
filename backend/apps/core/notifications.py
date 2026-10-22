@@ -32,7 +32,12 @@ EVENTS: tuple[Event, ...] = (
     Event("license_expiring", "it"),
     Event("request_confirmed", "employee"),
     Event("request_rejected", "employee"),
+    Event("request_cancelled", "employee"),
     Event("request_ready", "employee"),
+    Event("request_rescheduled", "employee"),
+    Event("request_handed_out", "employee"),
+    Event("request_extended", "employee"),
+    Event("request_returned", "employee"),
     Event("return_reminder", "employee"),
     Event("return_overdue", "employee"),
     Event("issue_message", "employee"),
@@ -45,6 +50,16 @@ AUDIENCE = {event.key: event.audience for event in EVENTS}
 def site_events(stored: dict) -> dict[str, bool]:
     """Notification kinds switched on site-wide (all on by default)."""
     return {event.key: bool(stored.get(event.key, True)) for event in EVENTS}
+
+
+def receivable(user) -> set[str]:
+    """Kinds ``user`` can get, and so switch off: their own, plus IT and approver ones by role."""
+    audiences = {"employee"}
+    if user.is_it_staff:
+        audiences.add("it")
+    if user.is_approver:
+        audiences.add("approver")
+    return {event.key for event in EVENTS if event.audience in audiences}
 
 
 def user_wants(user, event: str) -> bool:

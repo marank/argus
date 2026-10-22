@@ -1,5 +1,5 @@
 import { i18n } from '@/i18n'
-import type { Allocation, ReservationItem } from '@/types/reservations'
+import type { Allocation, Reservation, ReservationItem } from '@/types/reservations'
 
 /** "Laptop · any model": the singular item name, falling back to the category name. */
 export function anyModelLabel(category: { name: string; item_name?: string }): string {
@@ -39,4 +39,16 @@ export function allocationCode(
 /** Devices and license seats come back; consumables are used up. */
 export function isReturnable(allocation: Allocation): boolean {
   return Boolean(allocation.asset || allocation.license)
+}
+
+/**
+ * Whether IT has planned how the devices reach the employee, which happens when marking
+ * it ready (or changing the handover after that). Before that the handover mode is only
+ * the default. Older requests got date and place when they were confirmed.
+ */
+export function handoverPlanned(reservation: Pick<Reservation, 'events' | 'pickup_at'>): boolean {
+  return (
+    !!reservation.pickup_at ||
+    reservation.events.some((event) => ['rescheduled', 'ready'].includes(event.kind))
+  )
 }

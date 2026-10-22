@@ -60,7 +60,7 @@ def test_it_may_record_anything(it_client):
     assert request(it_client, {"asset_model": str(model.pk)}).status_code == 201
 
 
-def test_unknown_or_inactive_requester_is_a_404(it_client):
+def test_unknown_or_inactive_requester_is_refused_with_a_message(it_client):
     sales = User.objects.get(username="sales")
     sales.is_active = False
     sales.save()
@@ -75,4 +75,5 @@ def test_unknown_or_inactive_requester_is_a_404(it_client):
             "items": [{"quantity": 1, "asset_model": str(model.pk)}],
         }
         response = it_client.post("/api/reservations", data, content_type=JSON)
-        assert response.status_code == 404, response.content
+        assert response.status_code == 409, response.content
+        assert "active employee" in response.json()["detail"]

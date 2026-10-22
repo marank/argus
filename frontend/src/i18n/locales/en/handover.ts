@@ -17,6 +17,10 @@ export default {
   readyHint: 'How will the devices reach the employee?',
   skipCheck: 'Skip the device check at the terminal',
   skipCheckHint: 'The terminal starts with “Who collects?”.',
+  notify: 'Notify the employee',
+  notifyHint: 'They get a message with date and place, unless they switched it off.',
+  notNotified: 'Employee not notified',
+  notifyChangeHint: 'They get a message with the changed handover, unless they switched it off.',
   checkSkipped: 'The device check is skipped.',
   withoutCheck: 'without device check',
   collectPending:

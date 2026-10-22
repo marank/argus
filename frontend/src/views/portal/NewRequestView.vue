@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeftRight, ClipboardList, ScanLine } from '@lucide/vue'
+import { ArrowLeftRight, ArrowRight, Check, ClipboardList, ScanLine } from '@lucide/vue'
 import { NAlert, NButton, NSkeleton, useMessage } from 'naive-ui'
 import { watchDebounced } from '@vueuse/core'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
@@ -57,8 +57,35 @@ const mode = computed<'request' | 'direct' | null>(() => {
 })
 const direct = computed(() => mode.value === 'direct')
 
+const choices = computed(() => [
+  {
+    mode: 'request' as const,
+    icon: ClipboardList,
+    title: t('reservations.direct.chooseRequest'),
+    hint: t('reservations.direct.chooseRequestHint'),
+    points: [
+      t('reservations.direct.requestPoints.catalog'),
+      t('reservations.direct.requestPoints.approval'),
+      t('reservations.direct.requestPoints.confirm'),
+    ],
+  },
+  {
+    mode: 'direct' as const,
+    icon: ScanLine,
+    title: t('reservations.direct.title'),
+    hint: t('reservations.direct.chooseDirectHint'),
+    points: [
+      t('reservations.direct.directPoints.scan'),
+      t('reservations.direct.directPoints.noApproval'),
+      t('reservations.direct.directPoints.protocol'),
+    ],
+  },
+])
+
 function choose(value: 'request' | 'direct' | null) {
-  router.replace({ query: value ? { mode: value } : {} })
+  // A device from the device page stays picked whichever way is chosen.
+  const asset = route.query.asset ? { asset: route.query.asset } : {}
+  router.replace({ query: value ? { mode: value, ...asset } : asset })
 }
 
 const catalog = ref<CatalogCategory[] | null>(null)
@@ -130,16 +157,27 @@ function prefill(earlier: Reservation) {
   }
 }
 
-// From the device page: start the hand-out with that device.
+// From the device page: hand out that device, or request its model.
 watch(
-  () => (direct.value ? route.query.asset : null),
-  async (id) => {
-    if (typeof id !== 'string') return
+  () => [mode.value, route.query.asset, catalog.value] as const,
+  async ([current, id, entries]) => {
+    if (typeof id !== 'string' || !current || (current === 'request' && !entries)) return
     const asset = await run(() => assetsApi.get(id))
-    if (asset) addAsset(asset)
+    if (!asset) return
+    if (current === 'direct') addAsset(asset)
+    else addModelOf(asset)
   },
   { immediate: true },
 )
+
+function addModelOf(asset: Asset) {
+  for (const category of catalog.value ?? []) {
+    const model = category.models.find((m) => m.id === asset.model.id)
+    if (!model) continue
+    if (!cart.value.some((line) => line.key === optionKey(category, model))) add(category, model)
+    return
+  }
+}
 
 /** Lookup of what is free in the period, by cart/option key. */
 function availableFor(key: string): number | null {
@@ -283,15 +321,27 @@ const header = computed(() =>
         :subtitle="t('reservations.direct.choose')"
       />
       <div class="choices">
-        <button type="button" class="choice" @click="choose('request')">
-          <ClipboardList :size="34" :stroke-width="1.3" />
-          <strong>{{ t('reservations.direct.chooseRequest') }}</strong>
-          <span class="muted">{{ t('reservations.direct.chooseRequestHint') }}</span>
-        </button>
-        <button type="button" class="choice" @click="choose('direct')">
-          <ScanLine :size="34" :stroke-width="1.3" />
-          <strong>{{ t('reservations.direct.title') }}</strong>
-          <span class="muted">{{ t('reservations.direct.chooseDirectHint') }}</span>
+        <button
+          v-for="choice in choices"
+          :key="choice.mode"
+          type="button"
+          class="choice"
+          :class="choice.mode"
+          @click="choose(choice.mode)"
+        >
+          <span class="choice-head">
+            <span class="choice-icon"
+              ><component :is="choice.icon" :size="22" :stroke-width="1.6"
+            /></span>
+            <ArrowRight class="go" :size="18" />
+          </span>
+          <strong>{{ choice.title }}</strong>
+          <span class="muted">{{ choice.hint }}</span>
+          <ul class="points">
+            <li v-for="point in choice.points" :key="point">
+              <Check :size="14" :stroke-width="2.2" />{{ point }}
+            </li>
+          </ul>
         </button>
       </div>
     </template>
@@ -370,14 +420,19 @@ const header = computed(() =>
 }
 .choices {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 360px));
+  grid-template-columns: repeat(2, minmax(0, 400px));
+  justify-content: center;
   gap: 16px;
 }
 .choice {
+  --accent: var(--ar-primary);
+  position: relative;
   display: grid;
-  justify-items: start;
-  gap: 10px;
-  padding: 28px 26px;
+  grid-template-rows: auto auto 1fr auto;
+  align-content: start;
+  gap: 8px;
+  overflow: hidden;
+  padding: 22px 24px 20px;
   border: 1px solid var(--ar-border);
   border-radius: 3px;
   background: var(--ar-surface);
@@ -387,13 +442,62 @@ const header = computed(() =>
   cursor: pointer;
   transition:
     border-color 0.15s ease,
-    background 0.15s ease;
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+.choice.direct {
+  --accent: var(--ar-violet);
+}
+/* A strip in the mode's colour that fills in on hover. */
+.choice::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--accent);
+  transform: scaleX(0.18);
+  transform-origin: left;
+  transition: transform 0.25s ease;
 }
 .choice:hover,
 .choice:focus-visible {
-  border-color: var(--ar-primary);
-  background: var(--ar-primary-soft);
-  color: var(--ar-primary);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--ar-border));
+  box-shadow: 0 6px 20px -12px color-mix(in srgb, var(--accent) 60%, transparent);
+  transform: translateY(-1px);
+}
+.choice:hover::before,
+.choice:focus-visible::before {
+  transform: scaleX(1);
+}
+.choice:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.choice-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.choice-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+}
+.go {
+  color: var(--ar-text-subtle);
+  transition:
+    transform 0.15s ease,
+    color 0.15s ease;
+}
+.choice:hover .go,
+.choice:focus-visible .go {
+  color: var(--accent);
+  transform: translateX(3px);
 }
 .choice strong {
   color: var(--ar-text);
@@ -402,6 +506,33 @@ const header = computed(() =>
 }
 .choice .muted {
   line-height: 1.5;
+}
+.points {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 12px 0 0;
+  border-top: 1px dashed var(--ar-border);
+  list-style: none;
+  font-size: 12.5px;
+}
+.points li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--ar-text);
+}
+.points svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--accent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .choice,
+  .choice::before,
+  .go {
+    transition: none;
+  }
 }
 @media (max-width: 1080px) {
   .layout {

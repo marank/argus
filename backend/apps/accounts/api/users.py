@@ -22,6 +22,7 @@ class UserFilter(FilterSchema):
     department: Annotated[UUID | None, FilterLookup("department_id")] = None
     is_active: bool | None = None
     is_staff: bool | None = None
+    is_terminal: bool | None = None
 
 
 def protect_administrators(request: HttpRequest, user: User) -> None:

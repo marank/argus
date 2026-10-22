@@ -261,8 +261,6 @@ class ConfirmItemIn(Schema):
 
 class ConfirmIn(Schema):
     items: list[ConfirmItemIn] = []
-    pickup_at: datetime | None = None
-    pickup_location: UUID | None = None
     comment: str = ""
 
 
@@ -291,6 +289,7 @@ class ScheduleIn(Schema):
     pickup_at: datetime | None = None
     pickup_location: UUID | None = None
     handover_mode: Reservation.HandoverMode | None = None
+    notify: bool = Field(True, description="Tell the employee, once it was ready")
 
 
 class ReadyIn(Schema):
@@ -299,6 +298,7 @@ class ReadyIn(Schema):
     # Date and place are confirmed with the ready message; left out, they stay as they are.
     pickup_at: datetime | None = None
     pickup_location: UUID | None = None
+    notify: bool = Field(True, description="Send the employee the ready message")
 
 
 class AllocationNoteIn(Schema):
@@ -334,6 +334,16 @@ class DirectRequestIn(Schema):
     requester: UUID | None = Field(None, description="Left out: the current user")
     assets: list[UUID] = []
     consumables: list[DirectConsumableIn] = []
+
+
+class QuickAssignIn(Schema):
+    """A device from stock straight to an employee: no request, no approval."""
+
+    asset: UUID
+    requester: UUID
+    duration: Reservation.Duration = Reservation.Duration.TEMPORARY
+    start_date: date | None = Field(None, description="Left out: today; earlier: began on that day")
+    end_date: date | None = None
 
 
 class AllocateIn(Schema):

@@ -23,6 +23,7 @@ const { busy, run } = useAction()
 
 const mode = ref<HandoverMode>('pickup')
 const skipCheck = ref(false)
+const notify = ref(true)
 const when = ref<number | null>(null)
 const where = ref<Id | null>(null)
 watch(show, (visible) => {
@@ -30,6 +31,8 @@ watch(show, (visible) => {
   const r = props.reservation
   mode.value = r.handover_mode
   skipCheck.value = r.skip_device_check
+  // A direct hand-out is usually done with the employee there: no message by default.
+  notify.value = r.origin !== 'direct'
   // The date set when confirming; the employee is told this one with the ready message.
   when.value = r.pickup_at ? new Date(r.pickup_at).getTime() : null
   where.value = r.pickup_location?.id ?? null
@@ -43,6 +46,7 @@ async function save() {
         skip_device_check: mode.value === 'pickup' && skipCheck.value,
         pickup_at: when.value ? new Date(when.value).toISOString() : null,
         pickup_location: where.value,
+        notify: notify.value,
       }),
     t('common.saved'),
   )
@@ -101,6 +105,13 @@ async function save() {
       </span>
       <NSwitch v-model:value="skipCheck" />
     </label>
+    <label class="skip">
+      <span>
+        <span>{{ t('handover.notify') }}</span>
+        <small class="muted">{{ t('handover.notifyHint') }}</small>
+      </span>
+      <NSwitch v-model:value="notify" />
+    </label>
     <template #footer>
       <div class="row" style="justify-content: flex-end">
         <NButton @click="show = false">{{ t('common.cancel') }}</NButton>
@@ -122,7 +133,12 @@ async function save() {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  margin-top: 14px;
+  align-items: start;
+  margin-top: 18px;
+}
+/* The pickup wish below the date must not push the location down. */
+.cols :deep(.n-form-item-blank) {
+  align-items: flex-start;
 }
 .skip {
   display: flex;

@@ -86,8 +86,9 @@ export interface ReservationListItem {
   start_date: string
   end_date: string | null
   status: ReservationStatus
-  /** `direct`: devices IT handed out on the spot, without a request first. */
-  origin: 'request' | 'direct'
+  /** `direct`: devices IT handed out on the spot, without a request first; `quick`: one device
+   * assigned from its page, recorded as handed out right away. */
+  origin: 'request' | 'direct' | 'quick'
   approval: ApprovalState
   handover_mode: HandoverMode
   /** The employee's preferred pickup day; IT sets the appointment (pickup_at). */
@@ -168,6 +169,7 @@ export interface FollowedRequest {
 export type ReservationEventKind =
   | 'created'
   | 'direct'
+  | 'quick'
   | 'approved'
   | 'declined'
   | 'confirmed'
@@ -203,6 +205,11 @@ export interface ReservationEvent {
     handover_mode?: HandoverMode
     pickup_at?: string
     pickup_location?: string
+    /** Only on "ready", and only when IT chose not to send the ready message. */
+    notified?: false
+    /** Ready again after a change: what came in and went out since the last time. */
+    added?: string[]
+    removed?: string[]
     method?: HandoverMethod
     received_by?: string
     location?: string
@@ -412,4 +419,13 @@ export interface TerminalPickupDetail {
         handed_out_by: TerminalStaff | null
       })
     | null
+}
+
+export interface QuickAssignInput {
+  asset: Id
+  requester: Id
+  duration: Duration
+  /** Left out: today; earlier records an assignment that already began. */
+  start_date: string | null
+  end_date: string | null
 }

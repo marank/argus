@@ -80,7 +80,7 @@ async function save() {
           <EntitySelect
             v-model="form.received_by"
             :fetcher="usersApi.list"
-            :params="{ is_active: true }"
+            :params="{ is_active: true, is_terminal: false }"
             :label="(u) => u.display_name"
             :initial="reservation.requester as never"
             :clearable="false"
