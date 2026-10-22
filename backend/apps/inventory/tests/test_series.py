@@ -48,6 +48,26 @@ def test_subcategory_does_not_inherit_the_sequence(it_client):
     assert all(m["category"]["code"] != "consumables" for m in numbered)
 
 
+def test_model_sequence_comes_before_the_category_sequence(it_client):
+    from apps.core.models import NumberSequence
+
+    handle = AssetModel.objects.get(name="SX5x Trigger Handle")
+    unnumbered = AssetModel.objects.filter(category__code="consumables").first()
+    quad = NumberSequence.objects.create(name="Quad chargers", prefix="Q", pattern="{prefix}{seq}", padding=3)
+    AssetModel.objects.filter(pk__in=[handle.pk, unnumbered.pk]).update(number_sequence=quad)
+    handle.refresh_from_db()
+    detail = it_client.get(f"/api/masterdata/models/{handle.pk}").json()
+    assert detail["number_sequence"]["id"] == str(quad.pk)
+
+    response = it_client.get(f"/api/inventory/assets/series/preview?model={handle.pk}&count=2")
+    assert response.json()["first"] == "Q001"
+    assert Asset.objects.create(model=handle).inventory_number == "Q001"
+
+    # A model with a sequence of its own counts as numbered, whatever its category.
+    numbered = it_client.get("/api/masterdata/models?numbered=true&page_size=100").json()["items"]
+    assert unnumbered.name in {m["name"] for m in numbered}
+
+
 def test_series_needs_a_number_sequence(it_client):
     unnumbered = AssetModel.objects.filter(category__code="consumables").first()
     response = it_client.post(

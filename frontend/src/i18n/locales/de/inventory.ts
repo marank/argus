@@ -7,7 +7,8 @@ export default {
   editAsset: 'Gerät bearbeiten',
   fields: {
     inventoryNumber: 'Inventar-Nr.',
-    inventoryNumberHint: 'Leer: nächste Nummer aus der Nummernserie der Kategorie.',
+    inventoryNumberHint:
+      'Leer: nächste Nummer aus der Nummernserie des Modells bzw. seiner Kategorie.',
     serialNumber: 'Seriennummer',
     imei: 'IMEI',
     macAddress: 'MAC-Adresse',
@@ -64,11 +65,12 @@ export default {
   },
   series: {
     title: 'Geräteserie anlegen',
-    help: 'Legt mehrere gleiche Geräte eines Modells auf einmal an. Die Inventarnummern kommen fortlaufend aus der Nummernserie der Kategorie; Seriennummern lassen sich später am Gerät nachtragen.',
+    help: 'Legt mehrere gleiche Geräte eines Modells auf einmal an. Die Inventarnummern kommen fortlaufend aus der Nummernserie des Modells bzw. seiner Kategorie; Seriennummern lassen sich später am Gerät nachtragen.',
     section: 'Serie',
     count: 'Anzahl',
     numbers: 'Inventarnummern',
-    pickModel: 'Modell wählen – nur Modelle, deren Kategorie eine Nummernserie hat.',
+    pickModel:
+      'Modell wählen – nur Modelle mit eigener Nummernserie oder einer Nummernserie der Kategorie.',
     priceHelp: 'Preis je Gerät. Vorbelegt mit dem Listenpreis des Modells.',
     warrantyHelp: 'Ergibt sich aus Kaufdatum und Garantiedauer des Modells.',
     submit: '{count} Geräte anlegen',

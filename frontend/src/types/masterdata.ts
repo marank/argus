@@ -102,6 +102,8 @@ export interface AssetModel {
   list_price: string | null
   warranty_months: number
   compatible_with: AssetModelRef[]
+  /** Inventory numbers for new devices; empty = the category's, otherwise the general one. */
+  number_sequence: Ref | null
   /** Gets new requests and reports; empty = as the category. IT only. */
   team: TeamRef | null
   is_requestable: boolean

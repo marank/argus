@@ -60,6 +60,18 @@ class AssetModel(TimeStampedModel):
         blank=True,
         help_text=_("Accessories, spare parts and consumables that fit this model."),
     )
+    number_sequence = models.ForeignKey(
+        "core.NumberSequence",
+        verbose_name=_("number sequence"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="asset_models",
+        help_text=_(
+            "Inventory numbers for new devices of this model. Empty: the category's sequence, "
+            "otherwise the general asset sequence."
+        ),
+    )
     team = models.ForeignKey(
         "accounts.Team",
         verbose_name=_("responsible team"),
@@ -98,6 +110,10 @@ class AssetModel(TimeStampedModel):
     def effective_team(self):
         """The responsible team: the model's own, otherwise the category's."""
         return self.team if self.team_id else self.category.effective_team()
+
+    def effective_number_sequence(self):
+        """The sequence for new devices: the model's own, otherwise the category's (None = general)."""
+        return self.number_sequence if self.number_sequence_id else self.category.number_sequence
 
     @property
     def is_software(self) -> bool:

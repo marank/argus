@@ -43,6 +43,8 @@ export interface FormSection {
   /** i18n key of the section title; omit for the first, untitled block. */
   title?: string
   fields: FieldDef[]
+  /** Show the section only while this returns true; gets the live form. */
+  visible?: (form: Record<string, any>) => boolean
   /** Switches above the inputs, for sections whose switches reveal the inputs below them. */
   togglesFirst?: boolean
   /**

@@ -138,7 +138,7 @@ class Asset(TimeStampedModel):
         if not self.inventory_number:
             from apps.core.services.numbering import next_number
 
-            sequence = self.model.category.number_sequence or "asset"
+            sequence = self.model.effective_number_sequence() or "asset"
             self.inventory_number = next_number(
                 sequence, taken=lambda n: Asset.objects.filter(inventory_number=n).exists()
             )

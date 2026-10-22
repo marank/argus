@@ -16,13 +16,13 @@ class AssetModelFilter(FilterSchema):
     ean: str | None = None
     is_active: bool | None = None
     is_requestable: bool | None = None
-    # Only models whose category draws inventory numbers from a number sequence.
+    # Only models that draw inventory numbers from a sequence of their own or of their category.
     numbered: bool | None = None
 
     def filter_numbered(self, value: bool | None) -> Q:
         if value is None:
             return Q()
-        q = Q(category__number_sequence__isnull=False)
+        q = Q(number_sequence__isnull=False) | Q(category__number_sequence__isnull=False)
         return q if value else ~q
 
 
@@ -44,7 +44,7 @@ router = build_crud_router(
             "part_number",
         ),
         queryset=lambda: AssetModel.objects.select_related(
-            "manufacturer", "category", "default_supplier", "team"
+            "manufacturer", "category", "default_supplier", "team", "number_sequence"
         ).prefetch_related("compatible_with__manufacturer"),
     ),
     tags=["asset models"],

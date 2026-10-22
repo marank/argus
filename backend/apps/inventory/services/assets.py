@@ -125,10 +125,10 @@ def bulk_create_assets(common: dict, serial_numbers: list[str], user) -> list[As
 
 def series_sequence(model: AssetModel):
     """The number sequence a series of ``model`` draws from; series need one of their own."""
-    sequence = model.category.number_sequence
+    sequence = model.effective_number_sequence()
     if sequence is None:
         raise BusinessError(
-            _("The category of %(model)s has no number sequence. Assign one to create a series.")
+            _("Neither %(model)s nor its category has a number sequence. Assign one to create a series.")
             % {"model": model.full_name}
         )
     return sequence

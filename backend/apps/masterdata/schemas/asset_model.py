@@ -27,6 +27,7 @@ class AssetModelOut(Schema):
     list_price: Decimal | None
     warranty_months: int
     compatible_with: list[AssetModelRefOut]
+    number_sequence: RefOut | None
     is_requestable: bool
     is_active: bool
     # IT-internal: empty for employees.
@@ -55,6 +56,7 @@ class AssetModelIn(Schema):
     list_price: Decimal | None = None
     warranty_months: int = Field(24, ge=0)
     compatible_with: list[UUID] = []
+    number_sequence: UUID | None = None
     is_requestable: bool = True
     is_active: bool = True
     team: UUID | None = None

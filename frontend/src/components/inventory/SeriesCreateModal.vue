@@ -28,7 +28,7 @@ import { ASSET_CONDITIONS, type AssetSeriesInput, type AssetSeriesPreview } from
 import type { AssetModel } from '@/types/masterdata'
 import { modelLabel } from '@/utils/models'
 
-/** Create many identical devices at once; the category's number sequence numbers them. */
+/** Create many identical devices at once; the number sequence of the model or its category numbers them. */
 const show = defineModel<boolean>('show', { required: true })
 const emit = defineEmits<{ created: [] }>()
 const { t } = useI18n()

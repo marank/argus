@@ -7,7 +7,7 @@ export default {
   editAsset: 'Edit device',
   fields: {
     inventoryNumber: 'Inventory no.',
-    inventoryNumberHint: 'Empty: next number from the category’s sequence.',
+    inventoryNumberHint: 'Empty: next number from the sequence of the model or its category.',
     serialNumber: 'Serial number',
     imei: 'IMEI',
     macAddress: 'MAC address',
@@ -64,11 +64,12 @@ export default {
   },
   series: {
     title: 'Create a series of devices',
-    help: 'Creates several identical devices of one model at once. Inventory numbers are drawn in a row from the category’s number sequence; serial numbers can be added on each device later.',
+    help: 'Creates several identical devices of one model at once. Inventory numbers are drawn in a row from the number sequence of the model or its category; serial numbers can be added on each device later.',
     section: 'Series',
     count: 'Quantity',
     numbers: 'Inventory numbers',
-    pickModel: 'Pick a model – only models whose category has a number sequence.',
+    pickModel:
+      'Pick a model – only models with a number sequence of their own or of their category.',
     priceHelp: 'Price per device. Defaults to the model’s list price.',
     warrantyHelp: 'Follows from the purchase date and the model’s warranty period.',
     submit: 'Create {count} devices',

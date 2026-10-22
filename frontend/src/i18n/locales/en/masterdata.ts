@@ -143,7 +143,10 @@ export default {
     numberSequenceHelp:
       'New devices of this category draw their inventory number from this sequence. Subcategories do not inherit it. Empty: the general asset sequence applies.',
     parentSequence: 'Parent category · {name}',
+    categorySequence: 'Category · {name}',
     generalSequence: 'General for assets',
+    modelNumberSequenceHelp:
+      'New devices of this model draw their inventory number from this sequence. Empty: the category’s sequence, otherwise the general asset sequence.',
     nextNumber: 'next number',
     useSequence: 'Use this number sequence',
     trackingHelp:

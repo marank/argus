@@ -1161,11 +1161,11 @@ msgstr ""
 #: apps/inventory/services/assets.py:126
 #, python-format
 msgid ""
-"The category of %(model)s has no number sequence. Assign one to create a "
-"series."
+"Neither %(model)s nor its category has a number sequence. Assign one to "
+"create a series."
 msgstr ""
-"Die Kategorie von %(model)s hat keine Nummernserie. Hinterlegen Sie eine, "
-"um eine Serie anzulegen."
+"Weder %(model)s noch seine Kategorie hat eine Nummernserie. Hinterlegen Sie "
+"eine, um eine Serie anzulegen."
 
 #: apps/inventory/models/asset_event.py:13
 msgid "Created"
@@ -1748,6 +1748,14 @@ msgstr ""
 #: apps/masterdata/models/category.py:52
 msgid "responsible team"
 msgstr "zuständiges Team"
+
+#: apps/masterdata/models/asset_model.py
+msgid ""
+"Inventory numbers for new devices of this model. Empty: the category's "
+"sequence, otherwise the general asset sequence."
+msgstr ""
+"Inventarnummern für neue Geräte dieses Modells. Ohne Angabe gilt die Serie "
+"der Kategorie, ersatzweise die allgemeine Serie für Assets."
 
 #: apps/masterdata/models/asset_model.py:64
 msgid ""

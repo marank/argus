@@ -106,102 +106,105 @@ async function save(another = false) {
         :disabled="readonly"
         @submit.prevent="save()"
       >
-        <FormSection
-          v-for="(section, index) in resource.sections"
-          :key="section.title ?? index"
-          :title="section.title ? t(section.title) : undefined"
-          :class="{ 'toggles-first': section.togglesFirst }"
-        >
-          <NGrid class="grid" :cols="2" :x-gap="12">
-            <NFormItemGi
-              v-for="field in section.fields.filter(
-                (f) => f.type !== 'switch' && isFieldVisible(f, form),
-              )"
-              :key="field.key"
-              :span="span(field)"
-              v-bind="fieldErrors.item(field.key)"
-            >
-              <template #label>
-                <FieldLabel
-                  :label="t(field.label)"
-                  :required="field.required"
-                  :help="helpKey(field) ? t(helpKey(field)!) : undefined"
-                />
-              </template>
-              <NInput
-                v-if="field.type === 'text'"
-                v-model:value="form[field.key]"
-                :disabled="!!row && !!field.locked?.(row)"
-              />
-              <NInput
-                v-else-if="field.type === 'mono'"
-                v-model:value="form[field.key]"
-                class="mono-input"
-                :disabled="!!row && !!field.locked?.(row)"
-              />
-              <NInput
-                v-else-if="field.type === 'textarea'"
-                v-model:value="form[field.key]"
-                type="textarea"
-                :autosize="{ minRows: 2, maxRows: 8 }"
-              />
-              <NInputNumber
-                v-else-if="field.type === 'number'"
-                v-model:value="form[field.key]"
-                :min="field.min"
-                :max="field.max"
-                :precision="field.precision"
-                style="width: 100%"
-              />
-              <NSelect
-                v-else-if="field.type === 'enum'"
-                v-model:value="form[field.key]"
-                :options="field.values.map((v) => ({ value: v, label: enumLabel(field.group, v) }))"
-              />
-              <NSelect
-                v-else-if="field.type === 'icon'"
-                v-model:value="form[field.key]"
-                :options="iconOptions"
-                :render-label="renderIconLabel as never"
-                clearable
-              />
-              <EntitySelect
-                v-else-if="field.type === 'entity'"
-                v-model="form[field.key]"
-                :fetcher="field.fetcher"
-                :label="field.display"
-                :params="field.params"
-                :multiple="field.multiple"
-                :initial="row && field.initial ? field.initial(row) : null"
-              />
-            </NFormItemGi>
-          </NGrid>
-          <!-- Switches as a list below the inputs: label and explanation left, switch right. -->
-          <div
-            v-if="section.fields.some((f) => f.type === 'switch' && isFieldVisible(f, form))"
-            class="toggles"
+        <template v-for="(section, index) in resource.sections" :key="section.title ?? index">
+          <FormSection
+            v-if="section.visible?.(form) ?? true"
+            :title="section.title ? t(section.title) : undefined"
+            :class="{ 'toggles-first': section.togglesFirst }"
           >
-            <ToggleRow
-              v-for="field in section.fields.filter(
-                (f) => f.type === 'switch' && isFieldVisible(f, form),
-              )"
-              :key="field.key"
-              v-model="form[field.key]"
-              :label="t(field.label)"
-              :help="helpKey(field) ? t(helpKey(field)!) : undefined"
-              :error="fieldErrors.errors[field.key]"
-              :disabled="readonly"
+            <NGrid class="grid" :cols="2" :x-gap="12">
+              <NFormItemGi
+                v-for="field in section.fields.filter(
+                  (f) => f.type !== 'switch' && isFieldVisible(f, form),
+                )"
+                :key="field.key"
+                :span="span(field)"
+                v-bind="fieldErrors.item(field.key)"
+              >
+                <template #label>
+                  <FieldLabel
+                    :label="t(field.label)"
+                    :required="field.required"
+                    :help="helpKey(field) ? t(helpKey(field)!) : undefined"
+                  />
+                </template>
+                <NInput
+                  v-if="field.type === 'text'"
+                  v-model:value="form[field.key]"
+                  :disabled="!!row && !!field.locked?.(row)"
+                />
+                <NInput
+                  v-else-if="field.type === 'mono'"
+                  v-model:value="form[field.key]"
+                  class="mono-input"
+                  :disabled="!!row && !!field.locked?.(row)"
+                />
+                <NInput
+                  v-else-if="field.type === 'textarea'"
+                  v-model:value="form[field.key]"
+                  type="textarea"
+                  :autosize="{ minRows: 2, maxRows: 8 }"
+                />
+                <NInputNumber
+                  v-else-if="field.type === 'number'"
+                  v-model:value="form[field.key]"
+                  :min="field.min"
+                  :max="field.max"
+                  :precision="field.precision"
+                  style="width: 100%"
+                />
+                <NSelect
+                  v-else-if="field.type === 'enum'"
+                  v-model:value="form[field.key]"
+                  :options="
+                    field.values.map((v) => ({ value: v, label: enumLabel(field.group, v) }))
+                  "
+                />
+                <NSelect
+                  v-else-if="field.type === 'icon'"
+                  v-model:value="form[field.key]"
+                  :options="iconOptions"
+                  :render-label="renderIconLabel as never"
+                  clearable
+                />
+                <EntitySelect
+                  v-else-if="field.type === 'entity'"
+                  v-model="form[field.key]"
+                  :fetcher="field.fetcher"
+                  :label="field.display"
+                  :params="field.params"
+                  :multiple="field.multiple"
+                  :initial="row && field.initial ? field.initial(row) : null"
+                />
+              </NFormItemGi>
+            </NGrid>
+            <!-- Switches as a list below the inputs: label and explanation left, switch right. -->
+            <div
+              v-if="section.fields.some((f) => f.type === 'switch' && isFieldVisible(f, form))"
+              class="toggles"
+            >
+              <ToggleRow
+                v-for="field in section.fields.filter(
+                  (f) => f.type === 'switch' && isFieldVisible(f, form),
+                )"
+                :key="field.key"
+                v-model="form[field.key]"
+                :label="t(field.label)"
+                :help="helpKey(field) ? t(helpKey(field)!) : undefined"
+                :error="fieldErrors.errors[field.key]"
+                :disabled="readonly"
+              />
+            </div>
+            <component
+              :is="section.extra"
+              v-if="section.extra"
+              :form="form"
+              :row="row"
+              :readonly="readonly"
+              @set="(key: string, value: unknown) => (form[key] = value)"
             />
-          </div>
-          <component
-            :is="section.extra"
-            v-if="section.extra"
-            :form="form"
-            :row="row"
-            :readonly="readonly"
-            @set="(key: string, value: unknown) => (form[key] = value)"
-          />
-        </FormSection>
+          </FormSection>
+        </template>
       </NForm>
       <template #footer>
         <div class="row">

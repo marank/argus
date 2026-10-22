@@ -144,7 +144,10 @@ export default {
     numberSequenceHelp:
       'Neue Geräte dieser Kategorie erhalten ihre Inventarnummer aus dieser Serie. Unterkategorien übernehmen sie nicht. Leer: Es gilt die allgemeine Serie für Assets.',
     parentSequence: 'Übergeordnete Kategorie · {name}',
+    categorySequence: 'Kategorie · {name}',
     generalSequence: 'Allgemein für Assets',
+    modelNumberSequenceHelp:
+      'Neue Geräte dieses Modells erhalten ihre Inventarnummer aus dieser Serie. Leer: Es gilt die Serie der Kategorie, ersatzweise die allgemeine Serie für Assets.',
     nextNumber: 'nächste Nummer',
     useSequence: 'Diese Nummernserie übernehmen',
     trackingHelp:

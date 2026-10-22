@@ -1,9 +1,16 @@
 import { h } from 'vue'
 
 import { teamsApi } from '@/api/accounts'
-import { assetModelsApi, categoriesApi, manufacturersApi, suppliersApi } from '@/api/masterdata'
+import {
+  assetModelsApi,
+  categoriesApi,
+  manufacturersApi,
+  numberSequencesApi,
+  suppliersApi,
+} from '@/api/masterdata'
 import { bool, mono } from '@/components/crud/cells'
 import { defineResource } from '@/components/crud/types'
+import { numberSequenceHints } from '@/components/masterdata/numberSequenceHints'
 import { i18n } from '@/i18n'
 import type { TeamRef } from '@/types/accounts'
 import type { AssetModel, Category } from '@/types/masterdata'
@@ -41,6 +48,12 @@ export default defineResource<AssetModel>({
       sorter: 'category__name',
       width: 170,
       render: (m) => m.category.name,
+    },
+    {
+      key: 'number_sequence',
+      label: 'masterdata.fields.numberSequence',
+      width: 170,
+      render: (m) => m.number_sequence?.name ?? '—',
     },
     {
       key: 'tracking',
@@ -143,6 +156,25 @@ export default defineResource<AssetModel>({
       ],
     },
     {
+      title: 'masterdata.sections.numbering',
+      // Only individual devices get inventory numbers.
+      visible: (form) => form.tracking === 'serialized',
+      fields: [
+        {
+          key: 'number_sequence',
+          label: 'masterdata.fields.numberSequence',
+          type: 'entity',
+          span: 2,
+          help: 'masterdata.fields.modelNumberSequenceHelp',
+          fetcher: numberSequencesApi.list,
+          display: (s: { name: string; preview?: string }) =>
+            s.preview ? `${s.name} · ${s.preview}` : s.name,
+          initial: (m: AssetModel) => m.number_sequence,
+        },
+      ],
+      extra: numberSequenceHints('category'),
+    },
+    {
       title: 'masterdata.sections.procurement',
       fields: [
         {
@@ -223,6 +255,7 @@ export default defineResource<AssetModel>({
     list_price: null,
     warranty_months: 24,
     compatible_with: [],
+    number_sequence: null,
     is_requestable: true,
     is_active: true,
   }),
@@ -241,6 +274,7 @@ export default defineResource<AssetModel>({
     list_price: m.list_price ? Number(m.list_price) : null,
     warranty_months: m.warranty_months,
     compatible_with: m.compatible_with.map((c) => c.id),
+    number_sequence: m.number_sequence?.id ?? null,
     is_requestable: m.is_requestable,
     is_active: m.is_active,
   }),
