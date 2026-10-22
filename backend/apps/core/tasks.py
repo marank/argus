@@ -4,10 +4,13 @@ Mails are rendered when they are queued and only delivered here. Delivery reads
 the mail settings at send time, so switching mail off also stops queued mails.
 """
 
+from datetime import timedelta
+
+from django.utils import timezone
 from procrastinate import RetryStrategy
 from procrastinate.contrib.django import app
 
-from apps.core.models import MailSettings, NotificationLog
+from apps.core.models import MailSettings, Notification, NotificationLog
 from apps.core.notifications import mail_ready, send_mail
 from apps.core.services.reminders import send_due_reminders
 
@@ -32,6 +35,16 @@ def send_notification(
 @app.task(queueing_lock="send_reminders")
 def send_reminders(timestamp: int) -> None:
     send_due_reminders()
+
+
+# Read in-app notifications are kept this long; unread ones stay until they are read.
+READ_NOTIFICATIONS_KEPT = timedelta(days=90)
+
+
+@app.periodic(cron="45 3 * * *")
+@app.task(queueing_lock="remove_read_notifications")
+def remove_read_notifications(timestamp: int) -> None:
+    Notification.objects.filter(read_at__lt=timezone.now() - READ_NOTIFICATIONS_KEPT).delete()
 
 
 @app.periodic(cron="30 3 * * *")

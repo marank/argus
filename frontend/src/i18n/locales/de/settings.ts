@@ -9,7 +9,9 @@ export default {
     rules: 'Fristen & Vorwarnzeiten',
     rulesDescription: 'Ausleihdauer, Erinnerungen, Garantie und Lizenzen',
     mail: 'E-Mail',
-    mailDescription: 'SMTP-Server und Benachrichtigungen',
+    mailDescription: 'SMTP-Server und Absender',
+    notifications: 'Benachrichtigungen',
+    notificationsDescription: 'Welche Benachrichtigungen per E-Mail und in der App kommen',
     featuresDescription: 'Bereiche und einzelne Funktionen aktivieren und deaktivieren',
   },
   ldap: {
@@ -121,6 +123,10 @@ export default {
     warranty_warning_daysHelp: 'Garantien, die innerhalb so vieler Tage enden.',
     license_warning_days: 'Lizenzen',
     license_warning_daysHelp: 'Lizenzen, die innerhalb so vieler Tage enden.',
+  },
+  notifications: {
+    mailNotReady:
+      'Der E-Mail-Versand ist noch nicht eingerichtet; die E-Mail-Schalter wirken erst danach. Einrichten unter',
   },
   mail: {
     server: 'SMTP-Server',

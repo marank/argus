@@ -5,6 +5,7 @@ import type {
   LdapTestResult,
   MailSettings,
   MailSettingsInput,
+  NotificationSettings,
   Rules,
   SiteSettings,
 } from '@/types/settings'
@@ -22,6 +23,12 @@ export const siteSettingsApi = {
   get: () => http.get<SiteSettings>('/settings/site'),
   update: (data: { flags?: Partial<Record<FlagKey, boolean>>; rules?: Rules }) =>
     http.put<SiteSettings>('/settings/site', data),
+}
+
+export const notificationSettingsApi = {
+  get: () => http.get<NotificationSettings>('/settings/notifications'),
+  update: (data: Pick<NotificationSettings, 'mail' | 'app'>) =>
+    http.put<NotificationSettings>('/settings/notifications', data),
 }
 
 export const mailSettingsApi = {

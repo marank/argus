@@ -9,7 +9,9 @@ export default {
     rules: 'Deadlines & warnings',
     rulesDescription: 'Loan periods, reminders, warranty and licenses',
     mail: 'Email',
-    mailDescription: 'SMTP server and notifications',
+    mailDescription: 'SMTP server and sender',
+    notifications: 'Notifications',
+    notificationsDescription: 'Which notifications come by email and in the app',
     featuresDescription: 'Enable and disable areas and individual features',
   },
   ldap: {
@@ -118,6 +120,10 @@ export default {
     warranty_warning_daysHelp: 'Warranties ending within this many days.',
     license_warning_days: 'Licenses',
     license_warning_daysHelp: 'Licenses ending within this many days.',
+  },
+  notifications: {
+    mailNotReady:
+      'Email is not set up yet; the email switches only take effect then. Set it up under',
   },
   mail: {
     server: 'SMTP server',

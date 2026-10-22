@@ -28,8 +28,10 @@ class MailSettings(TimeStampedModel):
         blank=True,
         help_text=_("Address of Argus for links in emails, e.g. https://argus.example.com"),
     )
-    # Notification kinds switched off site-wide; see ``apps.core.notifications.EVENTS``.
-    events = models.JSONField(_("notifications"), default=dict, blank=True)
+    # Notification kinds switched off site-wide, per channel ({event: false}); see
+    # ``apps.core.notifications.EVENTS``. ``events`` is email, ``app_events`` the bell.
+    events = models.JSONField(_("email notifications"), default=dict, blank=True)
+    app_events = models.JSONField(_("in-app notifications"), default=dict, blank=True)
 
     class Meta:
         verbose_name = _("mail settings")

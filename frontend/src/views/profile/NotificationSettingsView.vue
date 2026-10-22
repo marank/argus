@@ -1,18 +1,21 @@
 <script setup lang="ts">
-import { NAlert, NSkeleton, NSwitch, useMessage } from 'naive-ui'
+import { NAlert, NSkeleton, useMessage } from 'naive-ui'
 import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import PageHeader from '@/components/common/PageHeader.vue'
-import SettingRow from '@/components/settings/SettingRow.vue'
-import SettingsGroup from '@/components/settings/SettingsGroup.vue'
+import NotificationMatrix, {
+  type NotificationGroup,
+} from '@/components/settings/NotificationMatrix.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useFeaturesStore } from '@/stores/features'
-import type { NotificationKey } from '@/types/settings'
+import type { NotificationChannel, NotificationKey } from '@/types/settings'
 
 /**
- * Which emails the user wants to receive. IT and approver notifications only show
- * to IT staff and approvers; kinds switched off site-wide are not shown at all.
+ * Which notifications the user wants, by email and in the app. IT and approver
+ * notifications only show to IT staff and approvers. A kind switched off site-wide in
+ * both channels is not shown; in one channel, that switch shows off and locked. Without
+ * a mail setup (or an address of their own) all email switches show off and locked.
  */
 const { t } = useI18n()
 const message = useMessage()
@@ -21,20 +24,43 @@ const features = useFeaturesStore()
 
 onMounted(() => features.load())
 
-const groups = computed(() => {
-  const events = (features.settings?.notifications ?? []).filter((e) => e.enabled)
+const site = computed(
+  () => new Map((features.settings?.notifications ?? []).map((event) => [event.key, event])),
+)
+const mailPossible = computed(() => !!features.settings?.mail_enabled && !!auth.user?.email)
+
+const groups = computed<NotificationGroup[]>(() => {
+  const events = (features.settings?.notifications ?? []).filter((e) => e.mail || e.app)
   const shown = { employee: true, it: auth.isItStaff, approver: auth.isApprover }
   return (['employee', 'approver', 'it'] as const)
     .filter((audience) => shown[audience])
-    .map((audience) => ({ audience, events: events.filter((e) => e.audience === audience) }))
+    .map((audience) => ({
+      audience,
+      description: t(`profile.notifications.${audience}Description`),
+      events: events.filter((e) => e.audience === audience).map((e) => e.key),
+    }))
     .filter((group) => group.events.length)
 })
 
-const wants = (key: NotificationKey) => auth.user?.notification_settings?.[key] ?? true
+const stored = (channel: NotificationChannel) =>
+  (channel === 'mail' ? auth.user?.notification_settings : auth.user?.app_notification_settings) ??
+  {}
 
-async function toggle(key: NotificationKey, value: boolean) {
+function state(key: NotificationKey, channel: NotificationChannel) {
+  const available = !!site.value.get(key)?.[channel] && (channel === 'app' || mailPossible.value)
+  return available ? { value: stored(channel)[key] ?? true } : { value: false, disabled: true }
+}
+
+async function toggle(key: NotificationKey, channel: NotificationChannel, value: boolean) {
   try {
-    await auth.changeNotifications({ ...auth.user?.notification_settings, [key]: value })
+    await auth.changeNotifications({
+      notification_settings: auth.user?.notification_settings ?? {},
+      app_notification_settings: auth.user?.app_notification_settings ?? {},
+      [channel === 'mail' ? 'notification_settings' : 'app_notification_settings']: {
+        ...stored(channel),
+        [key]: value,
+      },
+    })
     message.success(t('common.saved'))
   } catch {
     message.error(t('common.error'))
@@ -59,26 +85,7 @@ async function toggle(key: NotificationKey, value: boolean) {
       <NAlert v-if="!groups.length" type="info" :bordered="false" class="gap">
         {{ t('profile.notifications.noneActive') }}
       </NAlert>
-      <SettingsGroup
-        v-for="group in groups"
-        :key="group.audience"
-        :title="t(`settings.mail.audience.${group.audience}`)"
-        :description="t(`profile.notifications.${group.audience}Description`)"
-      >
-        <SettingRow
-          v-for="event in group.events"
-          :key="event.key"
-          :label="t(`notifications.${event.key}`)"
-          :help="t(`notifications.${event.key}Help`)"
-          toggle
-        >
-          <NSwitch
-            :value="wants(event.key)"
-            :disabled="!features.settings.mail_enabled"
-            @update:value="(value: boolean) => toggle(event.key, value)"
-          />
-        </SettingRow>
-      </SettingsGroup>
+      <NotificationMatrix :groups="groups" :state="state" @toggle="toggle" />
     </template>
   </div>
 </template>

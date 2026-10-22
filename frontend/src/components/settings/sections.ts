@@ -1,4 +1,4 @@
-import { CalendarClock, KeyRound, Mail, ToggleRight } from '@lucide/vue'
+import { Bell, CalendarClock, KeyRound, Mail, ToggleRight } from '@lucide/vue'
 import type { Component } from 'vue'
 
 export interface SettingsSection {
@@ -29,6 +29,12 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
     label: 'settings.sections.mail',
     description: 'settings.sections.mailDescription',
     icon: Mail,
+  },
+  {
+    name: 'settings-notifications',
+    label: 'settings.sections.notifications',
+    description: 'settings.sections.notificationsDescription',
+    icon: Bell,
   },
   {
     name: 'settings-ldap',

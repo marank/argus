@@ -11,7 +11,7 @@ from apps.core.api.security import session_auth, superuser_auth
 from apps.core.features import FLAG_KEYS, FLAGS, current_flags
 from apps.core.models import MailSettings, SiteSettings
 from apps.core.models.site_settings import RULE_FIELDS
-from apps.core.notifications import EVENTS, site_events
+from apps.core.notifications import EVENTS, mail_ready, site_events
 
 router = Router(tags=["settings"])
 
@@ -33,7 +33,9 @@ class RulesSchema(Schema):
 class NotificationEventOut(Schema):
     key: str
     audience: str
-    enabled: bool
+    # Switched on site-wide, per channel.
+    mail: bool
+    app: bool
 
 
 class SiteSettingsOut(Schema):
@@ -66,7 +68,7 @@ def _ldap_enabled() -> bool:
 def _out() -> dict:
     site = SiteSettings.load()
     mail = MailSettings.load()
-    events = site_events(mail.events)
+    mail_events, app_events = site_events(mail.events), site_events(mail.app_events)
     return {
         "flags": current_flags(),
         "stored": {flag.key: bool(site.flags.get(flag.key, True)) for flag in FLAGS},
@@ -74,10 +76,17 @@ def _out() -> dict:
             {"key": flag.key, "kind": flag.kind, "requires": list(flag.requires)} for flag in FLAGS
         ],
         "rules": {name: getattr(site, name) for name in RULE_FIELDS},
-        "mail_enabled": mail.enabled,
+        # Email can actually go out: on, with a server and a sender.
+        "mail_enabled": mail_ready(mail),
         "ldap_enabled": _ldap_enabled(),
         "notifications": [
-            {"key": event.key, "audience": event.audience, "enabled": events[event.key]} for event in EVENTS
+            {
+                "key": event.key,
+                "audience": event.audience,
+                "mail": mail_events[event.key],
+                "app": app_events[event.key],
+            }
+            for event in EVENTS
         ],
     }
 

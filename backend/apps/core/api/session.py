@@ -164,8 +164,8 @@ def me(request: HttpRequest):
 def update_preferences(request: HttpRequest, payload: PreferencesIn):
     user = request.user
     for name, value in payload.dict(exclude_unset=True).items():
-        if name == "notification_settings":
-            # Only mails the user can get; nobody switches off what goes to others.
+        if name in ("notification_settings", "app_notification_settings"):
+            # Only what the user can get; nobody switches off what goes to others.
             allowed = receivable(user)
             value = {k: bool(v) for k, v in (value or {}).items() if k in allowed}
         elif name == "dashboard_settings":

@@ -21,7 +21,12 @@ export const authApi = {
   /** Whether the server and its database answer; the login page asks before signing in. */
   health: () => http.get<{ status: string }>('/health'),
   updatePreferences: (
-    data: Partial<Pick<CurrentUser, 'language' | 'notification_settings' | 'dashboard_settings'>>,
+    data: Partial<
+      Pick<
+        CurrentUser,
+        'language' | 'notification_settings' | 'app_notification_settings' | 'dashboard_settings'
+      >
+    >,
   ) => http.patch<CurrentUser>('/auth/me', data),
 }
 

@@ -279,6 +279,12 @@ export const routes: RouteRecordRaw[] = [
             meta: { superuser: true, title: 'settings.sections.mail' },
           },
           {
+            path: 'notifications',
+            name: 'settings-notifications',
+            component: () => import('@/views/settings/SiteNotificationsView.vue'),
+            meta: { superuser: true, title: 'settings.sections.notifications' },
+          },
+          {
             path: 'ldap',
             name: 'settings-ldap',
             component: () => import('@/views/settings/LdapSettingsView.vue'),

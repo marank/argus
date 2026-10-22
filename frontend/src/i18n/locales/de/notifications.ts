@@ -38,4 +38,14 @@ export default {
   issue_messageHelp: 'Die IT hat Ihnen zu einer Ihrer Meldungen geschrieben.',
   issue_resolved: 'Problemmeldung gelöst',
   issue_resolvedHelp: 'Mit der Nachricht der IT, falls vorhanden.',
+  channel: {
+    mail: 'E-Mail',
+    app: 'In der App',
+  },
+  bell: {
+    title: 'Benachrichtigungen',
+    readAll: 'Alle gelesen',
+    settings: 'Benachrichtigungen einstellen',
+    empty: 'Keine Benachrichtigungen.',
+  },
 }

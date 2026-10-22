@@ -1,7 +1,8 @@
 export default {
   notifications: {
     title: 'Benachrichtigungen',
-    subtitle: 'Legen Sie fest, welche Benachrichtigungen an {email} gesendet werden.',
+    subtitle:
+      'Legen Sie fest, welche Benachrichtigungen Sie in der App und per E-Mail an {email} erhalten.',
     employeeDescription: 'Zu Ihren Anforderungen, Geräten und Meldungen.',
     itDescription: 'Für IT-Mitarbeiter.',
     approverDescription: 'Für Genehmiger von Abteilungen.',

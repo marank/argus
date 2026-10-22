@@ -67,8 +67,9 @@ class User(AbstractUser):
     language = models.CharField(
         _("language"), max_length=5, choices=Language.choices, default=Language.GERMAN
     )
-    # Email notifications the user switched off: {event: false}; missing means on.
+    # Notifications the user switched off: {event: false}; missing means on.
     notification_settings = models.JSONField(_("email notifications"), default=dict, blank=True)
+    app_notification_settings = models.JSONField(_("in-app notifications"), default=dict, blank=True)
     # The user's own dashboard layout: {"widgets": [{id, visible, size, hidden_cards}]};
     # empty means the default layout. Widget ids are defined by the frontend.
     dashboard_settings = models.JSONField(_("dashboard layout"), default=dict, blank=True)

@@ -138,7 +138,6 @@ def test_mail_settings_keep_the_password_and_send_a_test(demo):
         "username": "argus",
         "password": "secret",
         "from_email": "argus@example.com",
-        "events": {"license_expiring": False},
     }
     response = admin.put("/api/settings/mail", payload, content_type=JSON)
     assert response.status_code == 200, response.content
@@ -148,7 +147,6 @@ def test_mail_settings_keep_the_password_and_send_a_test(demo):
     # Saving without a password keeps the stored one.
     response = admin.put("/api/settings/mail", {**payload, "password": None}, content_type=JSON)
     assert MailSettings.load().password == "secret"
-    assert response.json()["events"]["license_expiring"] is False
 
     response = admin.post("/api/settings/mail/test", {"to": "admin@example.com"}, content_type=JSON)
     assert response.status_code == 200, response.content
@@ -158,7 +156,9 @@ def test_mail_settings_keep_the_password_and_send_a_test(demo):
 def test_rules_are_part_of_the_site_settings(demo, employee_client):
     data = employee_client.get("/api/settings/site").json()
     assert data["rules"]["default_loan_days"] == 5
-    assert {"key": "request_ready", "audience": "employee", "enabled": True} in data["notifications"]
+    assert {"key": "request_ready", "audience": "employee", "mail": True, "app": True} in data[
+        "notifications"
+    ]
 
 
 @pytest.mark.parametrize("notify", [True, False])
@@ -263,3 +263,93 @@ def test_only_mails_one_can_get_can_be_switched_off(employee_client, it_client):
 
     response = it_client.patch("/api/auth/me", data, content_type=JSON)
     assert response.json()["notification_settings"] == {"request_ready": False, "request_submitted": False}
+
+
+# --- In the app ----------------------------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def empty_bell(request):
+    """The demo data rings the bell itself; the in-app tests start from an empty one."""
+    if "demo" in request.fixturenames:
+        from apps.core.models import Notification
+
+        request.getfixturevalue("demo")
+        Notification.objects.all().delete()
+
+
+def _confirm(employee_client, it_client, django_capture_on_commit_callbacks) -> str:
+    rid = submit(employee_client).json()["id"]
+    mail.outbox.clear()
+    with django_capture_on_commit_callbacks(execute=True):
+        it_client.post(f"/api/reservations/{rid}/confirm", {"items": []}, content_type=JSON)
+    return rid
+
+
+def test_the_bell_works_without_a_mail_server(
+    demo, employee_client, it_client, django_capture_on_commit_callbacks
+):
+    rid = _confirm(employee_client, it_client, django_capture_on_commit_callbacks)
+    assert mail.outbox == []
+    assert employee_client.get("/api/notifications/unread").json() == {"unread": 1}
+    (item,) = employee_client.get("/api/notifications").json()["items"]
+    assert item["event"] == "request_confirmed"
+    assert "bestätigt" in item["title"]  # in the recipient's language, like the email
+    assert item["path"] == f"/portal/requests/{rid}"
+    assert "\n" not in item["text"]  # only what happened, not the item list
+
+    read = employee_client.post(f"/api/notifications/{item['id']}/read").json()
+    assert read["read_at"] is not None
+    assert employee_client.get("/api/notifications/unread").json() == {"unread": 0}
+    # Nobody else's.
+    assert it_client.post(f"/api/notifications/{item['id']}/read").status_code == 404
+
+
+def test_each_channel_has_its_own_switches(
+    mail_on, employee_client, it_client, django_capture_on_commit_callbacks
+):
+    employee_client.patch(
+        "/api/auth/me", {"app_notification_settings": {"request_confirmed": False}}, content_type=JSON
+    )
+    _confirm(employee_client, it_client, django_capture_on_commit_callbacks)
+    assert recipients() == {"employee@example.com"}
+    assert employee_client.get("/api/notifications/unread").json() == {"unread": 0}
+
+    mail_on.events = {"request_confirmed": False}
+    mail_on.save()
+    employee_client.patch("/api/auth/me", {"app_notification_settings": {}}, content_type=JSON)
+    _confirm(employee_client, it_client, django_capture_on_commit_callbacks)
+    assert mail.outbox == []
+    assert employee_client.get("/api/notifications/unread").json() == {"unread": 1}
+
+    mail_on.app_events = {"request_confirmed": False}
+    mail_on.save()
+    _confirm(employee_client, it_client, django_capture_on_commit_callbacks)
+    assert employee_client.get("/api/notifications/unread").json() == {"unread": 1}
+
+
+def test_a_reminder_shows_once(demo, employee_client):
+    from apps.core.notifications import notify
+
+    employee = User.objects.get(username="employee")
+    for _ in range(2):
+        notify("return_reminder", [employee], lambda user: ("Reminder", "Bring it back."), key="r:1")
+    assert employee_client.get("/api/notifications/unread").json() == {"unread": 1}
+
+
+def test_read_all(demo, employee_client, it_client, django_capture_on_commit_callbacks):
+    for _ in range(2):
+        _confirm(employee_client, it_client, django_capture_on_commit_callbacks)
+    assert employee_client.get("/api/notifications?unread=true").json()["count"] == 2
+    assert employee_client.post("/api/notifications/read-all").json() == {"unread": 0}
+    assert employee_client.get("/api/notifications").json()["count"] == 2
+
+
+def test_site_wide_switches_per_channel(demo):
+    admin = Client()
+    admin.login(username="admin", password="argus-demo")
+    data = {"mail": {"request_ready": False, "unknown": False}, "app": {"license_expiring": False}}
+    body = admin.put("/api/settings/notifications", data, content_type=JSON).json()
+    assert body["mail"]["request_ready"] is False and body["app"]["request_ready"] is True
+    assert body["app"]["license_expiring"] is False and "unknown" not in body["mail"]
+    assert Client().get("/api/settings/notifications").status_code in (401, 403)

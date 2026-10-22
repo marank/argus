@@ -102,7 +102,9 @@ export interface TwoFactorSetup {
 export interface CurrentUser extends User {
   language: 'en' | 'de'
   /** Email notifications switched off by the user ({event: false}). */
+  /** Notifications switched off, by email and in the app ({kind: false}). */
   notification_settings: Partial<Record<NotificationKey, boolean>>
+  app_notification_settings: Partial<Record<NotificationKey, boolean>>
   /** The own dashboard layout; empty means the default. */
   dashboard_settings: DashboardSettings
   /** Approves requests for at least one department. */

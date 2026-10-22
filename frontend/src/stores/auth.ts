@@ -61,9 +61,10 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null
   }
 
-  async function changeNotifications(settings: CurrentUser['notification_settings']) {
-    if (user.value)
-      user.value = await authApi.updatePreferences({ notification_settings: settings })
+  async function changeNotifications(
+    settings: Pick<CurrentUser, 'notification_settings' | 'app_notification_settings'>,
+  ) {
+    if (user.value) user.value = await authApi.updatePreferences(settings)
   }
 
   async function changeDashboard(settings: CurrentUser['dashboard_settings']) {

@@ -56,16 +56,32 @@ export interface SiteSettings {
   stored: Record<FlagKey, boolean>
   definitions: { key: FlagKey; kind: 'module' | 'feature'; requires: ModuleKey[] }[]
   rules: Rules
-  /** Whether emails are sent at all. */
+  /** Whether emails can go out at all: switched on, with a server and a sender. */
   mail_enabled: boolean
   /** Directory login is configured and on; forms show LDAP-related fields. */
   ldap_enabled: boolean
-  /** Notification kinds and whether they are switched on site-wide. */
-  notifications: { key: NotificationKey; audience: NotificationAudience; enabled: boolean }[]
+  /** Notification kinds and whether they are switched on site-wide, per channel. */
+  notifications: {
+    key: NotificationKey
+    audience: NotificationAudience
+    mail: boolean
+    app: boolean
+  }[]
 }
 
 /** Who a notification is for: the person concerned, IT or department approvers. */
 export type NotificationAudience = 'employee' | 'it' | 'approver'
+
+/** How a notification reaches someone: by email or in the app (the bell). */
+export type NotificationChannel = 'mail' | 'app'
+
+/** Site-wide switches per notification kind and channel. */
+export interface NotificationSettings {
+  /** Email can actually go out; without it the email switches have no effect. */
+  mail_ready: boolean
+  mail: Record<NotificationKey, boolean>
+  app: Record<NotificationKey, boolean>
+}
 
 /** Deadlines and warning periods (days). */
 export interface Rules {
@@ -109,7 +125,6 @@ export interface MailSettings {
   from_email: string
   from_name: string
   app_url: string
-  events: Record<NotificationKey, boolean>
 }
 
 export interface MailSettingsInput extends Omit<MailSettings, 'password_set'> {

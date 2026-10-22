@@ -60,6 +60,7 @@ class CurrentUserOut(UserOut):
     permissions: dict[str, str]
     language: str
     notification_settings: dict[str, bool]
+    app_notification_settings: dict[str, bool]
     dashboard_settings: dict
     # Decides on requests of at least one department (shows the approvals page).
     is_approver: bool
@@ -88,7 +89,8 @@ class UserIn(Schema):
 
 class PreferencesIn(Schema):
     language: User.Language | None = None
-    # Email notifications the user switches off ({event: false}).
+    # Notifications the user switches off ({event: false}), by email and in the app.
     notification_settings: dict[str, bool] | None = None
+    app_notification_settings: dict[str, bool] | None = None
     # The own dashboard layout; an empty object restores the default.
     dashboard_settings: dict | None = None

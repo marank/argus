@@ -1,10 +1,13 @@
-"""Email notifications.
+"""Notifications by email and in the app (the bell).
 
-Every notification kind is listed in ``EVENTS`` with its audience. It goes out
-when mail is enabled, the kind is on in the mail settings and the recipient has
-not switched it off for themselves (``User.notification_settings``). Mails are
-queued as background jobs together with the surrounding transaction
-(``apps.core.jobs``); a failing server never breaks the action that caused the mail.
+Every notification kind is listed in ``EVENTS`` with its audience. Each channel has
+its own switches: site-wide in the notification settings (``MailSettings.events``
+for email, ``app_events`` for the app) and per person (``User.notification_settings``
+and ``app_notification_settings``); a person can only switch off what is on
+site-wide. Email also needs a working mail setup; the app does not. Mails are queued
+as background jobs together with the surrounding transaction (``apps.core.jobs``); a
+failing server never breaks the action that caused the mail. In-app notifications are
+stored right away and announced to the recipient's open tabs (``apps.core.live``).
 """
 
 from collections.abc import Callable, Iterable
@@ -66,6 +69,10 @@ def user_wants(user, event: str) -> bool:
     return bool((user.notification_settings or {}).get(event, True))
 
 
+def user_wants_app(user, event: str) -> bool:
+    return bool((user.app_notification_settings or {}).get(event, True))
+
+
 def it_staff():
     from apps.accounts.models import User
 
@@ -123,34 +130,54 @@ def notify(
     path: str = "",
     direct: bool = False,
 ) -> None:
-    """Queue ``event`` for each recipient; ``render(user)`` returns (subject, body).
+    """Notify each recipient of ``event``; ``render(user)`` returns (subject, body).
 
-    With ``key``, each recipient gets the notification only once (reminders): it
-    counts as sent once delivered, and is not queued again while it waits for a
-    retry. ``path`` is appended as a link when the app address is configured.
-    ``direct``: sent on purpose by IT (not listed in ``EVENTS``), so the site-wide
-    and personal switches do not apply.
+    By email and in the app, as the switches allow. With ``key``, each recipient gets
+    the notification only once per channel (reminders): an email counts as sent once
+    delivered, and is not queued again while it waits for a retry. ``path`` is the
+    page it is about: the email links to it when the app address is configured, the
+    app opens it. ``direct``: sent on purpose by IT (not listed in ``EVENTS``), so the
+    site-wide and personal switches do not apply.
     """
     from apps.core import tasks
     from apps.core.jobs import defer
-    from apps.core.models import MailSettings, NotificationLog
+    from apps.core.live import publish
+    from apps.core.models import MailSettings, Notification, NotificationLog
 
     settings = MailSettings.load()
-    if not mail_ready(settings):
-        return
-    if not direct and not site_events(settings.events)[event]:
+    by_mail = mail_ready(settings) and (direct or site_events(settings.events)[event])
+    in_app = direct or site_events(settings.app_events)[event]
+    if not (by_mail or in_app):
         return
 
     for user in recipients:
-        if not user.email or not user.is_active or not (direct or user_wants(user, event)):
+        if not user.is_active or user.is_terminal:
             continue
-        if key and NotificationLog.objects.filter(event=event, key=key, recipient=user).exists():
-            continue  # already sent
+        mail = by_mail and bool(user.email) and (direct or user_wants(user, event))
+        app = in_app and (direct or user_wants_app(user, event))
+        if key:
+            mail = mail and not NotificationLog.objects.filter(event=event, key=key, recipient=user).exists()
+            app = app and not Notification.objects.filter(event=event, key=key, recipient=user).exists()
+        if not (mail or app):
+            continue
         with translation.override(user.language or "de"):
             subject, body = render(user)
-            url = link(settings, path)
-            if url:
-                body = f"{body}\n\n{url}"
+        if app:
+            notification = Notification.objects.create(
+                recipient=user,
+                event=event,
+                key=key,
+                title=subject[:255],
+                # The first paragraph says what happened; the rest (items, link) is for the email.
+                text=body.split("\n\n", 1)[0],
+                path=path,
+            )
+            publish("notification", notification.pk, users=[user.pk], staff=False)
+        if not mail:
+            continue
+        url = link(settings, path)
+        if url:
+            body = f"{body}\n\n{url}"
         defer(
             tasks.send_notification,
             queueing_lock=f"{event}:{key}:{user.pk}" if key else None,

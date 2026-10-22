@@ -510,6 +510,21 @@ msgstr "Sprache"
 msgid "email notifications"
 msgstr "E-Mail-Benachrichtigungen"
 
+msgid "in-app notifications"
+msgstr "In-App-Benachrichtigungen"
+
+msgid "in-app notification"
+msgstr "In-App-Benachrichtigung"
+
+msgid "title"
+msgstr "Titel"
+
+msgid "link"
+msgstr "Link"
+
+msgid "read at"
+msgstr "gelesen am"
+
 #: apps/accounts/models/user.py:74
 msgid "dashboard layout"
 msgstr "Dashboard-Layout"

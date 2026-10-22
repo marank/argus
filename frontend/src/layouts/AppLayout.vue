@@ -7,6 +7,7 @@ import { useI18n } from 'vue-i18n'
 
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import GlobalScan from '@/components/layout/GlobalScan.vue'
+import NotificationBell from '@/components/layout/NotificationBell.vue'
 import UserMenu from '@/components/layout/UserMenu.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useLiveStore } from '@/stores/live'
@@ -51,6 +52,7 @@ function toggleSidebar() {
         </NButton>
         <GlobalScan v-if="auth.can('assets')" />
         <div class="spacer" />
+        <NotificationBell />
         <UserMenu />
       </NLayoutHeader>
       <NLayoutContent class="content" :native-scrollbar="false">

@@ -37,4 +37,14 @@ export default {
   issue_messageHelp: 'IT wrote to you about one of your reports.',
   issue_resolved: 'Problem report resolved',
   issue_resolvedHelp: 'With the message from IT, if any.',
+  channel: {
+    mail: 'Email',
+    app: 'In the app',
+  },
+  bell: {
+    title: 'Notifications',
+    readAll: 'Mark all read',
+    settings: 'Notification settings',
+    empty: 'No notifications.',
+  },
 }

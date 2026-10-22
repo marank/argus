@@ -1,4 +1,4 @@
-"""SMTP server and site-wide notification switches (administrators only)."""
+"""SMTP server and sender (administrators only); the switches per kind are in ``notification_settings``."""
 
 from django.http import HttpRequest
 from django.utils.translation import gettext as _
@@ -7,7 +7,7 @@ from ninja.errors import HttpError
 
 from apps.core.api.security import superuser_auth
 from apps.core.models import MailSettings
-from apps.core.notifications import EVENT_KEYS, send_mail, site_events
+from apps.core.notifications import send_mail
 
 router = Router(tags=["settings"], auth=superuser_auth)
 
@@ -22,7 +22,6 @@ class MailSettingsOut(Schema):
     from_email: str
     from_name: str
     app_url: str
-    events: dict[str, bool]
 
 
 class MailSettingsIn(Schema):
@@ -36,7 +35,6 @@ class MailSettingsIn(Schema):
     from_email: str = ""
     from_name: str = "Argus"
     app_url: str = ""
-    events: dict[str, bool] = {}
 
 
 class TestMailIn(Schema):
@@ -54,7 +52,6 @@ def _out(settings: MailSettings) -> dict:
         "from_email": settings.from_email,
         "from_name": settings.from_name,
         "app_url": settings.app_url,
-        "events": site_events(settings.events),
     }
 
 
@@ -68,12 +65,10 @@ def update_mail_settings(request: HttpRequest, payload: MailSettingsIn):
     settings = MailSettings.load()
     data = payload.dict()
     password = data.pop("password")
-    events = data.pop("events")
     for name, value in data.items():
         setattr(settings, name, value)
     if password is not None:
         settings.password = password
-    settings.events = {**settings.events, **{k: v for k, v in events.items() if k in EVENT_KEYS}}
     if settings.enabled and not (settings.host and settings.from_email):
         raise HttpError(422, _("Enter the SMTP server and the sender address to send emails."))
     settings.full_clean()

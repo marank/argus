@@ -9,9 +9,9 @@ import SettingsGroup from '@/components/settings/SettingsGroup.vue'
 import { useAction } from '@/composables/useAction'
 import { useAuthStore } from '@/stores/auth'
 import { useFeaturesStore } from '@/stores/features'
-import type { MailSettings, MailSettingsInput, NotificationKey } from '@/types/settings'
+import type { MailSettings, MailSettingsInput } from '@/types/settings'
 
-/** SMTP server, sender and which notifications go out at all. */
+/** SMTP server and sender; which notifications go out is set in its own section. */
 const { t } = useI18n()
 const message = useMessage()
 const auth = useAuthStore()
@@ -29,7 +29,6 @@ const form = reactive<MailSettingsInput>({
   from_email: '',
   from_name: 'Argus',
   app_url: '',
-  events: {} as Record<NotificationKey, boolean>,
 })
 const newPassword = ref('')
 const testTo = ref('')
@@ -47,7 +46,6 @@ function apply(settings: MailSettings) {
     from_email: settings.from_email,
     from_name: settings.from_name,
     app_url: settings.app_url,
-    events: { ...settings.events },
   })
   newPassword.value = ''
 }
@@ -64,15 +62,6 @@ const securityOptions = computed(() =>
     label: t(`settings.mail.security.${value}`),
   })),
 )
-
-/** Notification kinds grouped by who receives them. */
-const audiences = computed(() => {
-  const events = features.settings?.notifications ?? []
-  return (['employee', 'approver', 'it'] as const).map((audience) => ({
-    audience,
-    events: events.filter((e) => e.audience === audience).map((e) => e.key),
-  }))
-})
 
 async function save() {
   const saved = await run(
@@ -151,23 +140,6 @@ async function sendTest() {
             {{ t('settings.mail.sendTest') }}
           </NButton>
         </div>
-      </SettingRow>
-    </SettingsGroup>
-
-    <SettingsGroup
-      v-for="group in audiences"
-      :key="group.audience"
-      :title="t(`settings.mail.audience.${group.audience}`)"
-      :description="t(`settings.mail.audience.${group.audience}Description`)"
-    >
-      <SettingRow
-        v-for="key in group.events"
-        :key="key"
-        :label="t(`notifications.${key}`)"
-        :help="t(`notifications.${key}Help`)"
-        toggle
-      >
-        <NSwitch v-model:value="form.events[key]" />
       </SettingRow>
     </SettingsGroup>
 

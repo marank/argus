@@ -1,7 +1,7 @@
 export default {
   notifications: {
     title: 'Notifications',
-    subtitle: 'Choose which notifications are sent to {email}.',
+    subtitle: 'Choose which notifications you get in the app and by email to {email}.',
     employeeDescription: 'About your requests, devices and reports.',
     itDescription: 'For IT staff.',
     approverDescription: 'For department approvers.',

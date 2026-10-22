@@ -9,7 +9,14 @@ from django.utils.translation import gettext as _
 from ninja import NinjaAPI, Status
 
 from apps.accounts.api import departments, ldap, roles, teams, two_factor, users
-from apps.core.api import mail_settings, number_sequences, session, site_settings
+from apps.core.api import (
+    mail_settings,
+    notification_settings,
+    notifications,
+    number_sequences,
+    session,
+    site_settings,
+)
 from apps.core.api.security import employee_auth, it_staff_auth, superuser_auth
 from apps.core.exceptions import BusinessError
 from apps.dashboard.api import calendar, overview, widgets
@@ -40,6 +47,8 @@ api.add_router("/accounts/roles", roles.router, auth=superuser_auth)
 api.add_router("/settings/ldap", ldap.router)
 api.add_router("/settings/site", site_settings.router)
 api.add_router("/settings/mail", mail_settings.router)
+api.add_router("/settings/notifications", notification_settings.router)
+api.add_router("/notifications", notifications.router)
 api.add_router("/masterdata/manufacturers", manufacturers.router)
 api.add_router("/masterdata/suppliers", suppliers.router)
 api.add_router("/masterdata/categories", categories.router)
