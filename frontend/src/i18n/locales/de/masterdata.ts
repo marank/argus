@@ -142,7 +142,11 @@ export default {
     jobTitle: 'Position',
     department: 'Abteilung',
     numberSequenceHelp:
-      'Neue Geräte dieser Kategorie erhalten ihre Inventarnummer aus dieser Serie. Leer: Es gilt die Serie der übergeordneten Kategorie.',
+      'Neue Geräte dieser Kategorie erhalten ihre Inventarnummer aus dieser Serie. Unterkategorien übernehmen sie nicht. Leer: Es gilt die allgemeine Serie für Assets.',
+    parentSequence: 'Übergeordnete Kategorie · {name}',
+    generalSequence: 'Allgemein für Assets',
+    nextNumber: 'nächste Nummer',
+    useSequence: 'Diese Nummernserie übernehmen',
     trackingHelp:
       'Einzelgeräte: mit Seriennummer und Historie. Verbrauchsmaterial: nach Menge. Software: über Lizenzen.',
     categoryKind: 'Typ',

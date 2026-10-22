@@ -141,7 +141,11 @@ export default {
     jobTitle: 'Job title',
     department: 'Department',
     numberSequenceHelp:
-      'New devices of this category draw their inventory number from this sequence. Empty: the parent category’s sequence applies.',
+      'New devices of this category draw their inventory number from this sequence. Subcategories do not inherit it. Empty: the general asset sequence applies.',
+    parentSequence: 'Parent category · {name}',
+    generalSequence: 'General for assets',
+    nextNumber: 'next number',
+    useSequence: 'Use this number sequence',
     trackingHelp:
       'Individual devices: with serial number and history. Consumables: by quantity. Software: as licenses.',
     categoryKind: 'Type',

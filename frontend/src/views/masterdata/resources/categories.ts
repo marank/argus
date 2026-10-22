@@ -5,6 +5,7 @@ import { teamsApi } from '@/api/accounts'
 import { categoriesApi, numberSequencesApi } from '@/api/masterdata'
 import { bool, mono, withIcon } from '@/components/crud/cells'
 import { defineResource } from '@/components/crud/types'
+import { numberSequenceHints } from '@/components/masterdata/numberSequenceHints'
 import { i18n } from '@/i18n'
 import type { TeamRef } from '@/types/accounts'
 import { CATEGORY_KINDS, type Category } from '@/types/masterdata'
@@ -108,7 +109,8 @@ export default defineResource<Category>({
           label: 'masterdata.fields.parent',
           type: 'entity',
           fetcher: categoriesApi.list,
-          display: (c: Category) => c.path.join(' / '),
+          // The edited row's parent comes as a bare reference, without the path.
+          display: (c: Category) => c.path?.join(' / ') ?? c.name,
           initial: (c: Category) => c.parent,
         },
         { key: 'icon', label: 'masterdata.fields.icon', type: 'icon' },
@@ -130,6 +132,7 @@ export default defineResource<Category>({
           initial: (c: Category) => c.number_sequence,
         },
       ],
+      extra: numberSequenceHints('parent'),
     },
     {
       title: 'masterdata.sections.responsibility',

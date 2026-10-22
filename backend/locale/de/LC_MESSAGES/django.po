@@ -1815,10 +1815,12 @@ msgid "Icon name"
 msgstr "Name des Symbols"
 
 #: apps/masterdata/models/category.py:48
-msgid "Inventory numbers for new assets. Falls back to the parent category."
+msgid ""
+"Inventory numbers for new assets. Not inherited by subcategories; without "
+"one, the general asset sequence applies."
 msgstr ""
-"Inventarnummern für neue Geräte. Ohne Angabe gilt die übergeordnete "
-"Kategorie."
+"Inventarnummern für neue Geräte. Unterkategorien übernehmen sie nicht; ohne "
+"Angabe gilt die allgemeine Serie für Assets."
 
 #: apps/masterdata/models/category.py:57
 msgid ""

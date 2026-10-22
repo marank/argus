@@ -199,6 +199,7 @@ async function save(another = false) {
             :form="form"
             :row="row"
             :readonly="readonly"
+            @set="(key: string, value: unknown) => (form[key] = value)"
           />
         </FormSection>
       </NForm>

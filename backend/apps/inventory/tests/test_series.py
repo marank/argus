@@ -30,14 +30,21 @@ def test_series_numbers_devices_in_a_row(it_client):
     assert preview["first"] == f"MDE-{before + 121:04d}"
 
 
-def test_subcategory_inherits_the_sequence(it_client):
+def test_subcategory_does_not_inherit_the_sequence(it_client):
     handle = AssetModel.objects.get(name="SX5x Trigger Handle")
     response = it_client.get(f"/api/inventory/assets/series/preview?model={handle.pk}&count=2")
     assert response.json()["first"].startswith("MDA-")
 
+    # Without a sequence of its own, the subcategory does not fall back to the parent's.
+    handle.category.number_sequence = None
+    handle.category.save()
+    response = it_client.get(f"/api/inventory/assets/series/preview?model={handle.pk}&count=2")
+    assert response.status_code == 409
+    assert Asset.objects.create(model=handle).inventory_number.startswith("INV-")
+
     numbered = it_client.get("/api/masterdata/models?numbered=true&page_size=100").json()["items"]
     names = {m["name"] for m in numbered}
-    assert {"SX58", "SX5x Trigger Handle"} <= names
+    assert "SX58" in names and "SX5x Trigger Handle" not in names
     assert all(m["category"]["code"] != "consumables" for m in numbered)
 
 

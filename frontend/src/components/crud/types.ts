@@ -45,7 +45,10 @@ export interface FormSection {
   fields: FieldDef[]
   /** Switches above the inputs, for sections whose switches reveal the inputs below them. */
   togglesFirst?: boolean
-  /** Optional component rendered below the fields; receives the live `form` and the edited `row`. */
+  /**
+   * Optional component rendered below the fields; receives the live `form` and the edited `row`
+   * and may emit `set(key, value)` to change a form value.
+   */
   extra?: Component
 }
 

@@ -5,7 +5,7 @@ from django.db.models import Q
 from ninja import FilterLookup, FilterSchema
 
 from apps.core.api.crud import CrudConfig, build_crud_router
-from apps.masterdata.models import AssetModel, Category
+from apps.masterdata.models import AssetModel
 from apps.masterdata.schemas.asset_model import AssetModelIn, AssetModelOut
 
 
@@ -22,7 +22,7 @@ class AssetModelFilter(FilterSchema):
     def filter_numbered(self, value: bool | None) -> Q:
         if value is None:
             return Q()
-        q = Q(category_id__in=Category.numbered_ids())
+        q = Q(category__number_sequence__isnull=False)
         return q if value else ~q
 
 
