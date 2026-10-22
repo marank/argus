@@ -11,6 +11,6 @@ class AssetEventAdmin(admin.ModelAdmin):
     list_filter = ["kind", "asset__model__category", "asset__model"]
     search_fields = ["asset__inventory_number", "asset__serial_number", "description", "component"]
     list_select_related = ["asset__model__manufacturer", "performed_by", "related_user"]
-    autocomplete_fields = ["asset", "performed_by", "related_user", "reservation"]
+    autocomplete_fields = ["asset", "performed_by", "related_user", "asset_request"]
     date_hierarchy = "occurred_at"
     readonly_fields = ["created_at", "updated_at"]

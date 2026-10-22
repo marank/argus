@@ -4,39 +4,39 @@ import { computed, h, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
-import { approvalsApi } from '@/api/reservations'
+import { approvalsApi } from '@/api/requests'
 import EmptyState from '@/components/common/EmptyState.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useLive } from '@/composables/useLive'
-import type { ReservationListItem } from '@/types/reservations'
+import type { AssetRequestListItem } from '@/types/requests'
 
 /** Requests of the approver's departments waiting for a decision, oldest first. */
 const { t } = useI18n()
 const router = useRouter()
 const { date } = useFormat()
 
-const requests = ref<ReservationListItem[] | null>(null)
+const requests = ref<AssetRequestListItem[] | null>(null)
 
 async function load() {
   requests.value = (await approvalsApi.list({ page_size: 100 })).items
 }
 onMounted(load)
-useLive(['reservation'], load)
+useLive(['request'], load)
 
-const period = (r: ReservationListItem) =>
+const period = (r: AssetRequestListItem) =>
   `${date(r.start_date)} → ${r.end_date ? date(r.end_date) : t('common.permanent')}`
 
-const columns = computed<DataTableColumns<ReservationListItem>>(() => [
+const columns = computed<DataTableColumns<AssetRequestListItem>>(() => [
   {
     key: 'number',
-    title: t('reservations.number'),
+    title: t('requests.number'),
     width: 120,
     render: (r) => h('span', { class: 'mono' }, r.number),
   },
   {
     key: 'requester',
-    title: t('reservations.requester'),
+    title: t('requests.requester'),
     minWidth: 180,
     render: (r) =>
       h('div', [
@@ -46,13 +46,13 @@ const columns = computed<DataTableColumns<ReservationListItem>>(() => [
   },
   {
     key: 'title',
-    title: t('reservations.purpose'),
+    title: t('requests.purpose'),
     minWidth: 240,
     render: (r) => h('div', [h('div', r.title), h('small', { class: 'muted' }, r.summary)]),
   },
   {
     key: 'period',
-    title: t('reservations.period'),
+    title: t('requests.period'),
     width: 200,
     render: (r) => h('span', { class: 'mono' }, period(r)),
   },
@@ -68,10 +68,10 @@ const columns = computed<DataTableColumns<ReservationListItem>>(() => [
 <template>
   <div class="page">
     <PageHeader
-      :title="t('reservations.approvals.title')"
-      :subtitle="t('reservations.approvals.subtitle')"
+      :title="t('requests.approvals.title')"
+      :subtitle="t('requests.approvals.subtitle')"
     />
-    <EmptyState v-if="requests && !requests.length" :text="t('reservations.approvals.empty')" />
+    <EmptyState v-if="requests && !requests.length" :text="t('requests.approvals.empty')" />
     <NDataTable
       v-else
       class="clickable-rows"
@@ -79,9 +79,9 @@ const columns = computed<DataTableColumns<ReservationListItem>>(() => [
       :columns="columns"
       :data="requests ?? []"
       :loading="!requests"
-      :row-key="(r: ReservationListItem) => r.id"
+      :row-key="(r: AssetRequestListItem) => r.id"
       :row-props="
-        (r: ReservationListItem) => ({
+        (r: AssetRequestListItem) => ({
           onClick: () => router.push({ name: 'portal-approval', params: { id: r.id } }),
         })
       "

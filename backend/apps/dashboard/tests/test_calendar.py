@@ -2,7 +2,7 @@ from datetime import date, timedelta
 
 from django.utils import timezone
 
-from apps.reservations.models import Reservation
+from apps.requests.models import AssetRequest
 
 
 def fetch(client, **params):
@@ -22,24 +22,24 @@ def test_calendar_shows_loans_and_pickups(it_client):
     kinds = {e["kind"] for e in entries}
     assert {"loan", "pickup"} <= kinds
 
-    workshop = Reservation.objects.get(title="Training workshop")
+    workshop = AssetRequest.objects.get(title="Training workshop")
     loan = next(e for e in entries if e["id"] == f"loan-{workshop.pk}")
     # Ends are exclusive so a span from Mon to Wed covers Wed as well.
     assert loan["end"] == (workshop.end_date + timedelta(days=1)).isoformat()
-    assert loan["link"] == {"name": "reservation", "id": str(workshop.pk)}
+    assert loan["link"] == {"name": "request", "id": str(workshop.pk)}
 
 
 def test_permanent_requests_are_not_shown_as_loans(it_client):
     entries = fetch(it_client)
-    permanent = Reservation.objects.filter(duration=Reservation.Duration.PERMANENT)
+    permanent = AssetRequest.objects.filter(duration=AssetRequest.Duration.PERMANENT)
     loan_ids = {e["id"] for e in entries if e["kind"] == "loan"}
     assert not loan_ids & {f"loan-{r.pk}" for r in permanent}
 
 
 def test_overdue_returns_appear_today(it_client):
-    workshop = Reservation.objects.get(title="Training workshop")
-    Reservation.objects.filter(pk=workshop.pk).update(
-        status=Reservation.Status.HANDED_OUT,
+    workshop = AssetRequest.objects.get(title="Training workshop")
+    AssetRequest.objects.filter(pk=workshop.pk).update(
+        status=AssetRequest.Status.HANDED_OUT,
         start_date=date.today() - timedelta(days=9),
         end_date=date.today() - timedelta(days=2),
     )

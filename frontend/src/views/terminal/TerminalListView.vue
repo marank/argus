@@ -5,9 +5,9 @@ import { NInput, NSpin } from 'naive-ui'
 import { onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { terminalApi } from '@/api/reservations'
+import { terminalApi } from '@/api/requests'
 import { useFormat } from '@/composables/useFormat'
-import type { TerminalPickup } from '@/types/reservations'
+import type { TerminalPickup } from '@/types/requests'
 
 const { t } = useI18n()
 const { weekday } = useFormat()

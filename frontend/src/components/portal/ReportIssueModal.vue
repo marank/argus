@@ -3,12 +3,12 @@ import { NButton, NInput, NModal, NRadioButton, NRadioGroup } from 'naive-ui'
 import { reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { portalApi } from '@/api/reservations'
+import { portalApi } from '@/api/requests'
 import FieldLabel from '@/components/common/FieldLabel.vue'
 import { useAction } from '@/composables/useAction'
 import { useFormat } from '@/composables/useFormat'
 import { ISSUE_KINDS, type IssueKind, type OwnIssue } from '@/types/inventory'
-import type { MyAsset } from '@/types/reservations'
+import type { MyAsset } from '@/types/requests'
 import { categoryIcon } from '@/utils/icons'
 
 /** An employee reports a problem with one of their devices to IT. */
@@ -27,7 +27,7 @@ async function send() {
   if (!props.asset) return
   const issue = await run(
     () => portalApi.reportIssue(props.asset!.id, { ...form }),
-    t('reservations.myDevices.reportSent'),
+    t('requests.myDevices.reportSent'),
   )
   if (issue) {
     emit('reported', issue)
@@ -40,7 +40,7 @@ async function send() {
   <NModal
     v-model:show="show"
     preset="card"
-    :title="t('reservations.myDevices.report')"
+    :title="t('requests.myDevices.report')"
     style="max-width: 520px"
   >
     <div class="form">
@@ -58,7 +58,7 @@ async function send() {
         </div>
       </div>
       <div class="field">
-        <FieldLabel :label="t('reservations.myDevices.reportKind')" />
+        <FieldLabel :label="t('requests.myDevices.reportKind')" />
         <NRadioGroup v-model:value="form.kind" size="small">
           <NRadioButton v-for="kind in ISSUE_KINDS" :key="kind" :value="kind">
             {{ enumLabel('issueKind', kind) }}
@@ -66,13 +66,13 @@ async function send() {
         </NRadioGroup>
       </div>
       <div class="field">
-        <FieldLabel :label="t('reservations.myDevices.reportDescription')" required />
+        <FieldLabel :label="t('requests.myDevices.reportDescription')" required />
         <NInput
           v-model:value="form.description"
           type="textarea"
           :autosize="{ minRows: 3, maxRows: 8 }"
           :maxlength="2000"
-          :placeholder="t('reservations.myDevices.reportPlaceholder')"
+          :placeholder="t('requests.myDevices.reportPlaceholder')"
         />
       </div>
     </div>
@@ -80,7 +80,7 @@ async function send() {
       <div class="row" style="justify-content: flex-end">
         <NButton @click="show = false">{{ t('common.cancel') }}</NButton>
         <NButton type="primary" :loading="busy" :disabled="!form.description.trim()" @click="send">
-          {{ t('reservations.myDevices.send') }}
+          {{ t('requests.myDevices.send') }}
         </NButton>
       </div>
     </template>

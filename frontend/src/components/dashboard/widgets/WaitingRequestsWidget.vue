@@ -22,7 +22,7 @@ const { mode, setMode, when, other } = useDateMode(
 const rows = ref<WaitingRequest[] | null>(null)
 const load = async () => (rows.value = await dashboardApi.waitingRequests())
 onMounted(load)
-useLive(['reservation'], load)
+useLive(['request'], load)
 </script>
 
 <template>
@@ -36,7 +36,7 @@ useLive(['reservation'], load)
       <RouterLink
         v-for="r in rows"
         :key="r.id"
-        :to="{ name: 'reservation', params: { id: r.id } }"
+        :to="{ name: 'request', params: { id: r.id } }"
         class="line"
       >
         <span class="mono">{{ r.number }}</span>

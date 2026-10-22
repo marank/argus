@@ -26,7 +26,7 @@ const rows = ref<OverdueReturn[] | null>(null)
 
 const load = async () => (rows.value = await dashboardApi.overdueReturns())
 onMounted(load)
-useLive(['reservation'], load)
+useLive(['request'], load)
 const { remind, sending } = useRemind(load)
 
 const daysOverdue = (row: OverdueReturn) =>
@@ -39,7 +39,7 @@ const daysOverdue = (row: OverdueReturn) =>
       <span class="header-extra">
         <RouterLink
           v-if="rows?.length"
-          :to="{ name: 'reservations', query: { overdue: '1' } }"
+          :to="{ name: 'requests', query: { overdue: '1' } }"
           class="mono muted"
         >
           {{ rows.length }}
@@ -51,7 +51,7 @@ const daysOverdue = (row: OverdueReturn) =>
     <p v-else-if="!rows.length" class="muted">{{ t('dashboard.widgets.overdueReturns.empty') }}</p>
     <div v-else class="lines cols-4">
       <div v-for="row in rows" :key="row.id" class="line">
-        <RouterLink :to="{ name: 'reservation', params: { id: row.id } }" class="mono">
+        <RouterLink :to="{ name: 'request', params: { id: row.id } }" class="mono">
           {{ row.number }}
         </RouterLink>
         <span class="title">

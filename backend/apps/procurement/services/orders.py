@@ -13,8 +13,8 @@ from apps.inventory.models import Asset, ConsumableMovement
 from apps.inventory.services import assets as asset_service
 from apps.inventory.services.consumables import get_consumable, move_consumable
 from apps.procurement.models import PurchaseOrder, PurchaseOrderLine
-from apps.reservations.models import Reservation
-from apps.reservations.services import workflow
+from apps.requests.models import AssetRequest
+from apps.requests.services import workflow
 
 Status = PurchaseOrder.Status
 
@@ -40,7 +40,7 @@ def _save_lines(order: PurchaseOrder, lines: list[dict]) -> None:
         line.unit_price = data.get("unit_price")
         if line.unit_price is None and line.asset_model_id:
             line.unit_price = line.asset_model.list_price
-        line.reservation_item_id = data.get("reservation_item")
+        line.asset_request_item_id = data.get("asset_request_item")
         line.position = position
         line.full_clean()
         line.save()
@@ -107,8 +107,8 @@ def _add_months(day: date, months: int) -> date:
 def receive(order: PurchaseOrder, receipts: list[dict], user) -> PurchaseOrder:
     """Book a delivery: creates devices or increases consumable quantities.
 
-    Devices that were ordered for a reservation are allocated to it right away
-    while the reservation is still being prepared.
+    Devices that were ordered for a request are allocated to it right away
+    while the request is still being prepared.
     """
     # Locked and read again: two deliveries booked at once must not both see the
     # same open quantity.
@@ -118,7 +118,7 @@ def receive(order: PurchaseOrder, receipts: list[dict], user) -> PurchaseOrder:
     order_lines = {
         line.pk: line
         for line in order.lines.select_for_update(of=("self",)).select_related(
-            "asset_model", "reservation_item__reservation"
+            "asset_model", "asset_request_item__asset_request"
         )
     }
 
@@ -140,8 +140,8 @@ def receive(order: PurchaseOrder, receipts: list[dict], user) -> PurchaseOrder:
                 % {"open": line.quantity_open, "line": line.label}
             )
 
-        item = line.reservation_item
-        allocate = item is not None and item.reservation.status == Reservation.Status.CONFIRMED
+        item = line.asset_request_item
+        allocate = item is not None and item.asset_request.status == AssetRequest.Status.CONFIRMED
 
         if model.is_bulk:
             if not location_id:

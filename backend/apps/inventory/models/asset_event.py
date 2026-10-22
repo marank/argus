@@ -59,9 +59,9 @@ class AssetEvent(TimeStampedModel):
         blank=True,
         related_name="asset_events",
     )
-    reservation = models.ForeignKey(
-        "reservations.Reservation",
-        verbose_name=_("reservation"),
+    asset_request = models.ForeignKey(
+        "requests.AssetRequest",
+        verbose_name=_("request"),
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

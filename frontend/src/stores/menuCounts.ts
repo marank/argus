@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-import { portalApi } from '@/api/reservations'
-import type { MenuCounts } from '@/types/reservations'
+import { portalApi } from '@/api/requests'
+import type { MenuCounts } from '@/types/requests'
 
 /** Numbers for the self-service menu; pages refresh them when they change what they count. */
 export const useMenuCountsStore = defineStore('menuCounts', () => {

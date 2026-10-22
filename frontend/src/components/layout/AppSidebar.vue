@@ -48,7 +48,7 @@ watch(
 const menuCounts = useMenuCountsStore()
 const live = useLiveStore()
 watch(() => route.path, menuCounts.refresh, { immediate: true })
-useLive(['reservation', 'issue'], menuCounts.refresh)
+useLive(['request', 'issue'], menuCounts.refresh)
 useIntervalFn(() => {
   if (!live.connected) menuCounts.refresh()
 }, 60_000)

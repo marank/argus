@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
         ("inventory", "0001_initial"),
         ("masterdata", "0001_initial"),
         ("procurement", "0001_initial"),
-        ("reservations", "0001_initial"),
+        ("requests", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
@@ -81,7 +81,7 @@ class Migration(migrations.Migration):
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
                 related_name="asset_events",
-                to="reservations.reservation",
+                to="requests.reservation",
                 verbose_name="reservation",
             ),
         ),
@@ -149,7 +149,7 @@ class Migration(migrations.Migration):
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
                 related_name="stock_movements",
-                to="reservations.reservation",
+                to="requests.reservation",
                 verbose_name="reservation",
             ),
         ),

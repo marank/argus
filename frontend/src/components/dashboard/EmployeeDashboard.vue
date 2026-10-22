@@ -16,7 +16,7 @@ const data = ref<EmployeeOverview | null>(null)
 
 const load = async () => (data.value = await dashboardApi.me())
 onMounted(load)
-useLive(['reservation', 'issue', 'asset', 'license'], load)
+useLive(['request', 'issue', 'asset', 'license'], load)
 </script>
 
 <template>
@@ -24,7 +24,7 @@ useLive(['reservation', 'issue', 'asset', 'license'], load)
     <section class="stats">
       <StatCard
         :label="t('dashboard.openRequests')"
-        :value="data.open_reservations"
+        :value="data.open_requests"
         :icon="ClipboardList"
         tone="primary"
         :to="{ name: 'portal-requests' }"

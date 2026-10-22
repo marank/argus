@@ -4,7 +4,7 @@ from django.utils import timezone
 from apps.accounts.models import Team, User
 from apps.inventory.models import Asset, AssetIssue, License
 from apps.procurement.models import PurchaseOrder
-from apps.reservations.models import Reservation
+from apps.requests.models import AssetRequest
 
 
 def test_full_demo_data_covers_every_state(db):
@@ -13,11 +13,11 @@ def test_full_demo_data_covers_every_state(db):
 
     assert User.objects.count() > 25
     assert Asset.objects.count() > 140
-    reservation_states = set(Reservation.objects.values_list("status", flat=True))
-    assert reservation_states == set(Reservation.Status.values)
+    asset_request_states = set(AssetRequest.objects.values_list("status", flat=True))
+    assert asset_request_states == set(AssetRequest.Status.values)
     # One lent request is overdue.
-    assert Reservation.objects.filter(
-        status=Reservation.Status.HANDED_OUT, end_date__lt=timezone.localdate()
+    assert AssetRequest.objects.filter(
+        status=AssetRequest.Status.HANDED_OUT, end_date__lt=timezone.localdate()
     ).exists()
     assert set(Asset.objects.values_list("status", flat=True)) == set(Asset.Status.values)
     assert set(PurchaseOrder.objects.values_list("status", flat=True)) == set(PurchaseOrder.Status.values)
@@ -26,10 +26,10 @@ def test_full_demo_data_covers_every_state(db):
 
     # Teams: requests routed by model and default, every tab of the lists filled.
     assert Team.objects.get(is_default=True).name == "IT-Support"
-    ledgerline = Reservation.objects.get(title="Ledgerline access for the monthly reports")
+    ledgerline = AssetRequest.objects.get(title="Ledgerline access for the monthly reports")
     assert ledgerline.assigned_team.name == "Ledgerline"
-    assert Reservation.objects.filter(assigned_team__isnull=True, assignee__isnull=True).exists()
-    assert Reservation.objects.filter(assignee__username="jkoch").exists()
+    assert AssetRequest.objects.filter(assigned_team__isnull=True, assignee__isnull=True).exists()
+    assert AssetRequest.objects.filter(assignee__username="jkoch").exists()
     assert AssetIssue.objects.filter(assignee__username="it").exists()
 
 

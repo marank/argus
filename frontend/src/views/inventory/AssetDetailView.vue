@@ -31,7 +31,7 @@ const { t } = useI18n()
 const canWrite = computed(() => useAuthStore().can('assets', 'write'))
 // A quick assignment is recorded as a hand-out, so it keeps its return date and can be taken back.
 // Without the right to record hand-outs, the device is only assigned.
-const canHandOut = computed(() => useAuthStore().can('reservations', 'write'))
+const canHandOut = computed(() => useAuthStore().can('requests', 'write'))
 const features = useFeaturesStore()
 const router = useRouter()
 const message = useMessage()
@@ -178,12 +178,12 @@ async function removeEvent(event: AssetEvent) {
 
       <div class="layout">
         <div class="stack">
-          <NAlert v-if="asset.reservation" type="info" :bordered="false">
-            <RouterLink :to="{ name: 'reservation', params: { id: asset.reservation.id } }">
+          <NAlert v-if="asset.asset_request" type="info" :bordered="false">
+            <RouterLink :to="{ name: 'request', params: { id: asset.asset_request.id } }">
               {{
-                t('inventory.activeReservation', {
-                  number: asset.reservation.number,
-                  name: asset.reservation.requester.display_name,
+                t('inventory.activeRequest', {
+                  number: asset.asset_request.number,
+                  name: asset.asset_request.requester.display_name,
                 })
               }}
             </RouterLink>

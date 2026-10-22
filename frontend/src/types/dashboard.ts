@@ -5,10 +5,10 @@ import type { AssetModelRef, LocationRef } from './masterdata'
 
 export interface ITOverview {
   asset_status: Record<string, number>
-  reservations_submitted: number
-  reservations_to_prepare: number
-  reservations_ready: number
-  reservations_overdue: number
+  requests_submitted: number
+  requests_to_prepare: number
+  requests_ready: number
+  requests_overdue: number
   orders_to_place: number
   orders_in_transit: number
   low_consumables: number
@@ -24,7 +24,7 @@ export interface ITOverview {
 }
 
 export interface EmployeeOverview {
-  open_reservations: number
+  open_requests: number
   ready_for_pickup: { id: Id; number: string; title: string; pickup_at: string | null }[]
   assigned_assets: number
 }

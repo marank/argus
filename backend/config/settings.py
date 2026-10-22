@@ -63,7 +63,7 @@ INSTALLED_APPS = [
     "apps.accounts",
     "apps.masterdata",
     "apps.inventory",
-    "apps.reservations",
+    "apps.requests",
     "apps.procurement",
     "apps.dashboard",
 ]

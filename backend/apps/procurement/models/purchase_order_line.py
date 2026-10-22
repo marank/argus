@@ -27,9 +27,9 @@ class PurchaseOrderLine(UUIDModel):
     unit_price = models.DecimalField(_("unit price"), max_digits=10, decimal_places=2, null=True, blank=True)
     quantity_received = models.PositiveIntegerField(_("received quantity"), default=0)
     position = models.PositiveSmallIntegerField(_("position"), default=0)
-    reservation_item = models.ForeignKey(
-        "reservations.ReservationItem",
-        verbose_name=_("for reservation item"),
+    asset_request_item = models.ForeignKey(
+        "requests.AssetRequestItem",
+        verbose_name=_("for request line"),
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

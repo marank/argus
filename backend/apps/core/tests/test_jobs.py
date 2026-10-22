@@ -11,8 +11,8 @@ from apps.accounts.models import User
 from apps.core import tasks
 from apps.core.models import MailSettings, NotificationLog
 from apps.core.services.reminders import send_due_reminders
-from apps.reservations.models import Reservation
-from apps.reservations.services import notifications as reservation_notifications
+from apps.requests.models import AssetRequest
+from apps.requests.services import notifications as asset_request_notifications
 
 postgres_only = pytest.mark.skipif(
     connection.vendor != "postgresql", reason="the job queue lives in PostgreSQL"
@@ -50,24 +50,24 @@ def run_jobs() -> None:
             cursor.execute("UPDATE procrastinate_jobs SET status = 'succeeded' WHERE id = %s", [id])
 
 
-def overdue_reservation() -> Reservation:
+def overdue_asset_request() -> AssetRequest:
     employee = User.objects.get(username="employee")
     today = timezone.localdate()
-    return Reservation.objects.create(
+    return AssetRequest.objects.create(
         requester=employee,
         created_by=employee,
         title="Overdue",
-        duration=Reservation.Duration.TEMPORARY,
+        duration=AssetRequest.Duration.TEMPORARY,
         start_date=today - timedelta(days=10),
         end_date=today - timedelta(days=2),
-        status=Reservation.Status.HANDED_OUT,
+        status=AssetRequest.Status.HANDED_OUT,
     )
 
 
 @postgres_only
 def test_a_notification_is_queued_and_delivered_by_the_job(mail_on, job_queue):
-    reservation = overdue_reservation()
-    reservation_notifications.return_requested(reservation, User.objects.get(username="it"))
+    asset_request = overdue_asset_request()
+    asset_request_notifications.return_requested(asset_request, User.objects.get(username="it"))
     assert [name for name, _ in queued()] == ["apps.core.tasks.send_notification"]
     assert mail.outbox == []
 
@@ -77,9 +77,9 @@ def test_a_notification_is_queued_and_delivered_by_the_job(mail_on, job_queue):
 
 @postgres_only
 def test_a_rolled_back_change_queues_no_mail(mail_on, job_queue):
-    reservation = overdue_reservation()
+    asset_request = overdue_asset_request()
     with pytest.raises(RuntimeError), transaction.atomic():
-        reservation_notifications.return_requested(reservation, User.objects.get(username="it"))
+        asset_request_notifications.return_requested(asset_request, User.objects.get(username="it"))
         assert len(queued()) == 1
         raise RuntimeError
     assert queued() == []
@@ -87,7 +87,7 @@ def test_a_rolled_back_change_queues_no_mail(mail_on, job_queue):
 
 @postgres_only
 def test_a_reminder_is_queued_once_and_counts_as_sent_after_delivery(mail_on, job_queue):
-    overdue_reservation()
+    overdue_asset_request()
     send_due_reminders()
     first = queued()
     # Still waiting (e.g. for a retry): the hourly run does not queue it again.

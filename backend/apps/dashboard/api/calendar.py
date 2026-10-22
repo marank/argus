@@ -18,7 +18,7 @@ KIND_FEATURES = {
     "delivery": "calendar_deliveries",
 }
 
-router = Router(tags=["calendar"], auth=permission_auth("reservations"))
+router = Router(tags=["calendar"], auth=permission_auth("requests"))
 
 MAX_DAYS = 400
 

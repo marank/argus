@@ -14,7 +14,7 @@ from django.utils import timezone
 
 from apps.inventory.models import Asset, License
 from apps.procurement.models import PurchaseOrder
-from apps.reservations.models import Reservation
+from apps.requests.models import AssetRequest
 
 KINDS = ("loan", "pickup", "return", "delivery", "warranty", "license")
 
@@ -34,29 +34,29 @@ class Entry:
     details: list[str] = field(default_factory=list)
 
 
-def _requester(reservation: Reservation) -> str:
-    return reservation.requester.display_name
+def _requester(asset_request: AssetRequest) -> str:
+    return asset_request.requester.display_name
 
 
 def calendar_entries(
-    start: date, end: date, kinds: set[str] | None = None, reservation_filter: Q | None = None
+    start: date, end: date, kinds: set[str] | None = None, asset_request_filter: Q | None = None
 ) -> list[Entry]:
     """Entries overlapping [start, end] (inclusive).
 
-    ``reservation_filter`` narrows the request entries (loans, pickups, returns),
+    ``asset_request_filter`` narrows the request entries (loans, pickups, returns),
     e.g. to the user's own; deliveries and warranty or license ends stay.
     """
     kinds = kinds or set(KINDS)
     today = timezone.localdate()
     entries: list[Entry] = []
 
-    reservations = (
-        Reservation.objects.filter(reservation_filter or Q())
+    asset_requests = (
+        AssetRequest.objects.filter(asset_request_filter or Q())
         .select_related("requester")
         .prefetch_related("items__category", "items__asset_model__manufacturer")
     )
-    temporary = reservations.filter(
-        duration=Reservation.Duration.TEMPORARY, status__in=Reservation.OPEN_STATUSES
+    temporary = asset_requests.filter(
+        duration=AssetRequest.Duration.TEMPORARY, status__in=AssetRequest.OPEN_STATUSES
     )
 
     if "loan" in kinds:
@@ -71,14 +71,14 @@ def calendar_entries(
                     end=r.end_date + timedelta(days=1),
                     status=r.status,
                     overdue=r.is_overdue,
-                    link={"name": "reservation", "id": str(r.pk)},
+                    link={"name": "request", "id": str(r.pk)},
                     details=[r.number, *items],
                 )
             )
 
     if "pickup" in kinds:
-        pickups = reservations.filter(
-            status__in=(Reservation.Status.CONFIRMED, Reservation.Status.READY),
+        pickups = asset_requests.filter(
+            status__in=(AssetRequest.Status.CONFIRMED, AssetRequest.Status.READY),
             pickup_at__date__gte=start,
             pickup_at__date__lte=end,
         )
@@ -91,14 +91,14 @@ def calendar_entries(
                     start=timezone.localtime(r.pickup_at),
                     all_day=False,
                     status=r.status,
-                    link={"name": "reservation", "id": str(r.pk)},
+                    link={"name": "request", "id": str(r.pk)},
                     details=[r.number, r.title],
                 )
             )
 
     if "return" in kinds:
         # Overdue returns move along on today until the devices are back.
-        for r in temporary.filter(status=Reservation.Status.HANDED_OUT, end_date__lte=end):
+        for r in temporary.filter(status=AssetRequest.Status.HANDED_OUT, end_date__lte=end):
             overdue = r.end_date < today
             day = today if overdue else r.end_date
             if not start <= day <= end:
@@ -112,7 +112,7 @@ def calendar_entries(
                     due=r.end_date,
                     status=r.status,
                     overdue=overdue,
-                    link={"name": "reservation", "id": str(r.pk)},
+                    link={"name": "request", "id": str(r.pk)},
                     details=[r.number, r.title],
                 )
             )

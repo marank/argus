@@ -27,7 +27,7 @@ const tasks = ref<MyTasks | null>(null)
 
 const load = async () => (tasks.value = await dashboardApi.myTasks())
 onMounted(load)
-useLive(['reservation', 'issue'], load)
+useLive(['request', 'issue'], load)
 </script>
 
 <template>
@@ -42,7 +42,7 @@ useLive(['reservation', 'issue'], load)
     <div v-else class="lines dated">
       <template v-if="tasks.requests_total">
         <RouterLink
-          :to="{ name: 'reservations', query: { assigned: 'me' } }"
+          :to="{ name: 'requests', query: { assigned: 'me' } }"
           class="section eyebrow"
         >
           {{ t('dashboard.widgets.myTasks.requests', { count: tasks.requests_total }) }}
@@ -50,7 +50,7 @@ useLive(['reservation', 'issue'], load)
         <RouterLink
           v-for="r in tasks.requests"
           :key="r.id"
-          :to="{ name: 'reservation', params: { id: r.id } }"
+          :to="{ name: 'request', params: { id: r.id } }"
           class="line"
         >
           <span class="mono">{{ r.number }}</span>
@@ -63,7 +63,7 @@ useLive(['reservation', 'issue'], load)
             :title="other(r.start_date)"
             >{{ when(r.start_date) }}</span
           >
-          <StatusTag group="reservationStatus" :value="r.status" />
+          <StatusTag group="requestStatus" :value="r.status" />
         </RouterLink>
       </template>
       <template v-if="features.isOn('issues') && tasks.issues_total">

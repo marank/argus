@@ -5,7 +5,7 @@ import { computed, h, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
-import { portalApi } from '@/api/reservations'
+import { portalApi } from '@/api/requests'
 import EmptyState from '@/components/common/EmptyState.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
@@ -38,7 +38,7 @@ const grouping = useGroupedRows<OwnIssueWithDevice>({
   key: (i) => (isDone(i) ? 'done' : 'current'),
   label: (i) => [
     h(isDone(i) ? CircleCheck : CircleDot, { size: 14 }),
-    t(isDone(i) ? 'reservations.myIssues.done' : 'reservations.myIssues.current'),
+    t(isDone(i) ? 'requests.myIssues.done' : 'requests.myIssues.current'),
   ],
   storageKey: 'argus.groups.my-issues',
 })
@@ -51,7 +51,7 @@ const columns = computed(() =>
   withGroupHeaders<OwnIssueWithDevice>([
     {
       key: 'device',
-      title: t('reservations.myDevices.device'),
+      title: t('requests.myDevices.device'),
       minWidth: 230,
       render: (i) =>
         h('div', { class: 'device-cell' }, [
@@ -60,7 +60,7 @@ const columns = computed(() =>
             h('div', i.asset.model.full_name),
             h('small', { class: 'muted mono' }, [
               i.asset.inventory_number,
-              i.still_assigned ? null : ` · ${t('reservations.myIssues.returned')}`,
+              i.still_assigned ? null : ` · ${t('assetRequests.myIssues.returned')}`,
             ]),
           ]),
         ]),
@@ -104,10 +104,10 @@ const columns = computed(() =>
 <template>
   <div class="page">
     <PageHeader
-      :title="t('reservations.myIssues.title')"
-      :subtitle="t('reservations.myIssues.subtitle')"
+      :title="t('requests.myIssues.title')"
+      :subtitle="t('requests.myIssues.subtitle')"
     />
-    <EmptyState v-if="issues && !issues.length" :text="t('reservations.myIssues.empty')" />
+    <EmptyState v-if="issues && !issues.length" :text="t('requests.myIssues.empty')" />
     <NDataTable
       v-else
       class="clickable-rows"

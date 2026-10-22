@@ -28,7 +28,7 @@ const active = ref<number | null>(null)
 
 const load = async () => (weeks.value = await dashboardApi.requestTrend())
 onMounted(load)
-useLive(['reservation'], load)
+useLive(['request'], load)
 
 const SERIES = [
   { key: 'created', label: 'dashboard.widgets.requestTrend.created', color: 'var(--ar-series-1)' },

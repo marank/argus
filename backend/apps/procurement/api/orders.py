@@ -26,15 +26,15 @@ router = Router(tags=["procurement"], auth=permission_auth("procurement"))
 class OrderFilter(FilterSchema):
     status: Annotated[list[str] | None, FilterLookup("status__in")] = None
     supplier: Annotated[UUID | None, FilterLookup("supplier_id")] = None
-    reservation: Annotated[UUID | None, FilterLookup("lines__reservation_item__reservation_id")] = None
+    asset_request: Annotated[UUID | None, FilterLookup("lines__asset_request_item__asset_request_id")] = None
 
 
 def order_queryset():
     lines = PurchaseOrderLine.objects.select_related(
         "asset_model__manufacturer",
-        "reservation_item__reservation__requester",
-        "reservation_item__category",
-        "reservation_item__asset_model__manufacturer",
+        "asset_request_item__asset_request__requester",
+        "asset_request_item__category",
+        "asset_request_item__asset_model__manufacturer",
     )
     return PurchaseOrder.objects.select_related(
         "supplier", "delivery_location__parent", "created_by"

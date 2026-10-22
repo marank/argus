@@ -12,8 +12,8 @@ from apps.core.features import is_enabled
 from apps.core.models import SiteSettings
 from apps.inventory.models import License
 from apps.inventory.services import notifications as inventory_notifications
-from apps.reservations.models import Reservation
-from apps.reservations.services import notifications as reservation_notifications
+from apps.requests.models import AssetRequest
+from apps.requests.services import notifications as asset_request_notifications
 
 
 def send_due_reminders() -> int:
@@ -22,15 +22,15 @@ def send_due_reminders() -> int:
     today = timezone.localdate()
     checked = 0
 
-    lent = Reservation.objects.filter(
-        duration=Reservation.Duration.TEMPORARY, status=Reservation.Status.HANDED_OUT
+    lent = AssetRequest.objects.filter(
+        duration=AssetRequest.Duration.TEMPORARY, status=AssetRequest.Status.HANDED_OUT
     ).select_related("requester")
     due_soon = lent.filter(end_date__range=(today, today + timedelta(days=settings.return_reminder_days)))
-    for reservation in due_soon:
-        reservation_notifications.return_reminder(reservation)
+    for asset_request in due_soon:
+        asset_request_notifications.return_reminder(asset_request)
         checked += 1
-    for reservation in lent.filter(end_date__lt=today):
-        reservation_notifications.return_overdue(reservation)
+    for asset_request in lent.filter(end_date__lt=today):
+        asset_request_notifications.return_overdue(asset_request)
         checked += 1
 
     if is_enabled("licenses"):

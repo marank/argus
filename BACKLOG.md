@@ -53,4 +53,4 @@ mails and reminders stay queued unless
 
 - Purchase order detail page: its edit form would be overwritten. Could reload while
   the form is unchanged, or offer a "changed by someone else, reload?" hint.
-- Pickup terminal: still polls every 30 seconds; it could listen to `reservation`.
+- Pickup terminal: still polls every 30 seconds; it could listen to `request`.

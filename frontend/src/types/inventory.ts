@@ -52,7 +52,7 @@ export interface Asset {
 
 export interface AssetDetail extends Asset {
   components: { id: Id; inventory_number: string }[]
-  reservation: { id: Id; number: string; status: string; requester: UserRef } | null
+  asset_request: { id: Id; number: string; status: string; requester: UserRef } | null
   /** Assigned to this device directly. */
   consumables: AssetModelRef[]
   /** Compatible with the device's model. */
@@ -134,7 +134,7 @@ export interface AssetEvent {
   cost: string | null
   performed_by: UserRef | null
   related_user: UserRef | null
-  reservation: { id: Id; number: string } | null
+  asset_request: { id: Id; number: string } | null
 }
 
 export interface AssetEventWithAsset extends AssetEvent {

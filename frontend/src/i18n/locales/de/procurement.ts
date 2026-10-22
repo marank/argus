@@ -3,7 +3,7 @@ export default {
     title: 'Bedarf',
     subtitle:
       'Was der Pool nicht abdeckt: offene Anforderungspositionen und Bestände unter Minimum.',
-    fromReservations: 'Aus Anforderungen',
+    fromRequests: 'Aus Anforderungen',
     belowMinimum: 'Unter Mindestbestand',
     missing: 'Fehlt',
     available: 'Im Pool',
@@ -30,7 +30,7 @@ export default {
     unitPrice: 'Einzelpreis',
     received: 'Geliefert',
     open: 'Offen',
-    forReservation: 'für {number}',
+    forRequest: 'für {number}',
     markOrdered: 'Als bestellt markieren',
     receive: 'Wareneingang',
     receiveHint: 'Für Geräte Seriennummern scannen, für Verbrauchsmaterial Mengen eingeben.',

@@ -7,23 +7,23 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
 import { assetsApi } from '@/api/inventory'
-import { portalApi, reservationsApi } from '@/api/reservations'
+import { portalApi, requestsApi } from '@/api/requests'
 import PageHeader from '@/components/common/PageHeader.vue'
-import CatalogBrowser from '@/components/reservations/request/CatalogBrowser.vue'
-import ConsumableQuickPick from '@/components/reservations/request/ConsumableQuickPick.vue'
-import DirectPicker from '@/components/reservations/request/DirectPicker.vue'
-import RequestCart from '@/components/reservations/request/RequestCart.vue'
-import RequestPeriodCard from '@/components/reservations/request/RequestPeriodCard.vue'
+import CatalogBrowser from '@/components/requests/request/CatalogBrowser.vue'
+import ConsumableQuickPick from '@/components/requests/request/ConsumableQuickPick.vue'
+import DirectPicker from '@/components/requests/request/DirectPicker.vue'
+import RequestCart from '@/components/requests/request/RequestCart.vue'
+import RequestPeriodCard from '@/components/requests/request/RequestPeriodCard.vue'
 import {
   optionKey,
   periodQuery,
   type CartLine,
   type RequestPeriod,
-} from '@/components/reservations/request/types'
+} from '@/components/requests/request/types'
 import { useAction } from '@/composables/useAction'
 import { fromIsoDate } from '@/composables/useFormat'
 import { useAuthStore } from '@/stores/auth'
-import { anyModelLabel, itemLabel } from '@/utils/reservations'
+import { anyModelLabel, itemLabel } from '@/utils/requests'
 import { useFeaturesStore } from '@/stores/features'
 import type { UserRef } from '@/types/accounts'
 import type { Asset, Consumable } from '@/types/inventory'
@@ -32,9 +32,9 @@ import type {
   CatalogModel,
   DirectRequestInput,
   MyConsumables,
-  Reservation,
-  ReservationInput,
-} from '@/types/reservations'
+  AssetRequest,
+  AssetRequestInput,
+} from '@/types/requests'
 
 const { t } = useI18n()
 const features = useFeaturesStore()
@@ -49,7 +49,7 @@ const { busy, run } = useAction()
  * devices from stock (`?mode=direct`); everyone else only requests.
  * `?from=<id>` asks again for an earlier request: a request, prefilled.
  */
-const canDirect = computed(() => auth.can('reservations', 'write'))
+const canDirect = computed(() => auth.can('requests', 'write'))
 const mode = computed<'request' | 'direct' | null>(() => {
   if (!canDirect.value || route.query.from) return 'request'
   const value = route.query.mode
@@ -61,23 +61,23 @@ const choices = computed(() => [
   {
     mode: 'request' as const,
     icon: ClipboardList,
-    title: t('reservations.direct.chooseRequest'),
-    hint: t('reservations.direct.chooseRequestHint'),
+    title: t('requests.direct.chooseRequest'),
+    hint: t('requests.direct.chooseRequestHint'),
     points: [
-      t('reservations.direct.requestPoints.catalog'),
-      t('reservations.direct.requestPoints.approval'),
-      t('reservations.direct.requestPoints.confirm'),
+      t('requests.direct.requestPoints.catalog'),
+      t('requests.direct.requestPoints.approval'),
+      t('requests.direct.requestPoints.confirm'),
     ],
   },
   {
     mode: 'direct' as const,
     icon: ScanLine,
-    title: t('reservations.direct.title'),
-    hint: t('reservations.direct.chooseDirectHint'),
+    title: t('requests.direct.title'),
+    hint: t('requests.direct.chooseDirectHint'),
     points: [
-      t('reservations.direct.directPoints.scan'),
-      t('reservations.direct.directPoints.noApproval'),
-      t('reservations.direct.directPoints.protocol'),
+      t('requests.direct.directPoints.scan'),
+      t('requests.direct.directPoints.noApproval'),
+      t('requests.direct.directPoints.protocol'),
     ],
   },
 ])
@@ -113,16 +113,16 @@ onMounted(async () => {
   catalog.value = entries
   myConsumables.value = consumables
   if (typeof route.query.from === 'string') {
-    const earlier = await run(() => reservationsApi.get(route.query.from as string))
+    const earlier = await run(() => requestsApi.get(route.query.from as string))
     if (earlier) prefill(earlier)
   }
 })
 
 /** Asking again: the earlier request's lines, details and period (moved to today if past). */
-const previous = ref<Reservation | null>(null)
+const previous = ref<AssetRequest | null>(null)
 const initial = ref<{ title: string; notes: string; requester: UserRef | null } | null>(null)
 
-function prefill(earlier: Reservation) {
+function prefill(earlier: AssetRequest) {
   previous.value = earlier
   let freeText = 0
   cart.value = earlier.items.map((item) => {
@@ -194,7 +194,7 @@ let latestQuery = 0
 watchDebounced(
   () => periodQuery(period),
   async (query) => {
-    if (!auth.can('reservations') || !catalog.value || direct.value) return
+    if (!auth.can('requests') || !catalog.value || direct.value) return
     const current = ++latestQuery
     const counts = await portalApi.availability(query)
     if (current !== latestQuery) return // a newer period was chosen meanwhile
@@ -278,7 +278,7 @@ function addFreeText(text: string, category?: CatalogCategory) {
 }
 
 /** In a direct hand-out the cart holds devices and stocks instead of catalog lines. */
-function directInput(data: ReservationInput): DirectRequestInput {
+function directInput(data: AssetRequestInput): DirectRequestInput {
   const { items, ...fields } = data
   void items
   return {
@@ -290,26 +290,26 @@ function directInput(data: ReservationInput): DirectRequestInput {
   }
 }
 
-async function submit(data: ReservationInput) {
-  const reservation = await run(() =>
+async function submit(data: AssetRequestInput) {
+  const assetRequest = await run(() =>
     direct.value
-      ? reservationsApi.createDirect(directInput(data))
-      : reservationsApi.create({ ...data, follows: previous.value?.id ?? null }),
+      ? requestsApi.createDirect(directInput(data))
+      : requestsApi.create({ ...data, follows: previous.value?.id ?? null }),
   )
-  if (!reservation) return
+  if (!assetRequest) return
   // IT continues on the request itself; employees follow it in the portal.
-  if (auth.can('reservations')) {
-    message.success(t('reservations.new.submitted', { number: reservation.number }))
-    router.push({ name: 'reservation', params: { id: reservation.id } })
+  if (auth.can('requests')) {
+    message.success(t('requests.new.submitted', { number: assetRequest.number }))
+    router.push({ name: 'request', params: { id: assetRequest.id } })
   } else {
-    router.push({ name: 'portal-request', params: { id: reservation.id }, query: { created: '1' } })
+    router.push({ name: 'portal-request', params: { id: assetRequest.id }, query: { created: '1' } })
   }
 }
 
 const header = computed(() =>
   direct.value
-    ? { title: t('reservations.direct.title'), subtitle: t('reservations.direct.subtitle') }
-    : { title: t('reservations.new.title'), subtitle: t('reservations.new.subtitle') },
+    ? { title: t('requests.direct.title'), subtitle: t('requests.direct.subtitle') }
+    : { title: t('requests.new.title'), subtitle: t('requests.new.subtitle') },
 )
 </script>
 
@@ -317,8 +317,8 @@ const header = computed(() =>
   <div class="page">
     <template v-if="mode === null">
       <PageHeader
-        :title="t('reservations.new.title')"
-        :subtitle="t('reservations.direct.choose')"
+        :title="t('requests.new.title')"
+        :subtitle="t('requests.direct.choose')"
       />
       <div class="choices">
         <button
@@ -351,12 +351,12 @@ const header = computed(() =>
         <template v-if="canDirect" #actions>
           <NButton quaternary @click="choose(null)">
             <template #icon><ArrowLeftRight :size="15" /></template>
-            {{ t('reservations.direct.switch') }}
+            {{ t('requests.direct.switch') }}
           </NButton>
         </template>
       </PageHeader>
       <NAlert v-if="previous" type="info" :bordered="false" class="again">
-        {{ t('reservations.again.prefilled', { number: previous.number }) }}
+        {{ t('requests.again.prefilled', { number: previous.number }) }}
       </NAlert>
       <div class="layout">
         <NSkeleton v-if="!catalog" height="320px" />
@@ -384,7 +384,7 @@ const header = computed(() =>
           </template>
         </CatalogBrowser>
         <div class="side">
-          <RequestPeriodCard v-model="period" :shows-availability="auth.can('reservations')" />
+          <RequestPeriodCard v-model="period" :shows-availability="auth.can('requests')" />
           <RequestCart
             :key="mode"
             v-model:lines="cart"

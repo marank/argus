@@ -50,12 +50,12 @@ def assign_license(
 @transaction.atomic
 def unassign_license(assignment: LicenseAssignment, user) -> None:
     """Remove a seat; a seat handed out with a request counts as returned there."""
-    from apps.reservations.models import ReservationAllocation
-    from apps.reservations.services import workflow
+    from apps.requests.models import AssetRequestAllocation
+    from apps.requests.services import workflow
 
     allocation = (
-        ReservationAllocation.objects.filter(license_assignment=assignment)
-        .select_related("item__reservation")
+        AssetRequestAllocation.objects.filter(license_assignment=assignment)
+        .select_related("item__asset_request")
         .first()
     )
     if allocation:

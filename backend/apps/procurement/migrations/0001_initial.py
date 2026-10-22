@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("masterdata", "0001_initial"),
-        ("reservations", "0001_initial"),
+        ("requests", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
@@ -145,7 +145,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
                         related_name="order_lines",
-                        to="reservations.reservationitem",
+                        to="requests.reservationitem",
                         verbose_name="for reservation item",
                     ),
                 ),

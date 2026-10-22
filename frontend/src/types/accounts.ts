@@ -47,7 +47,7 @@ export type PermissionKey =
   | 'teams'
   | 'users'
   | 'number_sequences'
-  | 'reservations'
+  | 'requests'
   | 'assets'
   | 'consumables'
   | 'licenses'

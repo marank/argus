@@ -12,14 +12,14 @@ import StatusTag from '@/components/common/StatusTag.vue'
 import CreateOrderModal, { type DraftLine } from '@/components/procurement/CreateOrderModal.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useLive } from '@/composables/useLive'
-import type { Needs, ReservationNeed, ConsumableNeed } from '@/types/procurement'
+import type { Needs, AssetRequestNeed, ConsumableNeed } from '@/types/procurement'
 
 const { t } = useI18n()
 const { date } = useFormat()
 
 const needs = ref<Needs | null>(null)
 const loading = ref(false)
-const selectedReservations = ref<DataTableRowKey[]>([])
+const selectedAssetRequests = ref<DataTableRowKey[]>([])
 const selectedConsumables = ref<DataTableRowKey[]>([])
 const showOrder = ref(false)
 
@@ -27,18 +27,18 @@ async function load() {
   loading.value = true
   try {
     needs.value = await needsApi.list()
-    selectedReservations.value = []
+    selectedAssetRequests.value = []
     selectedConsumables.value = []
   } finally {
     loading.value = false
   }
 }
 onMounted(load)
-useLive(['reservation', 'order'], load, { paused: () => showOrder.value })
+useLive(['request', 'order'], load, { paused: () => showOrder.value })
 
 const num = (value: number, cls = '') => h('span', { class: `mono ${cls}` }, value)
 
-const reservationColumns = computed<DataTableColumns<ReservationNeed>>(() => [
+const assetRequestColumns = computed<DataTableColumns<AssetRequestNeed>>(() => [
   { type: 'selection', disabled: (n) => n.to_order === 0 },
   {
     key: 'item',
@@ -47,41 +47,41 @@ const reservationColumns = computed<DataTableColumns<ReservationNeed>>(() => [
     render: (n) =>
       h('div', [
         h('div', [
-          n.reservation_item.label,
-          n.reservation_item.is_free_text
-            ? h('span', { class: 'free-tag' }, t('reservations.freeText'))
+          n.asset_request_item.label,
+          n.asset_request_item.is_free_text
+            ? h('span', { class: 'free-tag' }, t('requests.freeText'))
             : null,
         ]),
-        n.reservation_item.default_supplier
-          ? h('small', { class: 'muted' }, n.reservation_item.default_supplier.name)
+        n.asset_request_item.default_supplier
+          ? h('small', { class: 'muted' }, n.asset_request_item.default_supplier.name)
           : null,
       ]),
   },
   {
-    key: 'reservation',
-    title: t('nav.reservations'),
+    key: 'request',
+    title: t('nav.requests'),
     width: 260,
     render: (n) =>
       h('div', { class: 'row' }, [
         h(
           RouterLink,
-          { to: { name: 'reservation', params: { id: n.reservation.id } }, class: 'mono' },
-          () => n.reservation.number,
+          { to: { name: 'request', params: { id: n.asset_request.id } }, class: 'mono' },
+          () => n.asset_request.number,
         ),
-        h(StatusTag, { group: 'reservationStatus', value: n.reservation.status }),
+        h(StatusTag, { group: 'requestStatus', value: n.asset_request.status }),
       ]),
   },
   {
     key: 'requester',
-    title: t('reservations.requester'),
+    title: t('requests.requester'),
     width: 160,
-    render: (n) => n.reservation.requester.display_name,
+    render: (n) => n.asset_request.requester.display_name,
   },
   {
     key: 'start',
-    title: t('reservations.startDate'),
+    title: t('requests.startDate'),
     width: 110,
-    render: (n) => h('span', { class: 'mono' }, date(n.reservation.start_date)),
+    render: (n) => h('span', { class: 'mono' }, date(n.asset_request.start_date)),
   },
   {
     key: 'missing',
@@ -159,14 +159,14 @@ const consumableColumns = computed<DataTableColumns<ConsumableNeed>>(() => [
 
 const draftLines = computed<DraftLine[]>(() => {
   const lines: DraftLine[] = []
-  for (const n of needs.value?.reservations ?? []) {
-    if (!selectedReservations.value.includes(n.reservation_item.id)) continue
+  for (const n of needs.value?.requests ?? []) {
+    if (!selectedAssetRequests.value.includes(n.asset_request_item.id)) continue
     lines.push({
-      label: `${n.reservation_item.label} · ${n.reservation.number}`,
-      asset_model: n.reservation_item.asset_model?.id ?? null,
-      category: n.reservation_item.category?.id ?? null,
+      label: `${n.asset_request_item.label} · ${n.asset_request.number}`,
+      asset_model: n.asset_request_item.asset_model?.id ?? null,
+      category: n.asset_request_item.category?.id ?? null,
       quantity: n.to_order,
-      reservation_item: n.reservation_item.id,
+      asset_request_item: n.asset_request_item.id,
     })
   }
   for (const n of needs.value?.consumables ?? []) {
@@ -181,11 +181,11 @@ const draftLines = computed<DraftLine[]>(() => {
 })
 
 const defaultSupplier = computed(() => {
-  const first = needs.value?.reservations.find((n) =>
-    selectedReservations.value.includes(n.reservation_item.id),
+  const first = needs.value?.requests.find((n) =>
+    selectedAssetRequests.value.includes(n.asset_request_item.id),
   )
   return (
-    first?.reservation_item.default_supplier?.id ??
+    first?.asset_request_item.default_supplier?.id ??
     needs.value?.consumables.find((n) => selectedConsumables.value.includes(n.consumable.id))
       ?.consumable.default_supplier?.id ??
     null
@@ -209,19 +209,19 @@ const defaultSupplier = computed(() => {
     </PageHeader>
     <div class="stack">
       <p class="muted">{{ t('procurement.needs.selectHint') }}</p>
-      <NCard :title="t('procurement.needs.fromReservations')" size="small">
+      <NCard :title="t('procurement.needs.fromRequests')" size="small">
         <EmptyState
-          v-if="needs && !needs.reservations.length"
+          v-if="needs && !needs.requests.length"
           :text="t('procurement.needs.empty')"
         />
         <NDataTable
           v-else
-          v-model:checked-row-keys="selectedReservations"
+          v-model:checked-row-keys="selectedAssetRequests"
           size="small"
-          :columns="reservationColumns"
-          :data="needs?.reservations ?? []"
+          :columns="assetRequestColumns"
+          :data="needs?.requests ?? []"
           :loading="loading"
-          :row-key="(n: ReservationNeed) => n.reservation_item.id"
+          :row-key="(n: AssetRequestNeed) => n.asset_request_item.id"
           :scroll-x="1100"
         />
       </NCard>

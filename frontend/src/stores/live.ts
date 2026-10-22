@@ -3,7 +3,7 @@ import { ref } from 'vue'
 
 /**
  * A signal from `/api/events` that something changed: `topic` names the kind
- * ("reservation", "issue", "asset", "license", "consumable", "order"), `id` the
+ * ("request", "issue", "asset", "license", "consumable", "order"), `id` the
  * object. Topic "*" asks to reload everything, e.g. after a lost connection.
  */
 export type LiveEvent = { topic: string; id: string | null }

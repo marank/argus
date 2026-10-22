@@ -2,7 +2,7 @@ import type { Id } from '@/types/common'
 import type { UserRef } from './accounts'
 import type { Ref } from './common'
 import type { AssetModelRef, CategoryRef, LocationRef } from './masterdata'
-import type { ReservationStatus } from './reservations'
+import type { AssetRequestStatus } from './requests'
 
 export type OrderStatus = 'draft' | 'ordered' | 'partially_received' | 'received' | 'cancelled'
 
@@ -24,10 +24,10 @@ export interface OrderLine {
   quantity_open: number
   unit_price: string | null
   total: string
-  reservation_item: {
+  asset_request_item: {
     id: Id
     label: string
-    reservation: { id: Id; number: string; requester: UserRef }
+    asset_request: { id: Id; number: string; requester: UserRef }
   } | null
 }
 
@@ -57,7 +57,7 @@ export interface OrderLineInput {
   description: string
   quantity: number
   unit_price: string | null
-  reservation_item?: Id | null
+  asset_request_item?: Id | null
 }
 
 export interface OrderInput {
@@ -69,8 +69,8 @@ export interface OrderInput {
   lines?: OrderLineInput[]
 }
 
-export interface ReservationNeed {
-  reservation_item: {
+export interface AssetRequestNeed {
+  asset_request_item: {
     id: Id
     label: string
     is_free_text: boolean
@@ -78,11 +78,11 @@ export interface ReservationNeed {
     asset_model: AssetModelRef | null
     default_supplier: Ref | null
   }
-  reservation: {
+  asset_request: {
     id: Id
     number: string
     title: string
-    status: ReservationStatus
+    status: AssetRequestStatus
     start_date: string
     requester: UserRef
   }
@@ -107,6 +107,6 @@ export interface ConsumableNeed {
 }
 
 export interface Needs {
-  reservations: ReservationNeed[]
+  requests: AssetRequestNeed[]
   consumables: ConsumableNeed[]
 }

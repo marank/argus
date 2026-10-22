@@ -8,7 +8,7 @@ from apps.core.schemas import RefOut
 from apps.masterdata.schemas.refs import AssetModelRefOut, CategoryRefOut, LocationRefOut
 
 
-class NeedReservationOut(Schema):
+class NeedAssetRequestOut(Schema):
     id: UUID
     number: str
     title: str
@@ -30,9 +30,9 @@ class NeedItemOut(Schema):
         return obj.asset_model.default_supplier if obj.asset_model_id else None
 
 
-class ReservationNeedOut(Schema):
-    reservation_item: NeedItemOut
-    reservation: NeedReservationOut
+class AssetRequestNeedOut(Schema):
+    asset_request_item: NeedItemOut
+    asset_request: NeedAssetRequestOut
     missing: int
     available: int
     on_order: int
@@ -60,5 +60,5 @@ class ConsumableNeedOut(Schema):
 
 
 class NeedsOut(Schema):
-    reservations: list[ReservationNeedOut]
+    requests: list[AssetRequestNeedOut]
     consumables: list[ConsumableNeedOut]

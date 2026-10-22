@@ -46,7 +46,7 @@ class AssetParentOut(Schema):
 
 class AssetDetailOut(AssetOut):
     components: list[AssetParentOut]
-    reservation: ActiveReservationOut | None = None
+    asset_request: ActiveAssetRequestOut | None = None
     # Assigned to this device directly; ``model_consumables`` come from its model.
     consumables: list[AssetModelRefOut]
     model_consumables: list[AssetModelRefOut]
@@ -76,16 +76,16 @@ class AssetDetailOut(AssetOut):
         return list(obj.components.all())
 
     @staticmethod
-    def resolve_reservation(obj: Asset):
+    def resolve_asset_request(obj: Asset):
         allocation = (
-            obj.reservation_allocations.filter(returned_at__isnull=True)
-            .select_related("item__reservation__requester")
+            obj.asset_request_allocations.filter(returned_at__isnull=True)
+            .select_related("item__asset_request__requester")
             .first()
         )
-        return allocation.item.reservation if allocation else None
+        return allocation.item.asset_request if allocation else None
 
 
-class ActiveReservationOut(Schema):
+class ActiveAssetRequestOut(Schema):
     id: UUID
     number: str
     status: str

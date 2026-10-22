@@ -4,14 +4,14 @@ import { NButton, NCard, NSkeleton } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { portalApi } from '@/api/reservations'
+import { portalApi } from '@/api/requests'
 import DetailGrid, { type DetailEntry } from '@/components/common/DetailGrid.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import ReportIssueModal from '@/components/portal/ReportIssueModal.vue'
 import { useFormat } from '@/composables/useFormat'
 import type { Id } from '@/types/common'
-import type { MyAsset } from '@/types/reservations'
+import type { MyAsset } from '@/types/requests'
 import { categoryIcon } from '@/utils/icons'
 import { useFeaturesStore } from '@/stores/features'
 
@@ -37,9 +37,9 @@ const details = computed<DetailEntry[]>(() => {
     { label: t('inventory.fields.category'), value: a.category },
     { label: t('inventory.fields.assignedSince'), value: date(a.assigned_since), mono: true },
     {
-      label: t('reservations.myDevices.returnBy'),
+      label: t('requests.myDevices.returnBy'),
       value: a.return_due
-        ? `${date(a.return_due)} · ${a.reservation_number}`
+        ? `${date(a.return_due)} · ${a.asset_request_number}`
         : t('common.permanent'),
       mono: !!a.return_due,
     },
@@ -51,11 +51,11 @@ const details = computed<DetailEntry[]>(() => {
   <div class="page">
     <NSkeleton v-if="!asset" height="240px" />
     <template v-else>
-      <PageHeader :title="asset.model.full_name" :eyebrow="t('reservations.myDevices.title')">
+      <PageHeader :title="asset.model.full_name" :eyebrow="t('requests.myDevices.title')">
         <template #actions>
           <NButton v-if="features.isOn('issues')" type="primary" @click="showReport = true">
             <template #icon><MessageSquareWarning :size="16" /></template>
-            {{ t('reservations.myDevices.report') }}
+            {{ t('requests.myDevices.report') }}
           </NButton>
         </template>
       </PageHeader>
@@ -72,11 +72,11 @@ const details = computed<DetailEntry[]>(() => {
 
         <NCard
           v-if="features.isOn('issues')"
-          :title="t('reservations.myDevices.reports')"
+          :title="t('requests.myDevices.reports')"
           size="small"
         >
           <p v-if="!asset.issues.length" class="muted">
-            {{ t('reservations.myDevices.noReports') }}
+            {{ t('requests.myDevices.noReports') }}
           </p>
           <ul v-else class="issues">
             <li v-for="issue in asset.issues" :key="issue.id">
@@ -96,7 +96,7 @@ const details = computed<DetailEntry[]>(() => {
                   v-if="issue.last_message && issue.last_message !== issue.description"
                   class="answer"
                 >
-                  <span class="eyebrow">{{ t('reservations.myDevices.lastMessage') }}</span>
+                  <span class="eyebrow">{{ t('requests.myDevices.lastMessage') }}</span>
                   {{ issue.last_message }}
                 </p>
               </RouterLink>

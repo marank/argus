@@ -13,7 +13,7 @@ import type { WidgetProps } from '@/types/dashboard'
 const props = defineProps<WidgetProps>()
 const emit = defineEmits<{ 'update:options': [options: Record<string, unknown>] }>()
 
-const DEFAULT_KEYS = ['portal-new', 'reservations', 'calendar', 'assets', 'orders']
+const DEFAULT_KEYS = ['portal-new', 'requests', 'calendar', 'assets', 'orders']
 
 const { t } = useI18n()
 const auth = useAuthStore()

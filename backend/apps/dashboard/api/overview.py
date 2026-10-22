@@ -14,10 +14,10 @@ router = Router(tags=["dashboard"])
 
 class ITOverviewOut(Schema):
     asset_status: dict[str, int]
-    reservations_submitted: int
-    reservations_to_prepare: int
-    reservations_ready: int
-    reservations_overdue: int
+    requests_submitted: int
+    requests_to_prepare: int
+    requests_ready: int
+    requests_overdue: int
     orders_to_place: int
     orders_in_transit: int
     low_consumables: int
@@ -39,7 +39,7 @@ class PickupOut(Schema):
 
 
 class EmployeeOverviewOut(Schema):
-    open_reservations: int
+    open_requests: int
     ready_for_pickup: list[PickupOut]
     assigned_assets: int
 
@@ -47,11 +47,11 @@ class EmployeeOverviewOut(Schema):
 # Figures each area contributes; they stay empty without the right to read the area.
 AREA_FIELDS = {
     "assets": {"asset_status": {}, "warranty_expiring": 0, "recent_events": []},
-    "reservations": {
-        "reservations_submitted": 0,
-        "reservations_to_prepare": 0,
-        "reservations_ready": 0,
-        "reservations_overdue": 0,
+    "requests": {
+        "requests_submitted": 0,
+        "requests_to_prepare": 0,
+        "requests_ready": 0,
+        "requests_overdue": 0,
         "requests_mine": 0,
         "requests_my_teams": 0,
         "requests_unassigned": 0,

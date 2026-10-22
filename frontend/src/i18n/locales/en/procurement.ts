@@ -2,7 +2,7 @@ export default {
   needs: {
     title: 'Demand',
     subtitle: 'What the pool cannot cover: open request lines and consumables below minimum.',
-    fromReservations: 'From requests',
+    fromRequests: 'From requests',
     belowMinimum: 'Consumables below minimum',
     missing: 'Missing',
     available: 'In pool',
@@ -29,7 +29,7 @@ export default {
     unitPrice: 'Unit price',
     received: 'Received',
     open: 'Open',
-    forReservation: 'for {number}',
+    forRequest: 'for {number}',
     markOrdered: 'Mark as ordered',
     receive: 'Goods receipt',
     receiveHint: 'Scan serial numbers for devices; enter quantities for consumables.',

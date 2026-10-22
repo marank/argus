@@ -17,7 +17,7 @@ describe('date helpers', () => {
 
 describe('status tones', () => {
   it('maps known statuses and falls back to default', () => {
-    expect(toneOf('reservationStatus', 'ready')).toBe('success')
+    expect(toneOf('requestStatus', 'ready')).toBe('success')
     expect(toneOf('assetStatus', 'unknown')).toBe('default')
   })
 })

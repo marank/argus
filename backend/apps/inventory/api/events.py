@@ -27,7 +27,7 @@ class EventFilter(FilterSchema):
 
 def event_queryset():
     return AssetEvent.objects.select_related(
-        "performed_by", "related_user", "reservation", "asset__model__manufacturer"
+        "performed_by", "related_user", "asset_request", "asset__model__manufacturer"
     )
 
 

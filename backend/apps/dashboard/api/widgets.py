@@ -78,7 +78,7 @@ def my_tasks(request: HttpRequest):
     return widgets.my_tasks(request.user)
 
 
-@router.get("/overdue-returns", response=list[OverdueReturnOut], auth=permission_auth("reservations"))
+@router.get("/overdue-returns", response=list[OverdueReturnOut], auth=permission_auth("requests"))
 def overdue_returns(request: HttpRequest):
     return widgets.overdue_returns()
 
@@ -88,7 +88,7 @@ def team_load(request: HttpRequest):
     return widgets.team_load()
 
 
-@router.get("/request-trend", response=list[TrendWeekOut], auth=permission_auth("reservations"))
+@router.get("/request-trend", response=list[TrendWeekOut], auth=permission_auth("requests"))
 def request_trend(request: HttpRequest):
     return widgets.request_trend()
 
@@ -146,12 +146,12 @@ class WaitingRequestOut(Schema):
 Days = Annotated[int, Query(ge=1, le=31)]
 
 
-@router.get("/upcoming", response=list[UpcomingOut], auth=permission_auth("reservations"))
+@router.get("/upcoming", response=list[UpcomingOut], auth=permission_auth("requests"))
 def upcoming(request: HttpRequest, days: Days = 7):
     return widgets.upcoming(days)
 
 
-@router.get("/due-returns", response=list[DueReturnOut], auth=permission_auth("reservations"))
+@router.get("/due-returns", response=list[DueReturnOut], auth=permission_auth("requests"))
 def due_returns(request: HttpRequest, days: Days = 3):
     return widgets.due_returns(days)
 
@@ -173,6 +173,6 @@ def open_orders(request: HttpRequest):
     return widgets.open_orders()
 
 
-@router.get("/waiting-requests", response=list[WaitingRequestOut], auth=permission_auth("reservations"))
+@router.get("/waiting-requests", response=list[WaitingRequestOut], auth=permission_auth("requests"))
 def waiting_requests(request: HttpRequest):
     return widgets.waiting_requests()

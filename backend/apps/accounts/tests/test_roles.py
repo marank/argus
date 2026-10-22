@@ -35,7 +35,7 @@ def test_staff_without_role_get_no_it_area(staff_client):
     assert staff_client.get("/api/procurement/orders").status_code == 403
     assert staff_client.get("/api/calendar", {"start": "2026-01-01", "end": "2026-02-01"}).status_code == 403
     # Requests: only their own, like any employee.
-    assert staff_client.get("/api/reservations").json()["items"] == []
+    assert staff_client.get("/api/requests").json()["items"] == []
     # Lookups for forms stay possible, changes do not.
     assert staff_client.get("/api/masterdata/manufacturers").status_code == 200
     response = staff_client.post("/api/masterdata/manufacturers", {"name": "ACME"}, content_type=JSON)
@@ -86,10 +86,10 @@ def test_superusers_and_employees(demo):
     assert not can(employee, "assets")
 
 
-def test_reservation_rights(staff, staff_client, employee_client):
+def test_asset_request_rights(staff, staff_client, employee_client):
     start = date.today() + timedelta(days=3)
-    reservation = employee_client.post(
-        "/api/reservations",
+    asset_request = employee_client.post(
+        "/api/requests",
         {
             "title": "Workshop",
             "duration": "temporary",
@@ -99,15 +99,15 @@ def test_reservation_rights(staff, staff_client, employee_client):
         },
         content_type=JSON,
     ).json()
-    url = f"/api/reservations/{reservation['id']}"
+    url = f"/api/requests/{asset_request['id']}"
 
     assert staff_client.get(url).status_code == 404
-    grant(staff, reservations="read")
+    grant(staff, requests="read")
     staff_client.get("/api/auth/me")  # a new request, so the rights are read again
     assert staff_client.get(url).status_code == 200
     assert staff_client.post(f"{url}/confirm", {"items": []}, content_type=JSON).status_code == 403
 
-    Role.objects.filter(members=staff).update(permissions={"reservations": "write"})
+    Role.objects.filter(members=staff).update(permissions={"requests": "write"})
     assert staff_client.post(f"{url}/confirm", {"items": []}, content_type=JSON).status_code == 200
 
 
@@ -141,7 +141,7 @@ def test_dashboard_shows_only_readable_areas(staff, staff_client, it_client):
 
     overview = staff_client.get("/api/dashboard/it").json()
     assert overview["asset_status"] == {} and overview["recent_events"] == []
-    assert overview["reservations_submitted"] == 0
+    assert overview["requests_submitted"] == 0
     assert staff_client.get("/api/dashboard/widgets/open-orders").status_code == 403
     assert staff_client.get("/api/dashboard/widgets/expiring").json() == []
 

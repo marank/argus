@@ -34,7 +34,7 @@ const data = ref<ITOverview | null>(null)
 
 const load = async () => (data.value = await dashboardApi.it())
 onMounted(load)
-useLive(['reservation', 'issue', 'asset', 'license', 'consumable', 'order'], load)
+useLive(['request', 'issue', 'asset', 'license', 'consumable', 'order'], load)
 
 const defs = new Map(WIDGETS.map((def) => [def.id, def]))
 const def = (widget: WidgetSettings) => defs.get(widgetType(widget)) as WidgetDef

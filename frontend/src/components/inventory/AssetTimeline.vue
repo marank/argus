@@ -56,11 +56,11 @@ const TYPES: Partial<Record<AssetEventKind, 'success' | 'info' | 'warning' | 'er
             >{{ t('inventory.event.employee') }}: {{ event.related_user.display_name }}</span
           >
           <RouterLink
-            v-if="event.reservation"
-            :to="{ name: 'reservation', params: { id: event.reservation.id } }"
+            v-if="event.asset_request"
+            :to="{ name: 'request', params: { id: event.asset_request.id } }"
             class="mono"
           >
-            {{ event.reservation.number }}
+            {{ event.asset_request.number }}
           </RouterLink>
           <span v-if="event.cost">{{ money(event.cost) }}</span>
           <span v-if="event.performed_by"

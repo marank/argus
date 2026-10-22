@@ -24,9 +24,9 @@ def signals(settings, monkeypatch):
 
 
 def test_a_new_request_signals_its_requester(demo, employee_client, signals):
-    reservation = submit(employee_client).json()
+    asset_request = submit(employee_client).json()
     employee = User.objects.get(username="employee")
-    assert ("reservation", reservation["id"], {str(employee.pk)}) in signals
+    assert ("request", asset_request["id"], {str(employee.pk)}) in signals
 
 
 def test_a_problem_report_signals_its_reporter(demo, signals):
@@ -46,4 +46,4 @@ def test_signals_reach_it_and_the_named_users_only():
 def test_nothing_is_published_without_postgresql(demo, settings, django_assert_num_queries):
     settings.LIVE_EVENTS = False
     with django_assert_num_queries(0):
-        live.publish("reservation", "r1")
+        live.publish("request", "r1")

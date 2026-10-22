@@ -119,15 +119,15 @@ export const NAVIGATION: NavSection[] = [
     it: true,
     items: [
       {
-        key: 'reservations',
-        permission: 'reservations',
-        label: 'nav.reservations',
+        key: 'requests',
+        permission: 'requests',
+        label: 'nav.requests',
         icon: ListChecks,
-        to: { name: 'reservations' },
+        to: { name: 'requests' },
       },
       {
         key: 'calendar',
-        permission: 'reservations',
+        permission: 'requests',
         module: 'calendar',
         label: 'nav.calendar',
         icon: CalendarDays,
@@ -290,8 +290,8 @@ export function activeKey(name: string | undefined, params: Record<string, unkno
       return 'assets'
     case 'license':
       return 'licenses'
-    case 'reservation':
-      return 'reservations'
+    case 'request':
+      return 'requests'
     case 'order':
       return 'orders'
     case 'portal-request':

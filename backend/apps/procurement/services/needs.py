@@ -1,4 +1,4 @@
-"""What still has to be ordered: open reservation demand and consumables below minimum."""
+"""What still has to be ordered: open request demand and consumables below minimum."""
 
 from uuid import UUID
 
@@ -8,25 +8,25 @@ from django.db.models.functions import Coalesce
 from apps.inventory.models import Consumable
 from apps.inventory.services.availability import available_count
 from apps.procurement.models import PurchaseOrder, PurchaseOrderLine
-from apps.reservations.models import Reservation, ReservationItem
+from apps.requests.models import AssetRequest, AssetRequestItem
 
 
 def _on_order_by_item() -> dict[UUID, int]:
     rows = (
         PurchaseOrderLine.objects.filter(
-            reservation_item__isnull=False, order__status__in=PurchaseOrder.OPEN_STATUSES
+            asset_request_item__isnull=False, order__status__in=PurchaseOrder.OPEN_STATUSES
         )
-        .values("reservation_item")
+        .values("asset_request_item")
         .annotate(open=Coalesce(Sum(F("quantity") - F("quantity_received")), 0))
     )
-    return {row["reservation_item"]: row["open"] for row in rows}
+    return {row["asset_request_item"]: row["open"] for row in rows}
 
 
 def _on_order_by_model() -> dict[UUID, int]:
     rows = (
         PurchaseOrderLine.objects.filter(
             asset_model__isnull=False,
-            reservation_item__isnull=True,
+            asset_request_item__isnull=True,
             order__status__in=PurchaseOrder.OPEN_STATUSES,
         )
         .values("asset_model")
@@ -35,12 +35,12 @@ def _on_order_by_model() -> dict[UUID, int]:
     return {row["asset_model"]: row["open"] for row in rows}
 
 
-def reservation_needs() -> list[dict]:
+def asset_request_needs() -> list[dict]:
     on_order = _on_order_by_item()
-    items = ReservationItem.objects.filter(
-        reservation__status__in=(Reservation.Status.SUBMITTED, Reservation.Status.CONFIRMED)
+    items = AssetRequestItem.objects.filter(
+        asset_request__status__in=(AssetRequest.Status.SUBMITTED, AssetRequest.Status.CONFIRMED)
     ).select_related(
-        "reservation__requester",
+        "asset_request__requester",
         "asset_model__manufacturer",
         "asset_model__default_supplier",
         "category",
@@ -60,8 +60,8 @@ def reservation_needs() -> list[dict]:
         shortfall = max(missing - available - ordered, 0)
         needs.append(
             {
-                "reservation_item": item,
-                "reservation": item.reservation,
+                "asset_request_item": item,
+                "asset_request": item.asset_request,
                 "missing": missing,
                 "available": available,
                 "on_order": ordered,

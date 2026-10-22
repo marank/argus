@@ -19,7 +19,7 @@ const load = ref<TeamLoad | null>(null)
 
 const fetchLoad = async () => (load.value = await dashboardApi.teamLoad())
 onMounted(fetchLoad)
-useLive(['reservation', 'issue'], fetchLoad)
+useLive(['request', 'issue'], fetchLoad)
 
 const withIssues = computed(() => features.isOn('issues'))
 const rows = computed(() =>
@@ -60,7 +60,7 @@ const breakdown = (r: { requests: number; issues: number }) =>
         {{ t('dashboard.widgets.teamLoad.more', { count: rows.length - MAX_ROWS }) }}
       </p>
       <RouterLink
-        :to="{ name: 'reservations', query: { assigned: 'nobody' } }"
+        :to="{ name: 'requests', query: { assigned: 'nobody' } }"
         class="unassigned"
         :class="{ warn: unassigned }"
       >

@@ -59,28 +59,28 @@ describe('useLive', () => {
   })
 
   it('reloads once for a burst of matching signals', async () => {
-    const { reload, source } = setup(['reservation'])
-    source.send('reservation', 'r1')
-    source.send('reservation', 'r2')
+    const { reload, source } = setup(['request'])
+    source.send('request', 'r1')
+    source.send('request', 'r2')
     source.send('order', 'o1')
     await vi.advanceTimersByTimeAsync(500)
     expect(reload).toHaveBeenCalledOnce()
   })
 
   it('skips a garbled frame and keeps listening', async () => {
-    const { reload, source } = setup(['reservation'])
+    const { reload, source } = setup(['request'])
     expect(() => source.onmessage?.({ data: 'not json' })).not.toThrow()
-    source.send('reservation', 'r1')
+    source.send('request', 'r1')
     await vi.advanceTimersByTimeAsync(500)
     expect(reload).toHaveBeenCalledOnce()
   })
 
   it('only counts signals for its own object', async () => {
-    const { reload, source } = setup(['reservation'], { id: 'r1' })
-    source.send('reservation', 'r2')
+    const { reload, source } = setup(['request'], { id: 'r1' })
+    source.send('request', 'r2')
     await vi.advanceTimersByTimeAsync(500)
     expect(reload).not.toHaveBeenCalled()
-    source.send('reservation', 'r1')
+    source.send('request', 'r1')
     await vi.advanceTimersByTimeAsync(500)
     expect(reload).toHaveBeenCalledOnce()
   })

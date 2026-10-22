@@ -7,24 +7,24 @@ from apps.accounts.services.assignment import assigned_q
 from apps.core.models import SiteSettings
 from apps.inventory.models import Asset, AssetEvent, AssetIssue, Consumable, License
 from apps.procurement.models import PurchaseOrder
-from apps.reservations.models import Reservation
+from apps.requests.models import AssetRequest
 
 
 def it_overview(user) -> dict:
     today = timezone.localdate()
     rules = SiteSettings.load()
-    reservations = Reservation.objects.all()
-    open_requests = reservations.filter(status__in=Reservation.OPEN_STATUSES)
+    asset_requests = AssetRequest.objects.all()
+    open_requests = asset_requests.filter(status__in=AssetRequest.OPEN_STATUSES)
     open_issues = AssetIssue.objects.exclude(status=AssetIssue.Status.RESOLVED)
     return {
         "asset_status": {
             row["status"]: row["count"] for row in Asset.objects.values("status").annotate(count=Count("id"))
         },
-        "reservations_submitted": reservations.filter(status=Reservation.Status.SUBMITTED).count(),
-        "reservations_to_prepare": reservations.filter(status=Reservation.Status.CONFIRMED).count(),
-        "reservations_ready": reservations.filter(status=Reservation.Status.READY).count(),
-        "reservations_overdue": reservations.filter(
-            status=Reservation.Status.HANDED_OUT, end_date__lt=today
+        "requests_submitted": asset_requests.filter(status=AssetRequest.Status.SUBMITTED).count(),
+        "requests_to_prepare": asset_requests.filter(status=AssetRequest.Status.CONFIRMED).count(),
+        "requests_ready": asset_requests.filter(status=AssetRequest.Status.READY).count(),
+        "requests_overdue": asset_requests.filter(
+            status=AssetRequest.Status.HANDED_OUT, end_date__lt=today
         ).count(),
         "orders_to_place": PurchaseOrder.objects.filter(status=PurchaseOrder.Status.DRAFT).count(),
         "orders_in_transit": PurchaseOrder.objects.filter(
@@ -52,9 +52,9 @@ def it_overview(user) -> dict:
 
 
 def employee_overview(user) -> dict:
-    mine = Reservation.objects.filter(requester=user)
+    mine = AssetRequest.objects.filter(requester=user)
     return {
-        "open_reservations": mine.filter(status__in=Reservation.OPEN_STATUSES).count(),
-        "ready_for_pickup": list(mine.filter(status=Reservation.Status.READY).order_by("pickup_at")[:5]),
+        "open_requests": mine.filter(status__in=AssetRequest.OPEN_STATUSES).count(),
+        "ready_for_pickup": list(mine.filter(status=AssetRequest.Status.READY).order_by("pickup_at")[:5]),
         "assigned_assets": Asset.objects.filter(assigned_to=user).count(),
     }

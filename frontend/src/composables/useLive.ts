@@ -5,7 +5,7 @@ import { useLiveStore, type LiveEvent } from '@/stores/live'
 
 /**
  * Calls `reload` when a live update signal for one of `topics` arrives (see
- * `stores/live`), e.g. `useLive(['reservation'], load)`.
+ * `stores/live`), e.g. `useLive(['request'], load)`.
  *
  * - `id`: only signals for this object (or for the whole topic) count.
  * - `paused`: while true, e.g. with a form or modal open, signals are held back

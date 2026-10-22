@@ -10,7 +10,7 @@ const TONES: Record<string, Record<string, Tone>> = {
     lost: 'error',
     retired: 'default',
   },
-  reservationStatus: {
+  requestStatus: {
     pending_approval: 'default',
     submitted: 'warning',
     confirmed: 'primary',

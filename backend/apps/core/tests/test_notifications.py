@@ -9,7 +9,7 @@ from django.utils import timezone
 from apps.accounts.models import User
 from apps.core.models import MailSettings, SiteSettings
 from apps.masterdata.models import Category
-from apps.reservations.models import Reservation
+from apps.requests.models import AssetRequest
 
 JSON = "application/json"
 
@@ -28,7 +28,7 @@ def mail_on(demo):
 def submit(client, days: int = 3) -> dict:
     start = date.today() + timedelta(days=1)
     response = client.post(
-        "/api/reservations",
+        "/api/requests",
         {
             "title": "Workshop",
             "duration": "temporary",
@@ -50,16 +50,16 @@ def test_new_request_notifies_it(mail_on, employee_client, django_capture_on_com
         assert submit(employee_client).status_code == 201
     staff = set(User.objects.filter(is_staff=True, is_terminal=False).values_list("email", flat=True))
     assert recipients() == staff
-    assert "https://argus.example.com/reservations/" in mail.outbox[0].body
+    assert "https://argus.example.com/requests/" in mail.outbox[0].body
 
 
 def test_decision_goes_to_requester_in_their_language(
     mail_on, employee_client, it_client, django_capture_on_commit_callbacks
 ):
-    reservation = submit(employee_client).json()
+    asset_request = submit(employee_client).json()
     mail.outbox.clear()
     with django_capture_on_commit_callbacks(execute=True):
-        it_client.post(f"/api/reservations/{reservation['id']}/confirm", {"items": []}, content_type=JSON)
+        it_client.post(f"/api/requests/{asset_request['id']}/confirm", {"items": []}, content_type=JSON)
     assert recipients() == {"employee@example.com"}
     assert "bestätigt" in mail.outbox[0].subject  # the demo employee uses German
 
@@ -74,10 +74,10 @@ def test_users_and_admins_can_switch_notifications_off(
     )
     assert response.json()["notification_settings"] == {"request_confirmed": False}
 
-    reservation = submit(employee_client).json()
+    asset_request = submit(employee_client).json()
     mail.outbox.clear()
     with django_capture_on_commit_callbacks(execute=True):
-        it_client.post(f"/api/reservations/{reservation['id']}/confirm", {"items": []}, content_type=JSON)
+        it_client.post(f"/api/requests/{asset_request['id']}/confirm", {"items": []}, content_type=JSON)
     assert mail.outbox == []
 
     mail_on.events = {"request_submitted": False}
@@ -97,14 +97,14 @@ def test_reminders_are_sent_once(mail_on, django_capture_on_commit_callbacks):
     employee = User.objects.get(username="employee")
     today = timezone.localdate()
     for title, end in (("Due tomorrow", today + timedelta(days=1)), ("Overdue", today - timedelta(days=2))):
-        Reservation.objects.create(
+        AssetRequest.objects.create(
             requester=employee,
             created_by=employee,
             title=title,
-            duration=Reservation.Duration.TEMPORARY,
+            duration=AssetRequest.Duration.TEMPORARY,
             start_date=today - timedelta(days=10),
             end_date=end,
-            status=Reservation.Status.HANDED_OUT,
+            status=AssetRequest.Status.HANDED_OUT,
         )
     with django_capture_on_commit_callbacks(execute=True):
         call_command("send_reminders", verbosity=0)
@@ -165,7 +165,7 @@ def test_rules_are_part_of_the_site_settings(demo, employee_client):
 def test_it_decides_whether_the_ready_message_goes_out(
     notify, mail_on, employee_client, it_client, django_capture_on_commit_callbacks
 ):
-    url = f"/api/reservations/{submit(employee_client).json()['id']}"
+    url = f"/api/requests/{submit(employee_client).json()['id']}"
     it_client.post(f"{url}/confirm", {"items": []}, content_type=JSON)
     it_client.post(f"{url}/auto-allocate")
     mail.outbox.clear()
@@ -180,7 +180,7 @@ def test_it_decides_whether_the_ready_message_goes_out(
 
 
 def _ready(employee_client, it_client) -> str:
-    url = f"/api/reservations/{submit(employee_client).json()['id']}"
+    url = f"/api/requests/{submit(employee_client).json()['id']}"
     it_client.post(f"{url}/confirm", {"items": []}, content_type=JSON)
     it_client.post(f"{url}/auto-allocate")
     it_client.post(f"{url}/ready", {"handover_mode": "collect", "notify": False}, content_type=JSON)
@@ -228,10 +228,10 @@ def test_only_a_cancellation_by_it_is_mailed(
     by_it = submit(employee_client).json()["id"]
     mail.outbox.clear()
     with django_capture_on_commit_callbacks(execute=True):
-        employee_client.post(f"/api/reservations/{own}/cancel")
+        employee_client.post(f"/api/requests/{own}/cancel")
     assert mail.outbox == []
     with django_capture_on_commit_callbacks(execute=True):
-        it_client.post(f"/api/reservations/{by_it}/cancel")
+        it_client.post(f"/api/requests/{by_it}/cancel")
     assert recipients() == {"employee@example.com"}
     assert "storniert" in mail.outbox[0].subject
 
@@ -282,7 +282,7 @@ def _confirm(employee_client, it_client, django_capture_on_commit_callbacks) -> 
     rid = submit(employee_client).json()["id"]
     mail.outbox.clear()
     with django_capture_on_commit_callbacks(execute=True):
-        it_client.post(f"/api/reservations/{rid}/confirm", {"items": []}, content_type=JSON)
+        it_client.post(f"/api/requests/{rid}/confirm", {"items": []}, content_type=JSON)
     return rid
 
 

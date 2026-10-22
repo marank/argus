@@ -49,7 +49,7 @@ export default {
     submit: 'Assign',
     saved: 'Device assigned.',
   },
-  activeReservation: 'Reserved for {number} ({name})',
+  activeRequest: 'Reserved for {number} ({name})',
   history: 'History',
   groupByCategory: 'Group by category',
   viaModel: 'via model',

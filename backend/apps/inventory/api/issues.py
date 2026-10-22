@@ -54,7 +54,7 @@ def list_issues(
     ordering: str | None = None,
     assigned: Assigned | None = None,
 ):
-    """``assigned`` works as for reservations: ``me``, ``my_teams`` or ``nobody``."""
+    """``assigned`` works as for requests: ``me``, ``my_teams`` or ``nobody``."""
     queryset = search(
         filters.filter(issue_queryset()).filter(assigned_q(request.user, assigned)),
         q,

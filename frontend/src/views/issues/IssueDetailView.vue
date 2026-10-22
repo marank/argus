@@ -4,7 +4,7 @@ import { computed, ref, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { issuesApi } from '@/api/inventory'
-import { portalApi } from '@/api/reservations'
+import { portalApi } from '@/api/requests'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import IssueConversation from '@/components/issues/IssueConversation.vue'

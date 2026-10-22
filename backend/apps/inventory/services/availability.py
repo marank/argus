@@ -93,7 +93,7 @@ def period_availability(start: date, end: date | None) -> tuple[dict[UUID, Count
     show their free seats.
     """
     from apps.masterdata.models import AssetModel
-    from apps.reservations.models import Reservation, ReservationAllocation, ReservationItem
+    from apps.requests.models import AssetRequest, AssetRequestAllocation, AssetRequestItem
 
     stock: dict[UUID, int] = defaultdict(int)
     reserved: dict[UUID, int] = defaultdict(int)
@@ -106,27 +106,27 @@ def period_availability(start: date, end: date | None) -> tuple[dict[UUID, Count
         stock[row["model_id"]] += row["n"] or 0
         reserved[row["model_id"]] += row["r"] or 0
 
-    overlapping = Q(reservation__status__in=[Reservation.Status.CONFIRMED, Reservation.Status.READY]) & (
-        Q(reservation__end_date__isnull=True) | Q(reservation__end_date__gte=start)
+    overlapping = Q(asset_request__status__in=[AssetRequest.Status.CONFIRMED, AssetRequest.Status.READY]) & (
+        Q(asset_request__end_date__isnull=True) | Q(asset_request__end_date__gte=start)
     )
     if end is not None:
         # Devices leave on the pickup day, which can be before they are needed.
         overlapping &= (
-            Q(reservation__start_date__lte=end)
-            | Q(reservation__requested_pickup_date__lte=end)
-            | Q(reservation__pickup_at__date__lte=end)
+            Q(asset_request__start_date__lte=end)
+            | Q(asset_request__requested_pickup_date__lte=end)
+            | Q(asset_request__pickup_at__date__lte=end)
         )
-    items = ReservationItem.objects.filter(overlapping).select_related("asset_model", "category")
+    items = AssetRequestItem.objects.filter(overlapping).select_related("asset_model", "category")
     allocated = defaultdict(int)
     for row in (
-        ReservationAllocation.objects.filter(item__in=items, asset__isnull=False)
+        AssetRequestAllocation.objects.filter(item__in=items, asset__isnull=False)
         .values("item_id", "asset__model_id")
         .annotate(n=Count("pk"))
     ):
         allocated[row["item_id"]] += row["n"]
         reserved[row["asset__model_id"]] += row["n"]
     consumable_allocated = dict(
-        ReservationAllocation.objects.filter(item__in=items, consumable__isnull=False)
+        AssetRequestAllocation.objects.filter(item__in=items, consumable__isnull=False)
         .values_list("item_id")
         .annotate(n=Sum("quantity"))
     )

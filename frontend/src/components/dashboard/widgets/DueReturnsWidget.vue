@@ -5,7 +5,7 @@ import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { dashboardApi } from '@/api/dashboard'
-import ExtendModal from '@/components/reservations/ExtendModal.vue'
+import ExtendModal from '@/components/requests/ExtendModal.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useLive } from '@/composables/useLive'
 import type { DueReturn, WidgetProps } from '@/types/dashboard'
@@ -32,7 +32,7 @@ const days = useOption<(typeof PERIODS)[number]>(stored, save, 'days', 3, oneOf(
 const rows = ref<DueReturn[] | null>(null)
 const load = async () => (rows.value = await dashboardApi.dueReturns(days.value))
 watch(days, load, { immediate: true })
-useLive(['reservation'], load)
+useLive(['request'], load)
 const { remind, sending } = useRemind(load)
 
 const extending = ref<DueReturn | null>(null)
@@ -64,7 +64,7 @@ function extend(row: DueReturn) {
     </p>
     <div v-else class="lines cols-5">
       <div v-for="row in rows" :key="row.id" class="line">
-        <RouterLink :to="{ name: 'reservation', params: { id: row.id } }" class="mono">
+        <RouterLink :to="{ name: 'request', params: { id: row.id } }" class="mono">
           {{ row.number }}
         </RouterLink>
         <span class="title">
@@ -82,7 +82,7 @@ function extend(row: DueReturn) {
         <NButton
           size="tiny"
           quaternary
-          :title="t('reservations.actions.extend')"
+          :title="t('requests.actions.extend')"
           @click="extend(row)"
         >
           <template #icon><CalendarPlus /></template>
@@ -102,7 +102,7 @@ function extend(row: DueReturn) {
     <ExtendModal
       v-if="extending"
       v-model:show="showExtend"
-      :reservation="extending"
+      :assetRequest="extending"
       @saved="load"
     />
   </NCard>

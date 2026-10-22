@@ -5,13 +5,13 @@ import { NButton, NRadioButton, NRadioGroup, NSkeleton } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { reservationsApi } from '@/api/reservations'
+import { requestsApi } from '@/api/requests'
 import EmptyState from '@/components/common/EmptyState.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useLive } from '@/composables/useLive'
-import type { ReservationListItem } from '@/types/reservations'
+import type { AssetRequestListItem } from '@/types/requests'
 
 /**
  * The employee's requests: running ones as cards with progress and what happens
@@ -21,13 +21,13 @@ const { t } = useI18n()
 const { date, weekday, enumLabel } = useFormat()
 const sortBy = useStorage<'status' | 'date'>('argus.my-requests-sort', 'status')
 
-const requests = ref<ReservationListItem[] | null>(null)
+const requests = ref<AssetRequestListItem[] | null>(null)
 async function load() {
-  const page = await reservationsApi.list({ mine: true, page_size: 100, ordering: '-created_at' })
+  const page = await requestsApi.list({ mine: true, page_size: 100, ordering: '-created_at' })
   requests.value = page.items
 }
 onMounted(load)
-useLive(['reservation'], load)
+useLive(['request'], load)
 
 const STEPS = ['submitted', 'confirmed', 'ready', 'handed_out'] as const
 // Waiting for the department comes before the first step.
@@ -42,42 +42,42 @@ const rows = computed(() => {
   if (sortBy.value === 'date') return [{ key: 'all', label: '', items: active.value }]
   return STATUS_ROWS.map((status) => ({
     key: status,
-    label: enumLabel('reservationStatus', status),
+    label: enumLabel('requestStatus', status),
     items: active.value.filter((r) => r.status === status),
   })).filter((row) => row.items.length)
 })
 
-const stepIndex = (r: ReservationListItem) => STEPS.indexOf(r.status as (typeof STEPS)[number])
+const stepIndex = (r: AssetRequestListItem) => STEPS.indexOf(r.status as (typeof STEPS)[number])
 
-function period(r: ReservationListItem): string {
+function period(r: AssetRequestListItem): string {
   return `${date(r.start_date)} → ${r.end_date ? date(r.end_date) : t('common.permanent')}`
 }
 
 /** One sentence on where the request stands and what the employee can expect. */
-function nextStep(r: ReservationListItem): string {
+function nextStep(r: AssetRequestListItem): string {
   switch (r.status) {
     case 'pending_approval':
-      return t('reservations.mine.next.pending_approval')
+      return t('requests.mine.next.pending_approval')
     case 'submitted':
-      return t('reservations.mine.next.submitted')
+      return t('requests.mine.next.submitted')
     case 'confirmed':
-      return t('reservations.mine.next.confirmed')
+      return t('requests.mine.next.confirmed')
     case 'ready':
       return r.pickup_at
-        ? t('reservations.mine.next.readyAt', { date: weekday(r.pickup_at) })
-        : t('reservations.mine.next.ready')
+        ? t('requests.mine.next.readyAt', { date: weekday(r.pickup_at) })
+        : t('requests.mine.next.ready')
     default:
-      if (r.is_overdue) return t('reservations.mine.next.overdue', { date: date(r.end_date) })
+      if (r.is_overdue) return t('requests.mine.next.overdue', { date: date(r.end_date) })
       return r.end_date
-        ? t('reservations.mine.next.handedOut', { date: date(r.end_date) })
-        : t('reservations.mine.next.handedOutPermanent')
+        ? t('requests.mine.next.handedOut', { date: date(r.end_date) })
+        : t('requests.mine.next.handedOutPermanent')
   }
 }
 </script>
 
 <template>
   <div class="page">
-    <PageHeader :title="t('reservations.mine.title')" :subtitle="t('reservations.mine.subtitle')">
+    <PageHeader :title="t('requests.mine.title')" :subtitle="t('requests.mine.subtitle')">
       <template #actions>
         <RouterLink :to="{ name: 'portal-new' }">
           <NButton type="primary">
@@ -89,21 +89,21 @@ function nextStep(r: ReservationListItem): string {
     </PageHeader>
 
     <NSkeleton v-if="!requests" height="120px" :repeat="2" />
-    <EmptyState v-else-if="!requests.length" :text="t('reservations.mine.empty')" />
+    <EmptyState v-else-if="!requests.length" :text="t('requests.mine.empty')" />
     <div v-else class="stack">
       <section>
         <div class="section-head">
-          <h2 class="eyebrow section">{{ t('reservations.mine.active') }}</h2>
+          <h2 class="eyebrow section">{{ t('requests.mine.active') }}</h2>
           <NRadioGroup
             v-model:value="sortBy"
             size="small"
-            :aria-label="t('reservations.mine.sortBy')"
+            :aria-label="t('requests.mine.sortBy')"
           >
-            <NRadioButton value="status">{{ t('reservations.mine.byStatus') }}</NRadioButton>
-            <NRadioButton value="date">{{ t('reservations.mine.byDate') }}</NRadioButton>
+            <NRadioButton value="status">{{ t('requests.mine.byStatus') }}</NRadioButton>
+            <NRadioButton value="date">{{ t('requests.mine.byDate') }}</NRadioButton>
           </NRadioGroup>
         </div>
-        <p v-if="!active.length" class="muted">{{ t('reservations.mine.noActive') }}</p>
+        <p v-if="!active.length" class="muted">{{ t('requests.mine.noActive') }}</p>
         <div v-for="row in rows" :key="row.key" class="row-block">
           <div v-if="row.label" class="row-label">
             {{ row.label }} <span class="mono muted">{{ row.items.length }}</span>
@@ -122,7 +122,7 @@ function nextStep(r: ReservationListItem): string {
                   <span class="mono muted small">{{ r.number }}</span>
                 </div>
                 <StatusTag
-                  group="reservationStatus"
+                  group="requestStatus"
                   :value="r.status"
                   :pulse="r.status === 'ready'"
                 />
@@ -145,7 +145,7 @@ function nextStep(r: ReservationListItem): string {
       </section>
 
       <section v-if="closed.length">
-        <h2 class="eyebrow section">{{ t('reservations.mine.closed') }}</h2>
+        <h2 class="eyebrow section">{{ t('requests.mine.closed') }}</h2>
         <div class="closed">
           <RouterLink
             v-for="r in closed"
@@ -156,7 +156,7 @@ function nextStep(r: ReservationListItem): string {
             <span class="mono muted">{{ r.number }}</span>
             <span class="title">{{ r.title }}</span>
             <span class="mono muted small">{{ period(r) }}</span>
-            <StatusTag group="reservationStatus" :value="r.status" />
+            <StatusTag group="requestStatus" :value="r.status" />
             <ChevronRight :size="14" class="muted" />
           </RouterLink>
         </div>

@@ -41,7 +41,7 @@ const days = Array.from({ length: 7 }, (_, i) => {
 
 const load = async () => (entries.value = await calendarApi.entries(days[0]!, days[6]!, KINDS))
 onMounted(load)
-useLive(['reservation', 'order', 'asset', 'license'], load)
+useLive(['request', 'order', 'asset', 'license'], load)
 
 /** All kinds are loaded once; switching one off only filters. */
 const shown = computed(() => (entries.value ?? []).filter((e) => kinds.value.includes(e.kind)))

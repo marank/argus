@@ -14,9 +14,9 @@ class PurchaseOrderLineInline(admin.TabularInline):
         "quantity",
         "unit_price",
         "quantity_received",
-        "reservation_item",
+        "asset_request_item",
     ]
-    autocomplete_fields = ["asset_model", "reservation_item"]
+    autocomplete_fields = ["asset_model", "asset_request_item"]
 
 
 @admin.register(PurchaseOrder)

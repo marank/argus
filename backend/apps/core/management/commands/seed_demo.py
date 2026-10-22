@@ -34,8 +34,8 @@ from apps.inventory.services import licenses as license_service
 from apps.inventory.services.consumables import move_consumable
 from apps.masterdata.models import AssetModel, Category, Location, Manufacturer, Supplier
 from apps.procurement.services import orders as order_service
-from apps.reservations.models import Handover
-from apps.reservations.services import workflow
+from apps.requests.models import Handover
+from apps.requests.services import workflow
 
 DEMO_PASSWORD = "argus-demo"
 
@@ -498,7 +498,7 @@ def seed_extra(base: dict, stdout) -> None:
         name="IT support",
         description="Requests, devices and problem reports; master data read-only.",
         permissions={
-            **dict.fromkeys(("reservations", "assets", "consumables", "licenses", "issues"), WRITE),
+            **dict.fromkeys(("requests", "assets", "consumables", "licenses", "issues"), WRITE),
             **dict.fromkeys(("models", "categories", "manufacturers", "locations", "procurement"), READ),
         },
     )
@@ -751,20 +751,20 @@ def seed_extra(base: dict, stdout) -> None:
             data["end_date"] = today + timedelta(days=start + days - 1)
         return workflow.submit(user, data, items, created_by=user, allow_past_start=start < 0)
 
-    def confirm(reservation, comment=""):
-        return workflow.confirm(reservation, it, {}, comment)
+    def confirm(asset_request, comment=""):
+        return workflow.confirm(asset_request, it, {}, comment)
 
-    def mark_ready(reservation, pickup_days=1, location=None):
+    def mark_ready(asset_request, pickup_days=1, location=None):
         pickup = now.replace(hour=10, minute=0, second=0, microsecond=0) + timedelta(days=pickup_days)
-        workflow.auto_allocate(reservation, it)
+        workflow.auto_allocate(asset_request, it)
         return workflow.mark_ready(
-            reservation, it, pickup_at=pickup, pickup_location_id=location.pk if location else None
+            asset_request, it, pickup_at=pickup, pickup_location_id=location.pk if location else None
         )
 
-    def hand_out(reservation):
-        confirm(reservation)
-        mark_ready(reservation, pickup_days=0)
-        return workflow.hand_out(reservation, it, method=Handover.Method.DIRECT)
+    def hand_out(asset_request):
+        confirm(asset_request)
+        mark_ready(asset_request, pickup_days=0)
+        return workflow.hand_out(asset_request, it, method=Handover.Method.DIRECT)
 
     tablets, monitors = categories["tablets"], categories["monitors"]
     submit(

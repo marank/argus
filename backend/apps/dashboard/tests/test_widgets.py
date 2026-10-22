@@ -3,14 +3,14 @@ from datetime import timedelta
 from django.utils import timezone
 
 from apps.accounts.models import User
-from apps.reservations.models import Reservation
+from apps.requests.models import AssetRequest
 
 
 def test_overdue_returns_list_lent_devices_past_their_date(it_client):
-    workshop = Reservation.objects.get(title="Training workshop")
-    Reservation.objects.filter(pk=workshop.pk).update(
-        status=Reservation.Status.HANDED_OUT,
-        duration=Reservation.Duration.TEMPORARY,
+    workshop = AssetRequest.objects.get(title="Training workshop")
+    AssetRequest.objects.filter(pk=workshop.pk).update(
+        status=AssetRequest.Status.HANDED_OUT,
+        duration=AssetRequest.Duration.TEMPORARY,
         end_date=timezone.localdate() - timedelta(days=3),
     )
     rows = it_client.get("/api/dashboard/widgets/overdue-returns").json()
@@ -21,8 +21,8 @@ def test_overdue_returns_list_lent_devices_past_their_date(it_client):
 
 def test_my_tasks_and_team_load_follow_the_assignee(it_client):
     me = User.objects.get(username="it")
-    workshop = Reservation.objects.get(title="Training workshop")
-    Reservation.objects.filter(pk=workshop.pk).update(status=Reservation.Status.SUBMITTED, assignee=me)
+    workshop = AssetRequest.objects.get(title="Training workshop")
+    AssetRequest.objects.filter(pk=workshop.pk).update(status=AssetRequest.Status.SUBMITTED, assignee=me)
 
     tasks = it_client.get("/api/dashboard/widgets/my-tasks").json()
     assert str(workshop.pk) in {r["id"] for r in tasks["requests"]}
@@ -35,7 +35,7 @@ def test_my_tasks_and_team_load_follow_the_assignee(it_client):
 
 def test_request_trend_counts_this_weeks_requests(it_client):
     before = it_client.get("/api/dashboard/widgets/request-trend").json()[-1]["created"]
-    workshop = Reservation.objects.get(title="Training workshop")
+    workshop = AssetRequest.objects.get(title="Training workshop")
     workshop.pk, workshop.number = None, ""
     workshop.save()
     weeks = it_client.get("/api/dashboard/widgets/request-trend").json()
@@ -45,9 +45,9 @@ def test_request_trend_counts_this_weeks_requests(it_client):
 
 
 def test_upcoming_follows_the_chosen_period(it_client):
-    workshop = Reservation.objects.get(title="Training workshop")
-    Reservation.objects.filter(pk=workshop.pk).update(
-        status=Reservation.Status.CONFIRMED, start_date=timezone.localdate() + timedelta(days=10)
+    workshop = AssetRequest.objects.get(title="Training workshop")
+    AssetRequest.objects.filter(pk=workshop.pk).update(
+        status=AssetRequest.Status.CONFIRMED, start_date=timezone.localdate() + timedelta(days=10)
     )
     week = {r["id"] for r in it_client.get("/api/dashboard/widgets/upcoming?days=7").json()}
     fortnight = {r["id"] for r in it_client.get("/api/dashboard/widgets/upcoming?days=14").json()}
@@ -57,9 +57,9 @@ def test_upcoming_follows_the_chosen_period(it_client):
 
 
 def test_due_returns_list_lent_devices_due_soon_but_not_overdue(it_client):
-    workshop = Reservation.objects.get(title="Training workshop")
-    lent = Reservation.objects.filter(pk=workshop.pk)
-    lent.update(status=Reservation.Status.HANDED_OUT, duration=Reservation.Duration.TEMPORARY)
+    workshop = AssetRequest.objects.get(title="Training workshop")
+    lent = AssetRequest.objects.filter(pk=workshop.pk)
+    lent.update(status=AssetRequest.Status.HANDED_OUT, duration=AssetRequest.Duration.TEMPORARY)
 
     def listed():
         rows = it_client.get("/api/dashboard/widgets/due-returns").json()
@@ -72,8 +72,8 @@ def test_due_returns_list_lent_devices_due_soon_but_not_overdue(it_client):
 
 
 def test_waiting_requests_list_submitted_requests(it_client):
-    workshop = Reservation.objects.get(title="Training workshop")
-    Reservation.objects.filter(pk=workshop.pk).update(status=Reservation.Status.SUBMITTED)
+    workshop = AssetRequest.objects.get(title="Training workshop")
+    AssetRequest.objects.filter(pk=workshop.pk).update(status=AssetRequest.Status.SUBMITTED)
     rows = it_client.get("/api/dashboard/widgets/waiting-requests").json()
     assert str(workshop.pk) in {r["id"] for r in rows}
     assert [r["created_at"] for r in rows] == sorted(r["created_at"] for r in rows)

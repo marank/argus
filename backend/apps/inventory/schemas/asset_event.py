@@ -11,7 +11,7 @@ from apps.inventory.models import AssetEvent
 from .refs import AssetRefOut
 
 
-class ReservationRefOut(Schema):
+class AssetRequestRefOut(Schema):
     id: UUID
     number: str
 
@@ -26,7 +26,7 @@ class AssetEventOut(Schema):
     cost: Decimal | None
     performed_by: UserRefOut | None
     related_user: UserRefOut | None
-    reservation: ReservationRefOut | None
+    asset_request: AssetRequestRefOut | None
 
 
 class AssetEventWithAssetOut(AssetEventOut):

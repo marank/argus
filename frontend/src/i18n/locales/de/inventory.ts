@@ -49,7 +49,7 @@ export default {
     submit: 'Zuweisen',
     saved: 'Gerät zugewiesen.',
   },
-  activeReservation: 'Reserviert für {number} ({name})',
+  activeRequest: 'Reserviert für {number} ({name})',
   history: 'Historie',
   groupByCategory: 'Nach Kategorie gruppieren',
   viaModel: 'über Modell',

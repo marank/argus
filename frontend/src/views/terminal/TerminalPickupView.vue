@@ -17,7 +17,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } 
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
-import { terminalApi } from '@/api/reservations'
+import { terminalApi } from '@/api/requests'
 import SignaturePad from '@/components/terminal/SignaturePad.vue'
 import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
@@ -27,9 +27,9 @@ import type {
   TerminalPerson,
   TerminalPickupDetail,
   TerminalStaff,
-} from '@/types/reservations'
+} from '@/types/requests'
 import { categoryIcon } from '@/utils/icons'
-import { allocationCode, allocationModel } from '@/utils/reservations'
+import { allocationCode, allocationModel } from '@/utils/requests'
 
 /**
  * Pickup at the shared terminal in three steps:
@@ -44,7 +44,7 @@ const confirmDialog = useConfirm()
 
 type Step = 'devices' | 'person' | 'sign' | 'done'
 
-const reservation = ref<TerminalPickupDetail | null>(null)
+const assetRequest = ref<TerminalPickupDetail | null>(null)
 const step = ref<Step>('devices')
 const notes = reactive<Record<Id, string>>({})
 const openNote = ref<Id | null>(null)
@@ -75,7 +75,7 @@ const staffOptions = computed(() =>
 )
 const handedOutByName = computed(() => {
   const chosen = staff.value.find((s) => s.id === handedOutBy.value)
-  const preparer = reservation.value?.prepared_by ?? reservation.value?.handled_by
+  const preparer = assetRequest.value?.prepared_by ?? assetRequest.value?.handled_by
   return chosen?.display_name ?? preparer?.display_name ?? '—'
 })
 
@@ -86,25 +86,25 @@ async function changeStaff() {
 
 onMounted(async () => {
   try {
-    reservation.value = await terminalApi.get(props.id)
+    assetRequest.value = await terminalApi.get(props.id)
     handedOutBy.value =
-      reservation.value.prepared_by?.id ?? reservation.value.handled_by?.id ?? null
+      assetRequest.value.prepared_by?.id ?? assetRequest.value.handled_by?.id ?? null
     // IT can skip the check, e.g. for sealed devices: start with who collects.
-    if (reservation.value.skip_device_check) step.value = 'person'
+    if (assetRequest.value.skip_device_check) step.value = 'person'
   } catch {
     router.replace({ name: 'terminal' })
   }
 })
 
 const devices = computed(() =>
-  (reservation.value?.items ?? []).flatMap((item) =>
+  (assetRequest.value?.items ?? []).flatMap((item) =>
     // License seats are already assigned; only things to take along are checked here.
     item.allocations.filter((a) => !a.license).map((allocation) => ({ item, allocation })),
   ),
 )
 
 const collectorName = computed(() => {
-  if (collector.value === 'requester') return reservation.value?.requester.display_name ?? ''
+  if (collector.value === 'requester') return assetRequest.value?.requester.display_name ?? ''
   return person.value?.display_name ?? personQuery.value.trim()
 })
 
@@ -133,13 +133,13 @@ function deviceLabel(allocation: TerminalAllocation) {
 }
 
 async function confirm() {
-  if (!reservation.value || !pad.value || pad.value.isEmpty()) return
+  if (!assetRequest.value || !pad.value || pad.value.isEmpty()) return
   const done = await run(() =>
-    terminalApi.sign(reservation.value!.id, {
+    terminalApi.sign(assetRequest.value!.id, {
       handed_out_by: handedOutBy.value,
       received_by:
         collector.value === 'requester'
-          ? reservation.value!.requester.id
+          ? assetRequest.value!.requester.id
           : (person.value?.id ?? null),
       received_by_name: collectorName.value,
       signature: pad.value!.toDataUrl(),
@@ -164,7 +164,7 @@ const stopIdle = watch(
 onBeforeUnmount(stopIdle)
 
 const STEPS = computed<Step[]>(() =>
-  reservation.value?.skip_device_check ? ['person', 'sign'] : ['devices', 'person', 'sign'],
+  assetRequest.value?.skip_device_check ? ['person', 'sign'] : ['devices', 'person', 'sign'],
 )
 
 async function cancelPickup() {
@@ -177,7 +177,7 @@ async function cancelPickup() {
 </script>
 
 <template>
-  <NSkeleton v-if="!reservation" height="300px" />
+  <NSkeleton v-if="!assetRequest" height="300px" />
 
   <div v-else-if="step === 'done'" class="done">
     <CircleCheckBig :size="88" :stroke-width="1.3" />
@@ -191,9 +191,9 @@ async function cancelPickup() {
   <div v-else class="pickup">
     <div class="head">
       <div class="title">
-        <span class="eyebrow">{{ reservation.number }}</span>
-        <h1>{{ reservation.requester.display_name }}</h1>
-        <span class="muted">{{ reservation.title }}</span>
+        <span class="eyebrow">{{ assetRequest.number }}</span>
+        <h1>{{ assetRequest.requester.display_name }}</h1>
+        <span class="muted">{{ assetRequest.title }}</span>
       </div>
       <ol class="steps">
         <li
@@ -223,8 +223,8 @@ async function cancelPickup() {
           <span class="fact">{{ t('terminal.deviceCount', devices.length) }}</span>
           <span class="fact">
             <CalendarClock :size="16" />
-            <template v-if="reservation.end_date">
-              {{ t('terminal.returnBy', { date: weekday(reservation.end_date) }) }}
+            <template v-if="assetRequest.end_date">
+              {{ t('terminal.returnBy', { date: weekday(assetRequest.end_date) }) }}
             </template>
             <template v-else>{{ t('terminal.keep') }}</template>
           </span>
@@ -312,8 +312,8 @@ async function cancelPickup() {
         >
           <UserRound :size="30" :stroke-width="1.5" />
           <span>
-            <strong>{{ t('terminal.iAm', { name: reservation.requester.display_name }) }}</strong>
-            <small class="muted">{{ reservation.department?.name }}</small>
+            <strong>{{ t('terminal.iAm', { name: assetRequest.requester.display_name }) }}</strong>
+            <small class="muted">{{ assetRequest.department?.name }}</small>
           </span>
         </button>
         <button
@@ -326,7 +326,7 @@ async function cancelPickup() {
           <span>
             <strong>{{ t('terminal.someoneElse') }}</strong>
             <small class="muted">{{
-              t('terminal.someoneElseHint', { name: reservation.requester.display_name })
+              t('terminal.someoneElseHint', { name: assetRequest.requester.display_name })
             }}</small>
           </span>
         </button>
@@ -363,7 +363,7 @@ async function cancelPickup() {
       </div>
       <div class="actions">
         <NButton
-          v-if="!reservation.skip_device_check"
+          v-if="!assetRequest.skip_device_check"
           size="large"
           class="back"
           @click="step = 'devices'"
@@ -393,13 +393,13 @@ async function cancelPickup() {
               <span class="eyebrow">{{ t('handover.receivedBy') }}</span>
               <strong>{{ collectorName }}</strong>
               <small v-if="collector === 'other'" class="muted">
-                {{ t('terminal.someoneElseHint', { name: reservation.requester.display_name }) }}
+                {{ t('terminal.someoneElseHint', { name: assetRequest.requester.display_name }) }}
               </small>
             </div>
             <div>
-              <span class="eyebrow">{{ t('reservations.endDate') }}</span>
-              <strong v-if="reservation.end_date" class="mono">{{
-                weekday(reservation.end_date)
+              <span class="eyebrow">{{ t('requests.endDate') }}</span>
+              <strong v-if="assetRequest.end_date" class="mono">{{
+                weekday(assetRequest.end_date)
               }}</strong>
               <strong v-else>{{ t('terminal.keep') }}</strong>
             </div>
@@ -443,7 +443,7 @@ async function cancelPickup() {
         <div class="signature">
           <SignaturePad ref="pad" :height="340" @change="(empty: boolean) => (signed = !empty)" />
           <p class="legal">
-            {{ t('terminal.legal', { name: reservation.requester.display_name }) }}
+            {{ t('terminal.legal', { name: assetRequest.requester.display_name }) }}
           </p>
         </div>
       </div>

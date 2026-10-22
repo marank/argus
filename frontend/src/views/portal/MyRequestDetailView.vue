@@ -7,21 +7,21 @@ import { computed, h, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
-import { reservationsApi } from '@/api/reservations'
+import { requestsApi } from '@/api/requests'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
-import HandoverCard from '@/components/reservations/HandoverCard.vue'
-import ReservationSteps from '@/components/reservations/ReservationSteps.vue'
-import OriginTag from '@/components/reservations/OriginTag.vue'
-import ReturnsCard from '@/components/reservations/ReturnsCard.vue'
-import ApprovalCard from '@/components/reservations/detail/ApprovalCard.vue'
-import HandoverPlanCard from '@/components/reservations/detail/HandoverPlanCard.vue'
-import RequestInfoCard from '@/components/reservations/detail/RequestInfoCard.vue'
-import ReservationHistory from '@/components/reservations/detail/ReservationHistory.vue'
+import HandoverCard from '@/components/requests/HandoverCard.vue'
+import RequestSteps from '@/components/requests/RequestSteps.vue'
+import OriginTag from '@/components/requests/OriginTag.vue'
+import ReturnsCard from '@/components/requests/ReturnsCard.vue'
+import ApprovalCard from '@/components/requests/detail/ApprovalCard.vue'
+import HandoverPlanCard from '@/components/requests/detail/HandoverPlanCard.vue'
+import RequestInfoCard from '@/components/requests/detail/RequestInfoCard.vue'
+import RequestHistory from '@/components/requests/detail/RequestHistory.vue'
 import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
-import type { Reservation, ReservationItem } from '@/types/reservations'
-import { allocationCode, allocationModel, handoverPlanned, itemLabel } from '@/utils/reservations'
+import type { AssetRequest, AssetRequestItem } from '@/types/requests'
+import { allocationCode, allocationModel, handoverPlanned, itemLabel } from '@/utils/requests'
 
 const props = defineProps<{ id: Id }>()
 const { t } = useI18n()
@@ -29,15 +29,15 @@ const route = useRoute()
 const confirm = useConfirm()
 const { busy, run } = useAction()
 
-const reservation = ref<Reservation | null>(null)
+const assetRequest = ref<AssetRequest | null>(null)
 
-const load = async () => (reservation.value = await reservationsApi.get(props.id))
+const load = async () => (assetRequest.value = await requestsApi.get(props.id))
 onMounted(load)
-useLive(['reservation'], load, { id: () => props.id })
+useLive(['request'], load, { id: () => props.id })
 
 /** Lent for a period: when it is due back, then what came back. */
 const showReturns = computed(() => {
-  const r = reservation.value
+  const r = assetRequest.value
   if (!r) return false
   return (
     r.returns.length > 0 ||
@@ -46,28 +46,28 @@ const showReturns = computed(() => {
 })
 
 async function cancel() {
-  if (!(await confirm(t('reservations.actions.confirmCancel'), { danger: true }))) return
-  const updated = await run(() => reservationsApi.cancel(props.id))
-  if (updated) reservation.value = updated
+  if (!(await confirm(t('requests.actions.confirmCancel'), { danger: true }))) return
+  const updated = await run(() => requestsApi.cancel(props.id))
+  if (updated) assetRequest.value = updated
 }
 
-const columns: DataTableColumns<ReservationItem> = [
+const columns: DataTableColumns<AssetRequestItem> = [
   {
     key: 'label',
-    title: () => t('reservations.items'),
+    title: () => t('requests.items'),
     render: (i) =>
       h('div', [h('div', itemLabel(i)), i.note ? h('small', { class: 'muted' }, i.note) : null]),
   },
   {
     key: 'requested',
-    title: () => t('reservations.quantities.requested'),
+    title: () => t('requests.quantities.requested'),
     width: 120,
     align: 'right',
     render: (i) => h('span', { class: 'mono' }, i.quantity_requested),
   },
   {
     key: 'confirmed',
-    title: () => t('reservations.quantities.confirmed'),
+    title: () => t('requests.quantities.confirmed'),
     width: 120,
     align: 'right',
     render: (i) =>
@@ -99,33 +99,33 @@ const columns: DataTableColumns<ReservationItem> = [
 
 <template>
   <div class="page">
-    <NSkeleton v-if="!reservation" height="200px" />
+    <NSkeleton v-if="!assetRequest" height="200px" />
     <template v-else>
-      <PageHeader :title="reservation.title" :eyebrow="reservation.number">
+      <PageHeader :title="assetRequest.title" :eyebrow="assetRequest.number">
         <template #badge
           ><StatusTag
-            group="reservationStatus"
-            :value="reservation.status"
-            :pulse="reservation.status === 'ready'" /><OriginTag :origin="reservation.origin"
+            group="requestStatus"
+            :value="assetRequest.status"
+            :pulse="assetRequest.status === 'ready'" /><OriginTag :origin="assetRequest.origin"
         /></template>
         <template #actions>
           <NButton
             v-if="
-              ['pending_approval', 'submitted', 'confirmed', 'ready'].includes(reservation.status)
+              ['pending_approval', 'submitted', 'confirmed', 'ready'].includes(assetRequest.status)
             "
             :loading="busy"
             @click="cancel"
           >
             <template #icon><X :size="15" /></template>
-            {{ t('reservations.actions.cancel') }}
+            {{ t('requests.actions.cancel') }}
           </NButton>
           <RouterLink
-            v-if="['rejected', 'cancelled', 'completed'].includes(reservation.status)"
-            :to="{ name: 'portal-new', query: { from: reservation.id } }"
+            v-if="['rejected', 'cancelled', 'completed'].includes(assetRequest.status)"
+            :to="{ name: 'portal-new', query: { from: assetRequest.id } }"
           >
-            <NButton :type="reservation.status === 'completed' ? 'default' : 'primary'">
+            <NButton :type="assetRequest.status === 'completed' ? 'default' : 'primary'">
               <template #icon><RotateCcw :size="15" /></template>
-              {{ t('reservations.again.action') }}
+              {{ t('requests.again.action') }}
             </NButton>
           </RouterLink>
         </template>
@@ -135,48 +135,48 @@ const columns: DataTableColumns<ReservationItem> = [
         <NAlert v-if="route.query.created" type="success" :bordered="false">
           {{
             t(
-              reservation.status === 'pending_approval'
-                ? 'reservations.new.submittedForApproval'
-                : 'reservations.new.submitted',
-              { number: reservation.number },
+              assetRequest.status === 'pending_approval'
+                ? 'requests.new.submittedForApproval'
+                : 'requests.new.submitted',
+              { number: assetRequest.number },
             )
           }}
         </NAlert>
-        <NCard size="small"><ReservationSteps :reservation="reservation" /></NCard>
+        <NCard size="small"><RequestSteps :assetRequest="assetRequest" /></NCard>
         <div class="layout">
           <div class="stack">
-            <NCard :title="t('reservations.items')" size="small">
+            <NCard :title="t('requests.items')" size="small">
               <NDataTable
                 size="small"
                 :columns="columns"
-                :data="reservation.items"
+                :data="assetRequest.items"
                 :bordered="false"
               />
             </NCard>
-            <ReservationHistory :reservation="reservation" />
+            <RequestHistory :assetRequest="assetRequest" />
           </div>
           <!-- First on narrow screens: how and when the devices come matters most. -->
           <div class="stack side">
             <HandoverCard
-              v-if="reservation.handover"
-              :reservation="reservation"
+              v-if="assetRequest.handover"
+              :assetRequest="assetRequest"
               :printable="false"
             />
             <HandoverPlanCard
               v-else-if="
-                ['confirmed', 'ready'].includes(reservation.status) && handoverPlanned(reservation)
+                ['confirmed', 'ready'].includes(assetRequest.status) && handoverPlanned(assetRequest)
               "
-              :reservation="reservation"
+              :assetRequest="assetRequest"
               for-employee
             />
             <ReturnsCard
               v-if="showReturns"
-              :reservation="reservation"
+              :assetRequest="assetRequest"
               with-due
               :printable="false"
             />
-            <RequestInfoCard :reservation="reservation" />
-            <ApprovalCard v-if="reservation.approval" :reservation="reservation" />
+            <RequestInfoCard :assetRequest="assetRequest" />
+            <ApprovalCard v-if="assetRequest.approval" :assetRequest="assetRequest" />
           </div>
         </div>
       </div>

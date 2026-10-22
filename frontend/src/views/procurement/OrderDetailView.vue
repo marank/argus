@@ -73,7 +73,7 @@ function apply(value: Order) {
     quantity: line.quantity,
     unit_price: line.unit_price,
     price: line.unit_price ? Number(line.unit_price) : null,
-    reservation_item: line.reservation_item?.id ?? null,
+    asset_request_item: line.asset_request_item?.id ?? null,
   }))
 }
 
@@ -279,13 +279,13 @@ function openOrdered() {
                     />
                   </div>
                   <small
-                    v-if="order.lines.find((l) => l.id === line.id)?.reservation_item"
+                    v-if="order.lines.find((l) => l.id === line.id)?.asset_request_item"
                     class="muted"
                   >
                     {{
-                      t('procurement.orders.forReservation', {
-                        number: order.lines.find((l) => l.id === line.id)!.reservation_item!
-                          .reservation.number,
+                      t('procurement.orders.forRequest', {
+                        number: order.lines.find((l) => l.id === line.id)!.asset_request_item!
+                          .asset_request.number,
                       })
                     }}
                   </small>
@@ -335,16 +335,16 @@ function openOrdered() {
                 <td>
                   {{ line.label }}
                   <RouterLink
-                    v-if="line.reservation_item"
+                    v-if="line.asset_request_item"
                     :to="{
-                      name: 'reservation',
-                      params: { id: line.reservation_item.reservation.id },
+                      name: 'request',
+                      params: { id: line.asset_request_item.asset_request.id },
                     }"
                     class="mono small"
                   >
                     {{
-                      t('procurement.orders.forReservation', {
-                        number: line.reservation_item.reservation.number,
+                      t('procurement.orders.forRequest', {
+                        number: line.asset_request_item.asset_request.number,
                       })
                     }}
                   </RouterLink>

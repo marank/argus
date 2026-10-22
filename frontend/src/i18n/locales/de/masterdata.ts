@@ -22,7 +22,7 @@ export default {
       teams: 'Teams',
       users: 'Mitarbeiter',
       number_sequences: 'Nummernserien',
-      reservations: 'Anforderungen & Kalender',
+      requests: 'Anforderungen & Kalender',
       assets: 'Geräte & Servicebuch',
       consumables: 'Verbrauchsmaterial',
       licenses: 'Lizenzen',
@@ -154,7 +154,7 @@ export default {
     pickupPointHelp: 'Wird bei der Abholplanung angeboten.',
     itStaffHelp: 'Zugang zum IT-Bereich. Welche Bereiche, legen die Rollen fest.',
     sequenceCodeHelp:
-      'Optional, zum Wiederfinden. System-Serien behalten ihr Kürzel: Argus vergibt darüber Inventar-, Reservierungs- und Bestellnummern.',
+      'Optional, zum Wiederfinden. System-Serien behalten ihr Kürzel: Argus vergibt darüber Inventar-, Anforderungs- und Bestellnummern.',
     systemSequence: 'System',
     allowAnyModel: '„Beliebiges Modell“ anforderbar',
     allowAnyModelHelp:

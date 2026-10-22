@@ -23,7 +23,7 @@ from apps.dashboard.api import calendar, overview, widgets
 from apps.inventory.api import router as inventory_router
 from apps.masterdata.api import asset_models, categories, locations, manufacturers, suppliers
 from apps.procurement.api import router as procurement_router
-from apps.reservations.api import router as reservations_router
+from apps.requests.api import router as requests_router
 
 # The API docs only in development: in production they would describe every endpoint
 # to anyone and load Swagger UI from a CDN onto the Argus origin.
@@ -56,7 +56,7 @@ api.add_router("/masterdata/locations", locations.router)
 api.add_router("/masterdata/models", asset_models.router)
 api.add_router("/masterdata/number-sequences", number_sequences.router)
 api.add_router("/inventory", inventory_router)
-api.add_router("", reservations_router)
+api.add_router("", requests_router)
 api.add_router("/procurement", procurement_router)
 
 

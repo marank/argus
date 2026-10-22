@@ -5,13 +5,13 @@ import { computed, h, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
-import { portalApi } from '@/api/reservations'
+import { portalApi } from '@/api/requests'
 import EmptyState from '@/components/common/EmptyState.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import ReportIssueModal from '@/components/portal/ReportIssueModal.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useLive } from '@/composables/useLive'
-import type { MyAsset } from '@/types/reservations'
+import type { MyAsset } from '@/types/requests'
 import { categoryIcon } from '@/utils/icons'
 import { useFeaturesStore } from '@/stores/features'
 
@@ -28,7 +28,7 @@ async function load() {
   assets.value = await portalApi.myAssets()
 }
 onMounted(load)
-useLive(['asset', 'reservation'], load, { paused: () => showReport.value })
+useLive(['asset', 'request'], load, { paused: () => showReport.value })
 
 function report(asset: MyAsset) {
   reporting.value = asset
@@ -43,14 +43,14 @@ function reportBadge(a: MyAsset) {
   return h(
     'span',
     { class: ['report-badge', { 'in-progress': inProgress }] },
-    t(inProgress ? 'reservations.myDevices.reportInProgress' : 'reservations.myDevices.reportOpen'),
+    t(inProgress ? 'requests.myDevices.reportInProgress' : 'requests.myDevices.reportOpen'),
   )
 }
 
 const columns = computed<DataTableColumns<MyAsset>>(() => [
   {
     key: 'model',
-    title: () => t('reservations.myDevices.device'),
+    title: () => t('requests.myDevices.device'),
     minWidth: 240,
     render: (a) =>
       h('div', { class: 'device-cell' }, [
@@ -81,7 +81,7 @@ const columns = computed<DataTableColumns<MyAsset>>(() => [
   },
   {
     key: 'due',
-    title: () => t('reservations.myDevices.returnBy'),
+    title: () => t('requests.myDevices.returnBy'),
     width: 130,
     render: (a) =>
       a.return_due
@@ -106,7 +106,7 @@ const columns = computed<DataTableColumns<MyAsset>>(() => [
               },
               {
                 icon: () => h(MessageSquareWarning, { size: 15 }),
-                default: () => t('reservations.myDevices.report'),
+                default: () => t('requests.myDevices.report'),
               },
             ),
         },
@@ -118,10 +118,10 @@ const columns = computed<DataTableColumns<MyAsset>>(() => [
 <template>
   <div class="page">
     <PageHeader
-      :title="t('reservations.myDevices.title')"
-      :subtitle="t('reservations.myDevices.subtitle')"
+      :title="t('requests.myDevices.title')"
+      :subtitle="t('requests.myDevices.subtitle')"
     />
-    <EmptyState v-if="assets && !assets.length" :text="t('reservations.myDevices.empty')" />
+    <EmptyState v-if="assets && !assets.length" :text="t('requests.myDevices.empty')" />
     <NDataTable
       v-else
       class="clickable-rows"

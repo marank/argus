@@ -10,7 +10,7 @@ const confirm = vi.fn<(content: string) => Promise<boolean>>()
 const remind = vi.fn<(id: string) => Promise<unknown>>()
 
 vi.mock('@/composables/useConfirm', () => ({ useConfirm: () => confirm }))
-vi.mock('@/api/reservations', () => ({ reservationsApi: { remind: (id: string) => remind(id) } }))
+vi.mock('@/api/requests', () => ({ requestsApi: { remind: (id: string) => remind(id) } }))
 vi.mock('@/api/dashboard', () => ({
   dashboardApi: { overdueReturns: () => Promise.resolve([row]) },
 }))

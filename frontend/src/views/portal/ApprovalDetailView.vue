@@ -7,16 +7,16 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
-import { approvalsApi, reservationsApi } from '@/api/reservations'
+import { approvalsApi, requestsApi } from '@/api/requests'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
-import ApprovalCard from '@/components/reservations/detail/ApprovalCard.vue'
-import RequestInfoCard from '@/components/reservations/detail/RequestInfoCard.vue'
-import RequestedItems from '@/components/reservations/detail/RequestedItems.vue'
-import ReservationHistory from '@/components/reservations/detail/ReservationHistory.vue'
+import ApprovalCard from '@/components/requests/detail/ApprovalCard.vue'
+import RequestInfoCard from '@/components/requests/detail/RequestInfoCard.vue'
+import RequestedItems from '@/components/requests/detail/RequestedItems.vue'
+import RequestHistory from '@/components/requests/detail/RequestHistory.vue'
 import { useAction } from '@/composables/useAction'
 import { useFormat } from '@/composables/useFormat'
-import type { Reservation } from '@/types/reservations'
+import type { AssetRequest } from '@/types/requests'
 
 /**
  * A request as its department's approver sees it: what is asked for, by whom, and
@@ -28,19 +28,19 @@ const router = useRouter()
 const { enumLabel } = useFormat()
 const { busy, run } = useAction()
 
-const reservation = ref<Reservation | null>(null)
-const load = async () => (reservation.value = await reservationsApi.get(props.id))
+const assetRequest = ref<AssetRequest | null>(null)
+const load = async () => (assetRequest.value = await requestsApi.get(props.id))
 onMounted(load)
 
 // The kind stays while the dialog fades out, so its texts do not switch on closing.
 const decision = ref<'approve' | 'decline'>('approve')
 const deciding = ref(false)
 const comment = ref('')
-useLive(['reservation'], load, { id: () => props.id, paused: () => deciding.value })
+useLive(['request'], load, { id: () => props.id, paused: () => deciding.value })
 
 /** Why the earlier request ended: the department's or IT's comment. */
 const earlierReason = computed(() => {
-  const f = reservation.value?.follows
+  const f = assetRequest.value?.follows
   if (!f) return ''
   return f.approval === 'rejected' ? f.approval_comment : f.it_comment
 })
@@ -58,7 +58,7 @@ async function decide() {
       approve
         ? approvalsApi.approve(props.id, comment.value)
         : approvalsApi.decline(props.id, comment.value),
-    t(approve ? 'reservations.approvals.approved' : 'reservations.approvals.declined'),
+    t(approve ? 'requests.approvals.approved' : 'requests.approvals.declined'),
   )
   if (updated) {
     // Decided: done for the approver, back to what still waits.
@@ -70,25 +70,25 @@ async function decide() {
 
 <template>
   <div class="page">
-    <NSkeleton v-if="!reservation" height="200px" />
+    <NSkeleton v-if="!assetRequest" height="200px" />
     <template v-else>
-      <PageHeader :title="reservation.title" :eyebrow="reservation.number">
-        <template #badge><StatusTag group="approval" :value="reservation.approval" /></template>
+      <PageHeader :title="assetRequest.title" :eyebrow="assetRequest.number">
+        <template #badge><StatusTag group="approval" :value="assetRequest.approval" /></template>
         <template #actions>
           <RouterLink :to="{ name: 'portal-approvals' }">
             <NButton quaternary>
               <template #icon><ArrowLeft :size="15" /></template>
-              {{ t('reservations.approvals.back') }}
+              {{ t('requests.approvals.back') }}
             </NButton>
           </RouterLink>
-          <template v-if="reservation.can_approve">
+          <template v-if="assetRequest.can_approve">
             <NButton @click="open('decline')">
               <template #icon><X :size="15" /></template>
-              {{ t('reservations.approvals.decline') }}
+              {{ t('requests.approvals.decline') }}
             </NButton>
             <NButton type="primary" @click="open('approve')">
               <template #icon><Check :size="15" /></template>
-              {{ t('reservations.approvals.approve') }}
+              {{ t('requests.approvals.approve') }}
             </NButton>
           </template>
         </template>
@@ -96,21 +96,21 @@ async function decide() {
 
       <div class="stack">
         <NAlert
-          v-if="reservation.follows"
+          v-if="assetRequest.follows"
           type="warning"
-          :title="t('reservations.again.approverTitle', { number: reservation.follows.number })"
+          :title="t('requests.again.approverTitle', { number: assetRequest.follows.number })"
         >
-          {{ enumLabel('reservationStatus', reservation.follows.status) }}
+          {{ enumLabel('requestStatus', assetRequest.follows.status) }}
           <template v-if="earlierReason">: „{{ earlierReason }}“</template>
         </NAlert>
         <div class="layout">
           <div class="stack">
-            <RequestedItems :reservation="reservation" />
-            <RequestInfoCard :reservation="reservation" />
+            <RequestedItems :assetRequest="assetRequest" />
+            <RequestInfoCard :assetRequest="assetRequest" />
           </div>
           <div class="stack">
-            <ApprovalCard :reservation="reservation" />
-            <ReservationHistory :reservation="reservation" />
+            <ApprovalCard :assetRequest="assetRequest" />
+            <RequestHistory :assetRequest="assetRequest" />
           </div>
         </div>
       </div>
@@ -121,14 +121,14 @@ async function decide() {
         :title="
           t(
             decision === 'approve'
-              ? 'reservations.approvals.approveTitle'
-              : 'reservations.approvals.declineTitle',
+              ? 'requests.approvals.approveTitle'
+              : 'requests.approvals.declineTitle',
           )
         "
         style="max-width: 460px"
       >
         <p v-if="decision === 'approve'" class="muted hint">
-          {{ t('reservations.approvals.approveHint') }}
+          {{ t('requests.approvals.approveHint') }}
         </p>
         <NInput
           v-model:value="comment"
@@ -136,8 +136,8 @@ async function decide() {
           :placeholder="
             t(
               decision === 'approve'
-                ? 'reservations.approvals.comment'
-                : 'reservations.approvals.declineReason',
+                ? 'requests.approvals.comment'
+                : 'requests.approvals.declineReason',
             )
           "
           :autosize="{ minRows: 3 }"
@@ -146,7 +146,7 @@ async function decide() {
           <div class="row" style="justify-content: flex-end">
             <NButton @click="deciding = false">{{ t('common.cancel') }}</NButton>
             <NButton v-if="decision === 'approve'" type="primary" :loading="busy" @click="decide">{{
-              t('reservations.approvals.approve')
+              t('requests.approvals.approve')
             }}</NButton>
             <NButton
               v-else
@@ -154,7 +154,7 @@ async function decide() {
               :disabled="!comment.trim()"
               :loading="busy"
               @click="decide"
-              >{{ t('reservations.approvals.decline') }}</NButton
+              >{{ t('requests.approvals.decline') }}</NButton
             >
           </div>
         </template>

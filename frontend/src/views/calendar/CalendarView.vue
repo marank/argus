@@ -203,7 +203,7 @@ const legend = computed(() =>
                   ·
                   {{
                     enumLabel(
-                      'reservationStatus',
+                      'requestStatus',
                       (arg.event.extendedProps.entry as CalendarEntry).status,
                     )
                   }}

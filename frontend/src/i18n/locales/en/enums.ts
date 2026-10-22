@@ -31,7 +31,7 @@ export default {
   },
   issueStatus: { open: 'Open', in_progress: 'In progress', resolved: 'Resolved' },
   approval: { pending: 'Pending', approved: 'Approved', rejected: 'Not approved' },
-  reservationStatus: {
+  requestStatus: {
     pending_approval: 'Awaiting approval',
     submitted: 'Submitted',
     confirmed: 'Confirmed',

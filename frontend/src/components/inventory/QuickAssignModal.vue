@@ -4,7 +4,7 @@ import { reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { usersApi } from '@/api/accounts'
-import { reservationsApi } from '@/api/reservations'
+import { requestsApi } from '@/api/requests'
 import DateField from '@/components/common/DateField.vue'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import FieldLabel from '@/components/common/FieldLabel.vue'
@@ -12,7 +12,7 @@ import { useAction } from '@/composables/useAction'
 import { toIsoDate } from '@/composables/useFormat'
 import { useFeaturesStore } from '@/stores/features'
 import type { Id } from '@/types/common'
-import type { Duration, Reservation } from '@/types/reservations'
+import type { Duration, AssetRequest } from '@/types/requests'
 
 /**
  * Assign a device from stock to an employee in one step: no request, no approval.
@@ -20,7 +20,7 @@ import type { Duration, Reservation } from '@/types/reservations'
  */
 const props = defineProps<{ assetId: Id }>()
 const show = defineModel<boolean>('show', { required: true })
-const emit = defineEmits<{ saved: [reservation: Reservation] }>()
+const emit = defineEmits<{ saved: [assetRequest: AssetRequest] }>()
 const { t } = useI18n()
 const features = useFeaturesStore()
 const { busy, run } = useAction()
@@ -56,7 +56,7 @@ const beforeStart = (ts: number) => ts < Math.max(form.start ?? 0, startOfToday(
 async function save() {
   const saved = await run(
     () =>
-      reservationsApi.quickAssign({
+      requestsApi.quickAssign({
         asset: props.assetId,
         requester: form.requester!,
         duration: form.duration,
@@ -89,7 +89,7 @@ async function save() {
           :label="(u) => u.display_name"
         />
       </NFormItem>
-      <NFormItem :label="t('reservations.duration')" :show-feedback="false">
+      <NFormItem :label="t('requests.duration')" :show-feedback="false">
         <NRadioGroup v-model:value="form.duration" class="duration">
           <NRadioButton value="temporary">{{ t('enums.duration.temporary') }}</NRadioButton>
           <NRadioButton value="permanent">{{ t('enums.duration.permanent') }}</NRadioButton>

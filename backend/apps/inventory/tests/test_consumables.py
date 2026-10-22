@@ -89,7 +89,7 @@ def test_manual_booking_leaves_reserved_units_alone(it_client):
 
     consumable = next(c for c in Consumable.objects.all() if c.available_quantity >= 3)
     response = it_client.post(
-        "/api/reservations/direct",
+        "/api/requests/direct",
         {
             "title": "New colleague",
             "duration": "permanent",

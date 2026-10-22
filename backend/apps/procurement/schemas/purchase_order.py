@@ -10,16 +10,16 @@ from apps.masterdata.schemas.refs import AssetModelRefOut, LocationRefOut
 from apps.procurement.models import PurchaseOrder
 
 
-class ReservationRefOut(Schema):
+class AssetRequestRefOut(Schema):
     id: UUID
     number: str
     requester: UserRefOut
 
 
-class LineReservationItemOut(Schema):
+class LineAssetRequestItemOut(Schema):
     id: UUID
     label: str
-    reservation: ReservationRefOut
+    asset_request: AssetRequestRefOut
 
 
 class PurchaseOrderLineOut(Schema):
@@ -32,7 +32,7 @@ class PurchaseOrderLineOut(Schema):
     quantity_open: int
     unit_price: Decimal | None
     total: Decimal
-    reservation_item: LineReservationItemOut | None
+    asset_request_item: LineAssetRequestItemOut | None
 
 
 class PurchaseOrderListOut(Schema):
@@ -69,7 +69,7 @@ class PurchaseOrderLineIn(Schema):
     description: str = ""
     quantity: int = Field(1, ge=1)
     unit_price: Decimal | None = None
-    reservation_item: UUID | None = None
+    asset_request_item: UUID | None = None
 
 
 class PurchaseOrderIn(Schema):

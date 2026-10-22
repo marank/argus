@@ -1,6 +1,6 @@
 # Argus
 
-IT asset management for the IT department: inventory, employee reservations,
+IT asset management for the IT department: inventory, employee requests,
 device preparation and procurement.
 
 | Part     | Stack                                                           |
@@ -156,13 +156,13 @@ signs in through the app's login, so the second step applies there too.
   inventory number, serial, IMEI or EAN jump straight to the device or model.
   Several devices can be scanned in at once.
 - **Number sequences** – configurable patterns per category
-  (`{prefix}{year}-{seq}`, yearly/monthly restart) for inventory, reservation and
+  (`{prefix}{year}-{seq}`, yearly/monthly restart) for inventory, request and
   order numbers.
 - **Self-service portal** – employees request devices by group ("any headset") or
   model, for a period or permanently, and follow status, pickup time and their
   assigned devices. Consumables that fit their own devices are offered as a quick pick.
 - **Roles for IT staff** – administrators define roles (master data → Roles) that
-  grant *read* or *write* per area: each master data type, reservations & calendar,
+  grant *read* or *write* per area: each master data type, requests & calendar,
   devices & service log, consumables, licenses, problem reports and procurement.
   Staff can hold several roles; rights add up. Areas without a right are hidden and
   refused by the API, though selection lists in forms keep working. Administrators
@@ -173,7 +173,7 @@ signs in through the app's login, so the second step applies there too.
   does IT get them. Requests go straight to IT for exempt employees, when IT records
   them on someone's behalf, when the department has no approvers, and approvers'
   own requests count as approved.
-- **Reservation workflow** – IT confirms (optionally with reduced quantities),
+- **Request workflow** – IT confirms (optionally with reduced quantities),
   sets pickup date and place, allocates concrete devices (scan, pick or automatic),
   marks the request ready, hands out and takes back.
 - **Pickup terminal & handover record** – when a request is ready, IT chooses
@@ -198,7 +198,7 @@ backend/
     accounts/        users, departments, teams, LDAP and two-factor sign-in
     masterdata/      manufacturers, suppliers, categories, models, locations
     inventory/       assets, asset events, consumables and their movements
-    reservations/    reservations, items, allocations, workflow, employee portal
+    requests/        requests, lines, allocations, workflow, employee portal
     procurement/     purchase orders, demand calculation, goods receipt
     dashboard/       overview figures
   Each app: models/, schemas/, api/, services/, admin/ – one file per concept.
@@ -207,8 +207,8 @@ backend/
 frontend/src/
   api/               typed API clients per domain
   types/             TypeScript types per domain
-  components/        layout, common, crud, inventory, reservations, procurement
-  views/             pages per area (portal, inventory, reservations, …)
+  components/        layout, common, crud, inventory, requests, procurement
+  views/             pages per area (portal, inventory, requests, …)
   composables/       list state, actions, formatting, scanner, confirm
   i18n/locales/      en/ and de/, one file per area
   theme/             palette and Naive UI overrides (light/dark)
@@ -217,29 +217,29 @@ frontend/src/
 All models use random UUIDs as primary keys (`apps.core.models.UUIDModel`, also on
 `accounts.User`); URLs and API payloads carry these UUIDs.
 
-Business rules live in `services/` (e.g. `apps/reservations/services/workflow.py`);
+Business rules live in `services/` (e.g. `apps/requests/services/workflow.py`);
 API modules stay thin.
 
 ## Glossary
 
-The code keeps its names; the interface uses the German (and English) terms on the
-right. "Reservierung" is not used in the interface: a request also covers permanent
-hand-outs, software and consumables. "Reserviert" stays as a device status (set aside
-for a request).
+Code names on the left, the interface's German (and English) terms on the right.
+URLs, API paths, permission areas and live topics say `request(s)`. "Reservierung"
+is not used: a request also covers permanent hand-outs, software and consumables.
+"Reserviert" stays as a device status (set aside for a request).
 
-| Code                    | Interface (de)          | Interface (en)      |
-| ----------------------- | ----------------------- | ------------------- |
-| `Reservation`           | Anforderung             | Request             |
-| `ReservationItem`       | Position                | Line                |
-| `ReservationAllocation` | Zuteilung               | Allocation          |
-| `Handover`              | Übergabe / Ausgabe      | Handover / hand-out |
-| `DeviceReturn`          | Rückgabe                | Return              |
-| `approve` (department)  | Genehmigung             | Approval            |
-| `confirm` (IT)          | Bestätigung             | Confirmation        |
-| `origin="direct"`       | Direktausgabe           | Direct hand-out     |
+| Code                     | Interface (de)          | Interface (en)      |
+| ------------------------ | ----------------------- | ------------------- |
+| `AssetRequest`           | Anforderung             | Request             |
+| `AssetRequestItem`       | Position                | Line                |
+| `AssetRequestAllocation` | Zuteilung               | Allocation          |
+| `Handover`               | Übergabe / Ausgabe      | Handover / hand-out |
+| `DeviceReturn`           | Rückgabe                | Return              |
+| `approve` (department)   | Genehmigung             | Approval            |
+| `confirm` (IT)           | Bestätigung             | Confirmation        |
+| `origin="direct"`        | Direktausgabe           | Direct hand-out     |
 
-`Reservation` is not renamed to `Request` to avoid confusion with the `request`
-argument of every API view.
+The model is `AssetRequest` (variables `asset_request`), not `Request`, to avoid
+confusion with the `request` argument of every API view.
 
 ## Checks
 

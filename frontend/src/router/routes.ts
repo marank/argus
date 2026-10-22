@@ -52,11 +52,11 @@ export const routes: RouteRecordRaw[] = [
     ],
   },
   {
-    path: '/reservations/:id([0-9a-f-]{36})/protocol',
+    path: '/requests/:id([0-9a-f-]{36})/protocol',
     name: 'handover-protocol',
-    component: () => import('@/views/reservations/HandoverProtocolView.vue'),
+    component: () => import('@/views/requests/HandoverProtocolView.vue'),
     props: (route) => ({ id: String(route.params.id) }),
-    meta: { permission: 'reservations', it: true, title: 'handover.protocol' },
+    meta: { permission: 'requests', it: true, title: 'handover.protocol' },
   },
   {
     path: '/',
@@ -150,7 +150,7 @@ export const routes: RouteRecordRaw[] = [
         path: 'calendar',
         name: 'calendar',
         component: () => import('@/views/calendar/CalendarView.vue'),
-        meta: { permission: 'reservations', module: 'calendar', it: true, title: 'nav.calendar' },
+        meta: { permission: 'requests', module: 'calendar', it: true, title: 'nav.calendar' },
       },
       // IT: inventory
       {
@@ -211,19 +211,19 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/inventory/EventLogView.vue'),
         meta: { permission: 'assets', it: true, title: 'nav.eventLog' },
       },
-      // IT: reservations
+      // IT: requests
       {
-        path: 'reservations',
-        name: 'reservations',
-        component: () => import('@/views/reservations/ReservationListView.vue'),
-        meta: { permission: 'reservations', it: true, title: 'nav.reservations' },
+        path: 'requests',
+        name: 'requests',
+        component: () => import('@/views/requests/RequestListView.vue'),
+        meta: { permission: 'requests', it: true, title: 'nav.requests' },
       },
       {
-        path: 'reservations/:id([0-9a-f-]{36})',
-        name: 'reservation',
-        component: () => import('@/views/reservations/ReservationDetailView.vue'),
+        path: 'requests/:id([0-9a-f-]{36})',
+        name: 'request',
+        component: () => import('@/views/requests/RequestDetailView.vue'),
         props: (route) => ({ id: String(route.params.id) }),
-        meta: { permission: 'reservations', it: true, title: 'nav.reservations' },
+        meta: { permission: 'requests', it: true, title: 'nav.requests' },
       },
       // IT: procurement
       {

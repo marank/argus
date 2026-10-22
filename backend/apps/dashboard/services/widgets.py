@@ -11,7 +11,7 @@ from apps.core.models import SiteSettings
 from apps.core.notifications import it_staff
 from apps.inventory.models import Asset, AssetIssue, Consumable, License
 from apps.procurement.models import PurchaseOrder
-from apps.reservations.models import Reservation
+from apps.requests.models import AssetRequest
 
 LIST_LIMIT = 10
 
@@ -23,7 +23,7 @@ def open_issues():
 def my_tasks(user) -> dict:
     """Open requests and problem reports assigned to the user personally, oldest first."""
     requests = (
-        Reservation.objects.filter(status__in=Reservation.OPEN_STATUSES)
+        AssetRequest.objects.filter(status__in=AssetRequest.OPEN_STATUSES)
         .filter(assigned_q(user, "me"))
         .select_related("requester")
         .order_by("start_date", "number")
@@ -42,12 +42,12 @@ def my_tasks(user) -> dict:
     }
 
 
-def overdue_returns() -> list[Reservation]:
+def overdue_returns() -> list[AssetRequest]:
     """Lent devices whose return date has passed, the longest overdue first."""
     return list(
-        Reservation.objects.filter(
-            status=Reservation.Status.HANDED_OUT,
-            duration=Reservation.Duration.TEMPORARY,
+        AssetRequest.objects.filter(
+            status=AssetRequest.Status.HANDED_OUT,
+            duration=AssetRequest.Duration.TEMPORARY,
             end_date__lt=timezone.localdate(),
         )
         .select_related("requester", "reminded_by")
@@ -57,7 +57,7 @@ def overdue_returns() -> list[Reservation]:
 
 def team_load() -> dict:
     """Open requests and problem reports per IT member, and those nobody has taken yet."""
-    open_requests = Reservation.objects.filter(status__in=Reservation.OPEN_STATUSES)
+    open_requests = AssetRequest.objects.filter(status__in=AssetRequest.OPEN_STATUSES)
     requests = dict(
         open_requests.exclude(assignee=None).values_list("assignee").annotate(n=Count("id")).order_by()
     )
@@ -83,7 +83,7 @@ def request_trend(weeks: int = 12) -> list[dict]:
 
     def per_week(field: str) -> dict:
         return dict(
-            Reservation.objects.filter(**{f"{field}__date__gte": first})
+            AssetRequest.objects.filter(**{f"{field}__date__gte": first})
             .annotate(week=TruncWeek(field, output_field=DateField()))
             .values_list("week")
             .annotate(n=Count("id"))
@@ -97,11 +97,11 @@ def request_trend(weeks: int = 12) -> list[dict]:
     ]
 
 
-def upcoming(days: int) -> list[Reservation]:
+def upcoming(days: int) -> list[AssetRequest]:
     """Confirmed and prepared requests to hand out within `days` days, the earliest first."""
     return list(
-        Reservation.objects.filter(
-            status__in=(Reservation.Status.CONFIRMED, Reservation.Status.READY),
+        AssetRequest.objects.filter(
+            status__in=(AssetRequest.Status.CONFIRMED, AssetRequest.Status.READY),
             start_date__lte=timezone.localdate() + timedelta(days=days),
         )
         .select_related("requester")
@@ -109,13 +109,13 @@ def upcoming(days: int) -> list[Reservation]:
     )
 
 
-def due_returns(days: int) -> list[Reservation]:
+def due_returns(days: int) -> list[AssetRequest]:
     """Lent devices due back within `days` days (not yet overdue), the soonest first."""
     today = timezone.localdate()
     return list(
-        Reservation.objects.filter(
-            status=Reservation.Status.HANDED_OUT,
-            duration=Reservation.Duration.TEMPORARY,
+        AssetRequest.objects.filter(
+            status=AssetRequest.Status.HANDED_OUT,
+            duration=AssetRequest.Duration.TEMPORARY,
             end_date__range=(today, today + timedelta(days=days)),
         )
         .select_related("requester", "reminded_by")
@@ -173,10 +173,10 @@ def open_orders() -> list[PurchaseOrder]:
     )
 
 
-def waiting_requests() -> list[Reservation]:
+def waiting_requests() -> list[AssetRequest]:
     """Submitted requests waiting for IT to confirm them, the longest waiting first."""
     return list(
-        Reservation.objects.filter(status=Reservation.Status.SUBMITTED)
+        AssetRequest.objects.filter(status=AssetRequest.Status.SUBMITTED)
         .select_related("requester", "assignee")
         .order_by("created_at")[:20]
     )

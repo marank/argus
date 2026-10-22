@@ -25,7 +25,7 @@ const days = useOption<Period>(stored, save, 'days', 7, oneOf(PERIODS))
 const rows = ref<UpcomingHandout[] | null>(null)
 const load = async () => (rows.value = await dashboardApi.upcoming(days.value))
 watch(days, load, { immediate: true })
-useLive(['reservation'], load)
+useLive(['request'], load)
 </script>
 
 <template>
@@ -49,7 +49,7 @@ useLive(['reservation'], load)
       <RouterLink
         v-for="r in rows"
         :key="r.id"
-        :to="{ name: 'reservation', params: { id: r.id } }"
+        :to="{ name: 'request', params: { id: r.id } }"
         class="line"
       >
         <span class="mono">{{ r.number }}</span>
@@ -63,7 +63,7 @@ useLive(['reservation'], load)
           >{{ when(r.pickup_at ?? r.start_date) }}</span
         >
         <!-- Pending hand-outs wait for IT: the dot pulses. -->
-        <StatusTag group="reservationStatus" :value="r.status" pulse />
+        <StatusTag group="requestStatus" :value="r.status" pulse />
       </RouterLink>
     </div>
   </NCard>

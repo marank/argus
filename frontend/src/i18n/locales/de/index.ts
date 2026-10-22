@@ -10,7 +10,7 @@ import nav from './nav'
 import notifications from './notifications'
 import procurement from './procurement'
 import profile from './profile'
-import reservations from './reservations'
+import requests from './requests'
 import settings from './settings'
 import terminal from './terminal'
 
@@ -27,7 +27,7 @@ export default {
   notifications,
   procurement,
   profile,
-  reservations,
+  requests,
   settings,
   terminal,
 }

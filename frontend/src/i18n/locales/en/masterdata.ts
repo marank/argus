@@ -21,7 +21,7 @@ export default {
       teams: 'Teams',
       users: 'Employees',
       number_sequences: 'Number sequences',
-      reservations: 'Requests & calendar',
+      requests: 'Requests & calendar',
       assets: 'Devices & service log',
       consumables: 'Consumables',
       licenses: 'Licenses',
@@ -153,7 +153,7 @@ export default {
     pickupPointHelp: 'Offered when scheduling a pickup.',
     itStaffHelp: 'Access to the IT area. Roles determine which areas.',
     sequenceCodeHelp:
-      'Optional, for finding it again. System sequences keep their code: Argus draws inventory, reservation and order numbers by it.',
+      'Optional, for finding it again. System sequences keep their code: Argus draws inventory, request and order numbers by it.',
     systemSequence: 'System',
     allowAnyModel: '“Any model” requestable',
     allowAnyModelHelp:

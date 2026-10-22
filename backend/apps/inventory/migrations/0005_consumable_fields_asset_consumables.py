@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
         ("inventory", "0004_rename_stock_to_consumable"),
         ("masterdata", "0003_consumable_tracking_label"),
         ("procurement", "0002_stable_ordering"),
-        ("reservations", "0004_rename_stock_item_to_consumable"),
+        ("requests", "0004_rename_stock_item_to_consumable"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
@@ -103,7 +103,7 @@ class Migration(migrations.Migration):
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
                 related_name="consumable_movements",
-                to="reservations.reservation",
+                to="requests.reservation",
                 verbose_name="reservation",
             ),
         ),

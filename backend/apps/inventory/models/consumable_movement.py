@@ -38,9 +38,9 @@ class ConsumableMovement(TimeStampedModel):
         blank=True,
         related_name="consumable_movements",
     )
-    reservation = models.ForeignKey(
-        "reservations.Reservation",
-        verbose_name=_("reservation"),
+    asset_request = models.ForeignKey(
+        "requests.AssetRequest",
+        verbose_name=_("request"),
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

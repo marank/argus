@@ -15,12 +15,12 @@ export interface DraftLine {
   label: string
   asset_model: Id | null
   quantity: number
-  reservation_item?: Id | null
+  asset_request_item?: Id | null
   /** Restrict model choice to a category when the request was "any of category". */
   category?: Id | null
 }
 
-/** Turn demand (reservation items or low stock) into a purchase order draft. */
+/** Turn demand (request items or low stock) into a purchase order draft. */
 const props = defineProps<{ lines: DraftLine[]; supplier?: Id | null }>()
 const show = defineModel<boolean>('show', { required: true })
 const { t } = useI18n()
@@ -50,7 +50,7 @@ async function create() {
         description: line.asset_model ? '' : line.label,
         quantity: line.quantity,
         unit_price: null,
-        reservation_item: line.reservation_item ?? null,
+        asset_request_item: line.asset_request_item ?? null,
       })),
     }),
   )

@@ -30,7 +30,7 @@ RESOURCES: tuple[Resource, ...] = (
     Resource("teams", "masterdata"),
     Resource("users", "masterdata"),
     Resource("number_sequences", "masterdata"),
-    Resource("reservations", "operations"),
+    Resource("requests", "operations"),
     Resource("assets", "operations"),
     Resource("consumables", "operations"),
     Resource("licenses", "operations"),

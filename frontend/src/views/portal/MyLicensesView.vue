@@ -4,7 +4,7 @@ import { computed, h, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 
-import { portalApi } from '@/api/reservations'
+import { portalApi } from '@/api/requests'
 import EmptyState from '@/components/common/EmptyState.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import { toIsoDate, useFormat } from '@/composables/useFormat'
@@ -21,7 +21,7 @@ const { date } = useFormat()
 const licenses = ref<OwnLicense[] | null>(null)
 const load = async () => (licenses.value = await portalApi.myLicenses())
 onMounted(load)
-useLive(['license', 'reservation'], load)
+useLive(['license', 'request'], load)
 
 const soon = toIsoDate(Date.now() + features.rules.license_warning_days * 86_400_000) ?? ''
 
@@ -42,7 +42,7 @@ function validity(l: OwnLicense) {
 const columns = computed<DataTableColumns<OwnLicense>>(() => [
   {
     key: 'software',
-    title: t('reservations.mySoftware.software'),
+    title: t('requests.mySoftware.software'),
     minWidth: 240,
     render: (l) =>
       h('div', { class: 'software-cell' }, [
@@ -52,7 +52,7 @@ const columns = computed<DataTableColumns<OwnLicense>>(() => [
   },
   {
     key: 'via',
-    title: t('reservations.mySoftware.usedVia'),
+    title: t('requests.mySoftware.usedVia'),
     minWidth: 220,
     render: (l) =>
       l.device
@@ -60,7 +60,7 @@ const columns = computed<DataTableColumns<OwnLicense>>(() => [
             h('span', { class: 'mono' }, l.device!.inventory_number),
             ` · ${l.device!.model.full_name}`,
           ])
-        : t('reservations.mySoftware.personal'),
+        : t('requests.mySoftware.personal'),
   },
   {
     key: 'valid_until',
@@ -70,7 +70,7 @@ const columns = computed<DataTableColumns<OwnLicense>>(() => [
   },
   {
     key: 'since',
-    title: t('reservations.mySoftware.since'),
+    title: t('requests.mySoftware.since'),
     width: 120,
     render: (l) => h('span', { class: 'mono' }, date(l.assigned_at)),
   },
@@ -80,10 +80,10 @@ const columns = computed<DataTableColumns<OwnLicense>>(() => [
 <template>
   <div class="page">
     <PageHeader
-      :title="t('reservations.mySoftware.title')"
-      :subtitle="t('reservations.mySoftware.subtitle')"
+      :title="t('requests.mySoftware.title')"
+      :subtitle="t('requests.mySoftware.subtitle')"
     />
-    <EmptyState v-if="licenses && !licenses.length" :text="t('reservations.mySoftware.empty')" />
+    <EmptyState v-if="licenses && !licenses.length" :text="t('requests.mySoftware.empty')" />
     <NDataTable
       v-else
       size="small"

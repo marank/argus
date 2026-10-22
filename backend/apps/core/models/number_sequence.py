@@ -49,7 +49,7 @@ class NumberSequence(TimeStampedModel):
         _("reset period"), max_length=10, choices=ResetPeriod.choices, default=ResetPeriod.NEVER
     )
     period_key = models.CharField(_("current period"), max_length=10, blank=True, editable=False)
-    # Argus draws inventory, reservation and order numbers from these by code
+    # Argus draws inventory, request and order numbers from these by code
     # (apps.core.services.numbering); their code stays fixed and they cannot be deleted.
     is_system = models.BooleanField(_("system sequence"), default=False, editable=False)
 

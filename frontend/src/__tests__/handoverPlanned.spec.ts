@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import type { Reservation, ReservationEvent } from '@/types/reservations'
-import { handoverPlanned } from '@/utils/reservations'
+import type { AssetRequest, AssetRequestEvent } from '@/types/requests'
+import { handoverPlanned } from '@/utils/requests'
 
-const withEvents = (...kinds: ReservationEvent['kind'][]) =>
+const withEvents = (...kinds: AssetRequestEvent['kind'][]) =>
   ({
-    events: kinds.map((kind) => ({ kind }) as ReservationEvent),
+    events: kinds.map((kind) => ({ kind }) as AssetRequestEvent),
     pickup_at: null,
-  }) as Pick<Reservation, 'events' | 'pickup_at'>
+  }) as Pick<AssetRequest, 'events' | 'pickup_at'>
 
 describe('handoverPlanned', () => {
   it('is not planned for a direct hand-out that was only recorded and allocated', () => {

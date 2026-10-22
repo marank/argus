@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
         ("inventory", "0003_stable_ordering"),
         ("masterdata", "0002_category_allow_any_model"),
         ("procurement", "0002_stable_ordering"),
-        ("reservations", "0003_stable_ordering"),
+        ("requests", "0003_stable_ordering"),
     ]
 
     operations = [
