@@ -146,6 +146,27 @@ class Category(TimeStampedModel):
         return None
 
     @classmethod
+    def tree_positions(cls) -> dict[UUID, int]:
+        """Position of every category in the tree read top-down: each category, then the
+        ones below it; siblings by sort order and name."""
+        rows = list(cls.objects.values_list("pk", "parent_id", "sort_order", "name"))
+        children: dict = {}
+        for pk, parent_id, sort_order, name in rows:
+            children.setdefault(parent_id, []).append((sort_order, name.lower(), pk))
+        positions: dict[UUID, int] = {}
+        stack = sorted(children.get(None, []), reverse=True)
+        while stack:
+            *_, pk = stack.pop()
+            if pk in positions:
+                continue
+            positions[pk] = len(positions)
+            stack.extend(sorted(children.get(pk, []), reverse=True))
+        # Categories caught in a loop have no way up to a root; they come last.
+        for pk, *_ in rows:
+            positions.setdefault(pk, len(positions))
+        return positions
+
+    @classmethod
     def numbered_ids(cls) -> set[UUID]:
         """IDs of the categories with a number sequence of their own or from a parent."""
         rows = list(cls.objects.values_list("pk", "parent_id", "number_sequence_id"))

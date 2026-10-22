@@ -15,7 +15,8 @@ export default defineResource<Category>({
   key: 'categories',
   permission: 'categories',
   api: categoriesApi,
-  ordering: 'sort_order',
+  // Each category followed by its subcategories.
+  ordering: 'tree_position',
   // Hardware first, then software (alphabetical order of the stored values).
   groupBy: {
     ordering: 'kind',

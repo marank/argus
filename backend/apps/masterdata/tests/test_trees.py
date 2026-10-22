@@ -88,3 +88,22 @@ def test_category_code_is_optional_but_unique_when_given(demo):
     )
     assert response.status_code == 422, response.content
     assert "code" in response.json()["errors"]
+
+
+def test_categories_list_parents_before_their_subcategories(demo):
+    admin = Client()
+    admin.login(username="admin", password="argus-demo")
+    mde = Category.objects.create(name="MDEs", code="t-mde", sort_order=50)
+    Category.objects.create(name="Handgriffe", code="t-handles", parent=mde, sort_order=0)
+    Category.objects.create(name="Dockingstationen", code="t-docks", parent=mde, sort_order=0)
+    Category.objects.create(name="Laptops 2", code="t-laptops", sort_order=40)
+
+    for ordering in ("", "kind,tree_position"):
+        items = admin.get(f"/api/masterdata/categories?page_size=200&ordering={ordering}").json()["items"]
+        names = [" / ".join(c["path"]) for c in items if c["code"].startswith("t-")]
+        assert names == ["Laptops 2", "MDEs", "MDEs / Dockingstationen", "MDEs / Handgriffe"]
+        # Every subcategory directly follows its parent's branch.
+        paths = [" / ".join(c["path"]) for c in items]
+        for index, path in enumerate(paths[1:], 1):
+            if " / " in path:
+                assert paths[index - 1].startswith(path.rsplit(" / ", 1)[0])
