@@ -8,6 +8,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
+        ("accounts", "0001_initial"),
         ("core", "0001_initial"),
     ]
 
@@ -93,7 +94,25 @@ class Migration(migrations.Migration):
                 ("created_at", models.DateTimeField(auto_now_add=True, verbose_name="created at")),
                 ("updated_at", models.DateTimeField(auto_now=True, verbose_name="updated at")),
                 ("name", models.CharField(max_length=100, verbose_name="name")),
-                ("code", models.SlugField(max_length=30, unique=True, verbose_name="code")),
+                (
+                    "kind",
+                    models.CharField(
+                        choices=[("hardware", "Hardware"), ("software", "Software")],
+                        default="hardware",
+                        max_length=10,
+                        verbose_name="type",
+                    ),
+                ),
+                (
+                    "item_name",
+                    models.CharField(
+                        blank=True,
+                        help_text="Name of a single item, e.g. “Laptop”. Shown for “any model” requests.",
+                        max_length=100,
+                        verbose_name="singular name",
+                    ),
+                ),
+                ("code", models.SlugField(blank=True, max_length=30, verbose_name="code")),
                 ("description", models.TextField(blank=True, verbose_name="description")),
                 (
                     "icon",
@@ -103,6 +122,22 @@ class Migration(migrations.Migration):
                     "is_requestable",
                     models.BooleanField(
                         default=True, help_text="Shown in the employee portal.", verbose_name="requestable"
+                    ),
+                ),
+                (
+                    "allow_any_model",
+                    models.BooleanField(
+                        default=True,
+                        help_text="Employees may request “any device” of this group. Turn off where only a specific model makes sense, e.g. accessories or consumables.",
+                        verbose_name="any model requestable",
+                    ),
+                ),
+                (
+                    "requires_approval",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Requests must first be approved by the employee's department. Applies to the subcategories as well.",
+                        verbose_name="requires approval",
                     ),
                 ),
                 ("sort_order", models.PositiveIntegerField(default=0, verbose_name="sort order")),
@@ -127,6 +162,18 @@ class Migration(migrations.Migration):
                         related_name="children",
                         to="masterdata.category",
                         verbose_name="parent category",
+                    ),
+                ),
+                (
+                    "team",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="New requests and reports for this category go to this team. Falls back to the parent.",
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="categories",
+                        to="accounts.team",
+                        verbose_name="responsible team",
                     ),
                 ),
             ],
@@ -218,7 +265,11 @@ class Migration(migrations.Migration):
                 (
                     "tracking",
                     models.CharField(
-                        choices=[("serialized", "Individual devices"), ("bulk", "Stock quantity")],
+                        choices=[
+                            ("serialized", "Individual devices"),
+                            ("bulk", "Consumable (quantity)"),
+                            ("license", "Software license"),
+                        ],
                         default="serialized",
                         max_length=12,
                         verbose_name="tracking",
@@ -245,6 +296,18 @@ class Migration(migrations.Migration):
                         help_text="Accessories, spare parts and consumables that fit this model.",
                         to="masterdata.assetmodel",
                         verbose_name="compatible with",
+                    ),
+                ),
+                (
+                    "team",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="New requests and reports for this model go to this team. Empty: as the category.",
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="asset_models",
+                        to="accounts.team",
+                        verbose_name="responsible team",
                     ),
                 ),
                 (
@@ -281,9 +344,20 @@ class Migration(migrations.Migration):
                 "verbose_name": "model",
                 "verbose_name_plural": "models",
                 "ordering": ["manufacturer__name", "name"],
-                "constraints": [
-                    models.UniqueConstraint(fields=("manufacturer", "name"), name="unique_model_name")
-                ],
             },
+        ),
+        migrations.AddConstraint(
+            model_name="category",
+            constraint=models.UniqueConstraint(
+                condition=models.Q(("code", ""), _negated=True),
+                fields=("code",),
+                name="unique_category_code",
+                violation_error_code="unique",
+                violation_error_message="A category with this code already exists.",
+            ),
+        ),
+        migrations.AddConstraint(
+            model_name="assetmodel",
+            constraint=models.UniqueConstraint(fields=("manufacturer", "name"), name="unique_model_name"),
         ),
     ]

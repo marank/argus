@@ -7,6 +7,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
+        ("accounts", "0002_initial"),
         ("inventory", "0001_initial"),
         ("masterdata", "0001_initial"),
         ("procurement", "0001_initial"),
@@ -51,6 +52,18 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name="assetevent",
+            name="asset_request",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="asset_events",
+                to="requests.assetrequest",
+                verbose_name="request",
+            ),
+        ),
+        migrations.AddField(
+            model_name="assetevent",
             name="performed_by",
             field=models.ForeignKey(
                 blank=True,
@@ -74,39 +87,127 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AddField(
-            model_name="assetevent",
-            name="reservation",
+            model_name="assetissue",
+            name="asset",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="issues",
+                to="inventory.asset",
+                verbose_name="device",
+            ),
+        ),
+        migrations.AddField(
+            model_name="assetissue",
+            name="assigned_team",
             field=models.ForeignKey(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
-                related_name="asset_events",
-                to="requests.reservation",
-                verbose_name="reservation",
+                related_name="issues",
+                to="accounts.team",
+                verbose_name="team",
             ),
         ),
         migrations.AddField(
-            model_name="stockitem",
+            model_name="assetissue",
+            name="assignee",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="assigned_issues",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="assignee",
+            ),
+        ),
+        migrations.AddField(
+            model_name="assetissue",
+            name="handled_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="+",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="handled by",
+            ),
+        ),
+        migrations.AddField(
+            model_name="assetissue",
+            name="reported_by",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="reported_issues",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="reported by",
+            ),
+        ),
+        migrations.AddField(
+            model_name="assetissueentry",
+            name="author",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="+",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="author",
+            ),
+        ),
+        migrations.AddField(
+            model_name="assetissueentry",
+            name="issue",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="entries",
+                to="inventory.assetissue",
+                verbose_name="problem report",
+            ),
+        ),
+        migrations.AddField(
+            model_name="consumable",
             name="location",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.PROTECT,
-                related_name="stock_items",
+                related_name="consumables",
                 to="masterdata.location",
                 verbose_name="location",
             ),
         ),
         migrations.AddField(
-            model_name="stockitem",
+            model_name="consumable",
             name="model",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.PROTECT,
-                related_name="stock_items",
+                related_name="consumables",
                 to="masterdata.assetmodel",
                 verbose_name="model",
             ),
         ),
         migrations.AddField(
-            model_name="stockmovement",
+            model_name="consumablemovement",
+            name="asset_request",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="consumable_movements",
+                to="requests.assetrequest",
+                verbose_name="request",
+            ),
+        ),
+        migrations.AddField(
+            model_name="consumablemovement",
+            name="consumable",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="movements",
+                to="inventory.consumable",
+                verbose_name="consumable",
+            ),
+        ),
+        migrations.AddField(
+            model_name="consumablemovement",
             name="performed_by",
             field=models.ForeignKey(
                 blank=True,
@@ -118,49 +219,96 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AddField(
-            model_name="stockmovement",
+            model_name="consumablemovement",
             name="purchase_order_line",
             field=models.ForeignKey(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
-                related_name="stock_movements",
+                related_name="consumable_movements",
                 to="procurement.purchaseorderline",
                 verbose_name="purchase order line",
             ),
         ),
         migrations.AddField(
-            model_name="stockmovement",
+            model_name="consumablemovement",
             name="recipient",
             field=models.ForeignKey(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
-                related_name="stock_movements",
+                related_name="consumable_movements",
                 to=settings.AUTH_USER_MODEL,
                 verbose_name="recipient",
             ),
         ),
         migrations.AddField(
-            model_name="stockmovement",
-            name="reservation",
+            model_name="license",
+            name="model",
+            field=models.ForeignKey(
+                limit_choices_to={"tracking": "license"},
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="licenses",
+                to="masterdata.assetmodel",
+                verbose_name="software",
+            ),
+        ),
+        migrations.AddField(
+            model_name="license",
+            name="supplier",
             field=models.ForeignKey(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
-                related_name="stock_movements",
-                to="requests.reservation",
-                verbose_name="reservation",
+                related_name="licenses",
+                to="masterdata.supplier",
+                verbose_name="supplier",
             ),
         ),
         migrations.AddField(
-            model_name="stockmovement",
-            name="stock_item",
+            model_name="licenseassignment",
+            name="asset",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="license_assignments",
+                to="inventory.asset",
+                verbose_name="device",
+            ),
+        ),
+        migrations.AddField(
+            model_name="licenseassignment",
+            name="assigned_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="+",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="assigned by",
+            ),
+        ),
+        migrations.AddField(
+            model_name="licenseassignment",
+            name="license",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="movements",
-                to="inventory.stockitem",
-                verbose_name="stock item",
+                related_name="assignments",
+                to="inventory.license",
+                verbose_name="license",
+            ),
+        ),
+        migrations.AddField(
+            model_name="licenseassignment",
+            name="user",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="license_assignments",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="employee",
             ),
         ),
         migrations.AddConstraint(
@@ -172,7 +320,36 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AddConstraint(
-            model_name="stockitem",
-            constraint=models.UniqueConstraint(fields=("model", "location"), name="unique_stock_location"),
+            model_name="consumable",
+            constraint=models.UniqueConstraint(
+                fields=("model", "location"), name="unique_consumable_location"
+            ),
+        ),
+        migrations.AddConstraint(
+            model_name="licenseassignment",
+            constraint=models.CheckConstraint(
+                condition=models.Q(
+                    models.Q(("asset__isnull", True), ("user__isnull", False)),
+                    models.Q(("asset__isnull", False), ("user__isnull", True)),
+                    _connector="OR",
+                ),
+                name="license_assignment_user_or_asset",
+            ),
+        ),
+        migrations.AddConstraint(
+            model_name="licenseassignment",
+            constraint=models.UniqueConstraint(
+                condition=models.Q(("user__isnull", False)),
+                fields=("license", "user"),
+                name="unique_license_user",
+            ),
+        ),
+        migrations.AddConstraint(
+            model_name="licenseassignment",
+            constraint=models.UniqueConstraint(
+                condition=models.Q(("asset__isnull", False)),
+                fields=("license", "asset"),
+                name="unique_license_asset",
+            ),
         ),
     ]

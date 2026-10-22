@@ -118,6 +118,7 @@ class Migration(migrations.Migration):
                     "quantity_received",
                     models.PositiveIntegerField(default=0, verbose_name="received quantity"),
                 ),
+                ("position", models.PositiveSmallIntegerField(default=0, verbose_name="position")),
                 (
                     "asset_model",
                     models.ForeignKey(
@@ -130,6 +131,17 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
+                    "asset_request_item",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="order_lines",
+                        to="requests.assetrequestitem",
+                        verbose_name="for request line",
+                    ),
+                ),
+                (
                     "order",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
@@ -138,22 +150,11 @@ class Migration(migrations.Migration):
                         verbose_name="purchase order",
                     ),
                 ),
-                (
-                    "reservation_item",
-                    models.ForeignKey(
-                        blank=True,
-                        null=True,
-                        on_delete=django.db.models.deletion.SET_NULL,
-                        related_name="order_lines",
-                        to="requests.reservationitem",
-                        verbose_name="for reservation item",
-                    ),
-                ),
             ],
             options={
                 "verbose_name": "order line",
                 "verbose_name_plural": "order lines",
-                "ordering": ["id"],
+                "ordering": ["position"],
             },
         ),
     ]

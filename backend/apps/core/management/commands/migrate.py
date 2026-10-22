@@ -1,38 +1,54 @@
-"""Django's migrate, first moving the former "reservations" app to its new label "requests".
+"""Django's migrate, first switching a database over to the fresh migrations of 2026-10-22.
 
-Django cannot rename an app in a migration: it plans the run from the recorded
-migrations before any of them runs. So this renames the app's tables, its recorded
-migrations and content types beforehand; on a new or already moved database it does
-nothing. The models are then renamed by ordinary migrations (requests 0019).
+The migrations of Argus's own apps were replaced by new initial ones. A database from
+before already has the schema they create, so this records them as applied in place of
+the old ones; Django then has nothing left to do. That needs the complete old history
+(the version before the switch must have migrated it). New databases and ones already
+switched are left alone.
 """
 
+from django.core.management.base import CommandError
 from django.core.management.commands.migrate import Command as MigrateCommand
 from django.db import connections, transaction
+from django.db.migrations.loader import MigrationLoader
+from django.db.migrations.recorder import MigrationRecorder
 
-OLD_LABEL = "reservations"
-NEW_LABEL = "requests"
+APPS = ("accounts", "core", "masterdata", "inventory", "procurement", "requests")
+# The last old migration per app; all of them must be applied before the switch.
+LAST_OLD = {
+    "accounts": "0016_requests_area",
+    "core": "0007_request_links",
+    "masterdata": "0008_category_code_optional",
+    "inventory": "0011_asset_request",
+    "procurement": "0003_asset_request_item",
+    "requests": "0019_asset_request",
+}
 
 
-def move_app_label(connection, old: str = OLD_LABEL, new: str = NEW_LABEL) -> bool:
-    tables = connection.introspection.table_names()
-    if "django_migrations" not in tables:
+def switch_migration_history(connection) -> bool:
+    recorder = MigrationRecorder(connection)
+    if not recorder.has_table():
         return False
-    quote = connection.ops.quote_name
-    with transaction.atomic(using=connection.alias), connection.cursor() as cursor:
-        cursor.execute("SELECT COUNT(*) FROM django_migrations WHERE app = %s", [old])
-        if not cursor.fetchone()[0]:
-            return False
-        for table in tables:
-            if table.startswith(f"{old}_"):
-                cursor.execute(f"ALTER TABLE {quote(table)} RENAME TO {quote(new + table[len(old) :])}")
-        cursor.execute("UPDATE django_migrations SET app = %s WHERE app = %s", [new, old])
-        if "django_content_type" in tables:
-            cursor.execute("UPDATE django_content_type SET app_label = %s WHERE app_label = %s", [new, old])
+    on_disk = {
+        key for key in MigrationLoader(None, ignore_no_migrations=True).disk_migrations if key[0] in APPS
+    }
+    recorded = {(row.app, row.name) for row in recorder.migration_qs.filter(app__in=(*APPS, "reservations"))}
+    if not recorded - on_disk:
+        return False
+    if not set(LAST_OLD.items()) <= recorded:
+        raise CommandError(
+            "This database stems from an older Argus with migrations that no longer exist. "
+            "Update it with the last version before 2026-10-22 (commit ac25933) first."
+        )
+    with transaction.atomic(using=connection.alias):
+        recorder.migration_qs.filter(app__in=APPS).delete()
+        for app, name in sorted(on_disk):
+            recorder.record_applied(app, name)
     return True
 
 
 class Command(MigrateCommand):
     def handle(self, *args, **options):
-        if move_app_label(connections[options["database"]]):
-            self.stdout.write(f'Moved the app "{OLD_LABEL}" to "{NEW_LABEL}".')
+        if switch_migration_history(connections[options["database"]]):
+            self.stdout.write("Switched to the fresh migrations of 2026-10-22.")
         super().handle(*args, **options)
