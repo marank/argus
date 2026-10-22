@@ -50,7 +50,7 @@ export default defineResource<Category>({
         ownOrInherited(
           c.team?.name,
           c.effective_team?.name,
-          t('masterdata.fields.inheritedFromParent'),
+          t('masterdata.fields.inheritedCategoryTeam'),
         ),
     },
     {

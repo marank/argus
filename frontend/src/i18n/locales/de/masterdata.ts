@@ -151,6 +151,8 @@ export default {
     nextNumber: 'nächste Nummer',
     useSequence: 'Diese Nummernserie übernehmen',
     inheritedFromParent: 'Übernommen von der übergeordneten Kategorie',
+    inheritedCategoryTeam: 'Übernommen von der übergeordneten Kategorie bzw. das Standard-Team',
+    inheritedModelTeam: 'Übernommen von der Kategorie bzw. das Standard-Team',
     inheritedSequence: 'Übernommen von der Kategorie bzw. allgemein für Assets',
     trackingHelp:
       'Einzelgeräte: mit Seriennummer und Historie. Verbrauchsmaterial: nach Menge. Software: über Lizenzen.',

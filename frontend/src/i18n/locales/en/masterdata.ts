@@ -150,6 +150,8 @@ export default {
     nextNumber: 'next number',
     useSequence: 'Use this number sequence',
     inheritedFromParent: 'Taken over from the parent category',
+    inheritedCategoryTeam: 'Taken over from the parent category, or the default team',
+    inheritedModelTeam: 'Taken over from the category, or the default team',
     inheritedSequence: 'Taken over from the category or the general asset sequence',
     trackingHelp:
       'Individual devices: with serial number and history. Consumables: by quantity. Software: as licenses.',

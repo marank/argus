@@ -66,7 +66,7 @@ export interface Category {
   number_sequence: Ref | null
   /** Gets new requests and reports; empty = as the parent. IT only. */
   team: TeamRef | null
-  /** The own team, otherwise the nearest parent's. IT only. */
+  /** The own team, the nearest parent's, otherwise the default team. IT only. */
   effective_team: TeamRef | null
   is_requestable: boolean
   allow_any_model: boolean
@@ -112,6 +112,8 @@ export interface AssetModel {
   effective_number_sequence: Ref | null
   /** Gets new requests and reports; empty = as the category. IT only. */
   team: TeamRef | null
+  /** The own team, the category's (or a parent's), otherwise the default team. IT only. */
+  effective_team: TeamRef | null
   is_requestable: boolean
   is_active: boolean
 }

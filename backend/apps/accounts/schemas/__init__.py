@@ -1,6 +1,6 @@
 from .department import DepartmentIn, DepartmentOut
 from .ldap import LdapSettingsIn, LdapSettingsOut, LdapTestIn, LdapTestOut
-from .team import TeamIn, TeamOut, TeamRefOut
+from .team import TeamIn, TeamOut, TeamRefOut, default_team
 from .two_factor import (
     BackupCodesOut,
     CodeIn,
@@ -34,4 +34,5 @@ __all__ = [
     "UserIn",
     "UserOut",
     "UserRefOut",
+    "default_team",
 ]

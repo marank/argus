@@ -122,3 +122,23 @@ def test_categories_show_the_team_and_approval_that_apply(demo):
     assert body["requires_approval"] is False and body["needs_approval"] is True
     body = admin.get(f"/api/masterdata/categories/{mde.pk}").json()
     assert body["effective_team"]["id"] == str(team.pk) and body["needs_approval"] is True
+
+
+def test_the_default_team_applies_where_nothing_else_does(demo):
+    from apps.masterdata.models import AssetModel
+
+    admin = Client()
+    admin.login(username="admin", password="argus-demo")
+    support = Team.objects.create(name="Front desk", is_default=True)
+    hardware = Team.objects.create(name="Hardware")
+    mde = Category.objects.create(name="MDEs", code="t-mde")
+    model = AssetModel.objects.filter(tracking="serialized").first()
+    model.category, model.team = mde, None
+    model.save()
+
+    assert admin.get(f"/api/masterdata/categories/{mde.pk}").json()["effective_team"]["id"] == str(support.pk)
+    assert admin.get(f"/api/masterdata/models/{model.pk}").json()["effective_team"]["id"] == str(support.pk)
+    mde.team = hardware
+    mde.save()
+    body = admin.get(f"/api/masterdata/models/{model.pk}").json()
+    assert body["team"] is None and body["effective_team"]["id"] == str(hardware.pk)

@@ -44,7 +44,14 @@ router = build_crud_router(
             "part_number",
         ),
         queryset=lambda: AssetModel.objects.select_related(
-            "manufacturer", "category__number_sequence", "default_supplier", "team", "number_sequence"
+            "manufacturer",
+            "category__number_sequence",
+            "category__team",
+            "category__parent__parent__team",
+            "category__parent__team",
+            "default_supplier",
+            "team",
+            "number_sequence",
         ).prefetch_related("compatible_with__manufacturer"),
     ),
     tags=["asset models"],

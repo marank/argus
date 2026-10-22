@@ -2,7 +2,7 @@ from uuid import UUID
 
 from ninja import Schema
 
-from apps.accounts.schemas import TeamRefOut
+from apps.accounts.schemas import TeamRefOut, default_team
 from apps.core.api.security import context_is_it_staff
 from apps.core.schemas import RefOut
 from apps.masterdata.models import Category
@@ -27,7 +27,7 @@ class CategoryOut(Schema):
     path: list[str]
     # IT-internal: empty for employees.
     team: TeamRefOut | None = None
-    # The team that applies, the own or the nearest parent's; IT-internal as well.
+    # The team that applies: the own, the nearest parent's or the default team; IT-internal as well.
     effective_team: TeamRefOut | None = None
 
     @staticmethod
@@ -40,7 +40,9 @@ class CategoryOut(Schema):
 
     @staticmethod
     def resolve_effective_team(obj: Category, context):
-        return obj.effective_team() if context_is_it_staff(context) else None
+        if not context_is_it_staff(context):
+            return None
+        return obj.effective_team() or default_team(context)
 
     @staticmethod
     def resolve_path(obj) -> list[str]:

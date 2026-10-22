@@ -61,6 +61,17 @@ export default defineResource<AssetModel>({
         ),
     },
     {
+      key: 'team',
+      label: 'masterdata.fields.responsibleTeam',
+      width: 160,
+      render: (m) =>
+        ownOrInherited(
+          m.team?.name,
+          m.effective_team?.name,
+          t('masterdata.fields.inheritedModelTeam'),
+        ),
+    },
+    {
       key: 'tracking',
       label: 'masterdata.fields.tracking',
       width: 150,
