@@ -10,7 +10,7 @@ export function createResource<T, TInput = Partial<T>>(path: string) {
     get: (id: Id) => http.get<T>(`${path}/${id}`),
     create: (data: TInput) => http.post<T>(path, data),
     update: (id: Id, data: TInput) => http.put<T>(`${path}/${id}`, data),
-    remove: (id: Id) => http.delete(`${path}/${id}`),
+    remove: (id: Id) => http.remove(`${path}/${id}`),
   }
 }
 

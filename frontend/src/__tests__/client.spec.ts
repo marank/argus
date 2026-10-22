@@ -50,4 +50,13 @@ describe('api client', () => {
     expect(isUnreachable(error)).toBe(false)
     expect(error.message).toBe('Not possible.')
   })
+
+  it('tells a successful delete from a failed one', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(null, { status: 204 })),
+    )
+    // useAction().run returns undefined for a failure; a delete must not look like one.
+    expect(await http.remove('/masterdata/models/1')).toBe(true)
+  })
 })

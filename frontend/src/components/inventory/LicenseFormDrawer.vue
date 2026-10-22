@@ -24,6 +24,7 @@ import { useAction } from '@/composables/useAction'
 import { useFieldErrors } from '@/composables/useFieldErrors'
 import { fromIsoDate, toIsoDate, useFormat } from '@/composables/useFormat'
 import type { LicenseDetail, LicenseInput } from '@/types/inventory'
+import { modelLabel } from '@/utils/models'
 
 const props = defineProps<{ license?: LicenseDetail | null }>()
 const show = defineModel<boolean>('show', { required: true })
@@ -129,7 +130,7 @@ async function save() {
                 v-model="form.model"
                 :fetcher="assetModelsApi.list"
                 :params="{ tracking: 'license', is_active: true }"
-                :label="(m) => `${m.full_name} · ${m.category.name}`"
+                :label="(m) => `${modelLabel(m)} · ${m.category.name}`"
                 :initial="
                   license ? ({ ...license.model, category: license.category } as never) : null
                 "

@@ -48,7 +48,13 @@ def list_consumables(
     queryset = search(
         filters.filter(consumable_queryset()),
         q,
-        ("model__name", "model__manufacturer__name", "model__ean", "model__part_number"),
+        (
+            "model__name",
+            "model__designation",
+            "model__manufacturer__name",
+            "model__ean",
+            "model__part_number",
+        ),
     )
     return order(queryset, ordering, ("model__name", "location__name", "quantity"))
 

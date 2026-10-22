@@ -1695,6 +1695,18 @@ msgstr "Hersteller"
 msgid "category"
 msgstr "Kategorie"
 
+#: apps/masterdata/models/asset_model.py:24
+msgid "manufacturer designation"
+msgstr "Herstellerbezeichnung"
+
+#: apps/masterdata/models/asset_model.py:26
+msgid "The model as the manufacturer calls it; unique per manufacturer."
+msgstr "Das Modell, wie der Hersteller es nennt; je Hersteller eindeutig."
+
+#: apps/masterdata/models/asset_model.py:83
+msgid "This manufacturer already has a model with this designation."
+msgstr "Dieser Hersteller hat schon ein Modell mit dieser Bezeichnung."
+
 #: apps/masterdata/models/asset_model.py:34
 msgid "part number"
 msgstr "Artikelnummer"
@@ -1826,12 +1838,13 @@ msgstr "beliebiges Modell anforderbar"
 
 #: apps/masterdata/models/category.py:66
 msgid ""
-"Employees may request “any device” of this group. Turn off where only a "
-"specific model makes sense, e.g. accessories or consumables."
+"Employees may request “any model” of this category, e.g. a charging cable "
+"when the type does not matter; IT picks the model when assigning. Turn off "
+"where employees have to choose a specific model."
 msgstr ""
-"Mitarbeiter dürfen „beliebig“ aus dieser Kategorie anfordern. Deaktivieren, "
-"wenn nur ein bestimmtes Modell sinnvoll ist, z. B. bei Zubehör oder "
-"Verbrauchsmaterial."
+"Mitarbeiter dürfen ein „beliebiges Modell“ dieser Kategorie anfordern, z. B. "
+"ein Ladekabel, wenn der Typ egal ist; die IT wählt das Modell bei der "
+"Zuweisung. Deaktivieren, wenn Mitarbeiter ein bestimmtes Modell wählen müssen."
 
 #: apps/masterdata/models/category.py:71
 msgid "requires approval"

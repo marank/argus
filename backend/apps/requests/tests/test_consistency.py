@@ -50,7 +50,7 @@ def test_any_model_never_picks_accessories(employee_client, it_client):
         name="Laptop accessories", code="laptop-accessories", parent=laptops
     )
     dock = AssetModel.objects.create(
-        name="Dock", manufacturer=Manufacturer.objects.first(), category=accessories
+        name="Dock", designation="Dock", manufacturer=Manufacturer.objects.first(), category=accessories
     )
     create_asset({"model": dock.pk, "status": Asset.Status.IN_STOCK}, User.objects.get(username="it"))
     rid = prepare(employee_client, it_client, [{"category": str(laptops.pk), "quantity": 1}])

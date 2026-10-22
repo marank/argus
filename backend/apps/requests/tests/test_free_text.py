@@ -53,6 +53,7 @@ def test_free_text_lines_need_resolution(employee_client, it_client):
         "/api/masterdata/models",
         {
             "name": "ThinkPad P16s 64GB",
+            "designation": "21K9",
             "manufacturer": str(Manufacturer.objects.get(name="Lenovo").pk),
             "category": str(laptops.pk),
         },

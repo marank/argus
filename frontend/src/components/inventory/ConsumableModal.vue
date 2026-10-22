@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Id } from '@/types/common'
+import { modelLabel } from '@/utils/models'
 import { NButton, NForm, NFormItem, NInputNumber, NModal } from 'naive-ui'
 import { reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -65,7 +66,7 @@ async function save() {
           v-model="form.model"
           :fetcher="assetModelsApi.list"
           :params="{ tracking: 'bulk' }"
-          :label="(m) => m.full_name"
+          :label="modelLabel"
           :disabled="!!item"
           :initial="item?.model as never"
         />

@@ -189,6 +189,7 @@ class Command(BaseCommand):
             models[name] = AssetModel.objects.create(
                 manufacturer=manufacturer,
                 name=name,
+                designation=name,
                 category=categories[category],
                 tracking=tracking,
                 ean=ean,
@@ -545,6 +546,7 @@ def seed_extra(base: dict, stdout) -> None:
         models[name] = AssetModel.objects.create(
             manufacturer=manufacturer,
             name=name,
+            designation=name,
             category=categories[category],
             tracking=tracking,
             list_price=price,

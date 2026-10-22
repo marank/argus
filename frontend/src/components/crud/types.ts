@@ -77,7 +77,7 @@ export interface ResourceDef<T extends { id: Id }> {
     list: (params: ListParams) => Promise<Page<T>>
     create: (data: any) => Promise<T>
     update: (id: Id, data: any) => Promise<T>
-    remove: (id: Id) => Promise<void>
+    remove: (id: Id) => Promise<true>
   }
   ordering?: string
   /** Show the rows in sections; the server sorts by the group's ordering first. */

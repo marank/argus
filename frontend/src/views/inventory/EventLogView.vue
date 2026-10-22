@@ -12,6 +12,7 @@ import DateField from '@/components/common/DateField.vue'
 import { toIsoDate, useFormat } from '@/composables/useFormat'
 import { useList } from '@/composables/useList'
 import type { AssetEventKind, AssetEventWithAsset } from '@/types/inventory'
+import { modelLabel } from '@/utils/models'
 
 const { t } = useI18n()
 const { dateTime, enumLabel, money } = useFormat()
@@ -130,7 +131,7 @@ const columns = computed<DataTableColumns<AssetEventWithAsset>>(() => [
           v-model="list.filters.model as string | null"
           :fetcher="assetModelsApi.list"
           :params="{ tracking: 'serialized' }"
-          :label="(m) => m.full_name"
+          :label="modelLabel"
           :placeholder="t('inventory.fields.model')"
           style="width: 220px"
         />

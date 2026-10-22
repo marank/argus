@@ -8,6 +8,7 @@ import { i18n } from '@/i18n'
 import type { TeamRef } from '@/types/accounts'
 import type { AssetModel, Category } from '@/types/masterdata'
 import { categoryIcon } from '@/utils/icons'
+import { modelLabel } from '@/utils/models'
 
 const { n, t } = i18n.global
 
@@ -22,14 +23,17 @@ export default defineResource<AssetModel>({
   },
   api: assetModelsApi,
   ordering: 'manufacturer__name',
-  title: (m) => m.full_name,
+  title: modelLabel,
   columns: [
     {
       key: 'name',
       label: 'common.name',
       sorter: 'name',
       render: (m) =>
-        h('div', [h('div', m.name), h('small', { class: 'muted' }, m.manufacturer.name)]),
+        h('div', [
+          h('div', m.name),
+          h('small', { class: 'muted' }, `${m.manufacturer.name} · ${m.designation}`),
+        ]),
     },
     {
       key: 'category',
@@ -94,6 +98,14 @@ export default defineResource<AssetModel>({
     {
       fields: [
         { key: 'name', label: 'common.name', type: 'text', required: true, span: 2 },
+        {
+          key: 'designation',
+          label: 'masterdata.fields.designation',
+          type: 'text',
+          required: true,
+          span: 2,
+          help: 'masterdata.fields.designationHelp',
+        },
         {
           key: 'manufacturer',
           label: 'masterdata.fields.manufacturer',
@@ -188,7 +200,7 @@ export default defineResource<AssetModel>({
           multiple: true,
           help: 'masterdata.fields.compatibleWithHelp',
           fetcher: assetModelsApi.list,
-          display: (m: AssetModel) => m.full_name,
+          display: modelLabel,
           initial: (m: AssetModel) => m.compatible_with,
         },
         { key: 'description', label: 'common.description', type: 'textarea' },
@@ -198,6 +210,7 @@ export default defineResource<AssetModel>({
   ],
   defaults: () => ({
     name: '',
+    designation: '',
     manufacturer: null,
     category: null,
     part_number: '',
@@ -215,6 +228,7 @@ export default defineResource<AssetModel>({
   }),
   toForm: (m) => ({
     name: m.name,
+    designation: m.designation,
     manufacturer: m.manufacturer.id,
     category: m.category.id,
     part_number: m.part_number,

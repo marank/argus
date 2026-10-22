@@ -17,7 +17,9 @@ def test_a_database_with_the_old_history_switches_to_the_fresh_migrations(db):
         MigrationRecorder.Migration.objects.create(app=app, name=name)
 
     assert switch_migration_history(connection)
-    assert recorded() == fresh
+    # Migrations added after the switch are left for Django to apply.
+    assert recorded() == {(app, name) for app, name in fresh if name.endswith("_initial")}
+    assert ("masterdata", "0002_model_designation") not in recorded()
     # Already switched: nothing left to do.
     assert not switch_migration_history(connection)
 

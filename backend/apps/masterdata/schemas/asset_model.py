@@ -14,6 +14,7 @@ from .refs import AssetModelRefOut, CategoryRefOut
 class AssetModelOut(Schema):
     id: UUID
     name: str
+    designation: str
     full_name: str
     manufacturer: RefOut
     category: CategoryRefOut
@@ -42,6 +43,7 @@ class AssetModelOut(Schema):
 
 class AssetModelIn(Schema):
     name: str
+    designation: str
     manufacturer: UUID
     category: UUID
     part_number: str = ""

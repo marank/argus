@@ -133,6 +133,11 @@ export const http = {
   put: <T>(path: string, body: unknown) => request<T>('PUT', path, { body }),
   patch: <T>(path: string, body: unknown) => request<T>('PATCH', path, { body }),
   delete: <T = void>(path: string) => request<T>('DELETE', path),
+  /**
+   * DELETE answered with 204. Resolves to `true`, since `useAction().run` takes
+   * `undefined` for a failure.
+   */
+  remove: (path: string) => request<void>('DELETE', path).then(() => true as const),
 }
 
 export type { Query }

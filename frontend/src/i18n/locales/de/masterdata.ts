@@ -91,6 +91,9 @@ export default {
     pickupPoint: 'Abholort',
     manufacturer: 'Hersteller',
     category: 'Kategorie',
+    designation: 'Herstellerbezeichnung',
+    designationHelp:
+      'Das Modell, wie der Hersteller es nennt, z. B. „ZQ-CRD4“. Mehrere Modelle eines Herstellers dürfen denselben Namen tragen, aber nicht dieselbe Bezeichnung.',
     partNumber: 'Artikelnummer',
     ean: 'EAN / GTIN',
     tracking: 'Führung',
@@ -158,7 +161,7 @@ export default {
     systemSequence: 'System',
     allowAnyModel: '„Beliebiges Modell“ anforderbar',
     allowAnyModelHelp:
-      'Mitarbeiter dürfen „beliebig“ aus dieser Kategorie anfordern. Für Zubehör oder Verbrauchsmaterial deaktivieren, wenn nur ein bestimmtes Modell sinnvoll ist.',
+      'Mitarbeiter dürfen ein „beliebiges Modell“ dieser Kategorie anfordern, z. B. ein Ladekabel, wenn der Typ egal ist; die IT wählt das Modell bei der Zuweisung. Deaktivieren, wenn Mitarbeiter ein bestimmtes Modell wählen müssen.',
     terminal: 'Abholterminal',
     terminalHelp:
       'Gemeinsames Konto für das Touch-Terminal; Zugriff nur auf vorbereitete Abholungen.',

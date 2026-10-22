@@ -26,6 +26,7 @@ import { useFieldErrors } from '@/composables/useFieldErrors'
 import { fromIsoDate, toIsoDate, useFormat } from '@/composables/useFormat'
 import { ASSET_CONDITIONS, type AssetSeriesInput, type AssetSeriesPreview } from '@/types/inventory'
 import type { AssetModel } from '@/types/masterdata'
+import { modelLabel } from '@/utils/models'
 
 /** Create many identical devices at once; the category's number sequence numbers them. */
 const show = defineModel<boolean>('show', { required: true })
@@ -154,7 +155,7 @@ async function submit() {
               v-model="form.model"
               :fetcher="assetModelsApi.list"
               :params="{ tracking: 'serialized', is_active: true, numbered: true }"
-              :label="(m) => `${m.full_name} · ${m.category.name}`"
+              :label="(m) => `${modelLabel(m)} · ${m.category.name}`"
               @select="onModel"
             />
           </NFormItemGi>

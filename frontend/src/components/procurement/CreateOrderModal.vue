@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Id } from '@/types/common'
+import { modelLabel } from '@/utils/models'
 import { Trash2 } from '@lucide/vue'
 import { NButton, NForm, NFormItem, NInputNumber, NModal, NTable, useMessage } from 'naive-ui'
 import { ref, watch } from 'vue'
@@ -96,7 +97,7 @@ async function create() {
                 size="small"
                 :fetcher="assetModelsApi.list"
                 :params="line.category ? { category: line.category } : {}"
-                :label="(m) => m.full_name"
+                :label="modelLabel"
               />
             </td>
             <td><NInputNumber v-model:value="line.quantity" size="small" :min="1" /></td>

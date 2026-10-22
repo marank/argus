@@ -10,6 +10,7 @@ import EntitySelect from '@/components/common/EntitySelect.vue'
 import { useAction } from '@/composables/useAction'
 import type { Id } from '@/types/common'
 import type { AssetRequest, AssetRequestItem } from '@/types/requests'
+import { modelLabel } from '@/utils/models'
 
 import CreateModelModal from './CreateModelModal.vue'
 
@@ -52,7 +53,7 @@ async function assign() {
         :params="
           item.category ? { category: item.category.id, is_active: true } : { is_active: true }
         "
-        :label="(m) => m.full_name"
+        :label="modelLabel"
         :placeholder="t('requests.freeTextResolve.existing')"
       />
       <NButton size="small" :disabled="!existing" :loading="busy" @click="assign">

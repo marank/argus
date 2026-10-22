@@ -33,7 +33,7 @@ export const assetsApi = {
   update: (id: Id, data: AssetInput) => http.put<AssetDetail>(`/inventory/assets/${id}`, data),
   assign: (id: Id, user: Id | null) =>
     http.post<AssetDetail>(`/inventory/assets/${id}/assign`, { user }),
-  remove: (id: Id) => http.delete(`/inventory/assets/${id}`),
+  remove: (id: Id) => http.remove(`/inventory/assets/${id}`),
   events: (id: Id) => http.get<AssetEvent[]>(`/inventory/assets/${id}/events`),
   addEvent: (id: Id, data: Record<string, unknown>) =>
     http.post<AssetEvent>(`/inventory/assets/${id}/events`, data),
@@ -42,7 +42,7 @@ export const assetsApi = {
 export const eventsApi = {
   list: (params: ListParams = {}) =>
     http.get<Page<AssetEventWithAsset>>('/inventory/events', params),
-  remove: (id: Id) => http.delete(`/inventory/events/${id}`),
+  remove: (id: Id) => http.remove(`/inventory/events/${id}`),
 }
 
 export const consumablesApi = {
@@ -65,7 +65,7 @@ export const licensesApi = {
   create: (data: LicenseInput) => http.post<LicenseDetail>('/inventory/licenses', data),
   update: (id: Id, data: LicenseInput) =>
     http.put<LicenseDetail>(`/inventory/licenses/${id}`, data),
-  remove: (id: Id) => http.delete(`/inventory/licenses/${id}`),
+  remove: (id: Id) => http.remove(`/inventory/licenses/${id}`),
   assign: (id: Id, data: { user?: Id; asset?: Id; note?: string }) =>
     http.post<LicenseDetail>(`/inventory/licenses/${id}/assignments`, data),
   unassign: (id: Id, assignmentId: Id) =>

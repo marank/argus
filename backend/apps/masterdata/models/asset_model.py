@@ -18,7 +18,13 @@ class AssetModel(TimeStampedModel):
         BULK = "bulk", _("Consumable (quantity)")
         LICENSE = "license", _("Software license")
 
+    # Several models may share a name; the manufacturer's designation tells them apart.
     name = models.CharField(_("name"), max_length=150)
+    designation = models.CharField(
+        _("manufacturer designation"),
+        max_length=150,
+        help_text=_("The model as the manufacturer calls it; unique per manufacturer."),
+    )
     manufacturer = models.ForeignKey(
         "masterdata.Manufacturer",
         verbose_name=_("manufacturer"),
@@ -71,7 +77,11 @@ class AssetModel(TimeStampedModel):
         verbose_name_plural = _("models")
         ordering = ["manufacturer__name", "name"]
         constraints = [
-            models.UniqueConstraint(fields=["manufacturer", "name"], name="unique_model_name"),
+            models.UniqueConstraint(
+                fields=["manufacturer", "designation"],
+                name="unique_model_designation",
+                violation_error_message=_("This manufacturer already has a model with this designation."),
+            ),
         ]
 
     def __str__(self) -> str:

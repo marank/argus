@@ -23,6 +23,7 @@ const { busy, run } = useAction()
 
 const form = reactive({
   name: '',
+  designation: '',
   manufacturer: null as Id | null,
   category: null as Id | null,
   tracking: 'serialized' as Tracking,
@@ -33,6 +34,7 @@ watch(show, (visible) => {
   if (!visible) return
   Object.assign(form, {
     name: props.item.description,
+    designation: props.item.description,
     manufacturer: null,
     category: props.item.category?.id ?? null,
     tracking: 'serialized',
@@ -64,6 +66,16 @@ async function save() {
       <NFormItem>
         <template #label><FieldLabel :label="t('common.name')" required /></template>
         <NInput v-model:value="form.name" />
+      </NFormItem>
+      <NFormItem>
+        <template #label>
+          <FieldLabel
+            :label="t('masterdata.fields.designation')"
+            :help="t('masterdata.fields.designationHelp')"
+            required
+          />
+        </template>
+        <NInput v-model:value="form.designation" />
       </NFormItem>
       <div class="cols">
         <NFormItem>
@@ -117,7 +129,9 @@ async function save() {
         <NButton
           type="primary"
           :loading="busy"
-          :disabled="!form.name.trim() || !form.manufacturer || !form.category"
+          :disabled="
+            !form.name.trim() || !form.designation.trim() || !form.manufacturer || !form.category
+          "
           @click="save"
         >
           {{ t('requests.freeTextResolve.createAndAssign') }}

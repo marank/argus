@@ -90,6 +90,9 @@ export default {
     pickupPoint: 'Pickup point',
     manufacturer: 'Manufacturer',
     category: 'Category',
+    designation: 'Manufacturer designation',
+    designationHelp:
+      'The model as the manufacturer calls it, e.g. “ZQ-CRD4”. Several models of one manufacturer may share a name, but not a designation.',
     partNumber: 'Part number',
     ean: 'EAN / GTIN',
     tracking: 'Tracking',
@@ -157,7 +160,7 @@ export default {
     systemSequence: 'System',
     allowAnyModel: '“Any model” requestable',
     allowAnyModelHelp:
-      'Employees may request “any” model of this category. Disable for accessories or consumables where only a specific model makes sense.',
+      'Employees may request “any model” of this category, e.g. a charging cable when the type does not matter; IT picks the model when assigning. Turn off where employees have to choose a specific model.',
     terminal: 'Pickup terminal',
     terminalHelp: 'Shared account for the touch terminal; access to prepared pickups only.',
     terminalLocation: 'Terminal site',

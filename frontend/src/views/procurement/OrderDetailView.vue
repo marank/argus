@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Id } from '@/types/common'
+import { modelLabel } from '@/utils/models'
 import { PackageCheck, Plus, Save, Send, Trash2, X } from '@lucide/vue'
 import {
   NButton,
@@ -266,7 +267,7 @@ function openOrdered() {
                       v-model="line.asset_model"
                       size="small"
                       :fetcher="assetModelsApi.list"
-                      :label="(m) => m.full_name"
+                      :label="modelLabel"
                       :initial="
                         (order.lines.find((l) => l.id === line.id)?.asset_model ?? null) as never
                       "

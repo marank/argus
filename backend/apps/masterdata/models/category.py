@@ -63,8 +63,9 @@ class Category(TimeStampedModel):
         _("any model requestable"),
         default=True,
         help_text=_(
-            "Employees may request “any device” of this group. Turn off where only a "
-            "specific model makes sense, e.g. accessories or consumables."
+            "Employees may request “any model” of this category, e.g. a charging cable "
+            "when the type does not matter; IT picks the model when assigning. Turn off "
+            "where employees have to choose a specific model."
         ),
     )
     requires_approval = models.BooleanField(

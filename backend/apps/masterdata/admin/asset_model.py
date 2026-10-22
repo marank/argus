@@ -8,6 +8,7 @@ from apps.masterdata.models import AssetModel
 class AssetModelAdmin(admin.ModelAdmin):
     list_display = [
         "name",
+        "designation",
         "manufacturer",
         "category",
         "tracking",
@@ -17,11 +18,11 @@ class AssetModelAdmin(admin.ModelAdmin):
         "is_active",
     ]
     list_filter = ["tracking", "is_active", "is_requestable", "category", "manufacturer"]
-    search_fields = ["name", "part_number", "ean", "manufacturer__name"]
+    search_fields = ["name", "designation", "part_number", "ean", "manufacturer__name"]
     list_select_related = ["manufacturer", "category"]
     autocomplete_fields = ["manufacturer", "category", "default_supplier", "compatible_with", "team"]
     fieldsets = [
-        (None, {"fields": ["name", "manufacturer", "category", "tracking", "team"]}),
+        (None, {"fields": ["name", "designation", "manufacturer", "category", "tracking", "team"]}),
         (_("Identification"), {"fields": ["part_number", "ean"]}),
         (_("Procurement"), {"fields": ["default_supplier", "list_price", "warranty_months"]}),
         (_("Employee portal"), {"fields": ["is_requestable", "is_active"]}),

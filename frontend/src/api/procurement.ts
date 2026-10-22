@@ -17,7 +17,7 @@ export const ordersApi = {
   get: (id: Id) => http.get<Order>(`${base}/${id}`),
   create: (data: OrderInput) => http.post<Order>(base, data),
   update: (id: Id, data: OrderInput) => http.put<Order>(`${base}/${id}`, data),
-  remove: (id: Id) => http.delete(`${base}/${id}`),
+  remove: (id: Id) => http.remove(`${base}/${id}`),
   markOrdered: (
     id: Id,
     data: { order_date: string | null; expected_date: string | null; supplier_reference: string },

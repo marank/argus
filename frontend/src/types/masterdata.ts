@@ -10,6 +10,7 @@ export const CATEGORY_KINDS: CategoryKind[] = ['hardware', 'software']
 export interface AssetModelRef {
   id: Id
   name: string
+  designation: string
   full_name: string
   tracking: Tracking
 }
@@ -87,6 +88,8 @@ export interface Location {
 export interface AssetModel {
   id: Id
   name: string
+  /** The manufacturer's own name for the model; unique per manufacturer. */
+  designation: string
   full_name: string
   manufacturer: Ref
   category: CategoryRef

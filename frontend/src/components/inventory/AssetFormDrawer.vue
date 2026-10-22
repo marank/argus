@@ -25,6 +25,7 @@ import { useAction } from '@/composables/useAction'
 import { useFieldErrors } from '@/composables/useFieldErrors'
 import { fromIsoDate, toIsoDate, useFormat } from '@/composables/useFormat'
 import { useFeaturesStore } from '@/stores/features'
+import { modelLabel } from '@/utils/models'
 import {
   ASSET_CONDITIONS,
   ASSET_STATUSES,
@@ -157,7 +158,7 @@ async function save() {
                 v-model="form.model"
                 :fetcher="assetModelsApi.list"
                 :params="{ tracking: 'serialized', is_active: true }"
-                :label="(m) => `${m.full_name} · ${m.category.name}`"
+                :label="(m) => `${modelLabel(m)} · ${m.category.name}`"
                 :initial="asset ? ({ ...asset.model, category: asset.category } as never) : null"
               />
             </NFormItemGi>
@@ -255,7 +256,7 @@ async function save() {
                 multiple
                 :fetcher="assetModelsApi.list"
                 :params="{ tracking: 'bulk', is_active: true }"
-                :label="(m) => m.full_name"
+                :label="modelLabel"
                 :initial="asset?.consumables as never"
               />
             </NFormItemGi>

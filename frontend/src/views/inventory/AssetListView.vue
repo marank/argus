@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Id } from '@/types/common'
+import { modelLabel } from '@/utils/models'
 import { Layers, Plus, ScanBarcode } from '@lucide/vue'
 import { NButton, NDataTable, NInput, NSelect, type DataTableColumns } from 'naive-ui'
 import { useStorage } from '@vueuse/core'
@@ -188,7 +189,7 @@ function onSaved(asset: { id: Id }) {
           v-model="list.filters.model as string | null"
           :fetcher="assetModelsApi.list"
           :params="{ tracking: 'serialized' }"
-          :label="(m) => m.full_name"
+          :label="modelLabel"
           :placeholder="t('inventory.fields.model')"
           style="width: 220px"
         />

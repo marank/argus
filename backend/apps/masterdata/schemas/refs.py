@@ -6,6 +6,7 @@ from ninja import Schema
 class AssetModelRefOut(Schema):
     id: UUID
     name: str
+    designation: str
     full_name: str
     tracking: str
 

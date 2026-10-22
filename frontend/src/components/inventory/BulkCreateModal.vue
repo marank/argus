@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Id } from '@/types/common'
+import { modelLabel } from '@/utils/models'
 import { NButton, NForm, NFormItem, NInput, NModal, NSelect, useMessage } from 'naive-ui'
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -60,7 +61,7 @@ async function submit() {
           v-model="form.model"
           :fetcher="assetModelsApi.list"
           :params="{ tracking: 'serialized' }"
-          :label="(m) => m.full_name"
+          :label="modelLabel"
         />
       </NFormItem>
       <div class="cols">

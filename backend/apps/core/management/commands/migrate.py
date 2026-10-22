@@ -42,8 +42,10 @@ def switch_migration_history(connection) -> bool:
         )
     with transaction.atomic(using=connection.alias):
         recorder.migration_qs.filter(app__in=APPS).delete()
+        # Only the fresh initial ones match the old schema; later migrations still have to run.
         for app, name in sorted(on_disk):
-            recorder.record_applied(app, name)
+            if name.endswith("_initial"):
+                recorder.record_applied(app, name)
     return True
 
 
