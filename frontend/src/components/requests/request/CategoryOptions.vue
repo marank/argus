@@ -23,6 +23,18 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 const groups = computed(() => [props.category, ...props.children])
+
+/** Below the first level, the way down from the group: "Scanner accessories / Cradles". */
+function path(group: CatalogCategory): string {
+  const byId = new Map(groups.value.map((g) => [g.id, g]))
+  const names = [group.name]
+  let parent = group.parent_id ? byId.get(group.parent_id) : undefined
+  while (parent && parent.id !== props.category.id) {
+    names.unshift(parent.name)
+    parent = parent.parent_id ? byId.get(parent.parent_id) : undefined
+  }
+  return names.join(' / ')
+}
 </script>
 
 <template>
@@ -39,7 +51,7 @@ const groups = computed(() => [props.category, ...props.children])
 
     <section v-for="group in groups" :key="group.id" class="group">
       <div v-if="group.id !== category.id" class="eyebrow">
-        {{ t('requests.new.accessories', { name: group.name }) }}
+        {{ t('requests.new.accessories', { name: path(group) }) }}
       </div>
       <CatalogOptionRow
         v-if="offersAnyModel(group)"

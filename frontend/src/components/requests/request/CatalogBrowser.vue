@@ -38,7 +38,12 @@ const topLevel = computed(() => {
   const ids = new Set(props.catalog.map((c) => c.id))
   return props.catalog.filter((c) => !c.parent_id || !ids.has(c.parent_id))
 })
-const childrenOf = (id: Id) => props.catalog.filter((c) => c.parent_id === id)
+/** All subcategories below a group, each followed by its own, at any depth. */
+function descendantsOf(id: Id): CatalogCategory[] {
+  return props.catalog
+    .filter((c) => c.parent_id === id)
+    .flatMap((child) => [child, ...descendantsOf(child.id)])
+}
 /** Tiles split into hardware and software, followed by the section for anything else. */
 const tileGroups = computed(() =>
   (['hardware', 'software'] as const)
@@ -161,7 +166,7 @@ const results = computed<CatalogOption[]>(() => {
         <CategoryOptions
           v-if="selected"
           :category="selected"
-          :children="childrenOf(selected.id)"
+          :children="descendantsOf(selected.id)"
           :cart-counts="cartCounts"
           @add="(category, model) => emit('add', category, model)"
           @add-free-text="(text, category) => emit('addFreeText', text, category)"
