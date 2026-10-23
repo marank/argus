@@ -1,5 +1,5 @@
 import { Check, CornerDownRight, Minus } from '@lucide/vue'
-import { h, type VNodeChild } from 'vue'
+import { h, type Component, type VNodeChild } from 'vue'
 
 import { categoryIcon } from '@/utils/icons'
 
@@ -39,5 +39,9 @@ export const path = (names: string[]) =>
       ])
     : (names[0] ?? '—')
 
-export const withIcon = (icon: string, label: VNodeChild) =>
-  h('span', { class: 'row' }, [h(categoryIcon(icon), { size: 15, class: 'muted' }), label])
+/** A label behind its icon; `lookup` maps the stored icon name (category icons by default). */
+export const withIcon = (
+  icon: string,
+  label: VNodeChild,
+  lookup: (name: string) => Component = categoryIcon,
+) => h('span', { class: 'row' }, [h(lookup(icon), { size: 15, class: 'muted' }), label])

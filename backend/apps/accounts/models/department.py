@@ -15,7 +15,23 @@ class Department(TimeStampedModel):
     those of the nearest department above it that has some.
     """
 
+    class Icon(models.TextChoices):
+        # Stored by name; the frontend maps the names to its icons (utils/icons.ts).
+        BUILDING = "building", _("Building")
+        MANAGEMENT = "briefcase", _("Management")
+        TEAM = "users", _("Team")
+        IT = "monitor", _("IT")
+        SALES = "cart", _("Sales")
+        STORE = "store", _("Store")
+        CUSTOMER_SERVICE = "headset", _("Customer service")
+        MARKETING = "megaphone", _("Marketing")
+        ACCOUNTING = "calculator", _("Accounting")
+        LOGISTICS = "truck", _("Logistics")
+        WAREHOUSE = "warehouse", _("Warehouse")
+        TECHNICAL = "wrench", _("Technical services")
+
     name = models.CharField(_("name"), max_length=100, unique=True)
+    icon = models.CharField(_("icon"), max_length=20, choices=Icon.choices, default=Icon.BUILDING)
     code = models.CharField(_("code"), max_length=20, blank=True)
     cost_center = models.CharField(_("cost center"), max_length=30, blank=True)
     parent = models.ForeignKey(

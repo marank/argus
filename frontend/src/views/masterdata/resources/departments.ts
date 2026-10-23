@@ -1,8 +1,9 @@
 import { departmentsApi, usersApi } from '@/api/accounts'
-import { mono, ownOrInherited, path } from '@/components/crud/cells'
+import { mono, ownOrInherited, path, withIcon } from '@/components/crud/cells'
 import { defineResource } from '@/components/crud/types'
 import { i18n } from '@/i18n'
 import type { Department, UserRef } from '@/types/accounts'
+import { DEPARTMENT_ICONS, departmentIcon } from '@/utils/icons'
 
 const { t } = i18n.global
 
@@ -14,10 +15,19 @@ export default defineResource<Department>({
   api: departmentsApi,
   // Each department followed by its subdepartments.
   ordering: 'tree_position',
-  tree: { ordering: 'tree_position', parent: (d) => d.parent?.id, label: (d) => d.name },
+  tree: {
+    ordering: 'tree_position',
+    parent: (d) => d.parent?.id,
+    label: (d) => withIcon(d.icon, d.name, departmentIcon),
+  },
   title: (d) => d.name,
   columns: [
-    { key: 'name', label: 'common.name', sorter: 'name', render: (d) => path(d.path) },
+    {
+      key: 'name',
+      label: 'common.name',
+      sorter: 'name',
+      render: (d) => withIcon(d.icon, path(d.path), departmentIcon),
+    },
     { key: 'code', label: 'common.code', sorter: 'code', width: 140, render: (d) => mono(d.code) },
     {
       key: 'cost_center',
@@ -53,7 +63,15 @@ export default defineResource<Department>({
   sections: [
     {
       fields: [
-        { key: 'name', label: 'common.name', type: 'text', required: true, span: 2 },
+        { key: 'name', label: 'common.name', type: 'text', required: true },
+        {
+          key: 'icon',
+          label: 'masterdata.fields.icon',
+          type: 'icon',
+          icons: DEPARTMENT_ICONS,
+          group: 'departmentIcon',
+          required: true,
+        },
         { key: 'code', label: 'common.code', type: 'mono' },
         { key: 'cost_center', label: 'masterdata.fields.costCenter', type: 'mono' },
         {
@@ -89,6 +107,7 @@ export default defineResource<Department>({
   ],
   defaults: () => ({
     name: '',
+    icon: 'building',
     code: '',
     cost_center: '',
     parent: null,
@@ -97,6 +116,7 @@ export default defineResource<Department>({
   }),
   toForm: (d) => ({
     name: d.name,
+    icon: d.icon,
     code: d.code,
     cost_center: d.cost_center,
     parent: d.parent?.id ?? null,

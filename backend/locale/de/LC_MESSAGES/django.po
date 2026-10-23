@@ -2961,3 +2961,48 @@ msgstr "Bitte einen LDAP-Filter eingeben."
 #: apps/accounts/api/ldap.py
 msgid "LDAP login is not enabled or not fully configured."
 msgstr "Die LDAP-Anmeldung ist nicht aktiviert oder nicht vollständig eingerichtet."
+
+#: apps/accounts/models/department.py
+msgid "Management"
+msgstr "Geschäftsleitung"
+
+#: apps/accounts/models/department.py
+msgid "Team"
+msgstr "Team"
+
+#: apps/accounts/models/department.py
+msgid "IT"
+msgstr "IT"
+
+#: apps/accounts/models/department.py
+msgid "Sales"
+msgstr "Vertrieb"
+
+#: apps/accounts/models/department.py
+msgid "Store"
+msgstr "Filiale"
+
+#: apps/accounts/models/department.py
+msgid "Customer service"
+msgstr "Kundenservice"
+
+#: apps/accounts/models/department.py
+msgid "Marketing"
+msgstr "Marketing"
+
+#: apps/accounts/models/department.py
+msgid "Accounting"
+msgstr "Buchhaltung"
+
+#: apps/accounts/models/department.py
+msgid "Logistics"
+msgstr "Logistik"
+
+#: apps/accounts/models/department.py
+msgid "Warehouse"
+msgstr "Lager"
+
+#: apps/accounts/models/department.py
+msgid "Technical services"
+msgstr "Haustechnik"
+

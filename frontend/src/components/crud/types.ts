@@ -26,7 +26,13 @@ export type FieldDef = BaseField &
     | { type: 'number'; min?: number; max?: number; precision?: number }
     | { type: 'switch' }
     | { type: 'enum'; group: string; values: string[] }
-    | { type: 'icon' }
+    | {
+        type: 'icon'
+        /** Icons to choose from, by stored name; the category icons by default. */
+        icons?: Record<string, Component>
+        /** Enum group (see enums.ts) that names the icons; otherwise their stored names show. */
+        group?: string
+      }
     | {
         type: 'entity'
         fetcher: (params: ListParams) => Promise<Page<any>>

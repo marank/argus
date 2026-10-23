@@ -142,3 +142,22 @@ def test_the_default_team_applies_where_nothing_else_does(demo):
     mde.save()
     body = admin.get(f"/api/masterdata/models/{model.pk}").json()
     assert body["team"] is None and body["effective_team"]["id"] == str(hardware.pk)
+
+
+def test_departments_get_an_icon_from_the_choices(demo):
+    admin = Client()
+    admin.login(username="admin", password="argus-demo")
+    operations = Department.objects.create(name="Operations")
+    assert operations.icon == Department.Icon.BUILDING
+
+    payload = {"name": "Support", "icon": "headset", "parent": str(operations.pk)}
+    response = admin.post("/api/accounts/departments", payload, content_type="application/json")
+    assert response.status_code == 201, response.content
+    assert response.json()["icon"] == "headset"
+
+    response = admin.post(
+        "/api/accounts/departments",
+        {**payload, "name": "Shoes", "icon": "rocket"},
+        content_type="application/json",
+    )
+    assert response.status_code == 422

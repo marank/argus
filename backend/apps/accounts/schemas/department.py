@@ -18,7 +18,7 @@ class DepartmentOut(ModelSchema):
 
     class Meta:
         model = Department
-        fields = ["id", "name", "code", "cost_center", "sort_order"]
+        fields = ["id", "name", "icon", "code", "cost_center", "sort_order"]
 
     @staticmethod
     def resolve_member_count(obj: Department) -> int:
@@ -44,6 +44,7 @@ class DepartmentOut(ModelSchema):
 
 class DepartmentIn(Schema):
     name: str
+    icon: Department.Icon = Department.Icon.BUILDING
     code: str = ""
     cost_center: str = ""
     parent: UUID | None = None

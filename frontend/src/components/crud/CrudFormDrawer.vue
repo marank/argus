@@ -10,7 +10,7 @@ import {
   NInputNumber,
   NSelect,
 } from 'naive-ui'
-import { computed, h, nextTick, reactive, watch } from 'vue'
+import { computed, h, nextTick, reactive, watch, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import EntitySelect from '@/components/common/EntitySelect.vue'
@@ -51,11 +51,12 @@ const title = computed(() =>
     : `${t(`masterdata.singular.${props.resource.key}`)} · ${t('common.create')}`,
 )
 
-const iconOptions = Object.entries(CATEGORY_ICONS).map(([name, icon]) => ({
-  value: name,
-  label: name,
-  icon,
-}))
+const iconOptions = (field: { icons?: Record<string, Component>; group?: string }) =>
+  Object.entries(field.icons ?? CATEGORY_ICONS).map(([name, icon]) => ({
+    value: name,
+    label: field.group ? enumLabel(field.group, name) : name,
+    icon,
+  }))
 const renderIconLabel = (option: { label: string; icon: any }) =>
   h('span', { class: 'row' }, [h(option.icon, { size: 15 }), option.label])
 
@@ -163,9 +164,9 @@ async function save(another = false) {
                 <NSelect
                   v-else-if="field.type === 'icon'"
                   v-model:value="form[field.key]"
-                  :options="iconOptions"
+                  :options="iconOptions(field)"
                   :render-label="renderIconLabel as never"
-                  clearable
+                  :clearable="!field.required"
                 />
                 <EntitySelect
                   v-else-if="field.type === 'entity'"

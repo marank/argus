@@ -7,7 +7,7 @@ from apps.accounts.models import Department
 
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
-    list_display = ["name", "parent", "code", "cost_center", "member_count"]
+    list_display = ["name", "parent", "icon", "code", "cost_center", "member_count"]
     search_fields = ["name", "code", "cost_center"]
     autocomplete_fields = ["parent", "approvers"]
 

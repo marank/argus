@@ -140,6 +140,8 @@ export interface DashboardSettings {
 export interface Department {
   id: Id
   name: string
+  /** Stored icon name, see DEPARTMENT_ICONS. */
+  icon: string
   code: string
   cost_center: string
   parent: Ref | null
