@@ -39,9 +39,21 @@ export const path = (names: string[]) =>
       ])
     : (names[0] ?? '—')
 
-/** A label behind its icon; `lookup` maps the stored icon name (category icons by default). */
+/**
+ * A label behind its icon; `lookup` maps the stored icon name (category icons by default).
+ * A label too long for the column is cut off, shown in full on hover; the icon keeps its size.
+ */
 export const withIcon = (
   icon: string,
   label: VNodeChild,
   lookup: (name: string) => Component = categoryIcon,
-) => h('span', { class: 'row' }, [h(lookup(icon), { size: 15, class: 'muted' }), label])
+) =>
+  h('span', { class: 'row icon-label' }, [
+    h(lookup(icon), { size: 15, class: 'muted' }),
+    h('span', { class: 'icon-label-text', onMouseenter: titleWhenCut }, [label]),
+  ])
+
+function titleWhenCut(event: MouseEvent) {
+  const element = event.currentTarget as HTMLElement
+  element.title = element.scrollWidth > element.clientWidth ? (element.textContent ?? '') : ''
+}

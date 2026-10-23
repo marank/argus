@@ -87,6 +87,20 @@ a:hover {
   gap: 8px;
 }
 
+/* Icon and label in a table cell (see withIcon): long labels give way, the icon keeps its size. */
+.icon-label {
+  min-width: 0;
+}
+.icon-label > svg {
+  flex: none;
+}
+.icon-label-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .grid-2 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
@@ -235,13 +249,6 @@ a:hover {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-/* Long names give way, the icon keeps its size. */
-.n-data-table .tree-label > .row {
-  overflow: hidden;
-}
-.n-data-table .tree-label > .row > svg {
-  flex: none;
 }
 /* Collapses the rows below, like the chevron of a group header. */
 .n-data-table .tree-chevron {
