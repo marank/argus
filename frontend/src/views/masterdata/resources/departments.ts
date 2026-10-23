@@ -1,16 +1,23 @@
 import { departmentsApi, usersApi } from '@/api/accounts'
-import { mono, text } from '@/components/crud/cells'
+import { mono, ownOrInherited, path } from '@/components/crud/cells'
 import { defineResource } from '@/components/crud/types'
+import { i18n } from '@/i18n'
 import type { Department, UserRef } from '@/types/accounts'
+
+const { t } = i18n.global
+
+const names = (users: UserRef[]) => users.map((u) => u.display_name).join(', ')
 
 export default defineResource<Department>({
   key: 'departments',
   permission: 'departments',
   api: departmentsApi,
-  ordering: 'sort_order',
+  // Each department followed by its subdepartments.
+  ordering: 'tree_position',
+  tree: { ordering: 'tree_position', parent: (d) => d.parent?.id, label: (d) => d.name },
   title: (d) => d.name,
   columns: [
-    { key: 'name', label: 'common.name', sorter: 'name' },
+    { key: 'name', label: 'common.name', sorter: 'name', render: (d) => path(d.path) },
     { key: 'code', label: 'common.code', sorter: 'code', width: 140, render: (d) => mono(d.code) },
     {
       key: 'cost_center',
@@ -28,7 +35,12 @@ export default defineResource<Department>({
     {
       key: 'approvers',
       label: 'masterdata.fields.approvers',
-      render: (d) => text(d.approvers.map((a) => a.display_name).join(', ')),
+      render: (d) =>
+        ownOrInherited(
+          names(d.approvers),
+          names(d.effective_approvers),
+          t('masterdata.fields.inheritedFromParentDepartment'),
+        ),
     },
     {
       key: 'sort_order',
@@ -44,6 +56,15 @@ export default defineResource<Department>({
         { key: 'name', label: 'common.name', type: 'text', required: true, span: 2 },
         { key: 'code', label: 'common.code', type: 'mono' },
         { key: 'cost_center', label: 'masterdata.fields.costCenter', type: 'mono' },
+        {
+          key: 'parent',
+          label: 'masterdata.fields.parent',
+          type: 'entity',
+          fetcher: departmentsApi.list,
+          // The edited row's parent comes as a bare reference, without the path.
+          display: (d: Department) => d.path?.join(' / ') ?? d.name,
+          initial: (d: Department) => d.parent,
+        },
         {
           key: 'sort_order',
           label: 'masterdata.fields.sortOrder',
@@ -66,11 +87,19 @@ export default defineResource<Department>({
       ],
     },
   ],
-  defaults: () => ({ name: '', code: '', cost_center: '', sort_order: 0, approvers: [] }),
+  defaults: () => ({
+    name: '',
+    code: '',
+    cost_center: '',
+    parent: null,
+    sort_order: 0,
+    approvers: [],
+  }),
   toForm: (d) => ({
     name: d.name,
     code: d.code,
     cost_center: d.cost_center,
+    parent: d.parent?.id ?? null,
     sort_order: d.sort_order,
     approvers: d.approvers.map((a) => a.id),
   }),

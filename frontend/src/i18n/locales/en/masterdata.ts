@@ -1,6 +1,7 @@
 export default {
   title: 'Master data',
   noDepartment: 'No department',
+  treeView: 'As tree',
   noAccess: 'Your roles do not give access to this area.',
   roles: {
     permissions: 'Rights',
@@ -150,6 +151,7 @@ export default {
     nextNumber: 'next number',
     useSequence: 'Use this number sequence',
     inheritedFromParent: 'Taken over from the parent category',
+    inheritedFromParentDepartment: 'Taken over from the parent department',
     inheritedCategoryTeam: 'Taken over from the parent category, or the default team',
     inheritedModelTeam: 'Taken over from the category, or the default team',
     inheritedSequence: 'Taken over from the category or the general asset sequence',
@@ -180,7 +182,7 @@ export default {
     itStaff: 'IT staff',
     approvers: 'Approvers',
     approversHelp:
-      'Approve this department’s requests for categories that require approval. Without approvers they go straight to IT.',
+      'Approve requests for categories that require approval from this department and from subdepartments without approvers of their own. Empty: the parent department’s approvers apply; without any, requests go straight to IT.',
     approvalExempt: 'Exempt from approval',
     approvalExemptHelp: 'Requests go straight to IT, even for categories that need approval.',
     requiresApproval: 'Requires approval',

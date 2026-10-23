@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import { Pencil, Plus, Trash2 } from '@lucide/vue'
+import { useStorage } from '@vueuse/core'
 import { NButton, NDataTable, NInput, NSelect, type DataTableColumns } from 'naive-ui'
-import { computed, h, onMounted, ref } from 'vue'
+import { computed, h, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import CheckField from '@/components/common/CheckField.vue'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
 import { useFormat } from '@/composables/useFormat'
-import { useGroupedRows, withGroupHeaders } from '@/composables/useGroupedRows'
+import { isGroupRow, useGroupedRows, withGroupHeaders } from '@/composables/useGroupedRows'
 import { useList } from '@/composables/useList'
+import { useTreeRows } from '@/composables/useTreeRows'
 import { useAuthStore } from '@/stores/auth'
 
 import CrudFormDrawer from './CrudFormDrawer.vue'
@@ -30,12 +33,24 @@ const confirm = useConfirm()
 const { enumLabel } = useFormat()
 const { run } = useAction()
 
+/** Tree view, where the resource offers one; remembered per table. */
+const treeView = useStorage(`argus.tree.${props.resource.key}`, true)
+const treeActive = computed(() => !!props.resource.tree && treeView.value)
+
 const list = useList(props.resource.api.list, {
   ordering: props.resource.ordering,
-  groupOrdering: () => props.resource.groupBy?.ordering,
+  // The tree keeps each record below its parent (within its group); column sorting is off.
+  groupOrdering: () =>
+    [props.resource.groupBy?.ordering, treeActive.value ? props.resource.tree?.ordering : null]
+      .filter(Boolean)
+      .join(',') || undefined,
   filters: Object.fromEntries((props.resource.filters ?? []).map((f) => [f.key, null])),
 })
 onMounted(list.load)
+watch(treeActive, () => {
+  list.ordering.value = props.resource.ordering ?? ''
+  list.reload()
+})
 
 const editing = ref<any | null>(null)
 const showForm = ref(false)
@@ -56,17 +71,33 @@ async function remove(row: any) {
 
 const FLEX_MIN_WIDTH = 180
 
+const tree = useTreeRows<any>({
+  rows: () => list.rows.value,
+  parent: (row) => props.resource.tree!.parent(row),
+  group: props.resource.groupBy ? (row) => props.resource.groupBy!.key(row) : undefined,
+  enabled: () => treeActive.value,
+})
+
 const baseColumns = computed<DataTableColumns<any>>(() => [
-  ...props.resource.columns.filter(isVisible).map((column) => ({
-    key: column.sorter ?? column.key,
-    title: t(column.label),
-    sorter: column.sorter ? true : undefined,
-    width: column.width,
-    // Columns without a fixed width share the rest but never collapse.
-    minWidth: column.width ? undefined : FLEX_MIN_WIDTH,
-    ellipsis: { tooltip: true },
-    render: column.render ?? ((row: any) => row[column.key] ?? '—'),
-  })),
+  ...props.resource.columns.filter(isVisible).map((column, index) => {
+    const render = column.render ?? ((row: any) => row[column.key] ?? '—')
+    const treeColumn = treeActive.value && index === 0
+    return {
+      key: column.sorter ?? column.key,
+      title: t(column.label),
+      sorter: column.sorter && !treeActive.value ? true : undefined,
+      width: column.width,
+      // Columns without a fixed width share the rest but never collapse.
+      minWidth: column.width ? undefined : FLEX_MIN_WIDTH,
+      // The tree cell cuts its text itself; a tooltip would repeat the tree lines.
+      ellipsis: treeColumn ? false : { tooltip: true },
+      className: treeColumn ? 'tree-cell' : undefined,
+      render: treeColumn
+        ? (row: any) =>
+            tree.cell(row, tree.depth(row) ? props.resource.tree!.label(row) : render(row))
+        : render,
+    }
+  }),
   {
     key: '_actions',
     title: '',
@@ -122,6 +153,9 @@ const grouping = useGroupedRows<any>({
   storageKey: `argus.groups.${props.resource.key}`,
 })
 
+const rowClass = (row: any) =>
+  [grouping.rowClass(row), isGroupRow(row) ? '' : tree.rowClass(row)].filter(Boolean).join(' ')
+
 const boolOptions = computed(() => [
   { value: 'true', label: t('common.yes') },
   { value: 'false', label: t('common.no') },
@@ -174,8 +208,11 @@ const boolOptions = computed(() => [
             style="width: 200px"
           />
         </template>
+        <CheckField v-if="resource.tree" v-model="treeView" :label="t('masterdata.treeView')" />
       </div>
+      <!-- Rebuilt on switching the tree view, which drops the sort state of the headers. -->
       <NDataTable
+        :key="String(treeActive)"
         class="clickable-rows"
         remote
         size="small"
@@ -185,7 +222,7 @@ const boolOptions = computed(() => [
         :pagination="list.pagination.value"
         :row-key="(row: any) => row.id"
         :row-props="(row: any) => grouping.rowProps(row, edit)"
-        :row-class-name="grouping.rowClass"
+        :row-class-name="rowClass"
         :scroll-x="scrollX"
         @update:sorter="list.onSort"
       />

@@ -2,14 +2,19 @@ from uuid import UUID
 
 from ninja import ModelSchema, Schema
 
-from apps.accounts.models import Department
+from apps.accounts.models import Department, User
+from apps.core.schemas import RefOut, per_response
 
 from .user import UserRefOut
 
 
 class DepartmentOut(ModelSchema):
     member_count: int = 0
+    parent: RefOut | None = None
+    path: list[str] = []
     approvers: list[UserRefOut] = []
+    # The approvers that decide: the own or, without any, those of the nearest department above.
+    effective_approvers: list[UserRefOut] = []
 
     class Meta:
         model = Department
@@ -22,13 +27,25 @@ class DepartmentOut(ModelSchema):
         return obj.members.count() if count is None else count
 
     @staticmethod
+    def resolve_path(obj: Department) -> list[str]:
+        return [d.name for d in reversed(obj.ancestors())] + [obj.name]
+
+    @staticmethod
     def resolve_approvers(obj: Department) -> list:
         return list(obj.approvers.all())
+
+    @staticmethod
+    def resolve_effective_approvers(obj: Department, context) -> list:
+        source = per_response(context, "department_approval_sources", Department.approval_sources).get(obj.pk)
+        if source is None:
+            return []
+        return list(User.objects.filter(approving_departments=source, is_active=True))
 
 
 class DepartmentIn(Schema):
     name: str
     code: str = ""
     cost_center: str = ""
+    parent: UUID | None = None
     sort_order: int = 0
     approvers: list[UUID] = []

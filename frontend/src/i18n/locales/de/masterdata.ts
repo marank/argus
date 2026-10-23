@@ -1,6 +1,7 @@
 export default {
   title: 'Stammdaten',
   noDepartment: 'Ohne Abteilung',
+  treeView: 'Als Baum',
   noAccess: 'Ihre Rollen erlauben keinen Zugriff auf diesen Bereich.',
   roles: {
     permissions: 'Rechte',
@@ -151,6 +152,7 @@ export default {
     nextNumber: 'nächste Nummer',
     useSequence: 'Diese Nummernserie übernehmen',
     inheritedFromParent: 'Übernommen von der übergeordneten Kategorie',
+    inheritedFromParentDepartment: 'Übernommen von der übergeordneten Abteilung',
     inheritedCategoryTeam: 'Übernommen von der übergeordneten Kategorie bzw. das Standard-Team',
     inheritedModelTeam: 'Übernommen von der Kategorie bzw. das Standard-Team',
     inheritedSequence: 'Übernommen von der Kategorie bzw. allgemein für Assets',
@@ -182,7 +184,7 @@ export default {
     itStaff: 'IT-Mitarbeiter',
     approvers: 'Genehmiger',
     approversHelp:
-      'Genehmigen Anforderungen dieser Abteilung für genehmigungspflichtige Kategorien. Ohne Genehmiger gehen sie direkt an die IT.',
+      'Genehmigen Anforderungen dieser Abteilung und der Unterabteilungen ohne eigene Genehmiger für genehmigungspflichtige Kategorien. Leer: Es gelten die Genehmiger der übergeordneten Abteilung, ohne solche gehen die Anforderungen direkt an die IT.',
     approvalExempt: 'Von Genehmigungen befreit',
     approvalExemptHelp:
       'Anforderungen gehen direkt an die IT, auch für genehmigungspflichtige Kategorien.',

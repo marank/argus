@@ -215,13 +215,15 @@ class AssetRequest(TimeStampedModel):
         super().save(*args, **kwargs)
 
     def approvers(self):
-        """Who may approve for the requester's department (none without a department)."""
+        """Who may approve for the requester's department, or for the nearest one above it
+        that has approvers (none without a department)."""
         from apps.accounts.models import User
 
-        department_id = self.requester.department_id
-        if not department_id:
+        department = self.requester.department
+        source = department.approval_source() if department else None
+        if source is None:
             return User.objects.none()
-        return User.objects.filter(approving_departments=department_id, is_active=True)
+        return User.objects.filter(approving_departments=source, is_active=True)
 
     def may_approve(self, user) -> bool:
         return self.approvers().filter(pk=user.pk).exists()

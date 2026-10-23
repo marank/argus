@@ -3,7 +3,7 @@ import { h } from 'vue'
 
 import { teamsApi } from '@/api/accounts'
 import { categoriesApi, numberSequencesApi } from '@/api/masterdata'
-import { bool, inherited, mono, ownOrInherited, withIcon } from '@/components/crud/cells'
+import { bool, inherited, mono, ownOrInherited, path, withIcon } from '@/components/crud/cells'
 import { defineResource } from '@/components/crud/types'
 import { numberSequenceHints } from '@/components/masterdata/numberSequenceHints'
 import { i18n } from '@/i18n'
@@ -27,13 +27,18 @@ export default defineResource<Category>({
       t(`enums.categoryKind.${c.kind}`),
     ],
   },
+  tree: {
+    ordering: 'tree_position',
+    parent: (c) => c.parent?.id,
+    label: (c) => withIcon(c.icon, c.name),
+  },
   title: (c) => c.name,
   columns: [
     {
       key: 'name',
       label: 'common.name',
       sorter: 'name',
-      render: (c) => withIcon(c.icon, c.path.join(' / ')),
+      render: (c) => withIcon(c.icon, path(c.path)),
     },
     { key: 'code', label: 'common.code', sorter: 'code', width: 160, render: (c) => mono(c.code) },
     {

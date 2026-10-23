@@ -2,11 +2,11 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.test import Client
 
-from apps.accounts.models import Team
+from apps.accounts.models import Department, Team
 from apps.masterdata.models import Category, Location
 
 
-@pytest.mark.parametrize("model", [Category, Location])
+@pytest.mark.parametrize("model", [Category, Location, Department])
 def test_parent_cannot_be_the_node_itself_or_below_it(demo, model):
     root = model.objects.create(name="Root", code="t-root")
     child = model.objects.create(name="Child", code="t-child", parent=root)

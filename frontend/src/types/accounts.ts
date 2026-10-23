@@ -142,10 +142,15 @@ export interface Department {
   name: string
   code: string
   cost_center: string
+  parent: Ref | null
+  /** Names from the top-level department down to this one. */
+  path: string[]
   sort_order: number
   member_count: number
-  /** Approve requests for categories that need approval; none = straight to IT. */
+  /** Approve requests for categories that need approval; none = the parent's, else straight to IT. */
   approvers: UserRef[]
+  /** The approvers that decide: the own or those taken over from a department above. */
+  effective_approvers: UserRef[]
 }
 
 export interface TeamRef {

@@ -30,5 +30,14 @@ export const ownOrInherited = (
 
 export const text = (value: string | null | undefined) => value || '—'
 
-export const withIcon = (icon: string, label: string) =>
+/** A record's path, e.g. “Operations / Logistics”: the records above it greyed out. */
+export const path = (names: string[]) =>
+  names.length > 1
+    ? h('span', [
+        h('span', { class: 'muted' }, `${names.slice(0, -1).join(' / ')} / `),
+        names.at(-1),
+      ])
+    : (names[0] ?? '—')
+
+export const withIcon = (icon: string, label: VNodeChild) =>
   h('span', { class: 'row' }, [h(categoryIcon(icon), { size: 15, class: 'muted' }), label])

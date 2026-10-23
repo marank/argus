@@ -272,3 +272,43 @@ def test_menu_counts_show_open_requests_approvals_and_reports(
     update_issue(issue, User.objects.get(username="it"), AssetIssue.Status.RESOLVED, "New cable", by_it=True)
     after = counts(employee_client)
     assert after["issues"] == before["issues"] and after["issues_updated"] is True
+
+
+def test_subdepartments_take_over_the_approvers_of_the_department_above(
+    approval_setup, employee_client, approver_client
+):
+    # Logistics (approved by Sam) > Inbound > Returns, where Erika now works.
+    logistics = Department.objects.get(name="Logistics")
+    inbound = Department.objects.create(name="Inbound", parent=logistics)
+    returns = Department.objects.create(name="Returns", parent=inbound)
+    User.objects.filter(username="employee").update(department=returns)
+
+    asset_request = request(employee_client, "laptops")
+    assert asset_request["status"] == "pending_approval"
+    assert [a["username"] for a in asset_request["approvers"]] == ["sales"]
+    assert [r["id"] for r in approver_client.get("/api/approvals").json()["items"]] == [asset_request["id"]]
+    assert approver_client.get(f"/api/requests/{asset_request['id']}").json()["can_approve"] is True
+
+    # Approvers of their own take precedence; Sam no longer decides for Inbound and below.
+    inbound.approvers.add(User.objects.get(username="it"))
+    assert approver_client.get("/api/approvals").json()["items"] == []
+    response = approver_client.post(f"/api/approvals/{asset_request['id']}/approve", {}, content_type=JSON)
+    assert response.status_code == 404
+
+    # Inactive approvers do not count; the department above applies again.
+    User.objects.filter(username="it").update(is_active=False)
+    assert len(approver_client.get("/api/approvals").json()["items"]) == 1
+
+
+def test_department_list_shows_the_tree_and_inherited_approvers(approval_setup, it_client):
+    logistics = Department.objects.get(name="Logistics")
+    Department.objects.create(name="Inbound", parent=logistics)
+    rows = {d["name"]: d for d in it_client.get("/api/accounts/departments?page_size=100").json()["items"]}
+    names = list(rows)
+    assert names.index("Inbound") == names.index("Logistics") + 1
+    inbound = rows["Inbound"]
+    assert inbound["path"] == ["Logistics", "Inbound"]
+    assert inbound["parent"]["name"] == "Logistics"
+    assert inbound["approvers"] == []
+    assert [a["username"] for a in inbound["effective_approvers"]] == ["sales"]
+    assert rows["Sales"]["effective_approvers"] == []

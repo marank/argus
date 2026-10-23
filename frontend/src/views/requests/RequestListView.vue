@@ -191,7 +191,7 @@ const columns = computed<DataTableColumns<AssetRequestListItem>>(() => [
         <EntitySelect
           v-model="list.filters.department as string | null"
           :fetcher="departmentsApi.list"
-          :label="(d) => d.name"
+          :label="(d) => d.path.join(' / ')"
           :placeholder="t('requests.department')"
           style="width: 180px"
         />

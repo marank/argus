@@ -87,6 +87,17 @@ export interface ResourceDef<T extends { id: Id }> {
   ordering?: string
   /** Show the rows in sections; the server sorts by the group's ordering first. */
   groupBy?: { ordering: string; key: (row: T) => string; label: (row: T) => VNodeChild }
+  /**
+   * Offer a tree view of hierarchical records: the first column indents each record below
+   * its parent and shows `label` instead (the column's own content, e.g. the path, stays
+   * for records whose parent is not on the page).
+   */
+  tree?: {
+    /** Backend ordering that puts each record right after its parent. */
+    ordering: string
+    parent: (row: T) => Id | null | undefined
+    label: (row: T) => VNodeChild
+  }
   columns: ColumnDef<T>[]
   sections: FormSection[]
   filters?: FilterDef[]

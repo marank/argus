@@ -5,6 +5,7 @@ from django.db.models.functions import Coalesce
 from django.http import Http404, HttpRequest
 from django.shortcuts import get_object_or_404
 
+from apps.accounts.models import Department
 from apps.accounts.permissions import can
 from apps.requests.models import (
     AssetRequest,
@@ -65,10 +66,13 @@ def visible_asset_requests(request: HttpRequest) -> QuerySet[AssetRequest]:
 
 
 def approvable_asset_requests(user) -> QuerySet[AssetRequest]:
-    """Requests that went to one of the departments ``user`` approves for."""
+    """Requests that went to one of the departments ``user`` approves for, including the
+    departments below that take over their approvers."""
+    approving = set(user.approving_departments.values_list("pk", flat=True)) if user.is_active else set()
+    departments = [pk for pk, source in Department.approval_sources().items() if source in approving]
     return (
         asset_request_queryset()
-        .filter(requester__department__approvers=user)
+        .filter(requester__department__in=departments)
         .exclude(approval=AssetRequest.Approval.NOT_REQUIRED)
     )
 

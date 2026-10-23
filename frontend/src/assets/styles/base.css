@@ -216,6 +216,72 @@ a:hover {
   border-top-width: 1px;
 }
 
+/* Tree view (see useTreeRows): rows indented per level, with dashed lines like the groups'.
+   The lines are placed from the cell's left edge, behind its padding (`--tree-base`). */
+.n-data-table td.tree-cell {
+  --tree-base: 10px;
+  position: relative;
+}
+.n-data-table .group-child td.tree-cell {
+  --tree-base: 34px;
+}
+.n-data-table .tree-node {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.n-data-table .tree-line,
+.n-data-table .tree-stub,
+.n-data-table .tree-elbow::before,
+.n-data-table .tree-elbow::after {
+  position: absolute;
+  pointer-events: none;
+  border: 0 dashed var(--ar-text-subtle);
+  opacity: 0.6;
+}
+.n-data-table .tree-line {
+  top: 0;
+  bottom: 0;
+  border-left-width: 1px;
+}
+/* From below the row's icon down to its first child. */
+.n-data-table .tree-stub {
+  top: calc(50% + 10px);
+  bottom: 0;
+  border-left-width: 1px;
+}
+.n-data-table .tree-elbow {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+.n-data-table .tree-elbow::before,
+.n-data-table .tree-elbow::after {
+  content: '';
+  left: 0;
+}
+.n-data-table .tree-elbow::before {
+  top: 0;
+  bottom: 0;
+  border-left-width: 1px;
+}
+.n-data-table .tree-elbow-last::before {
+  bottom: 50%;
+}
+.n-data-table .tree-elbow::after {
+  top: 50%;
+  width: 12px;
+  border-top-width: 1px;
+}
+/* In grouped tables the group's line leads to the top-level rows only. */
+.n-data-table .group-child.tree-nested td:first-child::after,
+.n-data-table .group-child.tree-tail td:first-child::before {
+  display: none;
+}
+.n-data-table .group-child.tree-root-last .n-data-table-td.n-data-table-td:first-child::before {
+  bottom: 50% !important;
+}
+
 @media (max-width: 720px) {
   .page {
     padding: 14px 16px 32px;
