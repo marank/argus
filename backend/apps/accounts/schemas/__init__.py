@@ -1,5 +1,14 @@
 from .department import DepartmentIn, DepartmentOut
-from .ldap import LdapSettingsIn, LdapSettingsOut, LdapTestIn, LdapTestOut
+from .ldap import (
+    LdapSettingsIn,
+    LdapSettingsOut,
+    LdapSyncApplyIn,
+    LdapSyncPreviewOut,
+    LdapSyncQueryIn,
+    LdapSyncResultOut,
+    LdapTestIn,
+    LdapTestOut,
+)
 from .team import TeamIn, TeamOut, TeamRefOut, default_team
 from .two_factor import (
     BackupCodesOut,
@@ -20,6 +29,10 @@ __all__ = [
     "DepartmentOut",
     "LdapSettingsIn",
     "LdapSettingsOut",
+    "LdapSyncApplyIn",
+    "LdapSyncPreviewOut",
+    "LdapSyncQueryIn",
+    "LdapSyncResultOut",
     "LdapTestIn",
     "LdapTestOut",
     "PasswordIn",

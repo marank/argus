@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterLink, RouterView, useRoute } from 'vue-router'
 
 import PageHeader from '@/components/common/PageHeader.vue'
 import { SETTINGS_SECTIONS } from '@/components/settings/sections'
 
 const { t } = useI18n()
+const route = useRoute()
 </script>
 
 <template>
@@ -19,6 +20,7 @@ const { t } = useI18n()
           :to="{ name: section.name }"
           class="entry"
           active-class="active"
+          :class="{ active: route.meta.section === section.name }"
         >
           <component :is="section.icon" :size="16" :stroke-width="1.75" class="icon" />
           <span>

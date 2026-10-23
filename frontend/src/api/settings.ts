@@ -2,6 +2,9 @@ import type {
   FlagKey,
   LdapSettings,
   LdapSettingsInput,
+  LdapSyncPreview,
+  LdapSyncQuery,
+  LdapSyncResult,
   LdapTestResult,
   MailSettings,
   MailSettingsInput,
@@ -17,6 +20,10 @@ export const ldapSettingsApi = {
   update: (data: LdapSettingsInput) => http.put<LdapSettings>('/settings/ldap', data),
   test: (data: LdapSettingsInput & { username: string }) =>
     http.post<LdapTestResult>('/settings/ldap/test', data),
+  syncPreview: (query: LdapSyncQuery) =>
+    http.post<LdapSyncPreview>('/settings/ldap/sync/preview', query),
+  syncApply: (query: LdapSyncQuery & { dns: string[] }) =>
+    http.post<LdapSyncResult>('/settings/ldap/sync/apply', query),
 }
 
 export const siteSettingsApi = {

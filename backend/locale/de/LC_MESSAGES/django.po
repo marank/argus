@@ -2935,3 +2935,16 @@ msgstr "Nicht gefunden."
 #~ msgid "Allocate either a device or a consumable quantity."
 #~ msgstr ""
 #~ "Weisen Sie entweder ein Gerät oder eine Menge Verbrauchsmaterial zu."
+
+#: apps/accounts/services/ldap.py
+#, python-format
+msgid "Invalid LDAP filter: %(error)s"
+msgstr "Ungültiger LDAP-Filter: %(error)s"
+
+#: apps/accounts/services/ldap.py
+msgid "Enter an LDAP filter."
+msgstr "Bitte einen LDAP-Filter eingeben."
+
+#: apps/accounts/api/ldap.py
+msgid "LDAP login is not enabled or not fully configured."
+msgstr "Die LDAP-Anmeldung ist nicht aktiviert oder nicht vollständig eingerichtet."

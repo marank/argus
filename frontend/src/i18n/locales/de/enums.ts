@@ -1,4 +1,10 @@
 export default {
+  ldapSync: {
+    create: 'Neu',
+    update: 'Aktualisieren',
+    unchanged: 'Unverändert',
+    skipped: 'Übersprungen',
+  },
   assetStatus: {
     in_stock: 'Im Lager',
     reserved: 'Reserviert',

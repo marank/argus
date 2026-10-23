@@ -21,6 +21,8 @@ declare module 'vue-router' {
     title?: string
     /** Module that can be switched off in the site settings. */
     module?: ModuleKey
+    /** Settings section a sub-page belongs to (highlighted in the settings menu). */
+    section?: string
   }
 }
 
@@ -289,6 +291,12 @@ export const routes: RouteRecordRaw[] = [
             name: 'settings-ldap',
             component: () => import('@/views/settings/LdapSettingsView.vue'),
             meta: { superuser: true, title: 'settings.sections.ldap' },
+          },
+          {
+            path: 'ldap/sync',
+            name: 'settings-ldap-sync',
+            component: () => import('@/views/settings/LdapSyncView.vue'),
+            meta: { superuser: true, title: 'settings.ldap.sync.title', section: 'settings-ldap' },
           },
         ],
       },

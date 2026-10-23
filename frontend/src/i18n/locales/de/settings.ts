@@ -71,6 +71,41 @@ export default {
     testUser: 'Benutzername (optional)',
     testOk: 'Verbunden mit {server}',
     testUserFound: 'Eintrag gefunden – diese Werte würden übernommen:',
+    sync: {
+      open: 'Benutzer synchronisieren',
+      title: 'LDAP-Benutzer synchronisieren',
+      back: 'Zurück zur LDAP-Anmeldung',
+      query: 'Abfrage',
+      queryHelp:
+        "Welche Verzeichniseinträge abgeglichen werden. {'{username}'} im Filter steht für alle Benutzernamen.",
+      help: 'Legt Mitarbeiter aus dem Verzeichnis vorab an oder aktualisiert sie, ohne dass sie sich anmelden müssen. Die Vorschau ändert nichts; übernommen werden nur die ausgewählten Einträge, samt Teams mit LDAP-Gruppe.',
+      needsEnabled: 'Erst die LDAP-Anmeldung aktivieren und speichern.',
+      needsSave:
+        'Erst die Änderungen speichern – der Abgleich nutzt die gespeicherte Konfiguration.',
+      filter: 'LDAP-Filter',
+      presets: 'Vorlagen:',
+      presetLogin: 'Wie Anmeldefilter',
+      presetActive: 'Nur aktive AD-Konten',
+      presetGroup: 'Mitglied einer Gruppe',
+      run: 'Vorschau',
+      search: 'In Ergebnissen suchen',
+      truncated:
+        'Mehr als {limit} Treffer – nur die ersten {limit} werden angezeigt. Den Filter enger fassen und in Teilen abgleichen.',
+      stale:
+        'Filter oder Suchbasis wurden geändert. Übernommen wird, was die angezeigte Vorschau gefunden hat.',
+      action: 'Aktion',
+      name: 'Name',
+      changes: 'Änderungen',
+      linked: 'Wird mit dem Verzeichniseintrag verknüpft',
+      reason: {
+        no_username: 'Kein Benutzername im Eintrag',
+        duplicate: 'Gleicher Argus-Benutzer wie ein Eintrag weiter oben',
+        superuser: 'Lokaler Administrator – wird nicht übernommen',
+      },
+      selected: '{count} ausgewählt',
+      apply: 'Übernehmen ({count})',
+      applied: '{created} angelegt, {updated} aktualisiert',
+    },
   },
   flags: {
     needs: 'erfordert {modules}',

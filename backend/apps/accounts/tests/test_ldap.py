@@ -11,6 +11,8 @@ from apps.accounts.services import ldap
 
 SERVICE_DN = "CN=svc-argus,OU=Service,DC=example,DC=com"
 ANNA_DN = "CN=Anna Berger,OU=Staff,DC=example,DC=com"
+BERND_DN = "CN=Bernd Meier,OU=Staff,DC=example,DC=com"
+NONAME_DN = "CN=Meeting Room,OU=Staff,DC=example,DC=com"
 LEDGERLINE_DN = "CN=IT-Ledgerline,OU=Groups,DC=example,DC=com"
 SUPPORT_DN = "CN=IT-Support,OU=Groups,DC=example,DC=com"
 
@@ -26,6 +28,14 @@ DIRECTORY = {
         "mail": "anna.berger@example.com",
         "userPassword": "anna-secret",
     },
+    BERND_DN: {
+        "objectClass": ["user"],
+        "sAMAccountName": "BMeier",
+        "givenName": "Bernd",
+        "sn": "Meier",
+        "userPassword": "bernd-secret",
+    },
+    NONAME_DN: {"objectClass": ["user"], "givenName": "Meeting"},
     LEDGERLINE_DN: {"objectClass": ["group"], "member": [ANNA_DN]},
     SUPPORT_DN: {"objectClass": ["group"], "member": [SERVICE_DN]},
 }
@@ -245,3 +255,71 @@ def test_changed_server_needs_the_bind_password_again(configured, demo):
         content_type="application/json",
     )
     assert response.status_code == 200
+
+
+def admin_client() -> Client:
+    client = Client()
+    client.force_login(User.objects.get(username="admin"))
+    return client
+
+
+def sync(client: Client, step: str, **data):
+    return client.post(f"/api/settings/ldap/sync/{step}", data, content_type="application/json")
+
+
+def test_sync_preview_tells_what_would_change(configured, demo):
+    User.objects.create_user("bmeier", first_name="Old", last_name="Meier")
+    response = sync(admin_client(), "preview", filter="(&(objectClass=user)(sAMAccountName={username}))")
+    assert response.status_code == 200, response.content
+    items = {i["dn"]: i for i in response.json()["items"]}
+    assert set(items) == {ANNA_DN, BERND_DN}  # the search base leaves out the service account
+
+    assert items[ANNA_DN]["action"] == "create"
+    assert items[ANNA_DN]["changes"]["employee_number"] == {"old": "", "new": "4711"}
+    bernd = items[BERND_DN]
+    assert bernd["action"] == "update"
+    assert set(bernd["changes"]) == {"first_name", "ldap_dn"}
+    assert bernd["changes"]["first_name"] == {"old": "Old", "new": "Bernd"}
+    # Only a preview.
+    assert not User.objects.filter(username="aberger").exists()
+    assert User.objects.get(username="bmeier").first_name == "Old"
+
+
+def test_sync_preview_skips_entries_it_must_not_take_over(configured, demo):
+    User.objects.create_superuser("aberger", password="local-admin")
+    response = sync(admin_client(), "preview", filter="objectClass=user")
+    items = {i["dn"]: i for i in response.json()["items"]}
+    assert (items[ANNA_DN]["action"], items[ANNA_DN]["reason"]) == ("skipped", "superuser")
+    assert (items[NONAME_DN]["action"], items[NONAME_DN]["reason"]) == ("skipped", "no_username")
+
+
+def test_sync_apply_takes_over_the_chosen_entries(configured, demo):
+    configured.create_users = False  # the explicit sync creates users anyway
+    configured.save()
+    ledgerline = Team.objects.create(name="Ledgerline", ldap_group_dn=LEDGERLINE_DN)
+    User.objects.create_user("bmeier", first_name="Old")
+    query = {"filter": "(objectClass=user)", "search_base": ""}
+
+    response = sync(admin_client(), "apply", **query, dns=[ANNA_DN.lower(), NONAME_DN])
+    assert response.status_code == 200, response.content
+    assert response.json() == {"created": 1, "updated": 0, "skipped": 1}
+    anna = User.objects.get(username="aberger")
+    assert (anna.employee_number, anna.ldap_dn) == ("4711", ANNA_DN)
+    assert not anna.has_usable_password()
+    assert list(ledgerline.members.all()) == [anna]
+    assert User.objects.get(username="bmeier").first_name == "Old"  # not chosen
+
+    # A second run finds nothing left to do for Anna.
+    items = sync(admin_client(), "preview", **query).json()["items"]
+    assert {i["dn"]: i["action"] for i in items}[ANNA_DN] == "unchanged"
+
+
+def test_sync_rejects_bad_filters_and_non_admins(configured, demo, it_client):
+    assert sync(it_client, "preview", filter="(objectClass=user)").status_code == 403
+    response = sync(admin_client(), "preview", filter="(objectClass=user")
+    assert response.status_code == 400
+    assert "filter" in response.json()["detail"]
+
+    configured.enabled = False
+    configured.save()
+    assert sync(admin_client(), "preview", filter="(objectClass=user)").status_code == 400

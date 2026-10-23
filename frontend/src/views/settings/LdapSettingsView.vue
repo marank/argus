@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PlugZap, RotateCcw, Save } from '@lucide/vue'
+import { PlugZap, RotateCcw, Save, FolderSync } from '@lucide/vue'
 import {
   NAlert,
   NButton,
@@ -10,9 +10,11 @@ import {
   NSpin,
   NSwitch,
   NTag,
+  NTooltip,
 } from 'naive-ui'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 
 import { ldapSettingsApi } from '@/api/settings'
 import SettingRow from '@/components/settings/SettingRow.vue'
@@ -29,6 +31,7 @@ import type {
 type AttrField = Extract<keyof LdapSettingsFields, `attr_${string}`>
 
 const { t } = useI18n()
+const router = useRouter()
 const { busy: saving, run } = useAction()
 const { busy: testing, run: runTest } = useAction()
 
@@ -100,6 +103,15 @@ const dirty = computed(
       clearPassword.value),
 )
 
+// The sync runs on the saved configuration only.
+const syncBlocked = computed(() =>
+  !loaded.value?.enabled
+    ? t('settings.ldap.sync.needsEnabled')
+    : dirty.value
+      ? t('settings.ldap.sync.needsSave')
+      : undefined,
+)
+
 const missingRequired = computed(
   () =>
     form.enabled &&
@@ -149,6 +161,21 @@ const testRows = computed(() => {
           </h2>
           <p class="muted">{{ t('settings.ldap.subtitle') }}</p>
         </div>
+        <NTooltip :disabled="!syncBlocked">
+          <template #trigger>
+            <!-- A disabled button gets no hover events; the span carries the tooltip. -->
+            <span>
+              <NButton
+                :disabled="Boolean(syncBlocked)"
+                @click="router.push({ name: 'settings-ldap-sync' })"
+              >
+                <template #icon><FolderSync :size="15" /></template>
+                {{ t('settings.ldap.sync.open') }}
+              </NButton>
+            </span>
+          </template>
+          {{ syncBlocked }}
+        </NTooltip>
       </header>
 
       <NAlert v-if="loaded.locked.length" type="info" :bordered="false" class="env-notice">

@@ -1,4 +1,4 @@
-"""LDAP login settings (administrators only)."""
+"""LDAP login settings and user sync (administrators only)."""
 
 from django.http import HttpRequest
 from django.utils.translation import gettext as _
@@ -6,7 +6,16 @@ from ninja import Router
 from ninja.errors import HttpError
 
 from apps.accounts.models import LdapSettings
-from apps.accounts.schemas import LdapSettingsIn, LdapSettingsOut, LdapTestIn, LdapTestOut
+from apps.accounts.schemas import (
+    LdapSettingsIn,
+    LdapSettingsOut,
+    LdapSyncApplyIn,
+    LdapSyncPreviewOut,
+    LdapSyncQueryIn,
+    LdapSyncResultOut,
+    LdapTestIn,
+    LdapTestOut,
+)
 from apps.accounts.services import ldap
 from apps.core.api.security import superuser_auth
 
@@ -64,5 +73,48 @@ def test_settings(request: HttpRequest, payload: LdapTestIn):
     config = ldap.load_config(**_changes(payload))
     try:
         return ldap.test_connection(config, payload.username.strip())
+    except ldap.LdapError as exc:
+        raise HttpError(400, str(exc)) from exc
+
+
+def _sync_config() -> ldap.LdapConfig:
+    """The saved configuration; the sync never runs on unsaved form values."""
+    config = ldap.load_config()
+    if not config.is_usable:
+        raise HttpError(400, _("LDAP login is not enabled or not fully configured."))
+    return config
+
+
+def _item_out(item: ldap.SyncItem) -> dict:
+    return {
+        "dn": item.entry.dn,
+        "username": item.entry.username,
+        "action": item.action,
+        "reason": item.reason,
+        "user_id": str(item.user.pk) if item.user else None,
+        "values": item.entry.values,
+        "changes": {f: {"old": old, "new": new} for f, (old, new) in item.changes.items()},
+    }
+
+
+@router.post("/sync/preview", response=LdapSyncPreviewOut)
+def sync_preview(request: HttpRequest, payload: LdapSyncQueryIn):
+    """Which users a filter would create or update; nothing is changed."""
+    try:
+        result = ldap.preview_sync(_sync_config(), payload.filter, payload.search_base)
+    except ldap.LdapError as exc:
+        raise HttpError(400, str(exc)) from exc
+    return {
+        "items": [_item_out(i) for i in result["items"]],
+        "truncated": result["truncated"],
+        "limit": ldap.SYNC_LIMIT,
+    }
+
+
+@router.post("/sync/apply", response=LdapSyncResultOut)
+def sync_apply(request: HttpRequest, payload: LdapSyncApplyIn):
+    """Create or update the users of the chosen preview entries."""
+    try:
+        return ldap.apply_sync(_sync_config(), payload.filter, payload.search_base, payload.dns)
     except ldap.LdapError as exc:
         raise HttpError(400, str(exc)) from exc

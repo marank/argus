@@ -37,6 +37,37 @@ export interface LdapTestResult {
   user: Record<string, string> | null
 }
 
+export interface LdapSyncQuery {
+  filter: string
+  /** Empty = the configured user search base. */
+  search_base: string
+}
+
+export type LdapSyncAction = 'create' | 'update' | 'unchanged' | 'skipped'
+
+export interface LdapSyncItem {
+  dn: string
+  username: string
+  action: LdapSyncAction
+  /** Why skipped: no_username, duplicate or superuser. */
+  reason: string
+  user_id: string | null
+  values: Record<string, string>
+  changes: Record<string, { old: string; new: string }>
+}
+
+export interface LdapSyncPreview {
+  items: LdapSyncItem[]
+  truncated: boolean
+  limit: number
+}
+
+export interface LdapSyncResult {
+  created: number
+  updated: number
+  skipped: number
+}
+
 /** Switchable modules and features, see the backend's apps/core/features.py. */
 export type ModuleKey =
   'consumables' | 'licenses' | 'procurement' | 'calendar' | 'issues' | 'terminal'

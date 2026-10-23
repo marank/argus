@@ -41,3 +41,39 @@ class LdapTestIn(LdapSettingsIn):
 class LdapTestOut(Schema):
     server: str
     user: dict[str, str] | None
+
+
+class LdapSyncQueryIn(Schema):
+    filter: str = Field(max_length=2000)
+    search_base: str = Field("", max_length=500, description="Empty = the configured user search base.")
+
+
+class LdapSyncApplyIn(LdapSyncQueryIn):
+    dns: list[str] = Field(description="Entries to take over, from the preview.")
+
+
+class LdapSyncChange(Schema):
+    old: str
+    new: str
+
+
+class LdapSyncItemOut(Schema):
+    dn: str
+    username: str
+    action: str = Field(description="create, update, unchanged or skipped")
+    reason: str = Field(description="Why skipped: no_username, duplicate or superuser")
+    user_id: str | None
+    values: dict[str, str]
+    changes: dict[str, LdapSyncChange]
+
+
+class LdapSyncPreviewOut(Schema):
+    items: list[LdapSyncItemOut]
+    truncated: bool
+    limit: int
+
+
+class LdapSyncResultOut(Schema):
+    created: int
+    updated: int
+    skipped: int
