@@ -226,9 +226,51 @@ a:hover {
   --tree-base: 34px;
 }
 .n-data-table .tree-node {
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 4px;
   white-space: nowrap;
+}
+.n-data-table .tree-label {
+  min-width: 0;
+  overflow: hidden;
   text-overflow: ellipsis;
+}
+/* Long names give way, the icon keeps its size. */
+.n-data-table .tree-label > .row {
+  overflow: hidden;
+}
+.n-data-table .tree-label > .row > svg {
+  flex: none;
+}
+/* Collapses the rows below, like the chevron of a group header. */
+.n-data-table .tree-chevron {
+  display: inline-flex;
+  flex: none;
+  padding: 2px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--ar-text-muted);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.n-data-table .tree-chevron:hover {
+  color: var(--ar-text);
+  background: var(--ar-border);
+}
+.n-data-table .tree-chevron:focus-visible {
+  outline: 2px solid var(--ar-primary);
+  outline-offset: -1px;
+}
+.n-data-table .tree-chevron.collapsed {
+  transform: rotate(-90deg);
+}
+.n-data-table .tree-enter td {
+  animation: ar-row-in 0.22s ease-out both;
+}
+.n-data-table .tree-leave td {
+  animation: ar-row-out 0.14s ease-in both;
 }
 .n-data-table .tree-line,
 .n-data-table .tree-stub,

@@ -76,6 +76,9 @@ const tree = useTreeRows<any>({
   parent: (row) => props.resource.tree!.parent(row),
   group: props.resource.groupBy ? (row) => props.resource.groupBy!.key(row) : undefined,
   enabled: () => treeActive.value,
+  // While searching, every hit shows.
+  collapsible: () => !list.search.value,
+  storageKey: `argus.tree.collapsed.${props.resource.key}`,
 })
 
 const baseColumns = computed<DataTableColumns<any>>(() => [
@@ -150,6 +153,7 @@ const grouping = useGroupedRows<any>({
   key: (row) => props.resource.groupBy!.key(row),
   label: (row) => props.resource.groupBy!.label(row),
   enabled: () => !!props.resource.groupBy,
+  visible: (row) => tree.isShown(row),
   storageKey: `argus.groups.${props.resource.key}`,
 })
 

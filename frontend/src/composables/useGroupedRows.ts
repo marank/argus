@@ -27,6 +27,8 @@ export function useGroupedRows<T extends object>(options: {
   key: (row: T) => string
   label: (row: T) => VNodeChild
   enabled?: () => boolean
+  /** Rows to leave out though they count for their group (e.g. below a collapsed tree row). */
+  visible?: (row: T) => boolean
   storageKey?: string
 }) {
   const collapsed = options.storageKey
@@ -36,7 +38,8 @@ export function useGroupedRows<T extends object>(options: {
 
   const rows = computed<(T | GroupRow)[]>(() => {
     const source = options.rows()
-    if (options.enabled && !options.enabled()) return source
+    if (options.enabled && !options.enabled())
+      return options.visible ? source.filter(options.visible) : source
     const result: (T | GroupRow)[] = []
     const last = new WeakSet<object>()
     let header = null as GroupRow | null
@@ -56,7 +59,7 @@ export function useGroupedRows<T extends object>(options: {
         result.push(header)
       }
       header.count += 1
-      if (!header.collapsed) result.push(row)
+      if (!header.collapsed && (options.visible?.(row) ?? true)) result.push(row)
       previous = row
     }
     if (previous) last.add(previous)

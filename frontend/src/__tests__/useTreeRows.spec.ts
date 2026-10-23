@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { useTreeRows } from '@/composables/useTreeRows'
 
@@ -60,5 +60,38 @@ describe('useTreeRows', () => {
     expect(rowClass({ id: 'monitors', parent: null })).toBe('tree-root-last')
     expect(rowClass({ id: 'arms', parent: 'monitors' })).toBe('tree-nested tree-tail')
     expect(meta.value.get('office')).toMatchObject({ rootLast: true, tail: false })
+  })
+
+  it('hides the rows below a collapsed row, unless collapsing is off', () => {
+    vi.useFakeTimers()
+    let collapsible = true
+    const rows: Row[] = [
+      { id: 'operations', parent: null },
+      { id: 'logistics', parent: 'operations' },
+      { id: 'outbound', parent: 'logistics' },
+      { id: 'sales', parent: null },
+    ]
+    const { isShown, toggle, meta } = useTreeRows<Row>({
+      rows: () => rows,
+      parent: (row) => row.parent,
+      enabled: () => true,
+      collapsible: () => collapsible,
+    })
+    const shown = () => rows.filter(isShown).map((row) => row.id)
+
+    toggle('operations')
+    expect(shown()).toEqual(['operations', 'logistics', 'outbound', 'sales'])
+    vi.advanceTimersByTime(200)
+    expect(shown()).toEqual(['operations', 'sales'])
+    // The collapsed row keeps its children (and so its chevron).
+    expect(meta.value.get('operations')!.hasChildren).toBe(true)
+
+    collapsible = false
+    expect(shown()).toEqual(['operations', 'logistics', 'outbound', 'sales'])
+    collapsible = true
+
+    toggle('operations')
+    expect(shown()).toEqual(['operations', 'logistics', 'outbound', 'sales'])
+    vi.useRealTimers()
   })
 })
