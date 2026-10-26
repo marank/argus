@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import type { Id } from '@/types/common'
-import { useDebounceFn } from '@vueuse/core'
-import { ScanLine, X } from '@lucide/vue'
-import { NAutoComplete, NButton, NInputNumber, NProgress, NSelect } from 'naive-ui'
+import { X } from '@lucide/vue'
+import { NButton, NInputNumber, NProgress, NSelect } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { requestsApi } from '@/api/requests'
+import ScanCombobox from '@/components/common/ScanCombobox.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { useAction } from '@/composables/useAction'
 import type {
@@ -31,9 +31,7 @@ const emit = defineEmits<{ updated: [assetRequest: AssetRequest] }>()
 const { t } = useI18n()
 const { busy, run } = useAction()
 
-// Null after picking an option from the list (clear-after-select).
 const code = ref('')
-const typed = computed(() => code.value.trim())
 const candidates = ref<Candidates | null>(null)
 const consumableQuantity = ref(1)
 const licenseId = ref<Id | null>(null)
@@ -87,19 +85,11 @@ async function loadCandidates() {
   const call = ++latest
   searching.value = true
   try {
-    const result = await requestsApi.candidates(props.item.id, typed.value || undefined)
+    const result = await requestsApi.candidates(props.item.id, code.value.trim() || undefined)
     if (call === latest) candidates.value = result
   } finally {
     if (call === latest) searching.value = false
   }
-}
-
-const search = useDebounceFn(loadCandidates, 250)
-
-/** Naive clears to null after an option was picked. */
-function onInput(value: string | null) {
-  code.value = value ?? ''
-  search()
 }
 
 /** Devices and consumables to pick from, as soon as the item can take more. */
@@ -111,13 +101,6 @@ const pickable = computed(
     !props.item.is_software,
 )
 watch(pickable, (open) => open && loadCandidates(), { immediate: true })
-
-/** Enter without a highlighted option: take the typed or scanned code as is. */
-function onEnter(event: KeyboardEvent) {
-  if (event.defaultPrevented || !typed.value) return
-  event.preventDefault()
-  allocate({ code: typed.value })
-}
 
 async function allocate(data: {
   asset?: Id
@@ -281,26 +264,17 @@ async function remove(allocationId: Id) {
     </div>
 
     <div v-if="pickable" class="tools">
-      <!-- Naive picks a highlighted option on Enter first and marks the event handled. -->
-      <NAutoComplete
-        :value="code"
-        size="small"
+      <ScanCombobox
+        v-model="code"
         :options="assetOptions"
         :placeholder="t('requests.allocation.scan')"
         :loading="searching || busy"
-        :get-show="() => true"
-        show-empty
-        clear-after-select
+        :empty-text="t('requests.allocation.noCandidates')"
         class="scan"
-        @update:value="onInput"
-        @select="(id: string | number) => allocate({ asset: id as Id })"
-        @keydown.enter="onEnter"
-      >
-        <template #prefix><ScanLine :size="14" /></template>
-        <template #empty
-          ><span class="muted small">{{ t('requests.allocation.noCandidates') }}</span></template
-        >
-      </NAutoComplete>
+        @search="loadCandidates"
+        @select="(id) => allocate({ asset: id })"
+        @enter="(scanned) => allocate({ code: scanned })"
+      />
       <template v-for="consumable in candidates?.consumables ?? []" :key="consumable.id">
         <div class="row consumable">
           <span class="small"
@@ -415,10 +389,8 @@ async function remove(allocationId: Id) {
   align-items: center;
 }
 .scan {
-  max-width: 300px;
-}
-.scan :deep(input) {
-  font-family: var(--ar-font-mono);
+  width: 300px;
+  max-width: 100%;
 }
 .consumable {
   width: 100%;
