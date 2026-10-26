@@ -168,10 +168,22 @@ export default {
     handedOut: 'Handed out',
     completed: 'Completed',
   },
+  nextStep: {
+    title: 'Next step',
+    pendingApproval:
+      'The department has to approve the request first. After that, IT can confirm it.',
+    submitted: 'Check the availability of the items, then confirm or reject the request.',
+    allocate:
+      'Allocate specific devices – by scan, by hand or automatically. Anything the pool lacks can be ordered.',
+    markReady: 'Everything is allocated. Plan the handover and mark the request ready.',
+    completeSeats: 'Everything is allocated. Release the licenses to complete the hand-out.',
+    pickup: '{name} collects the devices at the pickup terminal and signs there.',
+    handOut: 'Hand the devices to {name}, then record the hand-out.',
+    lent: 'The devices are on loan until {date}. Take them back here when they are returned.',
+  },
   approval: {
     label: 'Approval',
     waiting: 'Waiting for approval by {names}.',
-    itWaiting: 'Confirmation is possible only after the department has approved.',
     approved: 'Approved by {name} · {date}',
     selfApproved: 'Requested by {name} as approver · {date}',
     rejected: 'Not approved by {name} · {date}',

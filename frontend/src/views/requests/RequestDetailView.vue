@@ -206,6 +206,34 @@ const showReturns = computed(
       Boolean(assetRequest.value?.handover)),
 )
 
+/** What is up next, shown above the cards. Overdue loans have their own alert. */
+const nextStep = computed(() => {
+  const r = assetRequest.value
+  if (!r) return null
+  const name = r.requester.display_name
+  switch (r.status) {
+    case 'pending_approval':
+      return t('requests.nextStep.pendingApproval')
+    case 'submitted':
+      return t('requests.nextStep.submitted')
+    case 'confirmed':
+      if (missing.value) return t('requests.nextStep.allocate')
+      return t(seatsOnly.value ? 'requests.nextStep.completeSeats' : 'requests.nextStep.markReady')
+    case 'ready':
+      return t(
+        r.handover_mode === 'pickup' ? 'requests.nextStep.pickup' : 'requests.nextStep.handOut',
+        {
+          name,
+        },
+      )
+    case 'handed_out':
+      if (r.duration !== 'temporary' || r.is_overdue || !r.end_date) return null
+      return t('requests.nextStep.lent', { date: date(r.end_date) })
+    default:
+      return null
+  }
+})
+
 const canRemind = computed(
   () => status.value === 'handed_out' && assetRequest.value?.duration === 'temporary',
 )
@@ -284,10 +312,6 @@ async function cancel() {
           </template>
           <template v-if="status === 'confirmed'">
             <NButton @click="openConfirm('confirm')">{{ t('common.edit') }}</NButton>
-            <NButton v-if="missing" type="primary" :loading="busy" @click="autoAllocate">
-              <template #icon><Sparkles :size="15" /></template>
-              {{ t('requests.actions.autoAllocate') }}
-            </NButton>
             <!-- Ready only once everything confirmed is allocated. -->
             <NButton v-if="!missing" type="primary" :loading="busy" @click="markReady">
               <template #icon><PackageCheck :size="15" /></template>
@@ -338,8 +362,9 @@ async function cancel() {
       </PageHeader>
 
       <div class="stack">
-        <NAlert v-if="status === 'pending_approval'" type="info" :bordered="false">
-          {{ t('requests.approval.itWaiting') }}
+        <NCard size="small"><RequestSteps :assetRequest="assetRequest" /></NCard>
+        <NAlert v-if="nextStep" type="info" :bordered="false" :title="t('requests.nextStep.title')">
+          {{ nextStep }}
         </NAlert>
         <NAlert
           v-if="assetRequest.is_overdue && assetRequest.end_date"
@@ -364,13 +389,18 @@ async function cancel() {
             </NButton>
           </div>
         </NAlert>
-        <NCard size="small"><RequestSteps :assetRequest="assetRequest" /></NCard>
         <div class="layout">
           <div class="stack">
             <NCard
               :title="preparing ? t('requests.allocation.title') : t('requests.items')"
               size="small"
             >
+              <template v-if="canWrite && preparing && missing" #header-extra>
+                <NButton size="small" :loading="busy" @click="autoAllocate">
+                  <template #icon><Sparkles :size="14" /></template>
+                  {{ t('requests.actions.autoAllocate') }}
+                </NButton>
+              </template>
               <p v-if="preparing" class="muted small hint">
                 {{ t('requests.allocation.hint') }}
               </p>

@@ -170,10 +170,22 @@ export default {
     handedOut: 'Ausgegeben',
     completed: 'Abgeschlossen',
   },
+  nextStep: {
+    title: 'Nächster Schritt',
+    pendingApproval:
+      'Die Abteilung muss die Anforderung erst genehmigen. Danach kann die IT sie bestätigen.',
+    submitted: 'Verfügbarkeit der Positionen prüfen und die Anforderung bestätigen oder ablehnen.',
+    allocate:
+      'Konkrete Geräte zuweisen – per Scan, von Hand oder automatisch. Was im Pool fehlt, lässt sich bestellen.',
+    markReady: 'Alles ist zugewiesen. Übergabe planen und die Anforderung abholbereit melden.',
+    completeSeats: 'Alles ist zugewiesen. Lizenzen freigeben, um die Ausgabe abzuschließen.',
+    pickup: '{name} holt die Geräte am Abholterminal ab und unterschreibt dort.',
+    handOut: 'Geräte an {name} übergeben und anschließend die Ausgabe erfassen.',
+    lent: 'Die Geräte sind bis {date} verliehen. Bei Rückgabe hier zurücknehmen.',
+  },
   approval: {
     label: 'Genehmigung',
     waiting: 'Wartet auf Genehmigung durch {names}.',
-    itWaiting: 'Bestätigung erst nach Genehmigung durch die Abteilung möglich.',
     approved: 'Genehmigt von {name} · {date}',
     selfApproved: 'Von {name} als Genehmiger angefordert · {date}',
     rejected: 'Nicht genehmigt von {name} · {date}',
