@@ -283,9 +283,8 @@ export default {
   allocation: {
     title: 'Preparation',
     hint: 'Allocate specific devices to the request.',
-    scan: 'Scan device to allocate',
-    candidates: 'Available in pool',
-    noCandidates: 'No matching devices available in the pool.',
+    scan: 'Scan or search device',
+    noCandidates: 'No matching device in the pool. Enter takes the code as typed.',
     consumableFrom: 'from {location}',
     chooseLicense: 'Choose license…',
     chooseDevice: 'Employee’s device…',

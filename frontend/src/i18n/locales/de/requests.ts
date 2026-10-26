@@ -286,9 +286,8 @@ export default {
   allocation: {
     title: 'Vorbereitung',
     hint: 'Konkrete Geräte der Anforderung zuweisen.',
-    scan: 'Gerät zum Zuweisen scannen',
-    candidates: 'Im Pool verfügbar',
-    noCandidates: 'Im Pool sind keine passenden Geräte verfügbar.',
+    scan: 'Gerät scannen oder suchen',
+    noCandidates: 'Kein passendes Gerät im Pool. Enter übernimmt den eingegebenen Code.',
     consumableFrom: 'aus {location}',
     chooseLicense: 'Lizenz wählen…',
     chooseDevice: 'Gerät des Mitarbeiters…',
