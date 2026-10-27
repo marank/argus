@@ -72,8 +72,11 @@ export const requestsApi = {
   ) => http.post<AssetRequest>(`${base}/${id}/allocations`, data),
   resolveItem: (id: Id, itemId: Id, assetModel: Id) =>
     http.post<AssetRequest>(`${base}/${id}/items/${itemId}/resolve`, { asset_model: assetModel }),
-  autoAllocate: (id: Id) =>
-    http.post<{ allocated: number; asset_request: AssetRequest }>(`${base}/${id}/auto-allocate`),
+  /** Fills the open items from the pool; with `itemId` only that one. */
+  autoAllocate: (id: Id, itemId?: Id) =>
+    http.post<{ allocated: number; asset_request: AssetRequest }>(
+      `${base}/${id}/auto-allocate${itemId ? `?item=${itemId}` : ''}`,
+    ),
   removeAllocation: (id: Id, allocationId: Id) =>
     http.delete<AssetRequest>(`${base}/${id}/allocations/${allocationId}`),
   markReady: (

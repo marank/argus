@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Id } from '@/types/common'
-import { X } from '@lucide/vue'
-import { NButton, NInputNumber, NProgress, NSelect } from 'naive-ui'
+import { Sparkles, X } from '@lucide/vue'
+import { NButton, NInputNumber, NProgress, NSelect, useMessage } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -30,6 +30,7 @@ const props = defineProps<{
 const emit = defineEmits<{ updated: [assetRequest: AssetRequest] }>()
 const { t } = useI18n()
 const { busy, run } = useAction()
+const message = useMessage()
 
 const code = ref('')
 const candidates = ref<Candidates | null>(null)
@@ -117,6 +118,22 @@ async function allocate(data: {
     emit('updated', updated)
     if (candidates.value) await loadCandidates()
   }
+}
+
+/** Grey like the scan field next to it, so neither outshines the other. */
+const AS_INPUT = {
+  color: 'var(--ar-surface)',
+  border: '1px solid var(--ar-border-strong)',
+  textColor: 'var(--ar-text-subtle)',
+}
+
+/** Fills just this item from the pool. */
+async function autoAllocate() {
+  const result = await run(() => requestsApi.autoAllocate(props.assetRequest.id, props.item.id))
+  if (!result) return
+  message.info(t('requests.actions.autoAllocated', { count: result.allocated }))
+  emit('updated', result.asset_request)
+  await loadCandidates()
 }
 
 async function remove(allocationId: Id) {
@@ -275,6 +292,11 @@ async function remove(allocationId: Id) {
         @select="(id) => allocate({ asset: id })"
         @enter="(scanned) => allocate({ code: scanned })"
       />
+      <span class="muted or">{{ t('requests.allocation.or') }}</span>
+      <NButton :theme-overrides="AS_INPUT" :loading="busy" @click="autoAllocate">
+        <template #icon><Sparkles :size="15" /></template>
+        {{ t('requests.actions.autoAllocate') }}
+      </NButton>
       <template v-for="consumable in candidates?.consumables ?? []" :key="consumable.id">
         <div class="row consumable">
           <span class="small"
@@ -387,6 +409,22 @@ async function remove(allocationId: Id) {
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+}
+/* "or" between lines like the connectors of the step bar. */
+.or {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.or::before,
+.or::after {
+  content: '';
+  width: 20px;
+  height: 1px;
+  background: var(--ar-text-subtle);
 }
 .scan {
   width: 300px;

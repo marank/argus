@@ -288,6 +288,7 @@ export default {
     hint: 'Konkrete Geräte der Anforderung zuweisen.',
     scan: 'Gerät scannen oder suchen',
     noCandidates: 'Kein passendes Gerät im Pool. Enter übernimmt den eingegebenen Code.',
+    or: 'oder',
     consumableFrom: 'aus {location}',
     chooseLicense: 'Lizenz wählen…',
     chooseDevice: 'Gerät des Mitarbeiters…',

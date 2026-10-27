@@ -51,7 +51,7 @@ function onKeydown(event: KeyboardEvent) {
   <div class="scan-combobox" @keydown.capture="onKeydown">
     <NAutoComplete
       :value="code"
-      size="small"
+      size="medium"
       :options="props.options"
       :placeholder="placeholder"
       :loading="loading"
@@ -61,7 +61,7 @@ function onKeydown(event: KeyboardEvent) {
       @update:value="onInput"
       @select="(value: string | number) => emit('select', String(value))"
     >
-      <template #prefix><ScanLine :size="14" /></template>
+      <template #prefix><ScanLine :size="16" /></template>
       <template #empty
         ><span class="muted empty">{{ emptyText }}</span></template
       >

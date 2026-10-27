@@ -11,7 +11,6 @@ import {
   PackageCheck,
   PackageOpen,
   ShoppingCart,
-  Sparkles,
   Undo2,
   UserCheck,
   X,
@@ -24,7 +23,6 @@ import {
   NInput,
   NModal,
   NSkeleton,
-  useMessage,
   type DropdownOption,
 } from 'naive-ui'
 import { computed, h, onMounted, ref, type Component } from 'vue'
@@ -65,7 +63,6 @@ const props = defineProps<{ id: Id }>()
 const { t } = useI18n()
 // Without the right to change requests, the page is for viewing only.
 const canWrite = computed(() => useAuthStore().can('requests', 'write'))
-const message = useMessage()
 const confirm = useConfirm()
 const { busy, run } = useAction()
 const { date, dateTime } = useFormat()
@@ -176,14 +173,6 @@ async function act(action: () => Promise<AssetRequest>, success?: string) {
 function openConfirm(mode: 'confirm' | 'schedule') {
   confirmMode.value = mode
   showConfirm.value = true
-}
-
-async function autoAllocate() {
-  const result = await run(() => requestsApi.autoAllocate(props.id))
-  if (result) {
-    assetRequest.value = result.asset_request
-    message.info(t('requests.actions.autoAllocated', { count: result.allocated }))
-  }
 }
 
 async function reject() {
@@ -395,12 +384,6 @@ async function cancel() {
               :title="preparing ? t('requests.allocation.title') : t('requests.items')"
               size="small"
             >
-              <template v-if="canWrite && preparing && missing" #header-extra>
-                <NButton size="small" :loading="busy" @click="autoAllocate">
-                  <template #icon><Sparkles :size="14" /></template>
-                  {{ t('requests.actions.autoAllocate') }}
-                </NButton>
-              </template>
               <p v-if="preparing" class="muted small hint">
                 {{ t('requests.allocation.hint') }}
               </p>

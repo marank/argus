@@ -534,11 +534,14 @@ def allocate_license(
 
 
 @transaction.atomic
-def auto_allocate(asset_request: AssetRequest, user) -> int:
-    """Fill every open item from the pool; returns the number of units allocated."""
+def auto_allocate(asset_request: AssetRequest, user, item_id=None) -> int:
+    """Fill every open item (or just the given one) from the pool; returns the units allocated."""
     _require_status(asset_request, Status.CONFIRMED)
+    items = asset_request.items.select_related("asset_model", "category")
+    if item_id:
+        items = items.filter(pk=item_id)
     allocated = 0
-    for item in asset_request.items.select_related("asset_model", "category"):
+    for item in items:
         if item.is_free_text:
             continue  # needs a decision by IT first
         filters = {"model_id": item.asset_model_id, "category_id": item.category_id}

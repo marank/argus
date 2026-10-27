@@ -110,8 +110,9 @@ def resolve_item(request: HttpRequest, pk: UUID, item_id: UUID, payload: Resolve
 
 @router.post("/{uuid:pk}/auto-allocate", response=AutoAllocateOut)
 @transaction.atomic
-def auto_allocate(request: HttpRequest, pk: UUID):
-    allocated = workflow.auto_allocate(get_for_update(pk), request.user)
+def auto_allocate(request: HttpRequest, pk: UUID, item: UUID | None = None):
+    """Fill the open items from the pool; with `item` only that one."""
+    allocated = workflow.auto_allocate(get_for_update(pk), request.user, item)
     return {"allocated": allocated, "asset_request": get_asset_request(request, pk)}
 
 

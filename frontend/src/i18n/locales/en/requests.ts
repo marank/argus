@@ -285,6 +285,7 @@ export default {
     hint: 'Allocate specific devices to the request.',
     scan: 'Scan or search device',
     noCandidates: 'No matching device in the pool. Enter takes the code as typed.',
+    or: 'or',
     consumableFrom: 'from {location}',
     chooseLicense: 'Choose license…',
     chooseDevice: 'Employee’s device…',

@@ -127,6 +127,34 @@ def test_catalog_hides_availability_from_employees(employee_client, it_client):
     assert any(c["available"] for c in it_view)
 
 
+def test_auto_allocate_a_single_item(employee_client, it_client):
+    laptops = Category.objects.get(code="laptops")
+    headsets = Category.objects.get(code="headsets")
+    start = date.today() + timedelta(days=2)
+    asset_request = employee_client.post(
+        "/api/requests",
+        {
+            "title": "New colleague",
+            "duration": "permanent",
+            "start_date": start.isoformat(),
+            "items": [{"category": laptops.pk, "quantity": 1}, {"category": headsets.pk, "quantity": 1}],
+        },
+        content_type="application/json",
+    ).json()
+    laptop, headset = asset_request["items"]
+    base = f"/api/requests/{asset_request['id']}"
+    it_client.post(
+        f"{base}/confirm",
+        {"items": [{"id": i["id"], "quantity_confirmed": 1} for i in (laptop, headset)]},
+        content_type="application/json",
+    )
+
+    response = it_client.post(f"{base}/auto-allocate?item={headset['id']}")
+    assert response.json()["allocated"] == 1
+    allocated = {i["id"]: i["quantity_allocated"] for i in response.json()["asset_request"]["items"]}
+    assert allocated == {laptop["id"]: 0, headset["id"]: 1}
+
+
 def _ready_request(employee_client, it_client, **ready) -> dict:
     headsets = Category.objects.get(code="headsets")
     start = date.today() + timedelta(days=2)
