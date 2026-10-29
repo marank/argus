@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Argus – IT asset management (Django backend)"
 requires-python = ">=3.14"
 dependencies = [
-    "django>=6.1.2",
+    "django[argon2]>=6.1.2",
     "django-cors-headers>=4.9.0",
     "django-ninja>=1.7.1",
     "gunicorn>=26.2.0",
@@ -17,7 +17,9 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "deptry>=0.25.1",
     "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
     "pytest-django>=4.14.0",
     "pytest-xdist>=3.8.0",
     "ruff>=0.17.1",
@@ -44,3 +46,20 @@ addopts = "-n auto --maxprocesses=8"
 
 [tool.ruff.lint.per-file-ignores]
 "**/migrations/*" = ["E501"]
+
+[tool.coverage.run]
+source = ["apps", "config"]
+omit = ["*/migrations/*", "config/asgi.py", "config/wsgi.py"]
+
+[tool.coverage.report]
+fail_under = 90
+skip_covered = true
+show_missing = true
+
+[tool.deptry]
+# Tests may use dev dependencies (pytest) and what Django brings along (asgiref).
+extend_exclude = [".*/tests/", "conftest\\.py"]
+
+[tool.deptry.per_rule_ignores]
+# Used at runtime, never imported: the WSGI/ASGI servers and an app named in INSTALLED_APPS.
+DEP002 = ["gunicorn", "uvicorn", "django-cors-headers"]

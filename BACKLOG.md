@@ -41,7 +41,7 @@ unbuffered.
 
 Locally there are none: SQLite has no LISTEN/NOTIFY, and `runserver` is WSGI, where
 `/api/events` answers 204 even with PostgreSQL. To have them: run PostgreSQL
-(e.g. the `db` service of docker-compose), uvicorn for `/api/events` next to
+(e.g. the `db` service of compose.yml), uvicorn for `/api/events` next to
 runserver, and route that path to uvicorn in the Vite proxy; add a launch
 configuration for it.
 

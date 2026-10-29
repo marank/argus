@@ -25,7 +25,7 @@ env:
   REGISTRY: ${{ vars.REGISTRY }}
 
 jobs:
-  # --- Backend: ruff, migrations check, pytest against PostgreSQL --------------
+  # --- Backend: ruff, deptry, licenses, migrations check, pytest against PostgreSQL
   backend:
     runs-on: ubuntu-latest
     container:
@@ -73,16 +73,33 @@ jobs:
           uv run ruff check --output-format=concise .
           uv run ruff format --check .
 
+      - name: Dependencies (deptry)
+        run: uv run deptry .
+
+      # No GPL/AGPL/SSPL in production dependencies (LGPL is fine). Checked in a
+      # throwaway venv with only the production dependencies installed.
+      - name: Licenses
+        run: |
+          LICENSE_DIR=$(mktemp -d)
+          trap 'rm -rf "$LICENSE_DIR"' EXIT
+          uv export --locked --no-dev --no-hashes --format requirements.txt -o "$LICENSE_DIR/requirements.txt"
+          uv venv --quiet "$LICENSE_DIR/venv"
+          uv pip install --quiet --python "$LICENSE_DIR/venv" -r "$LICENSE_DIR/requirements.txt" pip-licenses
+          "$LICENSE_DIR/venv/bin/pip-licenses" --format=json \
+            --ignore-packages pip-licenses prettytable wcwidth \
+            | uv run python scripts/check_licenses.py
+
       - name: Check for missing migrations
         run: uv run python manage.py makemigrations --check --dry-run
 
       - name: Django system checks
         run: uv run python manage.py check
 
+      # Coverage minimum: fail_under in pyproject.toml.
       - name: Tests
-        run: uv run pytest -q
+        run: uv run pytest -q --cov
 
-  # --- Frontend: oxlint, eslint, type-check, vitest -----------------------------
+  # --- Frontend: oxlint, eslint, prettier, type-check, vitest, licenses ---------
   frontend:
     runs-on: ubuntu-latest
     container:
@@ -104,18 +121,20 @@ jobs:
           corepack enable
           pnpm install --frozen-lockfile
 
-      # The package.json lint scripts run with --fix; CI must only report.
       - name: Lint
         run: |
-          pnpm exec oxlint .
-          pnpm exec eslint .
-          pnpm exec prettier --check --experimental-cli src/
+          pnpm lint
+          pnpm format:check
 
       - name: Type-check
         run: pnpm type-check
 
+      # Coverage minimum: thresholds in vitest.config.ts.
       - name: Unit tests
-        run: pnpm exec vitest run
+        run: pnpm test:coverage
+
+      - name: Licenses
+        run: pnpm check:licenses
 
   # --- Image: build, smoke-test, push -------------------------------------------
   image:
@@ -184,7 +203,7 @@ jobs:
             --label "org.opencontainers.image.created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             $TAG_ARGS .
 
-      # Start the image against a throwaway PostgreSQL (like docker-compose.yml)
+      # Start the image against a throwaway PostgreSQL (like compose.yml)
       # and wait for the health endpoint, so an image that cannot boot (entrypoint,
       # migrations, nginx/gunicorn) is never pushed. Then check that it stays up and
       # that the job worker and the live update process (uvicorn) run: a program that

@@ -27,12 +27,16 @@ pnpm install
 pnpm dev                               # http://localhost:5173, proxies /api to :8000
 ```
 
+SQLite is enough for most work. The job queue and live updates need PostgreSQL;
+for those, start one with `docker compose -f compose.dev.yml up -d` (VS Code task
+**DB: start dev postgres**) and run the backend with `DB_HOST=localhost`.
+
 If the backend runs elsewhere, set `BACKEND_URL` (e.g.
 `BACKEND_URL=http://127.0.0.1:8010 pnpm dev`). Local development needs no
 `.env`: without variables (no `SECRET_KEY`) Django runs with debug on and SQLite.
 
 VS Code: *Terminal → Run Task…* offers all of this as tasks (`.vscode/tasks.json`),
-e.g. **Dev: start all**, **Check: all**, **DB: seed demo data**, **Docker: build and start**.
+e.g. **Dev: start all**, **Check: all** (same as CI), **DB: seed demo data**, **Docker: build and start**.
 
 Demo accounts created by `seed_demo` (development only, password `argus-demo`):
 `admin` (superuser), `it` (IT department), `employee`, `sales`, `terminal`
@@ -66,6 +70,7 @@ start the container waits for the database and applies migrations.
 | `TIME_ZONE`, `LOG_LEVEL` | Defaults `Europe/Berlin`, `INFO`. |
 | `ADMIN_USERNAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` | First administrator, created on first start (later: `set_password`). Made an administrator again on every start; deactivating it in the app sticks. |
 | `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | Database (also used by the Postgres container). |
+| `BACKUP_TIME`, `BACKUP_KEEP_DAYS` | Daily database dump at this time (default `02:30`, in `TIME_ZONE`), kept this many days (default `14`), see [Backups](#backups). |
 | `LDAP_*` | Optional LDAP / AD login, see [LDAP login](#ldap-login). |
 
 The app container runs unprivileged with a read-only root filesystem; health
@@ -82,6 +87,29 @@ off the second sign-in step):
 
 ```bash
 docker compose exec app python manage.py set_password admin
+```
+
+## Backups
+
+The `backup` service dumps the database every night (`BACKUP_TIME`) into the
+`backups` volume and deletes dumps older than `BACKUP_KEEP_DAYS`. The dumps are in
+PostgreSQL's custom format (`argus-<UTC timestamp>.dump`).
+
+Dumps on the same host do not protect against losing the host: copy them off
+regularly, or include the Docker volume in the host's backup.
+
+```bash
+docker compose exec backup sh /backup.sh now                          # dump right now
+docker compose exec backup ls -l /var/lib/postgresql/backups          # list dumps
+docker compose cp backup:/var/lib/postgresql/backups ./backups        # copy them off the host
+```
+
+Restore a dump (replaces the current data; stop the app so nothing writes meanwhile):
+
+```bash
+docker compose stop app
+docker compose exec -T backup sh -c 'pg_restore --clean --if-exists --no-owner -d "$PGDATABASE"' < backups/argus-20261029T013000Z.dump
+docker compose start app
 ```
 
 ## LDAP login
@@ -190,6 +218,8 @@ signs in through the app's login, so the second step applies there too.
 
 ## Project layout
 
+Conventions for contributors and coding agents are in [AGENTS.md](AGENTS.md).
+
 ```
 backend/
   config/            settings, URLs, API assembly (config/api.py)
@@ -243,9 +273,24 @@ confusion with the `request` argument of every API view.
 
 ## Checks
 
+The VS Code task **Check: all** runs the same checks as CI; by hand:
+
 ```bash
-cd backend && uv run pytest && uv run ruff check .
-cd frontend && pnpm type-check && pnpm lint && pnpm test:unit --run
+cd backend && uv run ruff check . && uv run ruff format --check . && uv run deptry . && uv run pytest --cov
+cd frontend && pnpm lint && pnpm format:check && pnpm type-check && pnpm test:coverage && pnpm check:licenses
+```
+
+Coverage must not fall below the minimum: 90 % in the backend (`fail_under` in
+`pyproject.toml`), a floor at today's level in the frontend (`vitest.config.ts`; raise
+it as tests are added). CI also refuses GPL/AGPL/SSPL licenses in production
+dependencies (`backend/scripts/check_licenses.py`, `frontend/scripts/check-licenses.mjs`).
+`pnpm lint:fix` and `pnpm format` fix what they can.
+
+Fast checks before every commit (ruff, prettier, oxlint, whitespace) with
+[pre-commit](https://pre-commit.com), installed once:
+
+```bash
+uv tool run pre-commit install
 ```
 
 The backend tests run in parallel (pytest-xdist, up to 8 workers). For a single file

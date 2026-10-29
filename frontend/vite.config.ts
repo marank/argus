@@ -22,7 +22,7 @@ export default defineConfig({
     proxy: {
       '/api': proxy,
       '/admin': proxy,
-      '/static': proxy,
+      '/django-static': proxy,
     },
   },
 })

@@ -57,7 +57,7 @@
       "dependencyDashboardApproval": true
     },
     {
-      "description": "PostgreSQL major upgrades need a dump/restore of the data; CI stays on the major of docker-compose.yml",
+      "description": "PostgreSQL major upgrades need a dump/restore of the data; CI stays on the major of compose.yml",
       "matchPackageNames": ["postgres"],
       "matchUpdateTypes": ["major"],
       "enabled": false

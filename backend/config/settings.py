@@ -11,16 +11,9 @@ from urllib.parse import urlsplit
 
 from django.utils.translation import gettext_lazy as _
 
+from .env import env_bool, env_list
+
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-
-def env_bool(name: str, default: bool = False) -> bool:
-    return os.environ.get(name, str(default)).lower() in {"1", "true", "yes", "on"}
-
-
-def env_list(name: str, default: str = "") -> list[str]:
-    return [item.strip() for item in os.environ.get(name, default).split(",") if item.strip()]
-
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-dev-only-change-me")
 # Debug only by default where no secret key is set, i.e. local development: any real
@@ -134,6 +127,16 @@ AUTHENTICATION_BACKENDS = [
     "apps.accounts.backends.LdapBackend",
 ]
 
+# Argon2 first (Django's recommendation); the others stay so existing hashes keep
+# working. They are upgraded to Argon2 at the next sign-in.
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+    "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
+    "django.contrib.auth.hashers.ScryptPasswordHasher",
+]
+
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -149,7 +152,9 @@ TIME_ZONE = os.environ.get("TIME_ZONE", "Europe/Berlin")
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = "static/"
+# Admin assets only; the SPA is served by nginx / Vite. Not "/static/", so it cannot
+# collide with a route of the app.
+STATIC_URL = "/django-static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
