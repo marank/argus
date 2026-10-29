@@ -26,7 +26,7 @@ class User(AbstractUser):
         ENGLISH = "en", _("English")
         GERMAN = "de", _("German")
 
-    id = models.UUIDField(_("ID"), primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(_("ID"), primary_key=True, default=uuid.uuid7, editable=False)
     department = models.ForeignKey(
         "accounts.Department",
         verbose_name=_("department"),

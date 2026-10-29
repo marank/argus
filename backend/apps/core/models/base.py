@@ -5,9 +5,13 @@ from django.utils.translation import gettext_lazy as _
 
 
 class UUIDModel(models.Model):
-    """Abstract base using a random UUID as primary key (also used in URLs)."""
+    """Abstract base with a UUID primary key (also used in URLs).
 
-    id = models.UUIDField(_("ID"), primary_key=True, default=uuid.uuid4, editable=False)
+    UUIDv7: random, but in creation order, which keeps the primary key indexes compact.
+    Lists still order explicitly; the ID only breaks ties.
+    """
+
+    id = models.UUIDField(_("ID"), primary_key=True, default=uuid.uuid7, editable=False)
 
     class Meta:
         abstract = True

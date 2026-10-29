@@ -248,7 +248,6 @@ export interface AssetLicense {
 export type IssueKind = 'defect' | 'damage' | 'lost' | 'other'
 export const ISSUE_KINDS: IssueKind[] = ['defect', 'damage', 'lost', 'other']
 export type IssueStatus = 'open' | 'in_progress' | 'resolved'
-export const ISSUE_STATUSES: IssueStatus[] = ['open', 'in_progress', 'resolved']
 
 /** A problem report as the reporting employee sees it. */
 export interface OwnIssue {

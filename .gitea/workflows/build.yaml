@@ -99,7 +99,7 @@ jobs:
       - name: Tests
         run: uv run pytest -q --cov
 
-  # --- Frontend: oxlint, eslint, prettier, type-check, vitest, licenses ---------
+  # --- Frontend: lint (oxlint, eslint, knip), prettier, types, vitest, licenses, size
   frontend:
     runs-on: ubuntu-latest
     container:
@@ -135,6 +135,12 @@ jobs:
 
       - name: Licenses
         run: pnpm check:licenses
+
+      # Budget in package.json ("size-limit"); the image build type-checks again.
+      - name: Bundle size
+        run: |
+          pnpm build-only
+          pnpm size
 
   # --- Image: build, smoke-test, push -------------------------------------------
   image:

@@ -61,7 +61,7 @@ start the container waits for the database and applies migrations.
 
 | Variable | Purpose |
 | --- | --- |
-| `APP_URLS` | All URLs users open Argus under, comma separated. Allowed hosts, CSRF/CORS origins and secure cookies (all `https`) are derived from it. |
+| `APP_URLS` | All URLs users open Argus under, comma separated. Allowed hosts, CSRF origins and secure cookies (all `https`) are derived from it. |
 | `TRUSTED_PROXIES` | Addresses or CIDR ranges of a TLS proxy in front; only these may pass on the client's address and scheme. |
 | `APP_PORT` | Host port (default `8080`). |
 | `APP_WORKERS` | Gunicorn workers (default 2 × CPU + 1, max 5). |
@@ -244,8 +244,10 @@ frontend/src/
   theme/             palette and Naive UI overrides (light/dark)
 ```
 
-All models use random UUIDs as primary keys (`apps.core.models.UUIDModel`, also on
-`accounts.User`); URLs and API payloads carry these UUIDs.
+All models use UUIDs as primary keys (`apps.core.models.UUIDModel`, also on
+`accounts.User`); URLs and API payloads carry these UUIDs. New ones are UUIDv7
+(random, in creation order). `manage.py check` fails (`core.E001`) for a model of
+our own without a UUID primary key.
 
 Business rules live in `services/` (e.g. `apps/requests/services/workflow.py`);
 API modules stay thin.
@@ -277,14 +279,16 @@ The VS Code task **Check: all** runs the same checks as CI; by hand:
 
 ```bash
 cd backend && uv run ruff check . && uv run ruff format --check . && uv run deptry . && uv run pytest --cov
-cd frontend && pnpm lint && pnpm format:check && pnpm type-check && pnpm test:coverage && pnpm check:licenses
+cd frontend && pnpm lint && pnpm format:check && pnpm type-check && pnpm test:coverage && pnpm check:licenses && pnpm build-only && pnpm size
 ```
 
 Coverage must not fall below the minimum: 90 % in the backend (`fail_under` in
 `pyproject.toml`), a floor at today's level in the frontend (`vitest.config.ts`; raise
 it as tests are added). CI also refuses GPL/AGPL/SSPL licenses in production
 dependencies (`backend/scripts/check_licenses.py`, `frontend/scripts/check-licenses.mjs`).
-`pnpm lint:fix` and `pnpm format` fix what they can.
+`pnpm lint` includes knip (unused files, exports and dependencies; `knip.jsonc`), and
+the built bundle must stay within the budget in `package.json` (`size-limit`; raise it
+deliberately when a feature needs it). `pnpm lint:fix` and `pnpm format` fix what they can.
 
 Fast checks before every commit (ruff, prettier, oxlint, whitespace) with
 [pre-commit](https://pre-commit.com), installed once:

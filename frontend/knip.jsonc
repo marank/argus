@@ -1,0 +1,9 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": ["scripts/*.mjs"],
+  "project": ["src/**/*.{ts,vue}", "scripts/*.mjs"],
+  // Types and constants a module uses itself may be exported for later use.
+  "ignoreExportsUsedInFile": true,
+  // Imported from CSS (src/assets/styles/base.css), which knip does not read.
+  "ignoreDependencies": ["@fontsource-variable/ibm-plex-sans", "@fontsource-variable/jetbrains-mono"]
+}

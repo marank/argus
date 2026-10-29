@@ -22,8 +22,8 @@ DEBUG = env_bool("DEBUG", "SECRET_KEY" not in os.environ)
 
 # --- Public addresses -----------------------------------------------------------
 # APP_URLS lists every URL users open Argus under, e.g.
-# "https://argus.example.com,http://argus.intranet:8080". Hosts, CSRF and CORS
-# origins and cookie security are all derived from it.
+# "https://argus.example.com,http://argus.intranet:8080". Hosts, CSRF origins and
+# cookie security are all derived from it.
 APP_URLS = [urlsplit(url) for url in env_list("APP_URLS")]
 # Browsers send origins in lower case and Django compares them exactly.
 _app_origins = [f"{url.scheme}://{url.netloc}".lower() for url in APP_URLS if url.scheme and url.netloc]
@@ -37,8 +37,6 @@ _app_hosts = {
 }
 ALLOWED_HOSTS = sorted(_app_hosts | {"localhost", "127.0.0.1"})
 CSRF_TRUSTED_ORIGINS = _app_origins + _dev_origins
-CORS_ALLOWED_ORIGINS = _app_origins + _dev_origins
-CORS_ALLOW_CREDENTIALS = True
 # Cookies only over HTTPS when Argus is reachable exclusively via HTTPS.
 SESSION_COOKIE_SECURE = bool(APP_URLS) and all(url.scheme == "https" for url in APP_URLS)
 CSRF_COOKIE_SECURE = SESSION_COOKIE_SECURE
@@ -51,7 +49,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "corsheaders",
     "apps.core",
     "apps.accounts",
     "apps.masterdata",
@@ -64,7 +61,6 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",

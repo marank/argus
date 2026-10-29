@@ -115,9 +115,9 @@
     },
     {
       "label": "Check: frontend",
-      "detail": "Same as the CI frontend job: oxlint, eslint, prettier, type-check, tests with coverage, licenses",
+      "detail": "Same as the CI frontend job: oxlint, eslint, knip, prettier, type-check, tests with coverage, licenses, bundle size",
       "type": "shell",
-      "command": "pnpm lint && pnpm format:check && pnpm type-check && pnpm test:coverage && pnpm check:licenses",
+      "command": "pnpm lint && pnpm format:check && pnpm type-check && pnpm test:coverage && pnpm check:licenses && pnpm build-only && pnpm size",
       "options": { "cwd": "${workspaceFolder}/frontend" },
       "problemMatcher": ["$tsc"]
     },

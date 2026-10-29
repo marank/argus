@@ -13,5 +13,3 @@ export function createResource<T, TInput = Partial<T>>(path: string) {
     remove: (id: Id) => http.remove(`${path}/${id}`),
   }
 }
-
-export type Resource<T, TInput = Partial<T>> = ReturnType<typeof createResource<T, TInput>>

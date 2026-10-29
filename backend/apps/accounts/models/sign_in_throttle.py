@@ -1,8 +1,10 @@
 from django.db import models
 from django.utils import timezone
 
+from apps.core.models import UUIDModel
 
-class SignInThrottle(models.Model):
+
+class SignInThrottle(UUIDModel):
     """Wrong passwords or codes per account in the current window; see ``services.throttle``.
 
     Kept in the database so every worker process counts the same attempts.

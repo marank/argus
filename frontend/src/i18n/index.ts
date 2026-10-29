@@ -6,8 +6,6 @@ import en from './locales/en'
 export type Locale = 'en' | 'de'
 export type MessageSchema = typeof en
 
-export const SUPPORTED_LOCALES: Locale[] = ['en', 'de']
-
 /**
  * The same in both languages; the locale gives the wording and order. Dates
  * with a weekday are put together from the parts in `useFormat`, which reads

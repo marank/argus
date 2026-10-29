@@ -19,8 +19,9 @@ VS Code tasks (`.vscode/tasks.json`) hold the everyday commands; the README list
 - **No monolithic modules.** `models/`, `admin/`, `api/`, `schemas/`, `services/`, `tests/` are packages
   with one file per model/resource; `__init__.py` re-exports explicitly. Relations use string
   references (`"app.Model"`).
-- **Every model inherits `apps.core.models.UUIDModel` or `TimeStampedModel`** (UUID primary key);
-  URLs and payloads carry these UUIDs. Order queries explicitly.
+- **Every model inherits `apps.core.models.UUIDModel` or `TimeStampedModel`** (UUIDv7 primary key);
+  `manage.py check` fails (`core.E001`) otherwise. URLs and payloads carry these UUIDs. Order
+  queries explicitly.
 - Business rules go in `services/`, not in API modules or a model's `save()`.
 - API: under `/api/`, no trailing slashes, session auth + CSRF, UUIDs in paths. `/api/health` stays
   unauthenticated and exactly at that path (container health check, CI smoke test).
