@@ -25,7 +25,7 @@ env:
   REGISTRY: ${{ vars.REGISTRY }}
 
 jobs:
-  # --- Backend: ruff, deptry, licenses, migrations check, pytest against PostgreSQL
+  # --- Backend: ruff, mypy, deptry, licenses, migrations, pytest against PostgreSQL
   backend:
     runs-on: ubuntu-latest
     container:
@@ -72,6 +72,9 @@ jobs:
         run: |
           uv run ruff check --output-format=concise .
           uv run ruff format --check .
+
+      - name: Types (mypy)
+        run: uv run mypy .
 
       - name: Dependencies (deptry)
         run: uv run deptry .

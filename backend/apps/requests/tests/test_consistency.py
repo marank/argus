@@ -49,8 +49,10 @@ def test_any_model_never_picks_accessories(employee_client, it_client):
     accessories = Category.objects.create(
         name="Laptop accessories", code="laptop-accessories", parent=laptops
     )
+    manufacturer = Manufacturer.objects.first()
+    assert manufacturer is not None
     dock = AssetModel.objects.create(
-        name="Dock", designation="Dock", manufacturer=Manufacturer.objects.first(), category=accessories
+        name="Dock", designation="Dock", manufacturer=manufacturer, category=accessories
     )
     create_asset({"model": dock.pk, "status": Asset.Status.IN_STOCK}, User.objects.get(username="it"))
     rid = prepare(employee_client, it_client, [{"category": str(laptops.pk), "quantity": 1}])
@@ -75,6 +77,7 @@ def test_deleting_a_device_with_history_is_refused(employee_client, it_client):
 def test_terminal_hides_lines_without_confirmed_devices(employee_client, it_client, terminal_client):
     laptops = Category.objects.get(code="laptops")
     model = laptops.asset_models.first()
+    assert model is not None
     start = date.today()
     rid = employee_client.post(
         "/api/requests",
@@ -123,6 +126,7 @@ def test_device_set_aside_for_a_request_cannot_be_assigned_elsewhere(employee_cl
     rid = prepare(employee_client, it_client, [{"category": str(laptops.pk), "quantity": 1}])
     asset = allocated_assets(rid)[0]
     it_user = AssetRequest.objects.get(pk=rid).handled_by
+    assert it_user is not None
 
     response = it_client.post(
         f"/api/inventory/assets/{asset.pk}/assign", {"user": str(it_user.pk)}, content_type=JSON

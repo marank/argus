@@ -1,7 +1,23 @@
+from typing import TYPE_CHECKING
+
 from django.http import HttpRequest
 from django.utils.translation import gettext as _
 from ninja.errors import HttpError
 from ninja.security import SessionAuth
+
+if TYPE_CHECKING:
+    from apps.accounts.models import User
+
+
+class AuthedRequest(HttpRequest):
+    """For type checking only: a request that passed the router's auth.
+
+    Annotate ``request`` with it in endpoints that require a session, so
+    ``request.user`` is the signed-in ``User`` instead of ``User | AnonymousUser``.
+    Endpoints with ``auth=None`` keep ``HttpRequest``.
+    """
+
+    user: User
 
 
 def is_it_staff(user) -> bool:

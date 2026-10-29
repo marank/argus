@@ -33,7 +33,9 @@ def current_totp(secret: str) -> str:
 
 
 def mailed_code() -> str:
-    return re.search(r"\b(\d{6})\b", mail.outbox[-1].body).group(1)
+    match = re.search(r"\b(\d{6})\b", str(mail.outbox[-1].body))
+    assert match is not None
+    return match.group(1)
 
 
 def enable_totp(client: Client) -> tuple[str, list[str]]:

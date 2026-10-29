@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Sum
@@ -75,12 +77,12 @@ class AssetRequestItem(UUIDModel):
 
     @property
     def requires_approval(self) -> bool:
-        category = self.asset_model.category if self.asset_model_id else self.category
+        category = self.asset_model.category if self.asset_model else self.category
         return category.needs_approval() if category else False
 
     @property
-    def effective_category_id(self) -> int:
-        return self.asset_model.category_id if self.asset_model_id else self.category_id
+    def effective_category_id(self) -> UUID | None:
+        return self.asset_model.category_id if self.asset_model else self.category_id
 
     @property
     def quantity_target(self) -> int:
@@ -99,9 +101,9 @@ class AssetRequestItem(UUIDModel):
     @property
     def is_software(self) -> bool:
         """Software lines are filled with license seats instead of devices."""
-        if self.asset_model_id:
+        if self.asset_model:
             return self.asset_model.is_software
-        return bool(self.category_id and self.category.is_software)
+        return bool(self.category and self.category.is_software)
 
     @property
     def quantity_missing(self) -> int:

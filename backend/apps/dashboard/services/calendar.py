@@ -61,6 +61,7 @@ def calendar_entries(
 
     if "loan" in kinds:
         for r in temporary.filter(start_date__lte=end, end_date__gte=start):
+            assert r.start_date is not None and r.end_date is not None  # the filter excludes NULL
             items = [f"{i.quantity_target}× {i.label}" for i in r.items.all()]
             entries.append(
                 Entry(
@@ -99,6 +100,7 @@ def calendar_entries(
     if "return" in kinds:
         # Overdue returns move along on today until the devices are back.
         for r in temporary.filter(status=AssetRequest.Status.HANDED_OUT, end_date__lte=end):
+            assert r.end_date is not None  # the filter excludes NULL
             overdue = r.end_date < today
             day = today if overdue else r.end_date
             if not start <= day <= end:
@@ -124,6 +126,7 @@ def calendar_entries(
             expected_date__lte=end,
         )
         for o in orders:
+            assert o.expected_date is not None  # the filter excludes NULL
             entries.append(
                 Entry(
                     id=f"delivery-{o.pk}",
@@ -144,18 +147,19 @@ def calendar_entries(
         )
         by_day: dict[date, list[Asset]] = defaultdict(list)
         for asset in assets:
+            assert asset.warranty_until is not None  # the filter excludes NULL
             by_day[asset.warranty_until].append(asset)
         # One entry per day; many devices bought together would flood the view.
-        for day, items in sorted(by_day.items()):
+        for day, due in sorted(by_day.items()):
             entries.append(
                 Entry(
                     id=f"warranty-{day.isoformat()}",
                     kind="warranty",
-                    title=str(len(items)),
+                    title=str(len(due)),
                     start=day,
                     link={"name": "assets", "warranty_until": day.isoformat()},
-                    details=[f"{a.inventory_number} · {a.model.full_name}" for a in items[:10]]
-                    + ([f"+{len(items) - 10}"] if len(items) > 10 else []),
+                    details=[f"{a.inventory_number} · {a.model.full_name}" for a in due[:10]]
+                    + ([f"+{len(due) - 10}"] if len(due) > 10 else []),
                 )
             )
 
@@ -166,6 +170,7 @@ def calendar_entries(
             .annotate(used=Count("assignments"))
         )
         for lic in licenses:
+            assert lic.valid_until is not None  # the filter excludes NULL
             entries.append(
                 Entry(
                     id=f"license-{lic.pk}",

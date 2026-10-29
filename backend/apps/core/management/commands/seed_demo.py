@@ -179,7 +179,7 @@ class Command(BaseCommand):
                 item_name=ITEM_NAMES.get(code, ""),
                 icon=icon,
                 number_sequence=sequence,
-                parent=categories.get(parent),
+                parent=categories[parent] if parent else None,
                 sort_order=index * 10,
             )
 
@@ -472,15 +472,17 @@ def seed_extra(base: dict, stdout) -> None:
 
     # --- Organisation ----------------------------------------------------------
     departments = {}
-    for name, code, cost_center, order in EXTRA_DEPARTMENTS:
+    for name, code, cost_center, sort_order in EXTRA_DEPARTMENTS:
         department, _ = Department.objects.get_or_create(name=name, defaults={"code": code})
-        department.code, department.cost_center, department.sort_order = code, cost_center, order
+        department.code, department.cost_center, department.sort_order = code, cost_center, sort_order
         department.save()
         departments[name] = department
 
     people = []
-    for index, (username, first, last, department, job) in enumerate(EXTRA_PEOPLE, start=1):
-        user = base["make_user"](username, first, last, departments[department], staff=department == "IT")
+    for index, (username, first, last, department_name, job) in enumerate(EXTRA_PEOPLE, start=1):
+        user = base["make_user"](
+            username, first, last, departments[department_name], staff=department_name == "IT"
+        )
         user.job_title = job
         user.employee_number = f"{1000 + index}"
         user.phone = f"+49 89 1234-{100 + index}"
@@ -495,7 +497,7 @@ def seed_extra(base: dict, stdout) -> None:
     by_name["mschmidt"].notification_settings = {"return_reminder": False}
     by_name["mschmidt"].save()
     # Support handles the daily work and only looks up the catalog; the rest is hidden.
-    support = Role.objects.create(
+    support_role = Role.objects.create(
         name="IT support",
         description="Requests, devices and problem reports; master data read-only.",
         permissions={
@@ -503,7 +505,7 @@ def seed_extra(base: dict, stdout) -> None:
             **dict.fromkeys(("models", "categories", "manufacturers", "locations", "procurement"), READ),
         },
     )
-    support.members.add(by_name["jkoch"])
+    support_role.members.add(by_name["jkoch"])
 
     munich = Location.objects.create(name="Branch Munich", code="MUC", kind=Location.Kind.SITE)
     munich_storage = Location.objects.create(
@@ -571,8 +573,10 @@ def seed_extra(base: dict, stdout) -> None:
         categories[code].save()
     models["Ledgerline ERP"].team = ledgerline
     models["Ledgerline ERP"].save()
-    for laptop in ("ThinkPad X1 Carbon Gen 12", "Latitude 5450", "ThinkPad T14 Gen 5"):
-        models[laptop].compatible_with.add(models["ThinkPad Universal USB-C Dock"], models["USB-C cable 2 m"])
+    for laptop_model in ("ThinkPad X1 Carbon Gen 12", "Latitude 5450", "ThinkPad T14 Gen 5"):
+        models[laptop_model].compatible_with.add(
+            models["ThinkPad Universal USB-C Dock"], models["USB-C cable 2 m"]
+        )
 
     # --- Devices ---------------------------------------------------------------
     devices: dict[str, list[Asset]] = {}
@@ -926,6 +930,7 @@ def seed_extra(base: dict, stdout) -> None:
     # --- Problem reports -------------------------------------------------------
     def report(user, kind, description):
         asset = Asset.objects.filter(assigned_to=user).first()
+        assert asset is not None  # everyone reporting here got devices above
         return issue_service.report_issue(asset, user, kind, description)
 
     report(by_name["dhoffmann"], AssetIssue.Kind.DEFECT, "Battery is empty after two hours.")

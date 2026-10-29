@@ -2,12 +2,11 @@ from uuid import UUID
 
 from django.db import transaction
 from django.db.models import Q
-from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from ninja import Router, Schema
 
-from apps.core.api.security import permission_auth
+from apps.core.api.security import AuthedRequest, permission_auth
 from apps.core.exceptions import BusinessError
 from apps.inventory.models import Asset, Consumable, License
 from apps.inventory.services.availability import pool_assets, pool_consumables, pool_licenses
@@ -33,7 +32,7 @@ class AutoAllocateOut(Schema):
 
 
 @router.get("/items/{uuid:item_id}/candidates", response=CandidatesOut)
-def candidates(request: HttpRequest, item_id: UUID, q: str | None = None):
+def candidates(request: AuthedRequest, item_id: UUID, q: str | None = None):
     """Devices from the pool (or free license seats) that could be allocated to an item."""
     item = get_object_or_404(AssetRequestItem.objects.select_related("asset_request"), pk=item_id)
     if item.is_free_text:
@@ -81,7 +80,7 @@ def _asset_by_code(code: str) -> Asset:
 
 
 @router.post("/{uuid:pk}/allocations", response=AssetRequestOut)
-def allocate(request: HttpRequest, pk: UUID, payload: AllocateIn):
+def allocate(request: AuthedRequest, pk: UUID, payload: AllocateIn):
     """Bind a device to the request, by id or by scanning its code."""
     item = get_object_or_404(AssetRequestItem, pk=payload.item, asset_request_id=pk)
     if payload.code:
@@ -101,7 +100,7 @@ def allocate(request: HttpRequest, pk: UUID, payload: AllocateIn):
 
 
 @router.post("/{uuid:pk}/items/{uuid:item_id}/resolve", response=AssetRequestOut)
-def resolve_item(request: HttpRequest, pk: UUID, item_id: UUID, payload: ResolveItemIn):
+def resolve_item(request: AuthedRequest, pk: UUID, item_id: UUID, payload: ResolveItemIn):
     """Assign a catalog model to a free-text line (e.g. one IT just created)."""
     item = get_object_or_404(AssetRequestItem, pk=item_id, asset_request_id=pk)
     workflow.resolve_item(item, get_object_or_404(AssetModel, pk=payload.asset_model), request.user)
@@ -110,7 +109,7 @@ def resolve_item(request: HttpRequest, pk: UUID, item_id: UUID, payload: Resolve
 
 @router.post("/{uuid:pk}/auto-allocate", response=AutoAllocateOut)
 @transaction.atomic
-def auto_allocate(request: HttpRequest, pk: UUID, item: UUID | None = None):
+def auto_allocate(request: AuthedRequest, pk: UUID, item: UUID | None = None):
     """Fill the open items from the pool; with `item` only that one."""
     allocated = workflow.auto_allocate(get_for_update(pk), request.user, item)
     return {"allocated": allocated, "asset_request": get_asset_request(request, pk)}
@@ -118,7 +117,7 @@ def auto_allocate(request: HttpRequest, pk: UUID, item: UUID | None = None):
 
 @router.delete("/{uuid:pk}/allocations/{uuid:allocation_id}", response=AssetRequestOut)
 @transaction.atomic
-def remove_allocation(request: HttpRequest, pk: UUID, allocation_id: UUID):
+def remove_allocation(request: AuthedRequest, pk: UUID, allocation_id: UUID):
     get_for_update(pk)  # waits for other changes to the request
     allocation = get_object_or_404(
         AssetRequestAllocation.objects.select_related("item__asset_request", "asset", "consumable"),
@@ -131,7 +130,7 @@ def remove_allocation(request: HttpRequest, pk: UUID, allocation_id: UUID):
 
 @router.post("/{uuid:pk}/return", response=AssetRequestOut)
 @transaction.atomic
-def return_devices(request: HttpRequest, pk: UUID, payload: ReturnIn):
+def return_devices(request: AuthedRequest, pk: UUID, payload: ReturnIn):
     workflow.return_devices(
         get_for_update(pk),
         request.user,

@@ -2,7 +2,6 @@ from typing import Annotated
 from uuid import UUID
 
 from django.db.models import Prefetch, QuerySet
-from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
 from ninja import FilterLookup, FilterSchema, Query, Router
 from ninja.pagination import paginate
@@ -11,7 +10,7 @@ from apps.accounts.services import assignment
 from apps.accounts.services.assignment import Assigned, assigned_q
 from apps.core.api.pagination import Pagination
 from apps.core.api.querying import order, search
-from apps.core.api.security import permission_auth
+from apps.core.api.security import AuthedRequest, permission_auth
 from apps.inventory.models import AssetIssue, AssetIssueEntry
 from apps.inventory.schemas.asset_issue import (
     AssetIssueDetailOut,
@@ -48,7 +47,7 @@ def issue_queryset():
 @router.get("", response=list[AssetIssueOut])
 @paginate(Pagination)
 def list_issues(
-    request: HttpRequest,
+    request: AuthedRequest,
     filters: Query[IssueFilter],
     q: str | None = None,
     ordering: str | None = None,
@@ -95,12 +94,12 @@ def issue_detail(issues: QuerySet[AssetIssue], pk: UUID) -> AssetIssue:
 
 
 @router.get("/{uuid:pk}", response=AssetIssueDetailOut)
-def detail(request: HttpRequest, pk: UUID):
+def detail(request: AuthedRequest, pk: UUID):
     return issue_detail(AssetIssue.objects.all(), pk)
 
 
 @router.put("/{uuid:pk}", response=AssetIssueDetailOut)
-def update(request: HttpRequest, pk: UUID, payload: AssetIssueUpdateIn):
+def update(request: AuthedRequest, pk: UUID, payload: AssetIssueUpdateIn):
     """Change the status (into work, resolved, reopened), optionally with a message."""
     issue = get_object_or_404(AssetIssue, pk=pk)
     update_issue(issue, request.user, payload.status, payload.message, by_it=True)
@@ -108,13 +107,13 @@ def update(request: HttpRequest, pk: UUID, payload: AssetIssueUpdateIn):
 
 
 @router.post("/{uuid:pk}/messages", response=AssetIssueDetailOut)
-def message(request: HttpRequest, pk: UUID, payload: IssueMessageIn):
+def message(request: AuthedRequest, pk: UUID, payload: IssueMessageIn):
     post_message(get_object_or_404(AssetIssue, pk=pk), request.user, payload.text, by_it=True)
     return issue_detail(AssetIssue.objects.all(), pk)
 
 
 @router.post("/{uuid:pk}/assign", response=AssetIssueDetailOut)
-def assign(request: HttpRequest, pk: UUID, payload: AssignIn):
+def assign(request: AuthedRequest, pk: UUID, payload: AssignIn):
     issue = get_object_or_404(AssetIssue, pk=pk)
     if assignment.assign(issue, payload.team, payload.assignee, request.user):
         notifications.issue_assigned(issue)

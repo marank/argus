@@ -90,14 +90,15 @@ def test_empty_line_is_rejected(employee_client):
 def test_any_model_can_be_disabled_per_group(employee_client):
     accessories = Category.objects.get(code="mde-accessories")
     start = date.today() + timedelta(days=1)
+    item = {"category": str(accessories.pk), "quantity": 2}
     payload = {
         "title": "Handles",
         "duration": "permanent",
         "start_date": start.isoformat(),
-        "items": [{"category": str(accessories.pk), "quantity": 2}],
+        "items": [item],
     }
     response = employee_client.post("/api/requests", payload, content_type=JSON)
     assert response.status_code == 409
     # A custom request within the group is still possible.
-    payload["items"][0]["description"] = "Handle with strap"
+    item["description"] = "Handle with strap"
     assert employee_client.post("/api/requests", payload, content_type=JSON).status_code == 201

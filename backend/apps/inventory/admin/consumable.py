@@ -8,7 +8,7 @@ from apps.inventory.models import Consumable, ConsumableMovement
 class ConsumableMovementInline(admin.TabularInline):
     model = ConsumableMovement
     extra = 0
-    fields = ["created_at", "delta", "reason", "note", "performed_by", "recipient"]
+    fields = ("created_at", "delta", "reason", "note", "performed_by", "recipient")
     readonly_fields = fields
     can_delete = False
     ordering = ["-created_at"]

@@ -3,12 +3,13 @@
 from uuid import UUID
 
 from django.db import transaction
-from django.http import Http404, HttpRequest
+from django.http import Http404
 from ninja import Router
 from ninja.pagination import paginate
 
 from apps.core.api.pagination import Pagination
 from apps.core.api.querying import search
+from apps.core.api.security import AuthedRequest
 from apps.requests.models import AssetRequest
 from apps.requests.schemas.asset_request import (
     ApproveIn,
@@ -25,7 +26,7 @@ router = Router(tags=["approvals"])
 
 @router.get("", response=list[AssetRequestListOut])
 @paginate(Pagination)
-def list_approvals(request: HttpRequest, q: str | None = None):
+def list_approvals(request: AuthedRequest, q: str | None = None):
     """Requests waiting for a decision, the oldest first; once decided they leave the list."""
     queryset = (
         approvable_asset_requests(request.user)
@@ -39,7 +40,7 @@ def list_approvals(request: HttpRequest, q: str | None = None):
     )
 
 
-def _decidable(request: HttpRequest, pk: UUID) -> AssetRequest:
+def _decidable(request: AuthedRequest, pk: UUID) -> AssetRequest:
     """A locked request the user approves for; others are not found.
 
     Checked before any status check, so nobody learns the state of a request
@@ -52,13 +53,13 @@ def _decidable(request: HttpRequest, pk: UUID) -> AssetRequest:
 
 @router.post("/{uuid:pk}/approve", response=AssetRequestOut)
 @transaction.atomic
-def approve(request: HttpRequest, pk: UUID, payload: ApproveIn):
+def approve(request: AuthedRequest, pk: UUID, payload: ApproveIn):
     workflow.approve(_decidable(request, pk), request.user, payload.comment)
     return get_asset_request(request, pk, as_approver=True)
 
 
 @router.post("/{uuid:pk}/decline", response=AssetRequestOut)
 @transaction.atomic
-def decline(request: HttpRequest, pk: UUID, payload: DeclineIn):
+def decline(request: AuthedRequest, pk: UUID, payload: DeclineIn):
     workflow.decline(_decidable(request, pk), request.user, payload.comment)
     return get_asset_request(request, pk, as_approver=True)

@@ -17,7 +17,7 @@ class ComponentInline(admin.TabularInline):
     model = Asset
     fk_name = "parent"
     extra = 0
-    fields = ["inventory_number", "model", "serial_number", "status"]
+    fields = ("inventory_number", "model", "serial_number", "status")
     readonly_fields = fields
     can_delete = False
     show_change_link = True

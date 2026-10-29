@@ -28,6 +28,9 @@ VS Code tasks (`.vscode/tasks.json`) hold the everyday commands; the README list
 - Configuration only via environment variables (`config/env.py` helpers); every new variable gets a
   commented entry in `.env.example` and a row in the README table.
 - User-facing strings in English, wrapped in `gettext`; German goes into `backend/locale/de`.
+- mypy (`[tool.mypy]` in `pyproject.toml`) must pass; annotate new code. Endpoints behind auth take
+  `request: AuthedRequest` (`apps/core/api/security.py`), so `request.user` is a `User`.
+  `# type: ignore` only with an error code and a reason.
 - Backend coverage must stay ≥ 90 %. No GPL/AGPL/SSPL dependencies (CI license check).
 
 ## Frontend rules

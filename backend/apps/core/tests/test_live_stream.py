@@ -19,7 +19,9 @@ postgres_only = pytest.mark.skipif(
 
 
 def report(user: User) -> AssetIssue:
-    return report_issue(Asset.objects.first(), user, AssetIssue.Kind.DEFECT, "Display flickers")
+    asset = Asset.objects.first()
+    assert asset is not None
+    return report_issue(asset, user, AssetIssue.Kind.DEFECT, "Display flickers")
 
 
 def test_the_stream_is_unavailable_outside_the_asgi_process(employee_client):
@@ -57,7 +59,8 @@ def test_the_stream_passes_signals_only_to_whom_they_concern(demo, monkeypatch):
         response = await client.get("/api/events")
         assert response.status_code == 200
         assert response["Content-Type"] == "text/event-stream"
-        stream = aiter(response.streaming_content)
+        # The stubs type test client responses as non-streaming.
+        stream = aiter(response.streaming_content)  # type: ignore[attr-defined]
         assert await anext(stream) == b"retry: 3000\n\n"
         return stream
 
@@ -78,6 +81,7 @@ def test_the_stream_passes_signals_only_to_whom_they_concern(demo, monkeypatch):
         with pytest.raises(TimeoutError):
             await next_event(streams["stranger"], timeout=1)
 
+        assert hub.listener is not None
         hub.listener.cancel()
         for stream in streams.values():
             await stream.aclose()

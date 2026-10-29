@@ -278,7 +278,7 @@ confusion with the `request` argument of every API view.
 The VS Code task **Check: all** runs the same checks as CI; by hand:
 
 ```bash
-cd backend && uv run ruff check . && uv run ruff format --check . && uv run deptry . && uv run pytest --cov
+cd backend && uv run ruff check . && uv run ruff format --check . && uv run mypy . && uv run deptry . && uv run pytest --cov
 cd frontend && pnpm lint && pnpm format:check && pnpm type-check && pnpm test:coverage && pnpm check:licenses && pnpm build-only && pnpm size
 ```
 

@@ -256,7 +256,9 @@ def test_menu_counts_show_open_requests_approvals_and_reports(
     assert counts(approver_client)["approvals"] == 1
 
     employee = User.objects.get(username="employee")
-    issue = AssetIssue.objects.create(asset=Asset.objects.first(), description="Broken", reported_by=employee)
+    asset = Asset.objects.first()
+    assert asset is not None
+    issue = AssetIssue.objects.create(asset=asset, description="Broken", reported_by=employee)
     assert counts(employee_client)["issues"] == before["issues"] + 1
     assert counts(employee_client)["issues_updated"] is before["issues_updated"]
 

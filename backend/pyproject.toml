@@ -17,6 +17,8 @@ dependencies = [
 [dependency-groups]
 dev = [
     "deptry>=0.25.1",
+    "django-stubs>=6.1.2",
+    "mypy>=2.4.1",
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
     "pytest-django>=4.14.0",
@@ -62,3 +64,25 @@ extend_exclude = [".*/tests/", "conftest\\.py"]
 [tool.deptry.per_rule_ignores]
 # Used at runtime, never imported: the WSGI and ASGI servers.
 DEP002 = ["gunicorn", "uvicorn"]
+
+[tool.mypy]
+plugins = ["mypy_django_plugin.main"]
+exclude = ["/migrations/"]
+# Not (yet) strict: unannotated functions are allowed, but their bodies are checked.
+check_untyped_defs = true
+strict_equality = true
+extra_checks = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+
+[[tool.mypy.overrides]]
+module = ["*.migrations.*"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+# No type information published for ldap3.
+module = ["ldap3", "ldap3.*"]
+ignore_missing_imports = true
+
+[tool.django-stubs]
+django_settings_module = "config.settings"

@@ -26,7 +26,7 @@ class UserAdmin(BaseUserAdmin):
     actions = ["reset_two_factor"]
     autocomplete_fields = ["department"]
     fieldsets = (
-        *BaseUserAdmin.fieldsets,
+        *(BaseUserAdmin.fieldsets or ()),
         (
             _("Organisation"),
             {"fields": ("department", "employee_number", "job_title", "phone", "language")},

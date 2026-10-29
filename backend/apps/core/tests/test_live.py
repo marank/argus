@@ -31,7 +31,9 @@ def test_a_new_request_signals_its_requester(demo, employee_client, signals):
 
 def test_a_problem_report_signals_its_reporter(demo, signals):
     employee = User.objects.get(username="employee")
-    issue = report_issue(Asset.objects.first(), employee, AssetIssue.Kind.DEFECT, "Display flickers")
+    asset = Asset.objects.first()
+    assert asset is not None
+    issue = report_issue(asset, employee, AssetIssue.Kind.DEFECT, "Display flickers")
     assert ("issue", str(issue.pk), {str(employee.pk)}) in signals
 
 

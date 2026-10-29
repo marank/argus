@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from django.core.exceptions import ValidationError
@@ -5,6 +6,9 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from apps.core.models import TimeStampedModel
+
+if TYPE_CHECKING:
+    from .asset_model import AssetModel
 
 
 class Category(TimeStampedModel):
@@ -111,7 +115,7 @@ class Category(TimeStampedModel):
             raise ValidationError(
                 {"parent": _("A category cannot be placed below itself or one of its subcategories.")}
             )
-        if self.parent_id and self.parent.kind != self.kind:
+        if self.parent is not None and self.parent.kind != self.kind:
             raise ValidationError(
                 {"kind": _("A subcategory must have the same type as its parent category.")}
             )
@@ -174,3 +178,7 @@ class Category(TimeStampedModel):
             if node.team_id:
                 return node.team
         return None
+
+    # Set by the portal catalog (apps/requests/api/portal.py), not a column. Declared
+    # last: above the fields, "models" would shadow django.db.models in this class body.
+    models: list[AssetModel]

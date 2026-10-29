@@ -1,9 +1,8 @@
 """Site-wide notification switches per kind and channel (administrators only)."""
 
-from django.http import HttpRequest
 from ninja import Router, Schema
 
-from apps.core.api.security import superuser_auth
+from apps.core.api.security import AuthedRequest, superuser_auth
 from apps.core.models import MailSettings
 from apps.core.notifications import EVENT_KEYS, mail_ready, site_events
 
@@ -35,12 +34,12 @@ def _known(switches: dict[str, bool]) -> dict[str, bool]:
 
 
 @router.get("", response=NotificationSettingsOut)
-def get_notification_settings(request: HttpRequest):
+def get_notification_settings(request: AuthedRequest):
     return _out(MailSettings.load())
 
 
 @router.put("", response=NotificationSettingsOut)
-def update_notification_settings(request: HttpRequest, payload: NotificationSettingsIn):
+def update_notification_settings(request: AuthedRequest, payload: NotificationSettingsIn):
     settings = MailSettings.load()
     settings.events = {**settings.events, **_known(payload.mail)}
     settings.app_events = {**settings.app_events, **_known(payload.app)}

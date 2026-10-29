@@ -51,6 +51,7 @@ def test_assign_seats_until_full(it_client):
 
     # Freeing a seat makes room again.
     assignment = License.objects.get(pk=license_id).assignments.first()
+    assert assignment is not None
     response = it_client.delete(f"/api/inventory/licenses/{license_id}/assignments/{assignment.pk}")
     assert response.json()["seats_used"] == 1
 
@@ -64,6 +65,7 @@ def test_assignment_must_match_license_type(it_client):
     assert response.status_code == 409
 
     laptop = Asset.objects.filter(model__name="ThinkPad T14 Gen 5").first()
+    assert laptop is not None
     response = it_client.post(
         f"/api/inventory/licenses/{autocad.pk}/assignments", {"asset": str(laptop.pk)}, content_type=JSON
     )
@@ -202,6 +204,7 @@ def test_my_licenses_lists_user_and_device_seats(employee_client, it_client):
     from apps.inventory.models import License
 
     workstation = Asset.objects.filter(model__name="Precision 3680 Tower").first()
+    assert workstation is not None
     it_client.post(
         f"/api/inventory/assets/{workstation.pk}/assign",
         {"user": str(User.objects.get(username="employee").pk)},

@@ -2,7 +2,6 @@ import logging
 from typing import Annotated
 from uuid import UUID
 
-from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from ninja import FilterLookup, FilterSchema
@@ -13,7 +12,7 @@ from apps.accounts.permissions import WRITE, can
 from apps.accounts.schemas import UserIn, UserOut
 from apps.accounts.services import two_factor
 from apps.core.api.crud import CrudConfig, build_crud_router
-from apps.core.api.security import permission_auth
+from apps.core.api.security import AuthedRequest, permission_auth
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +24,7 @@ class UserFilter(FilterSchema):
     is_terminal: bool | None = None
 
 
-def protect_administrators(request: HttpRequest, user: User) -> None:
+def protect_administrators(request: AuthedRequest, user: User) -> None:
     if user.is_superuser and not request.user.is_superuser:
         raise HttpError(403, _("Only administrators can change or delete an administrator."))
     if request.method == "DELETE" and user.pk == request.user.pk:
@@ -41,7 +40,7 @@ def changes_members(data: dict, user: User | None, relation: str) -> bool:
     return set(wanted) != current
 
 
-def check_user_input(request: HttpRequest, data: dict, user: User | None) -> None:
+def check_user_input(request: AuthedRequest, data: dict, user: User | None) -> None:
     """Rights beyond editing users, and no lockout.
 
     Only administrators appoint administrators and hand out roles (otherwise anyone
@@ -55,7 +54,7 @@ def check_user_input(request: HttpRequest, data: dict, user: User | None) -> Non
         raise HttpError(403, _("You may not change teams."))
 
     own = user is not None and user.pk == request.user.pk
-    if own and user.is_active and data.get("is_active") is False:
+    if own and user is not None and user.is_active and data.get("is_active") is False:
         raise HttpError(409, _("You cannot deactivate your own account."))
 
     wanted = data.get("is_superuser")
@@ -115,7 +114,7 @@ router = build_crud_router(
 
 
 @router.post("/{uuid:pk}/two-factor/reset", response=UserOut, auth=permission_auth("users", WRITE))
-def reset_two_factor(request: HttpRequest, pk: UUID):
+def reset_two_factor(request: AuthedRequest, pk: UUID):
     """For users who lost their phone and backup codes: they sign in with the password alone again."""
     user = get_object_or_404(User.objects.select_related("department", "terminal_location__parent"), pk=pk)
     if user.pk == request.user.pk:

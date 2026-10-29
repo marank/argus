@@ -1,7 +1,9 @@
 from datetime import date, timedelta
+from typing import TYPE_CHECKING
 
 import pytest
 from django.core import mail
+from django.core.mail import EmailMultiAlternatives
 from django.core.management import call_command
 from django.test import Client
 from django.utils import timezone
@@ -10,6 +12,9 @@ from apps.accounts.models import User
 from apps.core.models import MailSettings, SiteSettings
 from apps.masterdata.models import Category
 from apps.requests.models import AssetRequest
+
+if TYPE_CHECKING:
+    from django.test.client import _MonkeyPatchedWSGIResponse
 
 JSON = "application/json"
 
@@ -25,7 +30,7 @@ def mail_on(demo):
     return settings
 
 
-def submit(client, days: int = 3) -> dict:
+def submit(client: Client, days: int = 3) -> _MonkeyPatchedWSGIResponse:
     start = date.today() + timedelta(days=1)
     response = client.post(
         "/api/requests",
@@ -57,7 +62,9 @@ def test_mails_come_in_the_app_layout_too(mail_on, employee_client, django_captu
     with django_capture_on_commit_callbacks(execute=True):
         submit(employee_client)
     message = mail.outbox[0]
+    assert isinstance(message, EmailMultiAlternatives)
     html, mimetype = message.alternatives[0]
+    assert isinstance(html, str)
     assert mimetype == "text/html"
     assert 'href="https://argus.example.com/requests/' in html
     assert "https://argus.example.com/profile/notifications" in html

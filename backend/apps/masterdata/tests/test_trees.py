@@ -66,6 +66,7 @@ def test_categories_and_locations_can_be_created_through_the_api(demo):
     assert response.status_code == 201, response.content
 
     root = Location.objects.first()
+    assert root is not None
     response = admin.post(
         "/api/masterdata/locations",
         {"name": "Store room", "code": "t-store", "parent": str(root.pk)},
@@ -82,7 +83,9 @@ def test_category_code_is_optional_but_unique_when_given(demo):
         assert response.status_code == 201, response.content
         assert response.json()["code"] == ""
 
-    taken = Category.objects.exclude(code="").first().code
+    coded = Category.objects.exclude(code="").first()
+    assert coded is not None
+    taken = coded.code
     response = admin.post(
         "/api/masterdata/categories", {"name": "Copy", "code": taken}, content_type="application/json"
     )
@@ -133,6 +136,7 @@ def test_the_default_team_applies_where_nothing_else_does(demo):
     hardware = Team.objects.create(name="Hardware")
     mde = Category.objects.create(name="MDEs", code="t-mde")
     model = AssetModel.objects.filter(tracking="serialized").first()
+    assert model is not None
     model.category, model.team = mde, None
     model.save()
 

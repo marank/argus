@@ -97,15 +97,18 @@ def issue_answered(issue: AssetIssue, message: str, *, resolved: bool = False) -
 
 
 def license_expiring(license: License) -> None:
+    valid_until = license.valid_until
+    assert valid_until is not None  # only licenses that end are reminded of
+
     def render(user):
         subject = _("License ends on %(date)s: %(name)s") % {
-            "date": formats.date_format(license.valid_until, "SHORT_DATE_FORMAT"),
+            "date": formats.date_format(valid_until, "SHORT_DATE_FORMAT"),
             "name": license.model.full_name,
         }
         body = _("The license %(name)s %(reference)s ends on %(date)s.") % {
             "name": license.model.full_name,
             "reference": f"({license.reference})" if license.reference else "",
-            "date": formats.date_format(license.valid_until, "SHORT_DATE_FORMAT"),
+            "date": formats.date_format(valid_until, "SHORT_DATE_FORMAT"),
         }
         return subject, body
 

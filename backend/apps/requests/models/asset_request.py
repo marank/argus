@@ -1,9 +1,14 @@
+from typing import TYPE_CHECKING
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from apps.core.models import TimeStampedModel
+
+if TYPE_CHECKING:
+    from apps.accounts.models import User
 
 
 class AssetRequest(TimeStampedModel):
@@ -196,6 +201,9 @@ class AssetRequest(TimeStampedModel):
     confirmed_at = models.DateTimeField(_("confirmed at"), null=True, blank=True)
     handed_out_at = models.DateTimeField(_("handed out at"), null=True, blank=True)
     completed_at = models.DateTimeField(_("completed at"), null=True, blank=True)
+
+    # Cached by ``schemas.asset_request.pending_approvers``, not a column.
+    _pending_approvers: list[User]
 
     class Meta:
         verbose_name = _("request")

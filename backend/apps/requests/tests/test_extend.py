@@ -17,7 +17,9 @@ def extend(client, rid, end):
 
 def test_extend_moves_the_return_date(employee_client, it_client):
     rid = handed_out(employee_client, it_client)
-    new_end = AssetRequest.objects.get(pk=rid).end_date + timedelta(days=60)
+    end_date = AssetRequest.objects.get(pk=rid).end_date
+    assert end_date is not None
+    new_end = end_date + timedelta(days=60)
     response = extend(it_client, rid, new_end)
     assert response.status_code == 200, response.content
     data = response.json()

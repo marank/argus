@@ -61,6 +61,7 @@ def test_write_right_allows_changes(staff, staff_client):
     assert response.status_code == 204
     # Other master data stays closed.
     category = Category.objects.first()
+    assert category is not None
     response = staff_client.delete(f"/api/masterdata/categories/{category.pk}")
     assert response.status_code == 403
 
@@ -285,6 +286,7 @@ def test_terminal_location_only_for_terminals(demo):
     admin = Client()
     admin.login(username="admin", password="argus-demo")
     location = Location.objects.first()
+    assert location is not None
     user = User.objects.create_user("kiosk")
     url = f"/api/accounts/users/{user.pk}"
     data = {"username": "kiosk", "terminal_location": str(location.pk)}

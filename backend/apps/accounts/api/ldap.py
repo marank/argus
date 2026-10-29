@@ -1,6 +1,5 @@
 """LDAP login settings and user sync (administrators only)."""
 
-from django.http import HttpRequest
 from django.utils.translation import gettext as _
 from ninja import Router
 from ninja.errors import HttpError
@@ -17,7 +16,7 @@ from apps.accounts.schemas import (
     LdapTestOut,
 )
 from apps.accounts.services import ldap
-from apps.core.api.security import superuser_auth
+from apps.core.api.security import AuthedRequest, superuser_auth
 
 router = Router(tags=["settings"], auth=superuser_auth)
 
@@ -50,12 +49,12 @@ def _changes(payload: LdapSettingsIn) -> dict:
 
 
 @router.get("", response=LdapSettingsOut)
-def get_settings(request: HttpRequest):
+def get_settings(request: AuthedRequest):
     return _out(ldap.load_config())
 
 
 @router.put("", response=LdapSettingsOut)
-def update_settings(request: HttpRequest, payload: LdapSettingsIn):
+def update_settings(request: AuthedRequest, payload: LdapSettingsIn):
     stored = LdapSettings.load()
     locked = ldap.env_overrides().keys()
     # Fields set by the environment are left untouched in the database.
@@ -68,7 +67,7 @@ def update_settings(request: HttpRequest, payload: LdapSettingsIn):
 
 
 @router.post("/test", response=LdapTestOut)
-def test_settings(request: HttpRequest, payload: LdapTestIn):
+def test_settings(request: AuthedRequest, payload: LdapTestIn):
     """Try the (possibly unsaved) configuration: service bind and optional user lookup."""
     config = ldap.load_config(**_changes(payload))
     try:
@@ -98,7 +97,7 @@ def _item_out(item: ldap.SyncItem) -> dict:
 
 
 @router.post("/sync/preview", response=LdapSyncPreviewOut)
-def sync_preview(request: HttpRequest, payload: LdapSyncQueryIn):
+def sync_preview(request: AuthedRequest, payload: LdapSyncQueryIn):
     """Which users a filter would create or update; nothing is changed."""
     try:
         result = ldap.preview_sync(_sync_config(), payload.filter, payload.search_base)
@@ -112,7 +111,7 @@ def sync_preview(request: HttpRequest, payload: LdapSyncQueryIn):
 
 
 @router.post("/sync/apply", response=LdapSyncResultOut)
-def sync_apply(request: HttpRequest, payload: LdapSyncApplyIn):
+def sync_apply(request: AuthedRequest, payload: LdapSyncApplyIn):
     """Create or update the users of the chosen preview entries."""
     try:
         return ldap.apply_sync(_sync_config(), payload.filter, payload.search_base, payload.dns)

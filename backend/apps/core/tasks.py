@@ -6,6 +6,7 @@ so switching mail off also stops queued mails.
 """
 
 from datetime import timedelta
+from uuid import UUID
 
 from django.utils import timezone, translation
 from procrastinate import RetryStrategy
@@ -40,7 +41,7 @@ def send_notification(
     with translation.override(language):
         send_mail(settings, to, subject, body, url=url, manage_url=manage_url)
     if key:
-        NotificationLog.objects.get_or_create(event=event, key=key, recipient_id=recipient)
+        NotificationLog.objects.get_or_create(event=event, key=key, recipient_id=UUID(recipient))
 
 
 @app.periodic(cron="0 * * * *")

@@ -2,11 +2,12 @@ from uuid import UUID
 
 from django.db.models import Prefetch, QuerySet, Sum
 from django.db.models.functions import Coalesce
-from django.http import Http404, HttpRequest
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 
 from apps.accounts.models import Department
 from apps.accounts.permissions import can
+from apps.core.api.security import AuthedRequest
 from apps.requests.models import (
     AssetRequest,
     AssetRequestAllocation,
@@ -58,7 +59,7 @@ def asset_request_queryset() -> QuerySet[AssetRequest]:
     )
 
 
-def visible_asset_requests(request: HttpRequest) -> QuerySet[AssetRequest]:
+def visible_asset_requests(request: AuthedRequest) -> QuerySet[AssetRequest]:
     queryset = asset_request_queryset()
     if can(request.user, "requests"):
         return queryset
@@ -77,7 +78,7 @@ def approvable_asset_requests(user) -> QuerySet[AssetRequest]:
     )
 
 
-def get_asset_request(request: HttpRequest, pk: UUID, *, as_approver: bool = False) -> AssetRequest:
+def get_asset_request(request: AuthedRequest, pk: UUID, *, as_approver: bool = False) -> AssetRequest:
     """A request the user may see; ``as_approver`` adds those they decide on."""
     asset_request = visible_asset_requests(request).filter(pk=pk).first()
     if asset_request is None and as_approver:

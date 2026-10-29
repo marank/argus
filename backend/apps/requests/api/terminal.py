@@ -4,13 +4,12 @@ from uuid import UUID
 
 from django.db import transaction
 from django.db.models import Q
-from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
 from ninja import Router
 
 from apps.accounts.models import User
 from apps.core.api.querying import search, search_words
-from apps.core.api.security import terminal_auth
+from apps.core.api.security import AuthedRequest, terminal_auth
 from apps.requests.models import AssetRequest
 from apps.requests.schemas.terminal import (
     TerminalPersonOut,
@@ -38,7 +37,7 @@ def pickups(user):
 
 
 @router.get("/pickups", response=list[TerminalPickupOut])
-def list_pickups(request: HttpRequest, q: str | None = None):
+def list_pickups(request: AuthedRequest, q: str | None = None):
     """Prepared pickups, next pickup first."""
     queryset = search(
         pickups(request.user),
@@ -49,13 +48,13 @@ def list_pickups(request: HttpRequest, q: str | None = None):
 
 
 @router.get("/pickups/{uuid:pk}", response=TerminalPickupDetailOut)
-def get_pickup(request: HttpRequest, pk: UUID):
+def get_pickup(request: AuthedRequest, pk: UUID):
     return get_object_or_404(pickups(request.user), pk=pk)
 
 
 @router.post("/pickups/{uuid:pk}/sign", response=TerminalPickupDetailOut)
 @transaction.atomic
-def sign(request: HttpRequest, pk: UUID, payload: TerminalSignIn):
+def sign(request: AuthedRequest, pk: UUID, payload: TerminalSignIn):
     """Complete the hand-out with the collecting person's signature."""
     asset_request = get_object_or_404(pickups(request.user), pk=pk)
     workflow.hand_out(
@@ -73,13 +72,13 @@ def sign(request: HttpRequest, pk: UUID, payload: TerminalSignIn):
 
 
 @router.get("/staff", response=list[TerminalStaffOut])
-def staff(request: HttpRequest):
+def staff(request: AuthedRequest):
     """IT staff members, to name who hands out when it is not the one who prepared the pickup."""
     return list(User.objects.filter(is_active=True, is_staff=True, is_terminal=False))
 
 
 @router.get("/people", response=list[TerminalPersonOut])
-def people(request: HttpRequest, q: str = ""):
+def people(request: AuthedRequest, q: str = ""):
     """Minimal employee lookup to record who collects the devices.
 
     Every word must match the first or last name, the username or the employee

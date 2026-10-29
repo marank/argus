@@ -27,6 +27,7 @@ def test_full_demo_data_covers_every_state(db):
     # Teams: requests routed by model and default, every tab of the lists filled.
     assert Team.objects.get(is_default=True).name == "IT-Support"
     ledgerline = AssetRequest.objects.get(title="Ledgerline access for the monthly reports")
+    assert ledgerline.assigned_team is not None
     assert ledgerline.assigned_team.name == "Ledgerline"
     assert AssetRequest.objects.filter(assigned_team__isnull=True, assignee__isnull=True).exists()
     assert AssetRequest.objects.filter(assignee__username="jkoch").exists()

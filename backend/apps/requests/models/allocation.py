@@ -90,10 +90,11 @@ class AssetRequestAllocation(UUIDModel):
     @property
     def model(self):
         """The catalog model of what was allocated."""
-        if self.asset_id:
+        if self.asset:
             return self.asset.model
-        if self.consumable_id:
+        if self.consumable:
             return self.consumable.model
+        assert self.license is not None  # clean(): exactly one of asset, consumable, license
         return self.license.model
 
     @property

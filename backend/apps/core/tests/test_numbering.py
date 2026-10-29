@@ -139,6 +139,7 @@ def test_a_hand_entered_inventory_number_is_skipped_by_the_sequence(it_client):
     from apps.masterdata.models import AssetModel
 
     model = AssetModel.objects.filter(tracking="serialized").first()
+    assert model is not None
     sequence = model.effective_number_sequence() or NumberSequence.objects.get(code="asset")
     sequence.refresh_from_db()
     upcoming = sequence.preview()

@@ -20,7 +20,8 @@ class LdapSettingsForm(forms.ModelForm):
         fields = ldap.CONFIG_FIELDS
 
     def clean(self):
-        data = super().clean()
+        super().clean()
+        data = self.cleaned_data
         if data.get("clear_bind_password"):
             data["bind_password"] = ""
         elif not data.get("bind_password"):

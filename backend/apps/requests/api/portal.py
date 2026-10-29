@@ -4,13 +4,13 @@ from datetime import date, timedelta
 from uuid import UUID
 
 from django.db.models import Prefetch, Q
-from django.http import Http404, HttpRequest
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from ninja import Router, Status
 
 from apps.accounts.permissions import can
-from apps.core.api.security import permission_auth
+from apps.core.api.security import AuthedRequest, permission_auth
 from apps.core.features import is_enabled
 from apps.core.models import SiteSettings
 from apps.inventory.api.issues import issue_detail
@@ -60,7 +60,7 @@ def _set_counts(target, counts: Counts | None) -> None:
 
 @router.get("/catalog", response=list[CatalogCategoryOut])
 def catalog(
-    request: HttpRequest, start: date | None = None, end: date | None = None, permanent: bool = False
+    request: AuthedRequest, start: date | None = None, end: date | None = None, permanent: bool = False
 ):
     """Requestable categories with their models.
 
@@ -91,7 +91,7 @@ def catalog(
 
 
 @router.get("/availability", response=AvailabilityOut, auth=permission_auth("requests"))
-def availability(request: HttpRequest, start: date, end: date | None = None, permanent: bool = False):
+def availability(request: AuthedRequest, start: date, end: date | None = None, permanent: bool = False):
     """Counts of all models and categories for a period; the request form refreshes with it."""
     model_counts, category_counts = period_availability(*_period(start, end, permanent))
     return {
@@ -101,7 +101,7 @@ def availability(request: HttpRequest, start: date, end: date | None = None, per
 
 
 @router.get("/my-consumables", response=list[MyConsumablesOut])
-def my_consumables(request: HttpRequest):
+def my_consumables(request: AuthedRequest):
     """Requestable consumables that fit the employee's devices, grouped by device.
 
     A consumable fits when it is assigned to the device itself or marked as
@@ -178,7 +178,7 @@ def _own_assets(user, assets, issues) -> list[dict]:
 
 
 @router.get("/my-assets", response=list[MyAssetOut])
-def my_assets(request: HttpRequest):
+def my_assets(request: AuthedRequest):
     """Devices currently handed out to the logged-in employee."""
     # Open reports, plus resolved ones of the last 14 days so the answer stays visible.
     recent = timezone.now() - timedelta(days=14)
@@ -187,7 +187,7 @@ def my_assets(request: HttpRequest):
 
 
 @router.get("/my-assets/{uuid:pk}", response=MyAssetOut)
-def my_asset(request: HttpRequest, pk: UUID):
+def my_asset(request: AuthedRequest, pk: UUID):
     """One of the employee's devices with all its problem reports."""
     devices = _own_assets(request.user, Asset.objects.filter(pk=pk), AssetIssue.objects.all())
     if not devices:
@@ -196,14 +196,14 @@ def my_asset(request: HttpRequest, pk: UUID):
 
 
 @router.post("/my-assets/{uuid:pk}/issues", response={201: OwnIssueOut})
-def report(request: HttpRequest, pk: UUID, payload: AssetIssueIn):
+def report(request: AuthedRequest, pk: UUID, payload: AssetIssueIn):
     """Report a problem with one of the employee's own devices; IT sees it under problem reports."""
     asset = get_object_or_404(Asset, pk=pk, assigned_to=request.user)
     return Status(201, report_issue(asset, request.user, payload.kind, payload.description))
 
 
 @router.get("/my-issues", response=list[OwnIssueWithDeviceOut])
-def my_issues(request: HttpRequest):
+def my_issues(request: AuthedRequest):
     """All problems the employee has reported, newest first."""
     issues = with_messages(
         AssetIssue.objects.filter(reported_by=request.user).select_related(
@@ -215,12 +215,12 @@ def my_issues(request: HttpRequest):
     return issues
 
 
-def _own_issues(request: HttpRequest):
+def _own_issues(request: AuthedRequest):
     return AssetIssue.objects.filter(reported_by=request.user)
 
 
 @router.get("/my-issues/{uuid:pk}", response=AssetIssueDetailOut)
-def my_issue(request: HttpRequest, pk: UUID):
+def my_issue(request: AuthedRequest, pk: UUID):
     """One of the employee's reports with its conversation; opening it marks IT's updates seen."""
     issue = issue_detail(_own_issues(request), pk)
     mark_seen(request.user, issue)
@@ -228,13 +228,13 @@ def my_issue(request: HttpRequest, pk: UUID):
 
 
 @router.post("/my-issues/{uuid:pk}/messages", response=AssetIssueDetailOut)
-def my_issue_message(request: HttpRequest, pk: UUID, payload: IssueMessageIn):
+def my_issue_message(request: AuthedRequest, pk: UUID, payload: IssueMessageIn):
     post_message(get_object_or_404(_own_issues(request), pk=pk), request.user, payload.text, by_it=False)
     return issue_detail(_own_issues(request), pk)
 
 
 @router.post("/my-issues/{uuid:pk}/resolve", response=AssetIssueDetailOut)
-def my_issue_resolve(request: HttpRequest, pk: UUID, payload: IssueMessageIn):
+def my_issue_resolve(request: AuthedRequest, pk: UUID, payload: IssueMessageIn):
     """The employee marks the problem resolved, optionally saying how."""
     issue = get_object_or_404(_own_issues(request), pk=pk)
     update_issue(issue, request.user, AssetIssue.Status.RESOLVED, payload.text, by_it=False)
@@ -242,7 +242,7 @@ def my_issue_resolve(request: HttpRequest, pk: UUID, payload: IssueMessageIn):
 
 
 @router.get("/menu-counts", response=MenuCountsOut)
-def menu_counts(request: HttpRequest):
+def menu_counts(request: AuthedRequest):
     """Open requests, approvals and problem reports of the user, for the badges in the menu.
 
     Approvals always wait for the user; reports only when IT changed one since the user last opened it.
@@ -260,7 +260,7 @@ def menu_counts(request: HttpRequest):
 
 
 @router.get("/my-licenses", response=list[OwnLicenseOut])
-def my_licenses(request: HttpRequest):
+def my_licenses(request: AuthedRequest):
     """Software the employee uses: seats assigned to them or to one of their devices."""
     return list(
         LicenseAssignment.objects.filter(Q(user=request.user) | Q(asset__assigned_to=request.user))

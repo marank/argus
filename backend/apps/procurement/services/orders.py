@@ -32,13 +32,14 @@ def _save_lines(order: PurchaseOrder, lines: list[dict]) -> None:
         raise BusinessError(_("An order needs at least one line."))
     keep = []
     for position, data in enumerate(lines):
-        line = order.lines.filter(pk=data.get("id")).first() if data.get("id") else None
+        line_id = data.get("id")
+        line = order.lines.filter(pk=line_id).first() if line_id else None
         line = line or PurchaseOrderLine(order=order)
         line.asset_model_id = data.get("asset_model")
         line.description = data.get("description", "")
         line.quantity = data["quantity"]
         line.unit_price = data.get("unit_price")
-        if line.unit_price is None and line.asset_model_id:
+        if line.unit_price is None and line.asset_model is not None:
             line.unit_price = line.asset_model.list_price
         line.asset_request_item_id = data.get("asset_request_item")
         line.position = position
@@ -141,7 +142,8 @@ def receive(order: PurchaseOrder, receipts: list[dict], user) -> PurchaseOrder:
             )
 
         item = line.asset_request_item
-        allocate = item is not None and item.asset_request.status == AssetRequest.Status.CONFIRMED
+        if item is not None and item.asset_request.status != AssetRequest.Status.CONFIRMED:
+            item = None  # only confirmed requests get the delivered units
 
         if model.is_bulk:
             if not location_id:
@@ -155,7 +157,7 @@ def receive(order: PurchaseOrder, receipts: list[dict], user) -> PurchaseOrder:
                 purchase_order_line=line,
                 note=order.number,
             )
-            if allocate:
+            if item is not None:
                 take = min(quantity, item.quantity_missing)
                 if take:
                     workflow.allocate_consumable(item, consumable, take, user)
@@ -178,7 +180,7 @@ def receive(order: PurchaseOrder, receipts: list[dict], user) -> PurchaseOrder:
                     },
                     user,
                 )
-                if allocate and item.quantity_missing:
+                if item is not None and item.quantity_missing:
                     workflow.allocate_asset(item, asset, user)
 
         line.quantity_received += quantity

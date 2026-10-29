@@ -20,7 +20,7 @@ def _pickup(asset_request: AssetRequest) -> str:
     if not asset_request.pickup_at:
         return ""
     when = formats.date_format(timezone.localtime(asset_request.pickup_at), "SHORT_DATETIME_FORMAT")
-    place = f", {asset_request.pickup_location.full_name}" if asset_request.pickup_location_id else ""
+    place = f", {asset_request.pickup_location.full_name}" if asset_request.pickup_location else ""
     return _("Pickup: %(when)s%(place)s") % {"when": when, "place": place}
 
 
@@ -65,10 +65,13 @@ def approval_requested(asset_request: AssetRequest) -> None:
 
 
 def approval_declined(asset_request: AssetRequest) -> None:
+    approver = asset_request.approver
+    assert approver is not None  # workflow.decline records who declined first
+
     def render(user):
         subject = _("Your request %(number)s was declined") % {"number": asset_request.number}
         body = _("%(name)s did not approve your request “%(title)s”.") % {
-            "name": asset_request.approver.display_name,
+            "name": approver.display_name,
             "title": asset_request.title,
         }
         if asset_request.approval_comment:

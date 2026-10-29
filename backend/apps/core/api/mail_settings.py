@@ -1,11 +1,10 @@
 """SMTP server and sender (administrators only); the switches per kind are in ``notification_settings``."""
 
-from django.http import HttpRequest
 from django.utils.translation import gettext as _
 from ninja import Router, Schema
 from ninja.errors import HttpError
 
-from apps.core.api.security import superuser_auth
+from apps.core.api.security import AuthedRequest, superuser_auth
 from apps.core.models import MailSettings
 from apps.core.notifications import link, send_mail
 
@@ -56,12 +55,12 @@ def _out(settings: MailSettings) -> dict:
 
 
 @router.get("", response=MailSettingsOut)
-def get_mail_settings(request: HttpRequest):
+def get_mail_settings(request: AuthedRequest):
     return _out(MailSettings.load())
 
 
 @router.put("", response=MailSettingsOut)
-def update_mail_settings(request: HttpRequest, payload: MailSettingsIn):
+def update_mail_settings(request: AuthedRequest, payload: MailSettingsIn):
     settings = MailSettings.load()
     data = payload.dict()
     password = data.pop("password")
@@ -77,7 +76,7 @@ def update_mail_settings(request: HttpRequest, payload: MailSettingsIn):
 
 
 @router.post("/test", response={200: dict})
-def send_test_mail(request: HttpRequest, payload: TestMailIn):
+def send_test_mail(request: AuthedRequest, payload: TestMailIn):
     """Send a test email with the stored settings."""
     settings = MailSettings.load()
     if not (settings.host and settings.from_email):

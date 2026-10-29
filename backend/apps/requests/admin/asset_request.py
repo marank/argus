@@ -26,7 +26,7 @@ class AssetRequestEventInline(admin.TabularInline):
     model = AssetRequestEvent
     extra = 0
     can_delete = False
-    fields = ["at", "kind", "actor", "data"]
+    fields = ("at", "kind", "actor", "data")
     readonly_fields = fields
 
     def has_add_permission(self, request, obj=None) -> bool:
@@ -37,7 +37,7 @@ class HandoverInline(admin.StackedInline):
     model = Handover
     extra = 0
     can_delete = False
-    fields = [
+    fields = (
         "method",
         "received_by",
         "received_by_name",
@@ -46,7 +46,7 @@ class HandoverInline(admin.StackedInline):
         "handed_out_by",
         "handed_out_at",
         "signature_preview",
-    ]
+    )
     readonly_fields = fields
 
     def has_add_permission(self, request, obj=None) -> bool:

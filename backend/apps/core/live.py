@@ -17,6 +17,7 @@ from collections.abc import Callable, Iterable
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
+from django.db.models import Model
 from django.db.models.signals import post_delete, post_save
 
 CHANNEL = "argus_live"
@@ -44,7 +45,7 @@ def visible_to(event: dict, user_id: str, is_staff: bool) -> bool:
 Signal = tuple[str, object, Iterable]
 
 
-def track(model, signal: Callable[[object], Signal | None]) -> None:
+def track[M: Model](model: type[M], signal: Callable[[M], Signal | None]) -> None:
     """Publish ``signal(instance)`` (topic, id, users) when an instance of ``model`` is saved or deleted."""
 
     def changed(sender, instance, **kwargs):

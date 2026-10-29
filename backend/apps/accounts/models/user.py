@@ -1,4 +1,5 @@
 import uuid
+from typing import ClassVar
 
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
@@ -6,21 +7,21 @@ from django.db.models.functions import Lower
 from django.utils.translation import gettext_lazy as _
 
 
-class CaseInsensitiveUserManager(UserManager):
+class CaseInsensitiveUserManager(UserManager["User"]):
     """Usernames are compared without regard to case, like in Active Directory.
 
     ``get_by_natural_key`` is what the login (``ModelBackend``) and management
     commands use; the stored username keeps the spelling it was created with.
     """
 
-    def get_by_natural_key(self, username):
+    def get_by_natural_key(self, username: str | None) -> User:
         return self.get(**{f"{self.model.USERNAME_FIELD}__iexact": username})
 
 
 class User(AbstractUser):
     """Employee account. ``is_staff`` marks members of the IT department."""
 
-    objects = CaseInsensitiveUserManager()
+    objects: ClassVar[CaseInsensitiveUserManager] = CaseInsensitiveUserManager()
 
     class Language(models.TextChoices):
         ENGLISH = "en", _("English")

@@ -3,7 +3,6 @@ from typing import Annotated
 from uuid import UUID
 
 from django.db.models import ProtectedError, Q
-from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from ninja import FilterLookup, FilterSchema, Query, Router, Status
@@ -11,7 +10,7 @@ from ninja.pagination import paginate
 
 from apps.core.api.pagination import Pagination
 from apps.core.api.querying import order, search
-from apps.core.api.security import permission_auth
+from apps.core.api.security import AuthedRequest, permission_auth
 from apps.core.exceptions import BusinessError
 from apps.inventory.models import Asset
 from apps.inventory.schemas.asset import (
@@ -87,7 +86,7 @@ def asset_queryset():
 @router.get("", response=list[AssetOut])
 @paginate(Pagination)
 def list_assets(
-    request: HttpRequest,
+    request: AuthedRequest,
     filters: Query[AssetFilter],
     q: str | None = None,
     ordering: str | None = None,
@@ -97,18 +96,18 @@ def list_assets(
 
 
 @router.get("/{uuid:pk}", response=AssetDetailOut)
-def get_asset(request: HttpRequest, pk: UUID):
+def get_asset(request: AuthedRequest, pk: UUID):
     return get_object_or_404(asset_queryset(), pk=pk)
 
 
 @router.post("", response={201: AssetDetailOut})
-def create_asset(request: HttpRequest, payload: AssetIn):
+def create_asset(request: AuthedRequest, payload: AssetIn):
     asset = asset_service.create_asset(payload.dict(), request.user)
     return Status(201, get_asset(request, asset.pk))
 
 
 @router.post("/bulk", response={201: list[AssetOut]})
-def bulk_create_assets(request: HttpRequest, payload: AssetBulkIn):
+def bulk_create_assets(request: AuthedRequest, payload: AssetBulkIn):
     """Create several devices of the same model from a list of scanned serial numbers."""
     data = payload.dict()
     serials = data.pop("serial_numbers")
@@ -117,14 +116,14 @@ def bulk_create_assets(request: HttpRequest, payload: AssetBulkIn):
 
 
 @router.get("/series/preview", response=AssetSeriesPreviewOut)
-def preview_series(request: HttpRequest, model: UUID, count: int = 1):
+def preview_series(request: AuthedRequest, model: UUID, count: int = 1):
     """The inventory numbers a series of ``count`` devices of ``model`` would get."""
     asset_model = get_object_or_404(AssetModel.objects.select_related("category", "manufacturer"), pk=model)
     return asset_service.preview_series(asset_model, count)
 
 
 @router.post("/series", response={201: list[AssetOut]})
-def create_series(request: HttpRequest, payload: AssetSeriesIn):
+def create_series(request: AuthedRequest, payload: AssetSeriesIn):
     """Create several identical devices of one model, numbered in a row from its sequence."""
     data = payload.dict()
     count = data.pop("count")
@@ -133,14 +132,14 @@ def create_series(request: HttpRequest, payload: AssetSeriesIn):
 
 
 @router.put("/{uuid:pk}", response=AssetDetailOut)
-def update_asset(request: HttpRequest, pk: UUID, payload: AssetIn):
+def update_asset(request: AuthedRequest, pk: UUID, payload: AssetIn):
     asset = get_object_or_404(Asset, pk=pk)
     asset_service.update_asset(asset, payload.dict(), request.user)
     return get_asset(request, pk)
 
 
 @router.post("/{uuid:pk}/assign", response=AssetDetailOut)
-def assign_asset(request: HttpRequest, pk: UUID, payload: AssignIn):
+def assign_asset(request: AuthedRequest, pk: UUID, payload: AssignIn):
     """Hand a device to an employee directly, or take it back with ``user: null``."""
     asset = get_object_or_404(Asset, pk=pk)
     asset_service.update_asset(asset, {"assigned_to": payload.user}, request.user)
@@ -148,7 +147,7 @@ def assign_asset(request: HttpRequest, pk: UUID, payload: AssignIn):
 
 
 @router.delete("/{uuid:pk}", response={204: None})
-def delete_asset(request: HttpRequest, pk: UUID):
+def delete_asset(request: AuthedRequest, pk: UUID):
     try:
         get_object_or_404(Asset, pk=pk).delete()
     except ProtectedError as exc:

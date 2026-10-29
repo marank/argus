@@ -13,7 +13,7 @@ from ninja.utils import check_csrf
 from apps.accounts.models import TwoFactor
 from apps.accounts.schemas import CodeIn, CurrentUserOut, PreferencesIn, TwoFactorChallengeOut
 from apps.accounts.services import throttle, two_factor
-from apps.core.api.security import session_auth
+from apps.core.api.security import AuthedRequest, session_auth
 from apps.core.notifications import receivable
 
 # Plain session auth: the pickup terminal account must be able to sign in and out too.
@@ -102,7 +102,7 @@ def resend_login_code(request: HttpRequest):
 
 
 @router.post("/logout", response={204: None})
-def logout_view(request: HttpRequest):
+def logout_view(request: AuthedRequest):
     logout(request)
     return Status(204, None)
 
@@ -156,12 +156,12 @@ def clean_dashboard_settings(value: dict | None) -> dict:
 
 
 @router.get("/me", response=CurrentUserOut)
-def me(request: HttpRequest):
+def me(request: AuthedRequest):
     return request.user
 
 
 @router.patch("/me", response=CurrentUserOut)
-def update_preferences(request: HttpRequest, payload: PreferencesIn):
+def update_preferences(request: AuthedRequest, payload: PreferencesIn):
     user = request.user
     for name, value in payload.dict(exclude_unset=True).items():
         if name in ("notification_settings", "app_notification_settings"):

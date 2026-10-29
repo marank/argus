@@ -47,12 +47,13 @@ def submit(client, item: dict) -> dict:
     return response.json()
 
 
-def team_of(asset_request: dict) -> str | None:
+def team_of(asset_request: dict) -> Team | None:
     return AssetRequest.objects.get(pk=asset_request["id"]).assigned_team
 
 
 def test_requests_route_by_model_then_category_then_default(employee_client, demo):
     laptop = AssetModel.objects.filter(category__code="laptops").first()
+    assert laptop is not None
     support = Team.objects.create(name="IT-Support", is_default=True)
     hardware = Team.objects.create(name="Hardware")
     special = Team.objects.create(name="Special")
@@ -62,7 +63,7 @@ def test_requests_route_by_model_then_category_then_default(employee_client, dem
 
     # Inherited from a parent category.
     root = laptop.category
-    while root.parent_id:
+    while root.parent is not None:
         root = root.parent
     root.team = hardware
     root.save()
@@ -115,6 +116,7 @@ def test_reports_route_and_notify_the_team(
     ledgerline = Team.objects.create(name="Ledgerline", is_default=True)
     ledgerline.members.add(staff["nav"])
     asset = Asset.objects.filter(assigned_to__username="employee").first()
+    assert asset is not None
     with django_capture_on_commit_callbacks(execute=True):
         response = employee_client.post(
             f"/api/portal/my-assets/{asset.pk}/issues",
@@ -130,6 +132,7 @@ def test_assignee_hears_of_it_but_not_when_taking_it_themselves(
     mail_on, staff, it_client, django_capture_on_commit_callbacks
 ):
     asset_request = AssetRequest.objects.first()
+    assert asset_request is not None
     url = f"/api/requests/{asset_request.pk}/assign"
     with django_capture_on_commit_callbacks(execute=True):
         it_client.post(url, {"assignee": str(staff["nav"].pk)}, content_type=JSON)

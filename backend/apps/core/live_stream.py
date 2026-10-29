@@ -11,6 +11,7 @@ import asyncio
 import json
 import logging
 from collections import Counter
+from typing import Any
 
 import psycopg
 from django.conf import settings
@@ -38,20 +39,20 @@ class Hub:
     """The LISTEN connection of this process and the streams it feeds."""
 
     def __init__(self):
-        self.queues: set[asyncio.Queue] = set()
+        self.queues: set[asyncio.Queue[dict[str, Any]]] = set()
         self.streams_per_user: Counter[str] = Counter()
         self.listener: asyncio.Task | None = None
         # Set while LISTEN is active, i.e. signals reach the streams.
         self.listening = asyncio.Event()
 
-    def subscribe(self) -> asyncio.Queue:
-        queue = asyncio.Queue(maxsize=100)
+    def subscribe(self) -> asyncio.Queue[dict[str, Any]]:
+        queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue(maxsize=100)
         self.queues.add(queue)
         if self.listener is None or self.listener.done():
             self.listener = asyncio.create_task(self.listen())
         return queue
 
-    def unsubscribe(self, queue: asyncio.Queue) -> None:
+    def unsubscribe(self, queue: asyncio.Queue[dict[str, Any]]) -> None:
         self.queues.discard(queue)
 
     def broadcast(self, event: dict) -> None:

@@ -9,6 +9,7 @@ JSON = "application/json"
 
 def ordered(client, quantity=2) -> dict:
     model = AssetModel.objects.filter(tracking=AssetModel.Tracking.BULK).first()
+    assert model is not None
     order = client.post(
         "/api/procurement/orders",
         {"lines": [{"asset_model": str(model.pk), "quantity": quantity}]},
@@ -21,6 +22,7 @@ def ordered(client, quantity=2) -> dict:
 
 def receive(client, order, line, quantity):
     location = Location.objects.first()
+    assert location is not None
     return client.post(
         f"/api/procurement/orders/{order['id']}/receive",
         {"receipts": [{"line": line, "quantity": quantity, "location": str(location.pk)}]},
@@ -51,6 +53,7 @@ def test_line_of_another_order_is_not_found(it_client):
 def test_changing_lines_of_a_placed_order_changes_nothing(it_client):
     order = ordered(it_client)
     model = AssetModel.objects.filter(tracking=AssetModel.Tracking.BULK).first()
+    assert model is not None
     response = it_client.put(
         f"/api/procurement/orders/{order['id']}",
         {"notes": "changed", "lines": [{"asset_model": str(model.pk), "quantity": 9}]},

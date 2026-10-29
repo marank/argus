@@ -67,6 +67,10 @@ class AssetIssue(TimeStampedModel):
     # IT wrote or changed the status since the reporter last looked at the report.
     unseen_update = models.BooleanField(_("unseen update"), default=False)
 
+    # Set by the detail views for the response, not columns.
+    other_issues: list[AssetIssue]
+    still_assigned: bool
+
     class Meta:
         verbose_name = _("problem report")
         verbose_name_plural = _("problem reports")
@@ -101,6 +105,9 @@ class AssetIssueEntry(TimeStampedModel):
     text = models.TextField(_("text"), blank=True)
     # The new status of a status change.
     status = models.CharField(_("status"), max_length=12, choices=AssetIssue.Status.choices, blank=True)
+
+    # Set by the detail views for the response ("reporter" or "it"), not a column.
+    side: str
 
     class Meta:
         verbose_name = _("problem report entry")

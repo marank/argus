@@ -3,13 +3,13 @@
 from datetime import datetime
 from uuid import UUID
 
-from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from ninja import Router, Schema
 from ninja.pagination import paginate
 
 from apps.core.api.pagination import Pagination
+from apps.core.api.security import AuthedRequest
 from apps.core.live import publish
 from apps.core.models import Notification
 
@@ -30,25 +30,25 @@ class UnreadOut(Schema):
     unread: int
 
 
-def _changed(request: HttpRequest) -> None:
+def _changed(request: AuthedRequest) -> None:
     """Other tabs of the user update their bell too."""
     publish("notification", None, users=[request.user.pk], staff=False)
 
 
 @router.get("", response=list[NotificationOut])
 @paginate(Pagination)
-def list_notifications(request: HttpRequest, unread: bool = False):
+def list_notifications(request: AuthedRequest, unread: bool = False):
     queryset = Notification.objects.filter(recipient=request.user)
     return queryset.filter(read_at__isnull=True) if unread else queryset
 
 
 @router.get("/unread", response=UnreadOut)
-def unread_count(request: HttpRequest):
+def unread_count(request: AuthedRequest):
     return {"unread": Notification.objects.filter(recipient=request.user, read_at__isnull=True).count()}
 
 
 @router.post("/{uuid:pk}/read", response=NotificationOut)
-def mark_read(request: HttpRequest, pk: UUID):
+def mark_read(request: AuthedRequest, pk: UUID):
     notification = get_object_or_404(Notification, pk=pk, recipient=request.user)
     if notification.read_at is None:
         notification.read_at = timezone.now()
@@ -58,7 +58,7 @@ def mark_read(request: HttpRequest, pk: UUID):
 
 
 @router.post("/read-all", response=UnreadOut)
-def mark_all_read(request: HttpRequest):
+def mark_all_read(request: AuthedRequest):
     Notification.objects.filter(recipient=request.user, read_at__isnull=True).update(
         read_at=timezone.now(), updated_at=timezone.now()
     )

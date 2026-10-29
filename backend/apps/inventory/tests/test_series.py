@@ -53,6 +53,7 @@ def test_model_sequence_comes_before_the_category_sequence(it_client):
 
     handle = AssetModel.objects.get(name="SX5x Trigger Handle")
     unnumbered = AssetModel.objects.filter(category__code="consumables").first()
+    assert unnumbered is not None
     quad = NumberSequence.objects.create(name="Quad chargers", prefix="Q", pattern="{prefix}{seq}", padding=3)
     AssetModel.objects.filter(pk__in=[handle.pk, unnumbered.pk]).update(number_sequence=quad)
     handle.refresh_from_db()
@@ -83,6 +84,7 @@ def test_models_show_the_sequence_that_applies(it_client):
 
 def test_series_needs_a_number_sequence(it_client):
     unnumbered = AssetModel.objects.filter(category__code="consumables").first()
+    assert unnumbered is not None
     response = it_client.post(
         "/api/inventory/assets/series", {"model": str(unnumbered.pk), "count": 3}, content_type=JSON
     )

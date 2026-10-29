@@ -40,6 +40,7 @@ def test_terminal_lists_and_signs_pickup(terminal_client):
     asset = Asset.objects.get(pk=allocation["asset"]["id"])
     assert asset.assigned_to == asset_request.requester  # devices belong to the requester
     event = asset.events.filter(kind=AssetEvent.Kind.ASSIGNED).first()
+    assert event is not None
     assert event.description == "Scratch on lid"
     assert terminal_client.get("/api/terminal/pickups").json() == []
 

@@ -52,6 +52,7 @@ def test_employee_reports_problem_and_it_resolves_it(employee_client, it_client)
 
 def test_only_own_devices_can_be_reported(employee_client):
     foreign = Asset.objects.exclude(assigned_to__username="employee").first()
+    assert foreign is not None
     response = employee_client.post(
         f"/api/portal/my-assets/{foreign.pk}/issues",
         {"kind": "other", "description": "Not mine"},
@@ -85,6 +86,7 @@ def test_device_detail_shows_all_reports(employee_client):
     assert [i["description"] for i in detail.json()["issues"]] == ["Hinge broken"]
 
     foreign = Asset.objects.exclude(assigned_to__username="employee").first()
+    assert foreign is not None
     assert employee_client.get(f"/api/portal/my-assets/{foreign.pk}").status_code == 404
 
 
@@ -177,8 +179,10 @@ def test_reports_of_others_stay_private(employee_client, it_client):
     from apps.accounts.models import User
     from apps.inventory.models import AssetIssue
 
+    asset = Asset.objects.first()
+    assert asset is not None
     foreign = AssetIssue.objects.create(
-        asset=Asset.objects.first(), description="Not yours", reported_by=User.objects.get(username="it")
+        asset=asset, description="Not yours", reported_by=User.objects.get(username="it")
     )
     assert employee_client.get(f"/api/portal/my-issues/{foreign.pk}").status_code == 404
     url = f"/api/portal/my-issues/{foreign.pk}/messages"

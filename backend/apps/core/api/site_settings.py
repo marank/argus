@@ -4,10 +4,9 @@ Modules and features, deadlines, which email notifications exist (so users
 can see what they may switch off for themselves), and whether LDAP login is on.
 """
 
-from django.http import HttpRequest
 from ninja import Field, Router, Schema
 
-from apps.core.api.security import session_auth, superuser_auth
+from apps.core.api.security import AuthedRequest, session_auth, superuser_auth
 from apps.core.features import FLAG_KEYS, FLAGS, current_flags
 from apps.core.models import MailSettings, SiteSettings
 from apps.core.models.site_settings import RULE_FIELDS
@@ -92,12 +91,12 @@ def _out() -> dict:
 
 
 @router.get("", response=SiteSettingsOut, auth=session_auth)
-def get_site_settings(request: HttpRequest):
+def get_site_settings(request: AuthedRequest):
     return _out()
 
 
 @router.put("", response=SiteSettingsOut, auth=superuser_auth)
-def update_site_settings(request: HttpRequest, payload: SiteSettingsIn):
+def update_site_settings(request: AuthedRequest, payload: SiteSettingsIn):
     site = SiteSettings.load()
     site.flags = {**site.flags, **{k: v for k, v in payload.flags.items() if k in FLAG_KEYS}}
     if payload.rules:

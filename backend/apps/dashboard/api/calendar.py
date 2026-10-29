@@ -1,12 +1,11 @@
 from datetime import date
 
-from django.http import HttpRequest
 from django.utils.translation import gettext as _
 from ninja import Query, Router
 from ninja.errors import HttpError
 
 from apps.accounts.services.assignment import Assigned, assigned_q
-from apps.core.api.security import permission_auth
+from apps.core.api.security import AuthedRequest, permission_auth
 from apps.core.features import current_flags
 from apps.dashboard.schemas.calendar import CalendarEntryOut
 from apps.dashboard.services.calendar import KINDS, calendar_entries
@@ -25,10 +24,10 @@ MAX_DAYS = 400
 
 @router.get("", response=list[CalendarEntryOut])
 def calendar(
-    request: HttpRequest,
+    request: AuthedRequest,
     start: date,
     end: date,
-    kinds: Query[list[str]] = None,
+    kinds: Query[list[str] | None] = None,
     assigned: Assigned | None = None,
 ):
     """Lending periods, pickups, due returns, expected deliveries and warranty ends.

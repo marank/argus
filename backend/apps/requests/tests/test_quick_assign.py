@@ -11,7 +11,9 @@ JSON = "application/json"
 
 
 def in_stock() -> Asset:
-    return Asset.objects.filter(status=Asset.Status.IN_STOCK).order_by("inventory_number").first()
+    asset = Asset.objects.filter(status=Asset.Status.IN_STOCK).order_by("inventory_number").first()
+    assert asset is not None
+    return asset
 
 
 def employee() -> User:

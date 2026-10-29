@@ -102,6 +102,7 @@ def test_attribute_mapping_is_configurable_in_app(configured):
     configured.attr_first_name = "sn"
     configured.save()
     user = authenticate(username="aberger", password="anna-secret")
+    assert user is not None
     assert (user.first_name, user.employee_number) == ("Berger", "P-0815")
 
 
@@ -111,12 +112,15 @@ def test_environment_overrides_in_app_value(configured, monkeypatch):
     config = ldap.load_config()
     assert config.attr_employee_number == "personalNr"
     assert config.locked == {"attr_employee_number"}
-    assert authenticate(username="aberger", password="anna-secret").employee_number == "P-0815"
+    user = authenticate(username="aberger", password="anna-secret")
+    assert user is not None
+    assert user.employee_number == "P-0815"
 
 
 def test_existing_user_is_linked_and_updated(configured):
     existing = User.objects.create_user("ABERGER", password="local", first_name="Old")
     user = authenticate(username="aberger", password="anna-secret")
+    assert user is not None
     assert user.pk == existing.pk
     assert user.first_name == "Anna"
     assert user.ldap_dn == ANNA_DN
@@ -216,9 +220,10 @@ def test_team_membership_follows_ldap_groups(configured):
     missing.members.add(user)  # group unreadable: membership kept
     manual.members.add(user)  # no LDAP group: left alone
 
-    user = authenticate(username="aberger", password="anna-secret")
-    assert set(user.teams.values_list("name", flat=True)) == {"Ledgerline", "Old", "Manual"}
-    assert not ledgerline.members.exclude(pk=user.pk).exists()
+    logged_in = authenticate(username="aberger", password="anna-secret")
+    assert logged_in is not None
+    assert set(logged_in.teams.values_list("name", flat=True)) == {"Ledgerline", "Old", "Manual"}
+    assert not ledgerline.members.exclude(pk=logged_in.pk).exists()
 
 
 def test_site_settings_tell_whether_ldap_is_on(configured, it_client):

@@ -6,7 +6,7 @@ from apps.inventory.models import AssetIssue, AssetIssueEntry
 class AssetIssueEntryInline(admin.TabularInline):
     model = AssetIssueEntry
     extra = 0
-    fields = ["created_at", "kind", "author", "text", "status"]
+    fields = ("created_at", "kind", "author", "text", "status")
     readonly_fields = fields
     can_delete = False
 

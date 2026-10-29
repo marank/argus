@@ -22,7 +22,9 @@ def request(client, item: dict):
 
 
 def hardware_model() -> AssetModel:
-    return AssetModel.objects.filter(category__kind=Category.Kind.HARDWARE).first()
+    model = AssetModel.objects.filter(category__kind=Category.Kind.HARDWARE).first()
+    assert model is not None
+    return model
 
 
 @pytest.mark.parametrize("field", ["is_requestable", "is_active"])
@@ -48,6 +50,7 @@ def test_software_needs_the_software_feature(employee_client):
     software = AssetModel.objects.filter(
         category__kind=Category.Kind.SOFTWARE, is_requestable=True, is_active=True
     ).first()
+    assert software is not None
     assert request(employee_client, {"asset_model": str(software.pk)}).status_code == 201
     SiteSettings.objects.update(flags={"software_requests": False})
     assert request(employee_client, {"asset_model": str(software.pk)}).status_code == 409

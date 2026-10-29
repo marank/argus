@@ -61,6 +61,7 @@ def test_reserved_device_keeps_its_status(employee_client, it_client):
 
 def test_consumables_only_complete_on_hand_out(employee_client, it_client):
     ink = AssetModel.objects.filter(tracking=AssetModel.Tracking.BULK, consumables__quantity__gt=0).first()
+    assert ink is not None
     rid = prepare(employee_client, it_client, [{"asset_model": str(ink.pk), "quantity": 1}])
     response = it_client.post(f"/api/requests/{rid}/hand-out", {"method": "direct"}, content_type=JSON)
     assert response.json()["status"] == "completed"
@@ -86,11 +87,13 @@ def test_return_with_notes_damage_and_record(employee_client, it_client):
     assert data["status"] == "handed_out"
     assert len(data["returns"]) == 1 and data["returns"][0]["notes"] == "Came back early"
     first.refresh_from_db()
+    assert first.asset is not None
     assert first.return_note == "Display cracked" and first.asset.status == Asset.Status.IN_REPAIR
 
     data = it_client.post(f"/api/requests/{rid}/return", {}, content_type=JSON).json()
     assert data["status"] == "completed" and len(data["returns"]) == 2
     second.refresh_from_db()
+    assert second.asset is not None
     assert second.asset.status == Asset.Status.IN_STOCK
 
 
@@ -116,7 +119,8 @@ def test_terminal_names_who_prepared_the_pickup(employee_client, it_client, term
     data = terminal_client.post(f"/api/terminal/pickups/{rid}/sign", sign, content_type=JSON).json()
     assert data["prepared_by"]["id"] == str(it_user.pk)
     assert data["handover"]["handed_out_by"]["id"] == str(it_user.pk)
-    assert Handover.objects.get(asset_request_id=rid).recorded_by.username == "terminal"
+    recorded_by = Handover.objects.get(asset_request_id=rid).recorded_by
+    assert recorded_by is not None and recorded_by.username == "terminal"
 
 
 def test_terminal_can_name_someone_else_from_it(employee_client, it_client, terminal_client):
@@ -166,9 +170,11 @@ def test_device_license_goes_onto_one_of_the_requesters_devices(employee_client,
     license = candidates["licenses"][0]
     assert license["assign_to"] == "device"
     mine = Asset.objects.filter(assigned_to__username="employee").first()
+    assert mine is not None
     assert mine and str(mine.pk) in [d["id"] for d in candidates["devices"]]
 
     foreign = Asset.objects.exclude(assigned_to__username="employee").first()
+    assert foreign is not None
     body = {"item": item["id"], "license": license["id"], "asset": str(foreign.pk)}
     assert it_client.post(f"/api/requests/{rid}/allocations", body, content_type=JSON).status_code == 409
     body["asset"] = str(mine.pk)

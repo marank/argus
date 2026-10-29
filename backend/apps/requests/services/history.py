@@ -17,8 +17,8 @@ def record(asset_request: AssetRequest, kind: str, user=None, **data) -> AssetRe
 
 def allocation_label(allocation: AssetRequestAllocation) -> str:
     """What was allocated, readable on its own: "MDE-0001", "2× USB-C cable", "Seat: Office"."""
-    if allocation.asset_id:
+    if allocation.asset:
         return allocation.asset.inventory_number
-    if allocation.consumable_id:
+    if allocation.consumable:
         return f"{allocation.quantity}× {allocation.consumable.model}"
-    return str(allocation.license.model)
+    return str(allocation.model)

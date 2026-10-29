@@ -3,7 +3,6 @@ from typing import Annotated
 from uuid import UUID
 
 from django.db.models import Count, Q
-from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from ninja import FilterLookup, FilterSchema, Query, Router, Status
@@ -11,7 +10,7 @@ from ninja.pagination import paginate
 
 from apps.core.api.pagination import Pagination
 from apps.core.api.querying import order, search
-from apps.core.api.security import permission_auth
+from apps.core.api.security import AuthedRequest, permission_auth
 from apps.core.exceptions import BusinessError
 from apps.inventory.models import License
 from apps.inventory.schemas.license import LicenseAssignIn, LicenseDetailOut, LicenseIn, LicenseOut
@@ -64,7 +63,7 @@ def license_queryset():
 @router.get("", response=list[LicenseOut])
 @paginate(Pagination)
 def list_licenses(
-    request: HttpRequest,
+    request: AuthedRequest,
     filters: Query[LicenseFilter],
     q: str | None = None,
     ordering: str | None = None,
@@ -74,24 +73,24 @@ def list_licenses(
 
 
 @router.get("/{uuid:pk}", response=LicenseDetailOut)
-def get_license(request: HttpRequest, pk: UUID):
+def get_license(request: AuthedRequest, pk: UUID):
     return get_object_or_404(license_queryset(), pk=pk)
 
 
 @router.post("", response={201: LicenseDetailOut})
-def create_license(request: HttpRequest, payload: LicenseIn):
+def create_license(request: AuthedRequest, payload: LicenseIn):
     license = license_service.save_license(License(), payload.dict())
     return Status(201, get_license(request, license.pk))
 
 
 @router.put("/{uuid:pk}", response=LicenseDetailOut)
-def update_license(request: HttpRequest, pk: UUID, payload: LicenseIn):
+def update_license(request: AuthedRequest, pk: UUID, payload: LicenseIn):
     license_service.save_license(get_object_or_404(License, pk=pk), payload.dict())
     return get_license(request, pk)
 
 
 @router.delete("/{uuid:pk}", response={204: None})
-def delete_license(request: HttpRequest, pk: UUID):
+def delete_license(request: AuthedRequest, pk: UUID):
     license = get_object_or_404(License, pk=pk)
     if license.assignments.exists():
         raise BusinessError(_("Remove all assignments before deleting the license."))
@@ -100,7 +99,7 @@ def delete_license(request: HttpRequest, pk: UUID):
 
 
 @router.post("/{uuid:pk}/assignments", response={201: LicenseDetailOut})
-def assign(request: HttpRequest, pk: UUID, payload: LicenseAssignIn):
+def assign(request: AuthedRequest, pk: UUID, payload: LicenseAssignIn):
     license_service.assign_license(
         get_object_or_404(License, pk=pk),
         request.user,
@@ -112,7 +111,7 @@ def assign(request: HttpRequest, pk: UUID, payload: LicenseAssignIn):
 
 
 @router.delete("/{uuid:pk}/assignments/{uuid:assignment_id}", response=LicenseDetailOut)
-def unassign(request: HttpRequest, pk: UUID, assignment_id: UUID):
+def unassign(request: AuthedRequest, pk: UUID, assignment_id: UUID):
     assignment = get_object_or_404(get_object_or_404(License, pk=pk).assignments, pk=assignment_id)
     license_service.unassign_license(assignment, request.user)
     return get_license(request, pk)

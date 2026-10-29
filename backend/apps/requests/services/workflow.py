@@ -1,6 +1,8 @@
 """State transitions of a request, from submission to return."""
 
 from datetime import date, datetime, time
+from enum import Enum
+from typing import Final, Literal
 from uuid import UUID
 
 from django.db import transaction
@@ -31,8 +33,14 @@ from apps.requests.services.history import Kind, allocation_label, record
 
 Status = AssetRequest.Status
 Approval = AssetRequest.Approval
+
+
+class _Keep(Enum):
+    KEEP = "keep"
+
+
 # Leaves a field as it is, where ``None`` would clear it.
-KEEP = object()
+KEEP: Final = _Keep.KEEP
 
 
 def _require_status(asset_request: AssetRequest, *allowed: str) -> None:
@@ -124,7 +132,7 @@ def submit(
         line.full_clean()
         if from_catalog:
             _require_requestable(line)
-        if line.category_id and not line.asset_model_id and not line.description:
+        if line.category and not line.asset_model_id and not line.description:
             if not line.category.allow_any_model:
                 raise BusinessError(
                     _("Please choose a specific model for “%(category)s”.") % {"category": line.category}
@@ -169,7 +177,7 @@ def _record_created(asset_request: AssetRequest, kind: str, user) -> None:
         kind,
         user,
         requester=asset_request.requester.display_name if on_behalf else None,
-        follows=asset_request.follows.number if asset_request.follows_id else None,
+        follows=asset_request.follows.number if asset_request.follows else None,
     )
 
 
@@ -193,9 +201,9 @@ def _record_approval(asset_request: AssetRequest, user, decision: str, comment: 
 
 def _item_team(item: AssetRequestItem):
     """The team a request line routes to: its model's, else its category's."""
-    if item.asset_model_id:
+    if item.asset_model:
         return item.asset_model.effective_team()
-    return item.category.effective_team() if item.category_id else None
+    return item.category.effective_team() if item.category else None
 
 
 @transaction.atomic
@@ -330,7 +338,7 @@ def _record_schedule(asset_request: AssetRequest, kind: str, user, **extra) -> N
         user,
         handover_mode=asset_request.handover_mode,
         pickup_at=asset_request.pickup_at.isoformat() if asset_request.pickup_at else None,
-        pickup_location=asset_request.pickup_location.full_name if asset_request.pickup_location_id else None,
+        pickup_location=asset_request.pickup_location.full_name if asset_request.pickup_location else None,
         **extra,
     )
 
@@ -347,6 +355,7 @@ def extend(asset_request: AssetRequest, user, end_date: date) -> AssetRequest:
         raise BusinessError(_("Only temporary requests have a return date."))
     if end_date < timezone.localdate():
         raise BusinessError(_("The new return date must not be in the past."))
+    assert asset_request.end_date is not None  # _validate_period: temporary requests have one
     if end_date <= asset_request.end_date:
         raise BusinessError(_("The new return date must be after the current one."))
     previous = asset_request.end_date
@@ -584,14 +593,15 @@ def remove_allocation(allocation: AssetRequestAllocation, user) -> None:
 def _release(allocation: AssetRequestAllocation, user) -> None:
     """Give back what was set aside; the device was never handed out, so its history stays as it is."""
     if allocation.license_id:
-        if allocation.license_assignment_id:
+        if allocation.license_assignment:
             allocation.license_assignment.delete()
-    elif allocation.asset_id:
+    elif allocation.asset:
         asset = allocation.asset
         if asset.status == Asset.Status.RESERVED:
             asset.status = Asset.Status.IN_STOCK
             asset.save(update_fields=["status", "updated_at"])
     else:
+        assert allocation.consumable is not None  # clean(): exactly one of asset, consumable, license
         release_consumable(allocation.consumable, allocation.quantity)
 
 
@@ -617,8 +627,8 @@ def mark_ready(
     handover_mode: str | None = None,
     skip_device_check: bool = False,
     *,
-    pickup_at: datetime | None | object = KEEP,
-    pickup_location_id: UUID | None | object = KEEP,
+    pickup_at: datetime | None | Literal[_Keep.KEEP] = KEEP,
+    pickup_location_id: UUID | None | Literal[_Keep.KEEP] = KEEP,
     notify: bool = True,
 ) -> AssetRequest:
     """All devices are prepared. Pickup requests now show up on the pickup terminal.
@@ -773,7 +783,7 @@ def hand_out(
         note = allocation_notes.get(allocation.pk, "").strip()
         if allocation.license_id:
             pass  # the seat was assigned when it was allocated
-        elif allocation.asset_id:
+        elif allocation.asset:
             asset = allocation.asset
             asset.status = Asset.Status.IN_USE
             asset.assigned_to = requester
@@ -788,6 +798,7 @@ def hand_out(
                 description=note,
             )
         else:
+            assert allocation.consumable is not None  # clean(): exactly one of asset, consumable, license
             move_consumable(
                 allocation.consumable,
                 -allocation.quantity,
@@ -879,7 +890,9 @@ def prepare_direct(
     # One line per model, in the order the devices were picked.
     devices = Asset.objects.select_related("model__category").in_bulk(assets)
     stocks = Consumable.objects.select_related("model__category").in_bulk(list(consumables))
-    picked = [(devices[pk], 1) for pk in dict.fromkeys(assets) if pk in devices]
+    picked: list[tuple[Asset | Consumable, int]] = [
+        (devices[pk], 1) for pk in dict.fromkeys(assets) if pk in devices
+    ]
     picked += [(stocks[pk], quantity) for pk, quantity in consumables.items() if pk in stocks]
     if len(picked) != len(set(assets)) + len(consumables):
         raise BusinessError(_("A device or consumable was not found."))
@@ -1000,7 +1013,7 @@ def quick_assign(
         description=(
             _("Quick assignment until %(date)s")
             % {"date": formats.date_format(end_date, "SHORT_DATE_FORMAT")}
-            if lent
+            if end_date is not None
             else _("Quick assignment, permanent")
         ),
     )
@@ -1048,7 +1061,7 @@ def return_devices(
     )
     for allocation in selected:
         note = allocation_notes.get(allocation.pk, "").strip()
-        if allocation.asset_id:
+        if allocation.asset:
             asset = allocation.asset
             broken = allocation.pk in damaged
             asset.status = Asset.Status.IN_REPAIR if broken else Asset.Status.IN_STOCK
@@ -1070,7 +1083,7 @@ def return_devices(
                     user,
                     description=_("Returned damaged from %(number)s") % {"number": asset_request.number},
                 )
-        elif allocation.license_assignment_id:
+        elif allocation.license_assignment:
             allocation.license_assignment.delete()
             allocation.license_assignment = None
         allocation.returned_at = now

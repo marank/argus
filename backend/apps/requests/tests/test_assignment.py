@@ -39,6 +39,7 @@ def test_team_and_assignee_are_independent(it_client, support):
 
 def test_only_it_staff_can_be_assigned(it_client, demo):
     asset_request = AssetRequest.objects.first()
+    assert asset_request is not None
     employee = User.objects.get(username="employee")
     response = _assign(it_client, asset_request, assignee=str(employee.pk))
     assert response.status_code == 409
@@ -48,6 +49,7 @@ def test_only_it_staff_can_be_assigned(it_client, demo):
 
 def test_employees_can_neither_assign_nor_see_it(employee_client, support):
     asset_request = AssetRequest.objects.filter(requester__username="employee").first()
+    assert asset_request is not None
     assert _assign(employee_client, asset_request, team=str(support.pk)).status_code == 403
 
     asset_request.assigned_team = support
@@ -100,6 +102,7 @@ def test_team_crud_with_members(it_client, demo):
 def test_issues_can_be_assigned_and_filtered(it_client, support):
     it = User.objects.get(username="it")
     asset = Asset.objects.first()
+    assert asset is not None
     mine = AssetIssue.objects.create(asset=asset, description="Screen broken")
     other = AssetIssue.objects.create(asset=asset, description="Battery dead")
 
@@ -128,7 +131,9 @@ def test_dashboard_counts_the_users_queue(it_client, support):
     first.save()
     second.assigned_team = support
     second.save()
-    AssetIssue.objects.create(asset=Asset.objects.first(), description="Broken", assignee=it)
+    asset = Asset.objects.first()
+    assert asset is not None
+    AssetIssue.objects.create(asset=asset, description="Broken", assignee=it)
 
     data = it_client.get("/api/dashboard/it").json()
     assert data["requests_mine"] == 1

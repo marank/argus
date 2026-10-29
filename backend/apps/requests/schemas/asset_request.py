@@ -4,6 +4,7 @@ from uuid import UUID
 
 from ninja import Field, Schema
 
+from apps.accounts.models import User
 from apps.accounts.schemas import TeamRefOut, UserRefOut
 from apps.core.api.security import context_is_it_staff
 from apps.core.schemas import RefOut
@@ -162,7 +163,7 @@ class AssetRequestEventOut(Schema):
     data: dict
 
 
-def pending_approvers(asset_request: AssetRequest) -> list:
+def pending_approvers(asset_request: AssetRequest) -> list[User]:
     """Who may approve while the request waits for approval; asked once per request."""
     if asset_request.status != AssetRequest.Status.PENDING_APPROVAL:
         return []
@@ -206,6 +207,7 @@ class AssetRequestOut(AssetRequestListOut):
         if context_is_it_staff(context):
             return events
         request = (context or {}).get("request")
+        kinds: tuple[str, ...]
         if request is not None and request.user.pk == obj.requester_id:
             kinds = AssetRequestEvent.EMPLOYEE_KINDS
         else:
@@ -219,7 +221,7 @@ class AssetRequestOut(AssetRequestListOut):
     @staticmethod
     def resolve_can_approve(obj, context) -> bool:
         request = (context or {}).get("request")
-        return bool(request) and any(user.pk == request.user.pk for user in pending_approvers(obj))
+        return request is not None and any(user.pk == request.user.pk for user in pending_approvers(obj))
 
     @staticmethod
     def resolve_returns(obj):

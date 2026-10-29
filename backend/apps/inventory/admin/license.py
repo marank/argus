@@ -1,8 +1,17 @@
+from typing import TYPE_CHECKING, TypedDict
+
 from django.contrib import admin
 from django.db.models import Count
 from django.utils.translation import gettext_lazy as _
 
 from apps.inventory.models import License, LicenseAssignment
+
+if TYPE_CHECKING:
+    from django_stubs_ext import WithAnnotations
+
+
+class UsedSeats(TypedDict):
+    used_seats: int
 
 
 class LicenseAssignmentInline(admin.TabularInline):
@@ -28,5 +37,5 @@ class LicenseAdmin(admin.ModelAdmin):
         return super().get_queryset(request).annotate(used_seats=Count("assignments"))
 
     @admin.display(description=_("seats used"), ordering="used_seats")
-    def seats_used(self, obj: License) -> int:
+    def seats_used(self, obj: WithAnnotations[License, UsedSeats]) -> int:
         return obj.used_seats

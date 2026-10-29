@@ -22,6 +22,7 @@ from dataclasses import dataclass, fields
 from typing import Any
 
 from django.db import transaction
+from django.db.models import Field
 from django.db.models.functions import Lower
 from django.utils.translation import gettext as _
 from ldap3 import (
@@ -166,6 +167,7 @@ def _connect(config: LdapConfig, user: str | None, password: str | None) -> Conn
         except LDAPException as exc:
             logger.warning("LDAP server %s not reachable: %s", server, exc)
             error = exc
+    assert error is not None  # _servers() is never empty
     raise error
 
 
@@ -286,7 +288,9 @@ def _check_password(config: LdapConfig, dn: str, password: str) -> bool:
 
 
 def _truncate(field: str, value: str) -> str:
-    return value[: User._meta.get_field(field).max_length]
+    model_field = User._meta.get_field(field)
+    assert isinstance(model_field, Field)  # mapped names are concrete user fields
+    return value[: model_field.max_length]
 
 
 @transaction.atomic

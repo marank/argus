@@ -112,6 +112,7 @@ def test_order_from_need_and_receive(it_client):
 
 def test_lookup_by_ean_and_serial(it_client):
     asset = Asset.objects.first()
+    assert asset is not None
     result = it_client.get(f"/api/inventory/lookup?code={asset.serial_number}").json()
     assert result["kind"] == "asset"
     result = it_client.get(f"/api/inventory/lookup?code={asset.model.ean}").json()
@@ -206,6 +207,7 @@ def test_ready_request_can_be_reopened(employee_client, it_client, terminal_clie
 
 def test_ready_confirms_date_and_place(employee_client, it_client):
     place = Location.objects.first()
+    assert place is not None
     pickup = (timezone.now() + timedelta(days=3)).replace(microsecond=0)
     asset_request = _ready_request(
         employee_client,

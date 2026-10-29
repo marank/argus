@@ -117,14 +117,14 @@ def period_availability(start: date, end: date | None) -> tuple[dict[UUID, Count
             | Q(asset_request__pickup_at__date__lte=end)
         )
     items = AssetRequestItem.objects.filter(overlapping).select_related("asset_model", "category")
-    allocated = defaultdict(int)
-    for row in (
+    allocated: dict[UUID, int] = defaultdict(int)
+    for allocation in (
         AssetRequestAllocation.objects.filter(item__in=items, asset__isnull=False)
         .values("item_id", "asset__model_id")
         .annotate(n=Count("pk"))
     ):
-        allocated[row["item_id"]] += row["n"]
-        reserved[row["asset__model_id"]] += row["n"]
+        allocated[allocation["item_id"]] += allocation["n"]
+        reserved[allocation["asset__model_id"]] += allocation["n"]
     consumable_allocated = dict(
         AssetRequestAllocation.objects.filter(item__in=items, consumable__isnull=False)
         .values_list("item_id")

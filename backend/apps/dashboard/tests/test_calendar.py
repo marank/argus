@@ -25,6 +25,7 @@ def test_calendar_shows_loans_and_pickups(it_client):
     workshop = AssetRequest.objects.get(title="Training workshop")
     loan = next(e for e in entries if e["id"] == f"loan-{workshop.pk}")
     # Ends are exclusive so a span from Mon to Wed covers Wed as well.
+    assert workshop.end_date is not None
     assert loan["end"] == (workshop.end_date + timedelta(days=1)).isoformat()
     assert loan["link"] == {"name": "request", "id": str(workshop.pk)}
 

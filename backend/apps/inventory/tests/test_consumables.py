@@ -28,6 +28,7 @@ def test_consumables_list_under_new_url(it_client):
 
 def test_assign_consumables_to_asset(it_client):
     laptop = Asset.objects.filter(model__name="ThinkPad T14 Gen 5").first()
+    assert laptop is not None
     battery = AssetModel.objects.get(name="SX5x Battery 4680 mAh")
     detail = it_client.get(f"/api/inventory/assets/{laptop.pk}").json()
     assert detail["consumables"] == []
@@ -53,6 +54,7 @@ def test_assign_consumables_to_asset(it_client):
 
 def test_model_consumables_in_asset_detail(it_client):
     printer = Asset.objects.filter(model__name="DeskJet 2820e").first()
+    assert printer is not None
     detail = it_client.get(f"/api/inventory/assets/{printer.pk}").json()
     names = {c["name"] for c in detail["model_consumables"]}
     assert names == {"305 black ink cartridge", "305 tri-colour ink cartridge"}
