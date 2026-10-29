@@ -6,6 +6,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { requestsApi } from '@/api/requests'
+import BrandMark from '@/components/common/BrandMark.vue'
 import { useFormat } from '@/composables/useFormat'
 import type { AssetRequest } from '@/types/requests'
 import { allocationModel } from '@/utils/requests'
@@ -62,7 +63,7 @@ const returns = computed(() => {
   <div v-if="assetRequest" class="sheet">
     <header>
       <div>
-        <div class="brand mono">ARGUS</div>
+        <div class="brand mono"><BrandMark :size="20" />ARGUS</div>
         <h1>{{ t('handover.protocol') }}</h1>
       </div>
       <div class="mono right">
@@ -216,6 +217,9 @@ header {
   border-bottom: 2px solid #0b1220;
 }
 .brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   letter-spacing: 0.3em;
   font-weight: 700;
   color: #0e7490;

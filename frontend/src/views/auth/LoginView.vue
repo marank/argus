@@ -8,6 +8,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { authApi } from '@/api/auth'
 import { ApiError, isUnreachable } from '@/api/client'
+import BrandMark from '@/components/common/BrandMark.vue'
 import CodeInput from '@/components/common/CodeInput.vue'
 import { useAuthStore } from '@/stores/auth'
 import type { TwoFactorChallenge } from '@/types/accounts'
@@ -152,16 +153,7 @@ function back() {
   <div class="login">
     <div class="panel">
       <div class="brand">
-        <svg viewBox="0 0 32 32" width="34" height="34" aria-hidden="true">
-          <circle cx="16" cy="16" r="10" fill="none" stroke="currentColor" stroke-width="2.4" />
-          <circle cx="16" cy="16" r="3.6" fill="currentColor" />
-          <path
-            d="M16 2v5M16 25v5M2 16h5M25 16h5"
-            stroke="currentColor"
-            stroke-width="2.4"
-            stroke-linecap="round"
-          />
-        </svg>
+        <BrandMark :size="36" />
         <div>
           <div class="wordmark">ARGUS</div>
           <div class="eyebrow">{{ t('auth.subtitle') }}</div>

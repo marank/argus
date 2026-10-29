@@ -6,6 +6,7 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
+import BrandMark from '@/components/common/BrandMark.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useAuthStore } from '@/stores/auth'
 
@@ -31,16 +32,7 @@ function toggleLanguage() {
   <div class="terminal">
     <header>
       <RouterLink :to="{ name: 'terminal' }" class="brand">
-        <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">
-          <circle cx="16" cy="16" r="10" fill="none" stroke="currentColor" stroke-width="2.4" />
-          <circle cx="16" cy="16" r="3.6" fill="currentColor" />
-          <path
-            d="M16 2v5M16 25v5M2 16h5M25 16h5"
-            stroke="currentColor"
-            stroke-width="2.4"
-            stroke-linecap="round"
-          />
-        </svg>
+        <BrandMark :size="28" />
         <span class="wordmark">ARGUS</span>
         <span class="eyebrow">{{ t('terminal.title') }}</span>
       </RouterLink>
@@ -98,6 +90,8 @@ header {
   font-size: 16px;
   letter-spacing: 0.28em;
   color: var(--ar-text);
+  /* Centre the capitals, not the line box, against the mark. */
+  text-box: trim-both cap alphabetic;
 }
 .right {
   display: flex;

@@ -6,6 +6,7 @@ import { computed, h, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
 
+import BrandMark from '@/components/common/BrandMark.vue'
 import { useLive } from '@/composables/useLive'
 import { useAuthStore } from '@/stores/auth'
 import { useFeaturesStore } from '@/stores/features'
@@ -176,16 +177,7 @@ const nodeProps = (option: MenuOption) => {
 <template>
   <nav class="sidebar" :class="{ collapsed }">
     <RouterLink to="/" class="brand">
-      <svg viewBox="0 0 32 32" width="22" height="22" aria-hidden="true">
-        <circle cx="16" cy="16" r="10" fill="none" stroke="currentColor" stroke-width="2.4" />
-        <circle cx="16" cy="16" r="3.6" fill="currentColor" />
-        <path
-          d="M16 2v5M16 25v5M2 16h5M25 16h5"
-          stroke="currentColor"
-          stroke-width="2.4"
-          stroke-linecap="round"
-        />
-      </svg>
+      <BrandMark :size="24" />
       <span v-if="!collapsed" class="wordmark">ARGUS</span>
     </RouterLink>
     <!-- Only the menu scrolls on low screens; the brand stays at the top. -->
@@ -218,7 +210,7 @@ const nodeProps = (option: MenuOption) => {
   align-items: center;
   gap: 10px;
   height: var(--ar-header-height);
-  padding: 0 17px;
+  padding: 0 16px;
   border-bottom: 1px solid var(--ar-border);
   color: var(--ar-primary);
   text-decoration: none;
@@ -248,6 +240,8 @@ const nodeProps = (option: MenuOption) => {
   font-size: 14px;
   letter-spacing: 0.28em;
   color: var(--ar-text);
+  /* Centre the capitals, not the line box, against the mark. */
+  text-box: trim-both cap alphabetic;
 }
 :deep(.n-menu-item-group-title) {
   font-family: var(--ar-font-mono);
