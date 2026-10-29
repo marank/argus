@@ -1,0 +1,113 @@
+{% load i18n %}<!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}<html lang="{{ LANGUAGE_CODE }}">
+{% comment %}
+  The HTML part of every mail from Argus (see apps.core.notifications.send_mail).
+  Mail clients ignore most of CSS: the layout is tables with inline styles, the
+  colours are the app's light palette (frontend/src/theme/palette.ts). Clients
+  that honour the dark preference get the dark palette from the <style> block.
+{% endcomment %}
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<title>{{ subject }}</title>
+<style>
+  body { margin: 0; padding: 0; -webkit-text-size-adjust: 100%; }
+  a { color: #0e7490; }
+  @media (max-width: 620px) {
+    .ar-card-pad { padding: 24px 20px !important; }
+    .ar-outer-pad { padding: 16px 8px !important; }
+  }
+  @media (prefers-color-scheme: dark) {
+    .ar-bg { background: #0a0e13 !important; }
+    .ar-card { background: #10151b !important; border-color: #212a35 !important; }
+    .ar-accent { background: #22b8d6 !important; }
+    .ar-text { color: #dfe6ee !important; }
+    .ar-muted { color: #8a97a8 !important; }
+    .ar-subtle { color: #5f6c7c !important; }
+    .ar-sunken { background: #0c1116 !important; border-color: #212a35 !important; }
+    .ar-rule { border-color: #212a35 !important; }
+    .ar-soft { background: #0f2a33 !important; border-color: #1a5566 !important; }
+    .ar-link { color: #22b8d6 !important; }
+    .ar-button { background: #22b8d6 !important; }
+    .ar-button a { color: #03141a !important; }
+  }
+</style>
+</head>
+<body class="ar-bg" style="margin:0;padding:0;background:#f3f5f7;">
+{% if preheader %}<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f3f5f7;opacity:0;">{{ preheader }}</div>{% endif %}
+<table role="presentation" class="ar-bg" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f3f5f7" style="background:#f3f5f7;">
+  <tr>
+    <td class="ar-outer-pad" align="center" style="padding:32px 16px;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;">
+
+        <tr>
+          <td style="padding:0 4px 16px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td valign="middle" style="padding-right:10px;"><img src="cid:{{ logo_cid }}" width="28" height="28" alt="" style="display:block;border:0;width:28px;height:28px;"></td>
+                <td valign="middle" class="ar-text" style="font-family:'IBM Plex Sans','Segoe UI',-apple-system,Roboto,Helvetica,Arial,sans-serif;font-size:17px;font-weight:600;letter-spacing:-0.01em;color:#0f1720;">Argus</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="ar-card" bgcolor="#ffffff" style="background:#ffffff;border:1px solid #dbe1e7;border-radius:8px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr><td class="ar-accent" height="3" bgcolor="#0e7490" style="height:3px;line-height:3px;font-size:0;background:#0e7490;border-radius:8px 8px 0 0;">&nbsp;</td></tr>
+              <tr>
+                <td class="ar-card-pad" style="padding:28px 32px 32px;font-family:'IBM Plex Sans','Segoe UI',-apple-system,Roboto,Helvetica,Arial,sans-serif;">
+
+                  <h1 class="ar-text" style="margin:0 0 18px;font-size:19px;line-height:1.35;font-weight:600;letter-spacing:-0.01em;color:#0f1720;">{{ subject }}</h1>
+
+                  {% for block in blocks %}
+                    {% if block.code %}
+                      <table role="presentation" class="ar-soft" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#e9f3f5" style="margin:4px 0 20px;background:#e9f3f5;border:1px solid #b9dbe3;border-radius:6px;">
+                        <tr><td align="center" class="ar-text" style="padding:18px 12px;font-family:'JetBrains Mono',Consolas,'Courier New',monospace;font-size:30px;font-weight:600;letter-spacing:0.25em;text-indent:0.25em;color:#0f1720;">{{ block.code }}</td></tr>
+                      </table>
+                    {% elif block.lines %}
+                      <table role="presentation" class="ar-sunken" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f7f9fa" style="margin:0 0 16px;background:#f7f9fa;border:1px solid #dbe1e7;border-radius:6px;">
+                        {% if block.label %}
+                          <tr><td class="ar-subtle" style="padding:10px 14px 0;font-family:'JetBrains Mono',Consolas,'Courier New',monospace;font-size:10.5px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:#8794a3;">{{ block.label }}</td></tr>
+                        {% endif %}
+                        {% for item in block.lines %}
+                          <tr><td class="ar-text{% if not forloop.first %} ar-rule{% endif %}" style="padding:9px 14px;font-size:14px;line-height:1.45;color:#0f1720;{% if not forloop.first %}border-top:1px solid #dbe1e7;{% endif %}">{{ item }}</td></tr>
+                        {% endfor %}
+                      </table>
+                    {% else %}
+                      <p class="ar-text" style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#0f1720;">{{ block.text|urlize|linebreaksbr }}</p>
+                    {% endif %}
+                  {% endfor %}
+
+                  {% if url %}
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 0;">
+                      <tr>
+                        <td class="ar-button" bgcolor="#0e7490" style="background:#0e7490;border-radius:6px;">
+                          <a href="{{ url }}" style="display:inline-block;padding:11px 20px;font-family:'IBM Plex Sans','Segoe UI',-apple-system,Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;line-height:1;color:#ffffff;text-decoration:none;border-radius:6px;">{% translate "Open in Argus" %}&nbsp;&rarr;</a>
+                        </td>
+                      </tr>
+                    </table>
+                    <p class="ar-subtle" style="margin:14px 0 0;font-size:12px;line-height:1.5;color:#8794a3;word-break:break-all;">{% translate "Or open this link:" %} <a class="ar-link" href="{{ url }}" style="color:#0e7490;text-decoration:none;">{{ url }}</a></p>
+                  {% endif %}
+
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="ar-muted" style="padding:18px 4px 0;font-family:'IBM Plex Sans','Segoe UI',-apple-system,Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#5b6877;">
+            {% translate "This email was sent automatically by Argus, the IT asset management." %}
+            {% if manage_url %}<br><a class="ar-link" href="{{ manage_url }}" style="color:#0e7490;text-decoration:none;">{% translate "Manage notifications" %}</a>{% endif %}
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>

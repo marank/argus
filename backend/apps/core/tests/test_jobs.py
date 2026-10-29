@@ -105,7 +105,7 @@ def test_a_reminder_is_queued_once_and_counts_as_sent_after_delivery(mail_on, jo
 def test_a_failed_delivery_does_not_count_as_sent(mail_on, monkeypatch):
     employee = User.objects.get(username="employee")
 
-    def refuse(*args):
+    def refuse(*args, **kwargs):
         raise ConnectionRefusedError
 
     monkeypatch.setattr(tasks, "send_mail", refuse)

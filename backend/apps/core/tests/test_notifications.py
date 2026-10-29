@@ -53,6 +53,32 @@ def test_new_request_notifies_it(mail_on, employee_client, django_capture_on_com
     assert "https://argus.example.com/requests/" in mail.outbox[0].body
 
 
+def test_mails_come_in_the_app_layout_too(mail_on, employee_client, django_capture_on_commit_callbacks):
+    with django_capture_on_commit_callbacks(execute=True):
+        submit(employee_client)
+    message = mail.outbox[0]
+    html, mimetype = message.alternatives[0]
+    assert mimetype == "text/html"
+    assert 'href="https://argus.example.com/requests/' in html
+    assert "https://argus.example.com/profile/notifications" in html
+    assert "Workshop" in html
+    # The logo travels with the HTML part, not as an attachment.
+    parts = [part.get_content_type() for part in message.message().walk()]
+    assert parts == ["multipart/alternative", "text/plain", "multipart/related", "text/html", "image/png"]
+
+
+def test_mail_blocks():
+    from apps.core.notifications import blocks
+
+    assert blocks("Ready.\n\nStill to return:\n- A\n- B\n\nCode 123456 here.\n\nBye", "123456") == [
+        {"text": "Ready."},
+        {"label": "Still to return", "lines": ["A", "B"]},
+        {"text": "Code 123456 here."},
+        {"code": "123456"},
+        {"text": "Bye"},
+    ]
+
+
 def test_decision_goes_to_requester_in_their_language(
     mail_on, employee_client, it_client, django_capture_on_commit_callbacks
 ):

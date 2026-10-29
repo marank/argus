@@ -3006,3 +3006,18 @@ msgstr "Lager"
 msgid "Technical services"
 msgstr "Haustechnik"
 
+#: apps/core/templates/core/mail/message.html
+msgid "Open in Argus"
+msgstr "In Argus öffnen"
+
+#: apps/core/templates/core/mail/message.html
+msgid "Or open this link:"
+msgstr "Oder diesen Link öffnen:"
+
+#: apps/core/templates/core/mail/message.html
+msgid "This email was sent automatically by Argus, the IT asset management."
+msgstr "Diese E-Mail wurde automatisch von Argus, der IT-Asset-Verwaltung, versendet."
+
+#: apps/core/templates/core/mail/message.html
+msgid "Manage notifications"
+msgstr "Benachrichtigungen verwalten"

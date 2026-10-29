@@ -1,17 +1,18 @@
 """Background jobs, run by ``manage.py procrastinate worker`` (see ``apps.core.jobs``).
 
-Mails are rendered when they are queued and only delivered here. Delivery reads
-the mail settings at send time, so switching mail off also stops queued mails.
+Mail texts are rendered when they are queued and only delivered here, in the HTML
+layout and the recipient's language. Delivery reads the mail settings at send time,
+so switching mail off also stops queued mails.
 """
 
 from datetime import timedelta
 
-from django.utils import timezone
+from django.utils import timezone, translation
 from procrastinate import RetryStrategy
 from procrastinate.contrib.django import app
 
 from apps.core.models import MailSettings, Notification, NotificationLog
-from apps.core.notifications import mail_ready, send_mail
+from apps.core.notifications import EVENT_KEYS, link, mail_ready, send_mail
 from apps.core.services.reminders import send_due_reminders
 
 # Backs off from seconds to hours and gives up after about a day.
@@ -20,13 +21,24 @@ NOTIFICATION_RETRY = RetryStrategy(max_attempts=10, exponential_wait=3)
 
 @app.task(queue="mail", retry=NOTIFICATION_RETRY)
 def send_notification(
-    *, event: str, to: str, subject: str, body: str, key: str = "", recipient: str = ""
+    *,
+    event: str,
+    to: str,
+    subject: str,
+    body: str,
+    url: str = "",
+    language: str = "de",
+    key: str = "",
+    recipient: str = "",
 ) -> None:
     """With ``key`` (reminders) the notification counts as sent only once it was delivered."""
     settings = MailSettings.load()
     if not mail_ready(settings):
         return
-    send_mail(settings, to, subject, body)
+    # Kinds the recipient can switch off; mails sent on purpose by IT are not among them.
+    manage_url = link(settings, "/profile/notifications") if event in EVENT_KEYS else ""
+    with translation.override(language):
+        send_mail(settings, to, subject, body, url=url, manage_url=manage_url)
     if key:
         NotificationLog.objects.get_or_create(event=event, key=key, recipient_id=recipient)
 

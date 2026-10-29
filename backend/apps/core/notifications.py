@@ -10,11 +10,14 @@ failing server never breaks the action that caused the mail. In-app notification
 stored right away and announced to the recipient's open tabs (``apps.core.live``).
 """
 
+import email.policy
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
+from pathlib import Path
 
 from django.conf import settings as django_settings
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 from django.utils import translation
 from django.utils.module_loading import import_string
 
@@ -109,9 +112,67 @@ def link(settings, path: str) -> str:
     return f"{settings.app_url.rstrip('/')}{path}" if settings.app_url else ""
 
 
-def send_mail(settings, to: str, subject: str, body: str) -> None:
+LOGO_CID = "argus-logo"
+LOGO = Path(__file__).parent / "templates" / "core" / "mail" / "logo.png"
+
+
+class Mail(EmailMultiAlternatives):
+    """Plain text plus the HTML part, which carries the logo as an inline image."""
+
+    def message(self, *, policy=email.policy.default):
+        msg = super().message(policy=policy)
+        html = msg.get_body(("html",))
+        if html is not None:
+            html.add_related(LOGO.read_bytes(), "image", "png", cid=f"<{LOGO_CID}>", filename="argus.png")
+        return msg
+
+
+def blocks(body: str, code: str = "") -> list[dict]:
+    """The text body as paragraphs and lists ("- " lines, optionally after a "Label:" line).
+
+    ``code`` follows the paragraph that names it, or ends the body.
+    """
+    result = []
+    for part in body.strip().split("\n\n"):
+        lines = part.splitlines()
+        label = lines[0] if len(lines) > 1 and not lines[0].startswith("- ") else ""
+        items = lines[1:] if label else lines
+        if items and all(line.startswith("- ") for line in items):
+            result.append({"label": label.rstrip(":"), "lines": [line[2:] for line in items]})
+        else:
+            result.append({"text": part})
+            if code and code in part:
+                result.append({"code": code})
+                code = ""
+    if code:
+        result.append({"code": code})
+    return result
+
+
+def send_mail(
+    settings, to: str, subject: str, body: str, *, url: str = "", code: str = "", manage_url: str = ""
+) -> None:
+    """Sends ``body`` as text and in the HTML layout, in the active language.
+
+    ``url`` is the page the mail is about (a button), ``code`` a code to type in (set
+    off large), ``manage_url`` the page where the recipient switches notifications off.
+    """
+    text = f"{body}\n\n{url}" if url else body
+    html = render_to_string(
+        "core/mail/message.html",
+        {
+            "subject": subject,
+            "preheader": body.split("\n\n", 1)[0],
+            "blocks": blocks(body, code),
+            "url": url,
+            "manage_url": manage_url,
+            "logo_cid": LOGO_CID,
+        },
+    )
+    message = Mail(subject, text, sender(settings), [to])
+    message.attach_alternative(html, "text/html")
     with connection(settings) as backend:
-        backend.send_messages([EmailMessage(subject, body, sender(settings), [to])])
+        backend.send_messages([message])
 
 
 Render = Callable[[object], tuple[str, str]]
@@ -175,9 +236,6 @@ def notify(
             publish("notification", notification.pk, users=[user.pk], staff=False)
         if not mail:
             continue
-        url = link(settings, path)
-        if url:
-            body = f"{body}\n\n{url}"
         defer(
             tasks.send_notification,
             queueing_lock=f"{event}:{key}:{user.pk}" if key else None,
@@ -185,6 +243,8 @@ def notify(
             to=user.email,
             subject=subject,
             body=body,
+            url=link(settings, path),
+            language=user.language or "de",
             key=key,
             recipient=str(user.pk),
         )

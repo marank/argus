@@ -7,7 +7,7 @@ from ninja.errors import HttpError
 
 from apps.core.api.security import superuser_auth
 from apps.core.models import MailSettings
-from apps.core.notifications import send_mail
+from apps.core.notifications import link, send_mail
 
 router = Router(tags=["settings"], auth=superuser_auth)
 
@@ -88,6 +88,7 @@ def send_test_mail(request: HttpRequest, payload: TestMailIn):
             payload.to,
             _("Argus test email"),
             _("This test message confirms that Argus can send emails."),
+            url=link(settings, "/"),
         )
     except Exception as exc:  # noqa: BLE001 - report every SMTP problem to the admin
         raise HttpError(502, _("Sending failed: %(error)s") % {"error": exc}) from exc
