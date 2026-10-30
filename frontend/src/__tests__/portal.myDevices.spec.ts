@@ -85,6 +85,47 @@ describe('MyDevicesView', () => {
     expect(rowOf('BM-0003').textContent).toContain('10/24/2026')
   })
 
+  it('marks returns that are overdue', async () => {
+    api.myAssets.mockResolvedValue([
+      myAsset({ return_due: '2020-01-31', asset_request_number: 'R-1' }),
+      myAsset({ id: 'a2', inventory_number: 'NB-0002', return_due: '2099-01-31' }),
+    ])
+    await mountPage(MyDevicesView)
+    expect(rowOf('NB-0001').querySelector('.overdue')).not.toBeNull()
+    expect(rowOf('NB-0002').querySelector('.overdue')).toBeNull()
+  })
+
+  describe('on a phone', () => {
+    const original = window.matchMedia
+    beforeEach(() => {
+      window.matchMedia = ((query: string) => ({
+        matches: query.includes('max-width'),
+        media: query,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+      })) as unknown as typeof window.matchMedia
+    })
+    afterEach(() => {
+      window.matchMedia = original
+    })
+
+    it('shows one card per device with return date and report button', async () => {
+      api.myAssets.mockResolvedValue([
+        myAsset({ return_due: '2020-01-31', asset_request_number: 'R-1', issues: [issue()] }),
+      ])
+      const { router } = await mountPage(MyDevicesView)
+      expect(document.body.querySelector('table')).toBeNull()
+      const card = document.body.querySelector<HTMLElement>('.card')!
+      expect(card.textContent).toContain('NB-0001')
+      expect(card.textContent).toContain('Return overdue since')
+      expect(card.querySelector('.report-badge')?.textContent).toBe('Report open')
+
+      await click(button('Report a problem'))
+      expect(router.currentRoute.value.name).not.toBe('portal-device')
+      expect(document.body.querySelector('.n-modal')?.textContent).toContain('ThinkPad T14')
+    })
+  })
+
   it('marks devices with an open or running problem report', async () => {
     api.myAssets.mockResolvedValue([
       myAsset({ issues: [issue({ status: 'resolved' })] }),
@@ -178,6 +219,14 @@ describe('MyDeviceDetailView', () => {
     await mountPage(MyDeviceDetailView, { props: { id: 'a1' } })
     expect(api.myAsset).toHaveBeenCalledWith('a1')
     expect(bodyText()).toContain('10/24/2026 · R-9')
+  })
+
+  it('marks an overdue return', async () => {
+    api.myAsset.mockResolvedValue(
+      myAsset({ return_due: '2020-01-31', asset_request_number: 'R-9' }),
+    )
+    await mountPage(MyDeviceDetailView, { props: { id: 'a1' } })
+    expect(document.body.querySelector('dd.warning')?.textContent).toContain('R-9 · overdue')
   })
 
   it('lists the reports with IT’s latest answer, linking to the conversation', async () => {

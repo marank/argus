@@ -106,3 +106,20 @@ def test_expired_licenses_count_while_still_assigned(it_client):
     rows = it_client.get("/api/dashboard/widgets/expiring").json()
     assert [r["id"] for r in rows if r["kind"] == "license"] == [str(used.pk)]
     assert it_client.get("/api/dashboard/it").json()["licenses_expiring"] == 1
+
+
+def test_employee_dashboard_lists_returns_overdue_or_due_soon(employee_client):
+    employee = User.objects.get(username="employee")
+    today = timezone.localdate()
+    lent = AssetRequest.objects.filter(requester=employee)[:3]
+    overdue, soon, later = (r.pk for r in lent)
+    for pk, end in ((overdue, -3), (soon, 5), (later, 30)):
+        AssetRequest.objects.filter(pk=pk).update(
+            status=AssetRequestStatus.HANDED_OUT,
+            duration=AssetRequest.Duration.TEMPORARY,
+            end_date=today + timedelta(days=end),
+        )
+    rows = employee_client.get("/api/dashboard/me").json()["returns_due"]
+    ids = [r["id"] for r in rows]
+    assert ids.index(str(overdue)) < ids.index(str(soon))
+    assert str(later) not in ids

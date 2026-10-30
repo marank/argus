@@ -193,13 +193,36 @@ describe('IT dashboard', () => {
     })
 
     it('shows employees their own overview without the editor', async () => {
-      api.me.mockResolvedValue({ open_requests: 2, assigned_assets: 3, ready_for_pickup: [] })
+      api.me.mockResolvedValue({
+        open_requests: 2,
+        assigned_assets: 3,
+        ready_for_pickup: [],
+        returns_due: [],
+      })
       await dashboard({ user: makeUser({ first_name: 'Paul' }) })
       expect(api.it).not.toHaveBeenCalled()
       expect(pageText()).toContain('Your requests and devices at a glance.')
       expect(link('Open requests').getAttribute('href')).toBe('/portal/requests')
       expect(link('Assigned devices').textContent).toContain('3')
       expect(hasButton('Customize dashboard')).toBe(false)
+    })
+
+    it('reminds employees of returns, the overdue ones in red', async () => {
+      api.me.mockResolvedValue({
+        open_requests: 2,
+        assigned_assets: 3,
+        ready_for_pickup: [],
+        returns_due: [
+          { id: 'r1', number: 'R-1', title: 'Headset', end_date: '2020-01-31' },
+          { id: 'r2', number: 'R-2', title: 'Beamer', end_date: '2099-01-31' },
+        ],
+      })
+      await dashboard({ user: makeUser({ first_name: 'Paul' }) })
+      expect(link('R-1').textContent).toContain('Return overdue since')
+      expect(link('R-1').querySelector('strong.late')).not.toBeNull()
+      expect(link('R-2').textContent).toContain('Return by')
+      expect(link('R-2').querySelector('strong.late')).toBeNull()
+      expect(link('R-1').getAttribute('href')).toBe('/portal/requests/r1')
     })
   })
 

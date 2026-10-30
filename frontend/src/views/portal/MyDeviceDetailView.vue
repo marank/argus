@@ -13,6 +13,7 @@ import ReportIssueModal from '@/components/portal/ReportIssueModal.vue'
 import { useFormat } from '@/composables/useFormat'
 import type { Id } from '@/types/common'
 import { categoryIcon } from '@/utils/icons'
+import { isPast } from '@/utils/requests'
 import { useFeaturesStore } from '@/stores/features'
 
 /** One of the employee's devices with all its problem reports and IT's answers. */
@@ -39,9 +40,11 @@ const details = computed<DetailEntry[]>(() => {
     {
       label: t('requests.myDevices.returnBy'),
       value: a.return_due
-        ? `${date(a.return_due)} · ${a.asset_request_number}`
+        ? `${date(a.return_due)} · ${a.asset_request_number}` +
+          (isPast(a.return_due) ? ` · ${t('requests.myDevices.overdue')}` : '')
         : t('common.permanent'),
       mono: !!a.return_due,
+      warning: isPast(a.return_due),
     },
   ]
 })

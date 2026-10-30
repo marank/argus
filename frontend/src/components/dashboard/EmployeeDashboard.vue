@@ -67,6 +67,30 @@ useLive(['request', 'issue', 'asset', 'license'], load)
       </RouterLink>
     </NCard>
 
+    <!-- Overdue returns first; the card turns red as soon as one is late. -->
+    <NCard
+      v-if="data.returns_due.length"
+      :title="t('dashboard.returnsDue')"
+      size="small"
+      class="returns"
+      :class="{ late: data.returns_due.some((r) => isPast(r.end_date)) }"
+    >
+      <RouterLink
+        v-for="r in data.returns_due"
+        :key="r.id"
+        :to="{ name: 'portal-request', params: { id: r.id } }"
+        class="line"
+      >
+        <span class="mono">{{ r.number }}</span>
+        <span>{{ r.title }}</span>
+        <strong class="mono" :class="{ late: isPast(r.end_date) }">{{
+          isPast(r.end_date)
+            ? t('dashboard.returnOverdue', { date: weekday(r.end_date) })
+            : t('dashboard.returnBy', { date: weekday(r.end_date) })
+        }}</strong>
+      </RouterLink>
+    </NCard>
+
     <RouterLink :to="{ name: 'portal-new' }">
       <NButton type="primary" size="large">
         <template #icon><PackagePlus :size="18" /></template>
@@ -98,5 +122,17 @@ useLive(['request', 'issue', 'asset', 'license'], load)
 }
 .line strong.passed {
   color: var(--ar-warning);
+}
+.returns {
+  border-left: 3px solid var(--ar-warning);
+}
+.returns.late {
+  border-left-color: var(--ar-error);
+}
+.returns .line strong {
+  color: var(--ar-warning);
+}
+.returns .line strong.late {
+  color: var(--ar-error);
 }
 </style>

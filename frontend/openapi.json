@@ -5339,12 +5339,20 @@
             },
             "title": "Ready For Pickup",
             "type": "array"
+          },
+          "returns_due": {
+            "items": {
+              "$ref": "#/components/schemas/ReturnDueOut"
+            },
+            "title": "Returns Due",
+            "type": "array"
           }
         },
         "required": [
           "open_requests",
           "ready_for_pickup",
-          "assigned_assets"
+          "assigned_assets",
+          "returns_due"
         ],
         "title": "EmployeeOverviewOut",
         "type": "object"
@@ -10584,6 +10592,36 @@
           "notes"
         ],
         "title": "ReturnData",
+        "type": "object"
+      },
+      "ReturnDueOut": {
+        "properties": {
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "title",
+          "end_date"
+        ],
+        "title": "ReturnDueOut",
         "type": "object"
       },
       "ReturnEventOut": {

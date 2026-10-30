@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from uuid import UUID
 
 from ninja import Router
@@ -44,10 +44,18 @@ class PickupOut(Schema):
     pickup_at: datetime | None
 
 
+class ReturnDueOut(Schema):
+    id: UUID
+    number: str
+    title: str
+    end_date: date
+
+
 class EmployeeOverviewOut(Schema):
     open_requests: int
     ready_for_pickup: list[PickupOut]
     assigned_assets: int
+    returns_due: list[ReturnDueOut]
 
 
 # Figures each area contributes; they stay empty without the right to read the area.

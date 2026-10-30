@@ -73,6 +73,11 @@ class EmployeeOverview(TypedDict):
     open_requests: int
     ready_for_pickup: list[AssetRequest]
     assigned_assets: int
+    # Lent devices overdue or due back within RETURNS_DUE_DAYS, the earliest first.
+    returns_due: list[AssetRequest]
+
+
+RETURNS_DUE_DAYS = 7
 
 
 def it_overview(user: User) -> ITOverview:
@@ -120,4 +125,11 @@ def employee_overview(user: User) -> EmployeeOverview:
         "open_requests": mine.filter(status__in=AssetRequest.OPEN_STATUSES).count(),
         "ready_for_pickup": list(mine.filter(status=AssetRequestStatus.READY).order_by("pickup_at")[:5]),
         "assigned_assets": Asset.objects.filter(assigned_to=user).count(),
+        "returns_due": list(
+            mine.filter(
+                status=AssetRequestStatus.HANDED_OUT,
+                duration=AssetRequest.Duration.TEMPORARY,
+                end_date__lte=timezone.localdate() + timedelta(days=RETURNS_DUE_DAYS),
+            ).order_by("end_date", "number")[:5]
+        ),
     }

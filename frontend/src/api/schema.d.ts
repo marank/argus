@@ -4324,6 +4324,8 @@ export interface components {
       open_requests: number
       /** Ready For Pickup */
       ready_for_pickup: components['schemas']['PickupOut'][]
+      /** Returns Due */
+      returns_due: components['schemas']['ReturnDueOut'][]
     }
     /**
      * EmptyFilter
@@ -6370,6 +6372,23 @@ export interface components {
       items: string[]
       /** Notes */
       notes: string | null
+    }
+    /** ReturnDueOut */
+    ReturnDueOut: {
+      /**
+       * End Date
+       * Format: date
+       */
+      end_date: string
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /** Number */
+      number: string
+      /** Title */
+      title: string
     }
     /** ReturnEventOut */
     ReturnEventOut: {
