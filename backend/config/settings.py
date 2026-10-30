@@ -45,7 +45,10 @@ CSRF_TRUSTED_ORIGINS = _app_origins + _dev_origins
 # Cookies only over HTTPS when Argus is reachable exclusively via HTTPS.
 SESSION_COOKIE_SECURE = bool(APP_URLS) and all(url.scheme == "https" for url in APP_URLS)
 CSRF_COOKIE_SECURE = SESSION_COOKIE_SECURE
-# HSTS is left to the TLS proxy in front of Argus.
+# HSTS and the redirect from http to https are left to the TLS proxy in front of
+# Argus (the container itself speaks plain http), so `check --deploy` does not
+# warn about them.
+SILENCED_SYSTEM_CHECKS = ["security.W004", "security.W008"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",

@@ -100,7 +100,7 @@
     {
       "label": "Check: all",
       "detail": "Everything CI runs for backend and frontend (reports only, fixes nothing)",
-      "dependsOn": ["Check: backend", "Check: frontend"],
+      "dependsOn": ["Check: backend", "Check: deploy settings", "Check: frontend"],
       "dependsOrder": "sequence",
       "group": "test",
       "problemMatcher": []
@@ -111,6 +111,22 @@
       "type": "shell",
       "command": "uv run ruff check . && uv run ruff format --check . && uv run mypy . && uv run deptry . && uv run python manage.py makemigrations --check --dry-run && uv run python manage.py check && uv run pytest -q --cov",
       "options": { "cwd": "${workspaceFolder}/backend" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Check: deploy settings",
+      "detail": "Same as the CI step: manage.py check --deploy with production settings behind a TLS proxy",
+      "type": "shell",
+      "command": "uv run python manage.py check --deploy --fail-level WARNING",
+      "options": {
+        "cwd": "${workspaceFolder}/backend",
+        "env": {
+          "DEBUG": "false",
+          "SECRET_KEY": "ci-deploy-check-not-secret-but-long-and-random-enough-0123456789abcdef",
+          "APP_URLS": "https://argus.example.com",
+          "BEHIND_PROXY": "true"
+        }
+      },
       "problemMatcher": []
     },
     {

@@ -31,6 +31,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 # --- 3. Runtime ------------------------------------------------------------------
 FROM python:${PYTHON_VERSION}-slim-trixie AS runtime
+# renovate: datasource=pypi depName=supervisor
+ARG SUPERVISOR_VERSION=4.3.0
 
 LABEL org.opencontainers.image.title="Argus" \
       org.opencontainers.image.description="IT asset management (Django + Vue)"
@@ -43,8 +45,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     BEHIND_PROXY=true
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends nginx supervisor curl \
+    && apt-get install -y --no-install-recommends nginx curl \
     && rm -rf /var/lib/apt/lists/* \
+    # supervisord from PyPI, outside the app's venv: it is infrastructure, not an app
+    # dependency (Debian's package would also bring setuptools). pip is not needed at
+    # runtime, so it goes afterwards, with the libraries it vendors.
+    && pip install --no-cache-dir --root-user-action=ignore "supervisor==${SUPERVISOR_VERSION}" \
+    && pip uninstall -y --root-user-action=ignore pip \
     && rm -f /etc/nginx/sites-enabled/default \
     && groupadd --system --gid 10001 argus \
     && useradd --system --uid 10001 --gid argus --home-dir /app --shell /usr/sbin/nologin argus

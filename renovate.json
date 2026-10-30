@@ -3,11 +3,20 @@
   "extends": ["config:recommended", ":dependencyDashboard", ":semanticCommits"],
   "timezone": "Europe/Berlin",
   "schedule": ["before 6am on monday"],
+  "pre-commit": {
+    "enabled": true
+  },
   "lockFileMaintenance": {
     "enabled": true,
     "schedule": ["before 6am on the first day of the month"]
   },
   "customManagers": [
+    {
+      "description": "Versions pinned in the Dockerfile with a `# renovate:` comment (supervisor from PyPI)",
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)Dockerfile$/"],
+      "matchStrings": ["# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+ARG \\S+_VERSION=(?<currentValue>\\S+)"]
+    },
     {
       "description": "Images started with `docker run` inside workflow steps (Trivy scan)",
       "customType": "regex",
@@ -30,6 +39,11 @@
       "matchUpdateTypes": ["minor", "patch"],
       "matchPackageNames": ["!django"],
       "groupName": "backend (non-major)"
+    },
+    {
+      "description": "Hook revisions in .pre-commit-config.yaml (ruff there follows ruff in pyproject.toml)",
+      "matchManagers": ["pre-commit"],
+      "groupName": "pre-commit hooks"
     },
     {
       "description": "pnpm comes from `packageManager` via corepack, in CI and in the Dockerfile; its own PR",

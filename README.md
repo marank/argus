@@ -290,6 +290,12 @@ dependencies (`backend/scripts/check_licenses.py`, `frontend/scripts/check-licen
 the built bundle must stay within the budget in `package.json` (`size-limit`; raise it
 deliberately when a feature needs it). `pnpm lint:fix` and `pnpm format` fix what they can.
 
+CI additionally runs `manage.py check --deploy` with production settings (HSTS and the
+https redirect are left to the TLS proxy and silenced in `settings.py`) and Trivy:
+secrets, fixable critical vulnerabilities and Dockerfile misconfigurations fail the
+build, both in the repository and in the built image; HIGH vulnerabilities are
+reported.
+
 Fast checks before every commit (ruff, prettier, oxlint, whitespace) with
 [pre-commit](https://pre-commit.com), installed once:
 

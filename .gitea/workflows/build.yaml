@@ -23,6 +23,7 @@ concurrency:
 
 env:
   REGISTRY: ${{ vars.REGISTRY }}
+  TRIVY_IMAGE: aquasec/trivy:0.76.0
 
 jobs:
   # --- Backend: ruff, mypy, deptry, licenses, migrations, pytest against PostgreSQL
@@ -98,6 +99,16 @@ jobs:
       - name: Django system checks
         run: uv run python manage.py check
 
+      # Production settings as behind a TLS proxy: no warning may remain (HSTS and the
+      # https redirect belong to the proxy, see SILENCED_SYSTEM_CHECKS).
+      - name: Django deploy checks
+        env:
+          DEBUG: "false"
+          SECRET_KEY: ci-deploy-check-not-secret-but-long-and-random-enough-0123456789abcdef
+          APP_URLS: https://argus.example.com
+          BEHIND_PROXY: "true"
+        run: uv run python manage.py check --deploy --fail-level WARNING
+
       # Coverage minimum: fail_under in pyproject.toml.
       - name: Tests
         run: uv run pytest -q --cov
@@ -145,9 +156,36 @@ jobs:
           pnpm build-only
           pnpm size
 
-  # --- Image: build, smoke-test, push -------------------------------------------
+  # --- Repository: secrets, vulnerable dependencies, Dockerfile misconfiguration --
+  repository:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: builtin:checkout
+
+      # Secrets, critical fixable vulnerabilities in the lock files and HIGH/CRITICAL
+      # Dockerfile misconfigurations fail; HIGH vulnerabilities are reported. The files
+      # are streamed into the scanner as a tar archive, which works whether or not the
+      # runner's Docker daemon can see this checkout. The vulnerability database is
+      # cached in a volume of the runner's Docker.
+      - name: Scan
+        run: |
+          trivy() {
+            tar -c --exclude=.git --exclude=node_modules --exclude=.venv . \
+              | docker run --rm -i -v argus-trivy-cache:/root/.cache/trivy \
+                  --entrypoint sh "$TRIVY_IMAGE" -c \
+                  'mkdir /src && tar -x -C /src &&
+                   test -f /src/Dockerfile -a -f /src/backend/uv.lock || { echo "nothing to scan" >&2; exit 2; }
+                   exec trivy fs --no-progress --skip-version-check "$@" /src' \
+                  trivy "$@"
+          }
+          trivy --scanners secret --exit-code 1
+          trivy --scanners vuln --severity CRITICAL --ignore-unfixed --exit-code 1
+          trivy --scanners misconfig --severity HIGH,CRITICAL --exit-code 1
+          trivy --scanners vuln --severity HIGH
+
+  # --- Image: build, smoke-test, scan, push -------------------------------------
   image:
-    needs: [backend, frontend]
+    needs: [backend, frontend, repository]
     runs-on: ubuntu-latest
     env:
       DOCKER_BUILDKIT: "1"
@@ -263,19 +301,21 @@ jobs:
           echo "Worker and live update stream are up"
 
       # Known vulnerabilities (OS packages, Python wheels) and secrets baked into the image.
-      # Report only for now: add `--exit-code 1` to block the push once the findings are triaged.
-      # The vulnerability database is cached in a volume of the runner's Docker.
+      # Secrets and critical vulnerabilities with an available fix block the push; HIGH
+      # ones are reported (fixes for Debian packages arrive with the next base image,
+      # which `docker build --pull` picks up). The database is cached in a volume.
       - name: Vulnerability scan
         run: |
-          docker run --rm \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            -v argus-trivy-cache:/root/.cache/trivy \
-            aquasec/trivy:0.76.0 image \
-            --scanners vuln,secret \
-            --severity HIGH,CRITICAL \
-            --ignore-unfixed \
-            --no-progress \
-            "${{ steps.meta.outputs.image }}:sha-${{ steps.meta.outputs.short_sha }}"
+          scan() {
+            docker run --rm \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              -v argus-trivy-cache:/root/.cache/trivy \
+              "$TRIVY_IMAGE" image --no-progress --skip-version-check "$@" \
+              "${{ steps.meta.outputs.image }}:sha-${{ steps.meta.outputs.short_sha }}"
+          }
+          scan --scanners secret --exit-code 1
+          scan --scanners vuln --severity CRITICAL --ignore-unfixed --exit-code 1
+          scan --scanners vuln --severity HIGH --ignore-unfixed
 
       - name: Push
         if: env.PUSH == 'true'
