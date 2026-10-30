@@ -321,6 +321,36 @@ Commit `frontend/openapi.json` and `frontend/src/api/schema.d.ts`; CI fails when
 not match the code. `src/types/` refers to them (`Schemas['AssetOut']`), so a changed
 API shows up as a type error in the frontend.
 
+## CI and Gitea
+
+`.gitea/workflows/build.yaml` runs on every push to `main`, on version tags (`v1.2.3`)
+and on pull requests. The jobs `backend`, `frontend` and `repository` run in parallel
+(the same checks as **Check: all**, plus Trivy on the repository); `image` then builds
+the image, starts it against a throwaway PostgreSQL, scans it and, except for pull
+requests, pushes it to the Gitea registry (`latest`, `sha-…`, and `1.2.3`/`1.2`/`1`
+for tags). `.gitea/workflows/renovate.yaml` runs Renovate every night.
+
+Setting up a repository on Gitea, in this order:
+
+1. **Protect `main`** (*Settings → Branches*): require the status checks `backend`,
+   `frontend`, `repository` and `image`, so nothing is merged with a failing check.
+2. **Enable Actions** for the repository; the runner needs Docker (the `image` and
+   `repository` jobs run `docker build` and `docker run`).
+3. **Secrets** (*Settings → Actions → Secrets*):
+
+   | Secret | Used by | Value |
+   | --- | --- | --- |
+   | `REGISTRY_USER` | build | Gitea user that owns (or may write to) the package |
+   | `REGISTRY_TOKEN` | build | access token of that user with `write:package` |
+   | `RENOVATE_TOKEN` | Renovate | access token of the user that opens the PRs, with write access to the repository and the scopes `write:repository`, `write:issue`, `read:organization`, `read:user`, `read:package` |
+   | `GH_COM_TOKEN` | Renovate, optional | read-only github.com token: release notes in the PRs, no rate limits |
+
+The registry is set as `REGISTRY` in `build.yaml` (`registry.example.com`); the image is
+`<registry>/<owner>/<repository>` in lower case.
+
+Renovate's dependency dashboard is an issue in the repository; updates that need a
+decision (Django, Python, TypeScript majors) wait for approval there.
+
 ## Translations
 
 ```bash
