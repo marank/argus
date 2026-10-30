@@ -1,4 +1,5 @@
 from django.db.models import Model, Q, QuerySet
+from django.db.models.expressions import Combinable
 
 # Every word adds a condition per field; without a cap a pasted text builds a query
 # too large for the database. Words beyond these limits are ignored.
@@ -28,8 +29,13 @@ def search[M: Model, R](
 def order[M: Model, R](
     queryset: QuerySet[M, R], ordering: str | None, allowed: tuple[str, ...]
 ) -> QuerySet[M, R]:
-    """Apply a comma separated ordering, ignoring fields not in ``allowed``."""
-    if not ordering:
-        return queryset
-    fields = [f for f in ordering.split(",") if f.lstrip("-") in allowed]
-    return queryset.order_by(*fields) if fields else queryset
+    """Apply a comma separated ordering, ignoring fields not in ``allowed``.
+
+    Without a usable ordering the queryset's own (or the model's default) applies. The
+    primary key always comes last: rows that tie on the sort fields would otherwise come
+    back in any order, swapping places on reload and repeating or going missing between
+    pages. UUIDv7 keys make that the order of creation.
+    """
+    fields: list[str | Combinable] = [f for f in (ordering or "").split(",") if f.lstrip("-") in allowed]
+    base = fields or list(queryset.query.order_by) or list(queryset.model._meta.ordering or ())
+    return queryset.order_by(*base, "pk")

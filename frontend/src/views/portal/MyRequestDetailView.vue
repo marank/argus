@@ -36,6 +36,14 @@ onMounted(load)
 useLive(['request'], load, { id: () => props.id })
 
 /** Lent for a period: when it is due back, then what came back. */
+/** Coming from the new request page (`?created=1`) and still waiting: say it went in. */
+const justSubmitted = computed(
+  () =>
+    !!route.query.created &&
+    (assetRequest.value?.status === 'submitted' ||
+      assetRequest.value?.status === 'pending_approval'),
+)
+
 const showReturns = computed(() => {
   const r = assetRequest.value
   if (!r) return false
@@ -132,7 +140,7 @@ const columns: DataTableColumns<Schemas['AssetRequestItemOut']> = [
       </PageHeader>
 
       <div class="stack">
-        <NAlert v-if="route.query.created" type="success" :bordered="false">
+        <NAlert v-if="justSubmitted" type="success" :bordered="false">
           {{
             t(
               assetRequest.status === 'pending_approval'

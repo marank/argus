@@ -207,6 +207,15 @@ describe('MyRequestDetailView', () => {
     )
   })
 
+  it('drops the "submitted" note once the new request is cancelled', async () => {
+    api.cancel.mockResolvedValue(assetRequest({ status: 'cancelled' }))
+    await open(assetRequest({ status: 'submitted' }), '/portal/requests/r1?created=1')
+    expect(bodyText()).toContain('Request R-2026-0042 submitted')
+    await click(button('Cancel request'))
+    await click(button('Confirm'))
+    expect(bodyText()).not.toContain('Request R-2026-0042 submitted')
+  })
+
   it('shows requested and confirmed quantities and the devices set aside', async () => {
     const allocation = (id: string, number: string): Schemas['AllocationOut'] => ({
       id,
