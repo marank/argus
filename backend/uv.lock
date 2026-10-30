@@ -84,6 +84,7 @@ dependencies = [
     { name = "ldap3" },
     { name = "procrastinate", extra = ["django"] },
     { name = "psycopg", extra = ["binary"] },
+    { name = "pydantic" },
     { name = "segno" },
     { name = "uvicorn" },
 ]
@@ -109,6 +110,7 @@ requires-dist = [
     { name = "ldap3", specifier = ">=2.9.1" },
     { name = "procrastinate", extras = ["django"], specifier = ">=3.10.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.6" },
+    { name = "pydantic", specifier = ">=2.14.1" },
     { name = "segno", specifier = ">=1.6" },
     { name = "uvicorn", specifier = ">=0.54.0" },
 ]

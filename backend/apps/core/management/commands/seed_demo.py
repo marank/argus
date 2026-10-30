@@ -19,7 +19,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.accounts.models import Department, Role, Team, User
-from apps.accounts.permissions import READ, RESOURCE_KEYS, WRITE
+from apps.accounts.permissions import PermissionLevel, ResourceKey
 from apps.core.models import NumberSequence
 from apps.core.services.numbering import get_sequence
 from apps.inventory.models import (
@@ -176,7 +176,7 @@ class Command(BaseCommand):
         full_access = Role.objects.create(
             name="Full access",
             description="Read and change everything.",
-            permissions=dict.fromkeys(RESOURCE_KEYS, WRITE),
+            permissions=dict.fromkeys(ResourceKey, PermissionLevel.WRITE),
         )
         full_access.members.add(it)
 
@@ -549,8 +549,26 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:
         name="IT support",
         description="Requests, devices and problem reports; master data read-only.",
         permissions={
-            **dict.fromkeys(("requests", "assets", "consumables", "licenses", "issues"), WRITE),
-            **dict.fromkeys(("models", "categories", "manufacturers", "locations", "procurement"), READ),
+            **dict.fromkeys(
+                (
+                    ResourceKey.REQUESTS,
+                    ResourceKey.ASSETS,
+                    ResourceKey.CONSUMABLES,
+                    ResourceKey.LICENSES,
+                    ResourceKey.ISSUES,
+                ),
+                PermissionLevel.WRITE,
+            ),
+            **dict.fromkeys(
+                (
+                    ResourceKey.MODELS,
+                    ResourceKey.CATEGORIES,
+                    ResourceKey.MANUFACTURERS,
+                    ResourceKey.LOCATIONS,
+                    ResourceKey.PROCUREMENT,
+                ),
+                PermissionLevel.READ,
+            ),
         },
     )
     support_role.members.add(by_name["jkoch"])

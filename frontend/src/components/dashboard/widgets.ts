@@ -47,8 +47,7 @@ import TeamLoadWidget from '@/components/dashboard/widgets/TeamLoadWidget.vue'
 import UpcomingWidget from '@/components/dashboard/widgets/UpcomingWidget.vue'
 import WaitingRequestsWidget from '@/components/dashboard/widgets/WaitingRequestsWidget.vue'
 import WeekWidget from '@/components/dashboard/widgets/WeekWidget.vue'
-import type { PermissionKey, WidgetSettings, WidgetSize } from '@/types/accounts'
-import type { FlagKey } from '@/types/settings'
+
 import type { Tone } from '@/utils/status'
 
 /** One key figure in a panel; `key` is what the user's layout stores when it is switched off. */
@@ -62,9 +61,9 @@ export interface StatCardDef {
   alert?: (data: Schemas['ITOverviewOut']) => boolean
   to?: RouteLocationRaw
   /** Shown only while this module or feature is on. */
-  flag?: FlagKey
+  flag?: Schemas['FlagKey']
   /** Shown only while the user's roles allow reading this area. */
-  permission?: PermissionKey
+  permission?: Schemas['ResourceKey']
 }
 
 /**
@@ -78,7 +77,7 @@ export interface WidgetDef {
   /** One line for the widget list in the editor. */
   description: string
   icon: Component
-  size: WidgetSize
+  size: Schemas['WidgetSize']
   /** Off until the user adds it from the widget list. */
   optional?: boolean
   /**
@@ -87,9 +86,9 @@ export interface WidgetDef {
    */
   multiple?: boolean
   /** Only offered while this module or feature is on. */
-  flag?: FlagKey
+  flag?: Schemas['FlagKey']
   /** Only offered while the user's roles allow reading this area. */
-  permission?: PermissionKey
+  permission?: Schemas['ResourceKey']
   cards?: StatCardDef[]
   component?: Component
 }
@@ -424,8 +423,8 @@ export const WIDGETS: WidgetDef[] = [
 /** Cards whose module or feature is on and whose area the user may read. */
 export const availableCards = (
   def: WidgetDef,
-  isOn: (flag: FlagKey) => boolean,
-  can: (permission: PermissionKey) => boolean,
+  isOn: (flag: Schemas['FlagKey']) => boolean,
+  can: (permission: Schemas['ResourceKey']) => boolean,
 ) =>
   (def.cards ?? []).filter(
     (card) => (!card.flag || isOn(card.flag)) && (!card.permission || can(card.permission)),
@@ -434,9 +433,10 @@ export const availableCards = (
 /** What the layout functions need to know of a widget. */
 type LayoutDef = Pick<WidgetDef, 'id' | 'size' | 'optional' | 'multiple'>
 
-export const defaultLayout = (defs: LayoutDef[]): WidgetSettings[] =>
+export const defaultLayout = (defs: LayoutDef[]): Schemas['DashboardWidgetOut'][] =>
   defs.map((d) => ({
     id: d.id,
+    widget: null,
     visible: !d.optional,
     size: d.size,
     height: 'auto',
@@ -480,11 +480,11 @@ export function moveBefore(order: string[], id: string, target: string): string[
  * The kind of widget an entry shows. The first instance of a widget has the
  * widget's id; further ones (`multiple`) have their own id and name the widget.
  */
-export const widgetType = (widget: Pick<WidgetSettings, 'id' | 'widget'>) =>
+export const widgetType = (widget: Pick<Schemas['DashboardWidgetOut'], 'id' | 'widget'>) =>
   widget.widget ?? widget.id
 
 /** Another instance of a widget that allows several, with its default size. */
-export function newInstance(def: LayoutDef): WidgetSettings {
+export function newInstance(def: LayoutDef): Schemas['DashboardWidgetOut'] {
   return {
     ...defaultLayout([def])[0]!,
     id: `${def.id}~${Math.random().toString(36).slice(2, 8)}`,
@@ -496,12 +496,12 @@ export function newInstance(def: LayoutDef): WidgetSettings {
 /** The user's saved layout applied to the widgets that exist (see `mergeOrder`). */
 export function resolveLayout(
   defs: LayoutDef[],
-  saved: WidgetSettings[] | undefined,
-): WidgetSettings[] {
+  saved: Schemas['DashboardWidgetOut'][] | undefined,
+): Schemas['DashboardWidgetOut'][] {
   if (!saved?.length) return defaultLayout(defs)
   const ids = defs.map((d) => d.id)
   // Further instances stay as long as their widget exists and allows several.
-  const isCopyOf = (w: WidgetSettings) =>
+  const isCopyOf = (w: Schemas['DashboardWidgetOut']) =>
     !!w.widget && w.widget !== w.id && !!defs.find((d) => d.id === w.widget)?.multiple
   return mergeOrder(
     ids,
@@ -510,15 +510,12 @@ export function resolveLayout(
   ).map((id) => {
     const widget = saved.find((w) => w.id === id)
     if (!widget) return defaultLayout(defs.filter((d) => d.id === id))[0]!
-    // Every field in a fixed order, filled in for layouts saved before it existed.
     return {
-      id: widget.id,
-      ...(isCopyOf(widget) ? { widget: widget.widget } : {}),
-      visible: widget.visible,
-      size: widget.size,
-      height: widget.height ?? 'auto',
-      hidden_cards: [...(widget.hidden_cards ?? [])],
-      card_order: [...(widget.card_order ?? [])],
+      ...widget,
+      // A copy whose widget no longer allows several shows as the first instance.
+      widget: isCopyOf(widget) ? widget.widget : null,
+      hidden_cards: [...widget.hidden_cards],
+      card_order: [...widget.card_order],
       options: { ...widget.options },
     }
   })
@@ -532,5 +529,5 @@ export const orderCards = (cards: StatCardDef[], order: string[]) =>
   ).map((key) => cards.find((c) => c.key === key)!)
 
 /** Whether a layout is the default one, so nothing needs to be stored. */
-export const isDefaultLayout = (defs: LayoutDef[], layout: WidgetSettings[]) =>
+export const isDefaultLayout = (defs: LayoutDef[], layout: Schemas['DashboardWidgetOut'][]) =>
   JSON.stringify(layout) === JSON.stringify(defaultLayout(defs))

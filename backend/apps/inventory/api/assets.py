@@ -8,6 +8,7 @@ from django.utils.translation import gettext as _
 from ninja import FilterLookup, FilterSchema, Query, Router, Status
 from ninja.pagination import paginate
 
+from apps.accounts.permissions import ResourceKey
 from apps.core.api.pagination import Pagination
 from apps.core.api.querying import order, search
 from apps.core.api.security import AuthedRequest, permission_auth
@@ -25,7 +26,7 @@ from apps.inventory.schemas.asset import (
 from apps.inventory.services import assets as asset_service
 from apps.masterdata.models import AssetModel, Category
 
-router = Router(tags=["assets"], auth=permission_auth("assets"))
+router = Router(tags=["assets"], auth=permission_auth(ResourceKey.ASSETS))
 
 SEARCH_FIELDS = (
     "inventory_number",

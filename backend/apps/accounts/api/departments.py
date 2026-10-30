@@ -1,6 +1,7 @@
 from django.db.models import Case, Count, IntegerField, QuerySet, Value, When
 
 from apps.accounts.models import Department
+from apps.accounts.permissions import ResourceKey
 from apps.accounts.schemas import DepartmentIn, DepartmentOut
 from apps.core.api.crud import CrudConfig, build_crud_router
 
@@ -28,7 +29,7 @@ router = build_crud_router(
         model=Department,
         out_schema=DepartmentOut,
         in_schema=DepartmentIn,
-        permission="departments",
+        permission=ResourceKey.DEPARTMENTS,
         search_fields=("name", "code", "cost_center"),
         ordering_fields=("name", "code", "cost_center", "sort_order", "tree_position"),
         queryset=department_queryset,

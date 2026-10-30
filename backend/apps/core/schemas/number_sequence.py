@@ -1,8 +1,9 @@
 from uuid import UUID
 
-from ninja import Field, Schema
+from ninja import Field
 
 from apps.core.models import NumberSequence
+from apps.core.schemas.base import Schema
 
 
 class NumberSequenceOut(Schema):

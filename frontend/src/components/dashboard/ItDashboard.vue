@@ -21,7 +21,6 @@ import { useLive } from '@/composables/useLive'
 import { useAuthStore } from '@/stores/auth'
 import { useFeaturesStore } from '@/stores/features'
 import type { Schemas } from '@/api/types'
-import type { DashboardSettings, WidgetSettings } from '@/types/accounts'
 
 /** `editing`: the layout editor is open; the page header switches it on. */
 const editing = defineModel<boolean>('editing', { default: false })
@@ -37,21 +36,22 @@ onMounted(load)
 useLive(['request', 'issue', 'asset', 'license', 'consumable', 'order'], load)
 
 const defs = new Map(WIDGETS.map((def) => [def.id, def]))
-const def = (widget: WidgetSettings) => defs.get(widgetType(widget)) as WidgetDef
+const def = (widget: Schemas['DashboardWidgetOut']) => defs.get(widgetType(widget)) as WidgetDef
 /** The name the user gave this instance, if any. */
-const customTitle = (widget: WidgetSettings) =>
+const customTitle = (widget: Schemas['DashboardWidgetOut']) =>
   typeof widget.options.title === 'string' && widget.options.title.trim()
     ? widget.options.title.trim()
     : undefined
 
 /** The saved layout; while editing a copy of it is changed and stored on "Done". */
-const saved = computed(() =>
-  resolveLayout(WIDGETS, (auth.user?.dashboard_settings as DashboardSettings | undefined)?.widgets),
-)
-const draft = ref<WidgetSettings[] | null>(null)
+const saved = computed(() => resolveLayout(WIDGETS, auth.user?.dashboard_settings.widgets))
+const draft = ref<Schemas['DashboardWidgetOut'][] | null>(null)
 watch(
   editing,
-  (on) => (draft.value = on ? (JSON.parse(JSON.stringify(saved.value)) as WidgetSettings[]) : null),
+  (on) =>
+    (draft.value = on
+      ? (JSON.parse(JSON.stringify(saved.value)) as Schemas['DashboardWidgetOut'][])
+      : null),
   { immediate: true },
 )
 const layout = computed(() => draft.value ?? saved.value)
@@ -61,9 +61,9 @@ const isAvailable = (d: WidgetDef) =>
   (!d.flag || features.isOn(d.flag)) &&
   (!d.permission || auth.can(d.permission)) &&
   (!d.cards || availableCards(d, features.isOn, auth.can).length > 0)
-const available = (widget: WidgetSettings) => isAvailable(def(widget))
+const available = (widget: Schemas['DashboardWidgetOut']) => isAvailable(def(widget))
 /** A panel with every card hidden is left out like a hidden widget. */
-const hasContent = (widget: WidgetSettings) =>
+const hasContent = (widget: Schemas['DashboardWidgetOut']) =>
   !def(widget).cards ||
   availableCards(def(widget), features.isOn, auth.can).some(
     (c) => !widget.hidden_cards.includes(c.key),
@@ -79,7 +79,7 @@ const widgets = computed(() =>
 interface PickerEntry {
   def: WidgetDef
   /** The hidden instance to show again; none adds another one. */
-  widget: WidgetSettings | null
+  widget: Schemas['DashboardWidgetOut'] | null
   another: boolean
   /** How often it is on the dashboard already. */
   count: number
@@ -96,7 +96,7 @@ const addable = computed(() =>
 const picking = ref(false)
 
 /** An added widget goes to the end, where the user sees it appear. */
-function add(d: WidgetDef, widget: WidgetSettings | null) {
+function add(d: WidgetDef, widget: Schemas['DashboardWidgetOut'] | null) {
   const list = draft.value
   if (!list) return
   if (widget) {
@@ -110,12 +110,12 @@ function add(d: WidgetDef, widget: WidgetSettings | null) {
 }
 
 /** Further instances go away entirely; the first one waits in the widget list. */
-function remove(widget: WidgetSettings) {
+function remove(widget: Schemas['DashboardWidgetOut']) {
   if (widget.widget && draft.value) draft.value.splice(draft.value.indexOf(widget), 1)
   else widget.visible = false
 }
 
-function rename(widget: WidgetSettings, title: string) {
+function rename(widget: Schemas['DashboardWidgetOut'], title: string) {
   const options = { ...widget.options }
   // Stored as typed (trimmed only for display), so spaces between words survive typing.
   if (title.trim()) options.title = title
@@ -127,7 +127,7 @@ function rename(widget: WidgetSettings, title: string) {
  * A widget changes its own settings (the notes text): while editing that goes
  * into the draft, otherwise it is saved right away.
  */
-async function setOptions(widget: WidgetSettings, options: Record<string, unknown>) {
+async function setOptions(widget: Schemas['DashboardWidgetOut'], options: Record<string, unknown>) {
   if (draft.value) {
     widget.options = options
     return
@@ -150,19 +150,19 @@ function moveTo(id: string, targetId: string) {
   list.splice(to, 0, widget!)
 }
 
-function move(widget: WidgetSettings, delta: number) {
+function move(widget: Schemas['DashboardWidgetOut'], delta: number) {
   const index = widgets.value.findIndex((w) => w.id === widget.id)
   const neighbour = widgets.value[index + delta]
   if (neighbour) moveTo(widget.id, neighbour.id)
 }
 
-function toggleCard(widget: WidgetSettings, key: string) {
+function toggleCard(widget: Schemas['DashboardWidgetOut'], key: string) {
   widget.hidden_cards = widget.hidden_cards.includes(key)
     ? widget.hidden_cards.filter((k) => k !== key)
     : [...widget.hidden_cards, key]
 }
 
-function reorderCards(widget: WidgetSettings, order: string[]) {
+function reorderCards(widget: Schemas['DashboardWidgetOut'], order: string[]) {
   const defaults = def(widget).cards?.map((c) => c.key) ?? []
   // The default order is stored as none, so a later change of the default still applies.
   widget.card_order = order.join() === defaults.join() ? [] : order
@@ -172,14 +172,14 @@ function reorderCards(widget: WidgetSettings, order: string[]) {
 const dragged = ref<string | null>(null)
 let lastOver: string | null = null
 
-function onDragStart(event: DragEvent, widget: WidgetSettings) {
+function onDragStart(event: DragEvent, widget: Schemas['DashboardWidgetOut']) {
   dragged.value = widget.id
   lastOver = widget.id
   event.dataTransfer?.setData('text/plain', widget.id)
   if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move'
 }
 
-function onDragOver(event: DragEvent, widget: WidgetSettings) {
+function onDragOver(event: DragEvent, widget: Schemas['DashboardWidgetOut']) {
   if (!dragged.value) return
   event.preventDefault()
   // Only on entering another widget, so a smaller one does not flip back and forth.
@@ -198,9 +198,9 @@ async function save() {
   if (!draft.value) return
   saving.value = true
   try {
-    await auth.changeDashboard(
-      isDefaultLayout(WIDGETS, draft.value) ? {} : { widgets: draft.value },
-    )
+    await auth.changeDashboard({
+      widgets: isDefaultLayout(WIDGETS, draft.value) ? [] : draft.value,
+    })
     editing.value = false
     message.success(t('common.saved'))
   } catch {

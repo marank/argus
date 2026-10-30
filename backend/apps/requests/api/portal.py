@@ -11,9 +11,9 @@ from django.utils import timezone
 from ninja import Router, Status
 
 from apps.accounts.models import User
-from apps.accounts.permissions import can
+from apps.accounts.permissions import ResourceKey, can
 from apps.core.api.security import AuthedRequest, permission_auth
-from apps.core.features import is_enabled
+from apps.core.features import FeatureKey, is_enabled
 from apps.core.models import SiteSettings
 from apps.inventory.api.issues import issue_detail
 from apps.inventory.models import Asset, AssetIssue, AssetIssueStatus, LicenseAssignment
@@ -107,13 +107,13 @@ def catalog(
     Availability for the period is only included for IT staff who handle requests; employees request
     what they need and IT decides what the pool can cover.
     """
-    show_availability = can(request.user, "requests")
+    show_availability = can(request.user, ResourceKey.REQUESTS)
     model_counts, category_counts = (
         period_availability(*_period(start, end, permanent)) if show_availability else ({}, {})
     )
     categories = Category.objects.filter(is_requestable=True)
     models = AssetModel.objects.filter(is_requestable=True, is_active=True)
-    if not is_enabled("software_requests"):
+    if not is_enabled(FeatureKey.SOFTWARE_REQUESTS):
         # Software can be switched off as a request option in the site settings.
         categories = categories.exclude(kind=CategoryKind.SOFTWARE)
         models = models.exclude(tracking=AssetModel.Tracking.LICENSE)
@@ -130,7 +130,7 @@ def catalog(
     return result
 
 
-@router.get("/availability", response=AvailabilityOut, auth=permission_auth("requests"))
+@router.get("/availability", response=AvailabilityOut, auth=permission_auth(ResourceKey.REQUESTS))
 def availability(
     request: AuthedRequest, start: date, end: date | None = None, permanent: bool = False
 ) -> Availability:

@@ -9,11 +9,12 @@ from django.db import models
 from django.db.models import ProtectedError, QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
-from ninja import FilterLookup, FilterSchema, Query, Router, Schema, Status
+from ninja import FilterLookup, FilterSchema, Query, Router, Status
 from ninja.errors import HttpError
 from ninja.pagination import paginate
 
-from apps.accounts.permissions import WRITE
+from apps.accounts.permissions import PermissionLevel, ResourceKey
+from apps.core.schemas.base import Schema
 
 from .pagination import Pagination
 from .querying import order, search
@@ -50,7 +51,7 @@ class CrudConfig[M: models.Model]:
     prepare: Callable[[dict[str, Any]], dict[str, Any]] = field(default=lambda data: data)
     # Area of the role rights (apps.accounts.permissions) that creating, changing
     # and deleting needs.
-    permission: str | None = None
+    permission: ResourceKey | None = None
     # Instead of ``permission``: the auth for writing, e.g. administrators only.
     write_auth: object | None = None
     # Auth for reading; by default IT staff, since master data is IT's working material.
@@ -91,7 +92,7 @@ def build_crud_router[M: models.Model](config: CrudConfig[M], *, tags: list[str]
     # IDs (module + function name) would collide in the OpenAPI schema.
     name = config.model._meta.model_name
     write_auth = config.write_auth or (
-        permission_auth(config.permission, WRITE) if config.permission else it_staff_auth
+        permission_auth(config.permission, PermissionLevel.WRITE) if config.permission else it_staff_auth
     )
     read_auth = config.read_auth or it_staff_auth
     if not TYPE_CHECKING:

@@ -8,7 +8,7 @@ from datetime import timedelta
 
 from django.utils import timezone
 
-from apps.core.features import is_enabled
+from apps.core.features import ModuleKey, is_enabled
 from apps.core.models import SiteSettings
 from apps.inventory.models import License
 from apps.inventory.services import notifications as inventory_notifications
@@ -33,7 +33,7 @@ def send_due_reminders() -> int:
         asset_request_notifications.return_overdue(asset_request)
         checked += 1
 
-    if is_enabled("licenses"):
+    if is_enabled(ModuleKey.LICENSES):
         ending = License.objects.select_related("model__manufacturer").filter(
             valid_until__range=(today, today + timedelta(days=settings.license_warning_days))
         )

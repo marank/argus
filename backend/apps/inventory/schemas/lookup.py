@@ -1,7 +1,6 @@
 from typing import Literal
 
-from ninja import Schema
-
+from apps.core.schemas.base import Schema
 from apps.masterdata.schemas.asset_model import AssetModelOut
 
 from .asset import AssetOut

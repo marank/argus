@@ -3,12 +3,13 @@
 from typing import TypedDict
 
 from django.utils.translation import gettext as _
-from ninja import Router, Schema
+from ninja import Router
 from ninja.errors import HttpError
 
 from apps.core.api.security import AuthedRequest, superuser_auth
 from apps.core.models import MailSettings
 from apps.core.notifications import link, send_mail
+from apps.core.schemas.base import Schema
 
 router = Router(tags=["settings"], auth=superuser_auth)
 

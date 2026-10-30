@@ -7,6 +7,7 @@ everything, and only IT staff can hold rights at all.
 """
 
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -14,46 +15,77 @@ if TYPE_CHECKING:
 
     from apps.accounts.models import User
 
-READ = "read"
-WRITE = "write"
-LEVELS = (READ, WRITE)
-_RANK: dict[str | None, int] = {None: 0, READ: 1, WRITE: 2}
+
+class ResourceKey(StrEnum):
+    """Areas of the app that roles grant rights on."""
+
+    MODELS = "models"
+    CATEGORIES = "categories"
+    MANUFACTURERS = "manufacturers"
+    SUPPLIERS = "suppliers"
+    LOCATIONS = "locations"
+    DEPARTMENTS = "departments"
+    TEAMS = "teams"
+    USERS = "users"
+    NUMBER_SEQUENCES = "number_sequences"
+    REQUESTS = "requests"
+    ASSETS = "assets"
+    CONSUMABLES = "consumables"
+    LICENSES = "licenses"
+    ISSUES = "issues"
+    PROCUREMENT = "procurement"
+
+
+class PermissionLevel(StrEnum):
+    READ = "read"
+    WRITE = "write"
+
+
+class ResourceGroup(StrEnum):
+    """Grouping in the role editor."""
+
+    MASTERDATA = "masterdata"
+    OPERATIONS = "operations"
+
+
+_RANK: dict[PermissionLevel | None, int] = {None: 0, PermissionLevel.READ: 1, PermissionLevel.WRITE: 2}
 
 
 @dataclass(frozen=True)
 class Resource:
-    key: str
-    group: str  # "masterdata" or "operations", for grouping in the role editor
+    key: ResourceKey
+    group: ResourceGroup
 
 
-RESOURCES: tuple[Resource, ...] = (
-    Resource("models", "masterdata"),
-    Resource("categories", "masterdata"),
-    Resource("manufacturers", "masterdata"),
-    Resource("suppliers", "masterdata"),
-    Resource("locations", "masterdata"),
-    Resource("departments", "masterdata"),
-    Resource("teams", "masterdata"),
-    Resource("users", "masterdata"),
-    Resource("number_sequences", "masterdata"),
-    Resource("requests", "operations"),
-    Resource("assets", "operations"),
-    Resource("consumables", "operations"),
-    Resource("licenses", "operations"),
-    Resource("issues", "operations"),
-    Resource("procurement", "operations"),
+_MASTERDATA = {
+    ResourceKey.MODELS,
+    ResourceKey.CATEGORIES,
+    ResourceKey.MANUFACTURERS,
+    ResourceKey.SUPPLIERS,
+    ResourceKey.LOCATIONS,
+    ResourceKey.DEPARTMENTS,
+    ResourceKey.TEAMS,
+    ResourceKey.USERS,
+    ResourceKey.NUMBER_SEQUENCES,
+}
+RESOURCES: tuple[Resource, ...] = tuple(
+    Resource(key, ResourceGroup.MASTERDATA if key in _MASTERDATA else ResourceGroup.OPERATIONS)
+    for key in ResourceKey
 )
-RESOURCE_KEYS = {resource.key for resource in RESOURCES}
 
 
-def clean_permissions(value: object) -> dict[str, str]:
+def clean_permissions(value: object) -> dict[ResourceKey, PermissionLevel]:
     """Only known areas with a valid level; anything else is dropped."""
     if not isinstance(value, dict):
         return {}
-    return {key: level for key, level in value.items() if key in RESOURCE_KEYS and level in LEVELS}
+    return {
+        ResourceKey(key): PermissionLevel(level)
+        for key, level in value.items()
+        if key in ResourceKey and level in PermissionLevel
+    }
 
 
-def effective_permissions(user: User | AnonymousUser | None) -> dict[str, str]:
+def effective_permissions(user: User | AnonymousUser | None) -> dict[ResourceKey, PermissionLevel]:
     """The user's level per area (areas without any right are left out).
 
     Cached on the user object, so one request asks the database once.
@@ -63,7 +95,7 @@ def effective_permissions(user: User | AnonymousUser | None) -> dict[str, str]:
     if user._argus_permissions is not None:
         return user._argus_permissions
     if user.is_superuser:
-        result: dict[str, str] = {key: WRITE for key in RESOURCE_KEYS}
+        result: dict[ResourceKey, PermissionLevel] = dict.fromkeys(ResourceKey, PermissionLevel.WRITE)
     elif not user.is_staff:
         result = {}
     else:
@@ -76,5 +108,7 @@ def effective_permissions(user: User | AnonymousUser | None) -> dict[str, str]:
     return result
 
 
-def can(user: User | AnonymousUser | None, resource: str, level: str = READ) -> bool:
+def can(
+    user: User | AnonymousUser | None, resource: ResourceKey, level: PermissionLevel = PermissionLevel.READ
+) -> bool:
     return _RANK[effective_permissions(user).get(resource)] >= _RANK[level]

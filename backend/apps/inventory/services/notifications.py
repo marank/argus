@@ -4,7 +4,7 @@ from django.utils import formats
 from django.utils.translation import gettext as _
 
 from apps.accounts.services.assignment import responsible_staff
-from apps.core.notifications import it_staff, notify
+from apps.core.notifications import NotificationEvent, it_staff, notify
 from apps.inventory.models import AssetIssue, License
 
 
@@ -19,7 +19,7 @@ def issue_reported(issue: AssetIssue) -> None:
         }
         return subject, f"{body}\n\n{issue.description}"
 
-    notify("issue_reported", responsible_staff(issue), render, path=_it_path(issue))
+    notify(NotificationEvent.ISSUE_REPORTED, responsible_staff(issue), render, path=_it_path(issue))
 
 
 def issue_assigned(issue: AssetIssue) -> None:
@@ -38,7 +38,7 @@ def issue_assigned(issue: AssetIssue) -> None:
         }
         return subject, f"{body}\n\n{issue.description}"
 
-    notify("assigned_to_me", [assignee], render, path=_it_path(issue))
+    notify(NotificationEvent.ASSIGNED_TO_ME, [assignee], render, path=_it_path(issue))
 
 
 def _it_path(issue: AssetIssue) -> str:
@@ -64,7 +64,7 @@ def issue_resolved(issue: AssetIssue, message: str) -> None:
             body = f"{body}\n\n{label} {message}"
         return subject, body
 
-    notify("issue_resolved", [issue.reported_by], render, path=_reporter_path(issue))
+    notify(NotificationEvent.ISSUE_RESOLVED, [issue.reported_by], render, path=_reporter_path(issue))
 
 
 def issue_message(issue: AssetIssue, message: str) -> None:
@@ -79,7 +79,7 @@ def issue_message(issue: AssetIssue, message: str) -> None:
         body = _("IT wrote about your report “%(description)s”:") % {"description": issue.description}
         return subject, f"{body}\n\n{message}"
 
-    notify("issue_message", [issue.reported_by], render, path=_reporter_path(issue))
+    notify(NotificationEvent.ISSUE_MESSAGE, [issue.reported_by], render, path=_reporter_path(issue))
 
 
 def issue_answered(issue: AssetIssue, message: str, *, resolved: bool = False) -> None:
@@ -97,7 +97,7 @@ def issue_answered(issue: AssetIssue, message: str, *, resolved: bool = False) -
         return subject, f"{body}\n\n{message}" if message else body
 
     recipients = [u for u in responsible_staff(issue) if u.pk != issue.reported_by_id]
-    notify("issue_answered", recipients, render, path=_it_path(issue))
+    notify(NotificationEvent.ISSUE_ANSWERED, recipients, render, path=_it_path(issue))
 
 
 def license_expiring(license: License) -> None:
@@ -117,7 +117,7 @@ def license_expiring(license: License) -> None:
         return subject, body
 
     notify(
-        "license_expiring",
+        NotificationEvent.LICENSE_EXPIRING,
         it_staff(),
         render,
         key=f"{license.pk}:{license.valid_until}",

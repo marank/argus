@@ -1,10 +1,9 @@
 from typing import Any
 from uuid import UUID
 
-from ninja import Schema
-
 from apps.accounts.models import Department, User
 from apps.core.schemas import RefOut, per_response
+from apps.core.schemas.base import Schema
 
 from .user import UserRefOut
 

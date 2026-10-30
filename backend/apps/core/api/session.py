@@ -1,21 +1,19 @@
 """Session based login for the single page app."""
 
-import json
-from typing import Any
-
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpRequest
 from django.middleware.csrf import get_token
 from django.utils.translation import gettext as _
-from ninja import Router, Schema, Status
+from ninja import Router, Status
 from ninja.errors import HttpError
 from ninja.utils import check_csrf
 
 from apps.accounts.models import TwoFactor, TwoFactorMethod, User
 from apps.accounts.schemas import CodeIn, CurrentUserOut, PreferencesIn, TwoFactorChallengeOut
-from apps.accounts.services import throttle, two_factor
+from apps.accounts.services import dashboard_layout, throttle, two_factor
 from apps.core.api.security import AuthedRequest, session_auth
 from apps.core.notifications import receivable
+from apps.core.schemas.base import Schema
 
 # Plain session auth: the pickup terminal account must be able to sign in and out too.
 router = Router(tags=["auth"], auth=session_auth)
@@ -108,54 +106,6 @@ def logout_view(request: AuthedRequest) -> Status[None]:
     return Status(204, None)
 
 
-DASHBOARD_SIZES = {"small", "medium", "large"}
-# "auto" fits the content (and the row); the others are fixed heights that scroll.
-DASHBOARD_HEIGHTS = {"auto", "small", "medium", "large"}
-# Room for a widget's own settings, such as the text of the notes widget.
-WIDGET_OPTIONS_MAX = 10_000
-
-
-def card_keys(value: object) -> list[str]:
-    """Distinct card keys in their given order."""
-    if not isinstance(value, list):
-        return []
-    return list(dict.fromkeys(c for c in value if isinstance(c, str) and 0 < len(c) <= 50))[:50]
-
-
-def widget_options(value: object) -> dict[str, Any]:
-    if not isinstance(value, dict) or len(json.dumps(value, ensure_ascii=False)) > WIDGET_OPTIONS_MAX:
-        return {}
-    return value
-
-
-def clean_dashboard_settings(value: dict[str, Any] | None) -> dict[str, Any]:
-    """Keeps only well-formed widget entries; the frontend owns the widget and card ids."""
-    widgets, seen = [], set()
-    for entry in (value or {}).get("widgets") or []:
-        if not isinstance(entry, dict):
-            continue
-        widget_id = entry.get("id")
-        if not isinstance(widget_id, str) or not widget_id or len(widget_id) > 50 or widget_id in seen:
-            continue
-        seen.add(widget_id)
-        # Further instances of a widget name the widget they show.
-        kind = entry.get("widget")
-        widgets.append(
-            {
-                "id": widget_id,
-                **({"widget": kind} if isinstance(kind, str) and 0 < len(kind) <= 50 else {}),
-                "visible": bool(entry.get("visible", True)),
-                "size": entry["size"] if entry.get("size") in DASHBOARD_SIZES else "large",
-                "height": entry["height"] if entry.get("height") in DASHBOARD_HEIGHTS else "auto",
-                "hidden_cards": card_keys(entry.get("hidden_cards")),
-                # Cards in the user's order; empty keeps the default order.
-                "card_order": card_keys(entry.get("card_order")),
-                "options": widget_options(entry.get("options")),
-            }
-        )
-    return {"widgets": widgets[:50]} if widgets else {}
-
-
 @router.get("/me", response=CurrentUserOut)
 def me(request: AuthedRequest) -> User:
     return request.user
@@ -170,7 +120,7 @@ def update_preferences(request: AuthedRequest, payload: PreferencesIn) -> User:
             allowed = receivable(user)
             value = {k: bool(v) for k, v in (value or {}).items() if k in allowed}
         elif name == "dashboard_settings":
-            value = clean_dashboard_settings(value)
+            value = dashboard_layout.clean(value)
         setattr(user, name, value)
     user.save()
     return user

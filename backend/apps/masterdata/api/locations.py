@@ -5,6 +5,7 @@ from django.db.models import F, QuerySet
 from django.db.models.functions import Coalesce
 from ninja import FilterLookup, FilterSchema
 
+from apps.accounts.permissions import ResourceKey
 from apps.core.api.crud import CrudConfig, build_crud_router
 from apps.masterdata.models import Location
 from apps.masterdata.schemas.location import LocationIn, LocationOut
@@ -31,7 +32,7 @@ router = build_crud_router(
         out_schema=LocationOut,
         in_schema=LocationIn,
         filter_schema=LocationFilter,
-        permission="locations",
+        permission=ResourceKey.LOCATIONS,
         search_fields=("name", "code", "parent__name"),
         ordering_fields=("name", "code", "kind", "site"),
         queryset=location_queryset,

@@ -3,7 +3,6 @@ import { computed, ref, watchEffect } from 'vue'
 
 import { siteSettingsApi } from '@/api/settings'
 import type { Schemas } from '@/api/types'
-import type { FlagKey } from '@/types/settings'
 
 /**
  * Modules and features switched on in the site settings. Until they are loaded
@@ -12,7 +11,7 @@ import type { FlagKey } from '@/types/settings'
 export const useFeaturesStore = defineStore('features', () => {
   const settings = ref<Schemas['SiteSettingsOut'] | null>(null)
 
-  const isOn = (key: FlagKey) => settings.value?.flags[key] ?? true
+  const isOn = (key: Schemas['FlagKey']) => settings.value?.flags[key] ?? true
 
   async function load() {
     settings.value = await siteSettingsApi.get()

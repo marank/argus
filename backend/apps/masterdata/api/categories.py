@@ -4,6 +4,7 @@ from uuid import UUID
 from django.db.models import Case, IntegerField, QuerySet, Value, When
 from ninja import FilterLookup, FilterSchema
 
+from apps.accounts.permissions import ResourceKey
 from apps.core.api.crud import CrudConfig, build_crud_router
 from apps.masterdata.models import Category
 from apps.masterdata.schemas.category import CategoryIn, CategoryOut
@@ -37,7 +38,7 @@ router = build_crud_router(
         out_schema=CategoryOut,
         in_schema=CategoryIn,
         filter_schema=CategoryFilter,
-        permission="categories",
+        permission=ResourceKey.CATEGORIES,
         search_fields=("name", "code", "description"),
         ordering_fields=("name", "code", "sort_order", "kind", "tree_position"),
         queryset=category_queryset,

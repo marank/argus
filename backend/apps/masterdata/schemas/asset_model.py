@@ -2,13 +2,14 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from ninja import Field, Schema
+from ninja import Field
 
 from apps.accounts.models import Team
 from apps.accounts.schemas import TeamRefOut, default_team
 from apps.core.api.security import context_is_it_staff
 from apps.core.models import NumberSequence
 from apps.core.schemas import RefOut, per_response
+from apps.core.schemas.base import Schema
 from apps.core.services.numbering import get_sequence
 from apps.masterdata.models import AssetModel
 

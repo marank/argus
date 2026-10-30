@@ -4,6 +4,7 @@ from uuid import UUID
 from ninja import FilterLookup, FilterSchema
 
 from apps.accounts.models import Team
+from apps.accounts.permissions import ResourceKey
 from apps.accounts.schemas import TeamIn, TeamOut
 from apps.core.api.crud import CrudConfig, build_crud_router
 
@@ -20,7 +21,7 @@ router = build_crud_router(
         out_schema=TeamOut,
         in_schema=TeamIn,
         filter_schema=TeamFilter,
-        permission="teams",
+        permission=ResourceKey.TEAMS,
         search_fields=("name", "code"),
         ordering_fields=("name", "code", "sort_order"),
         queryset=lambda: Team.objects.prefetch_related("members"),

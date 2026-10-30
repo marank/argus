@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from django.contrib.auth.models import AnonymousUser
 
     from apps.accounts.models import User
+    from apps.accounts.permissions import PermissionLevel, ResourceKey
 
 
 class AuthedRequest(HttpRequest):
@@ -55,26 +56,28 @@ class PermissionAuth(SessionAuth):
     or "read" for a lookup that is sent by POST.
     """
 
-    def __init__(self, resource: str, level: str | None = None) -> None:
+    def __init__(self, resource: ResourceKey, level: PermissionLevel | None = None) -> None:
         super().__init__()
         self.resource = resource
         self.level = level
 
     def authenticate(self, request: HttpRequest, key: str | None) -> User | None:
-        from apps.accounts.permissions import READ, WRITE, can
+        from apps.accounts.permissions import PermissionLevel, can
 
         user: User | None = super().authenticate(request, key)
         if user is None:
             return None
         if not is_it_staff(user):
             raise HttpError(403, _("This action is reserved for the IT department."))
-        level = self.level or (READ if request.method in ("GET", "HEAD") else WRITE)
+        level = self.level or (
+            PermissionLevel.READ if request.method in ("GET", "HEAD") else PermissionLevel.WRITE
+        )
         if not can(user, self.resource, level):
             raise HttpError(403, _("Your roles do not allow this."))
         return user
 
 
-def permission_auth(resource: str, level: str | None = None) -> PermissionAuth:
+def permission_auth(resource: ResourceKey, level: PermissionLevel | None = None) -> PermissionAuth:
     return PermissionAuth(resource, level)
 
 

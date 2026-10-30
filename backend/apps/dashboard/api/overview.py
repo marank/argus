@@ -1,10 +1,11 @@
 from datetime import datetime
 from uuid import UUID
 
-from ninja import Router, Schema
+from ninja import Router
 
-from apps.accounts.permissions import can
+from apps.accounts.permissions import ResourceKey, can
 from apps.core.api.security import AuthedRequest, it_staff_auth
+from apps.core.schemas.base import Schema
 from apps.dashboard.services.overview import (
     EmployeeOverview,
     ITOverview,
@@ -50,9 +51,9 @@ class EmployeeOverviewOut(Schema):
 
 
 # Figures each area contributes; they stay empty without the right to read the area.
-AREA_FIELDS: dict[str, ITOverviewPart] = {
-    "assets": {"asset_status": {}, "warranty_expiring": 0, "recent_events": []},
-    "requests": {
+AREA_FIELDS: dict[ResourceKey, ITOverviewPart] = {
+    ResourceKey.ASSETS: {"asset_status": {}, "warranty_expiring": 0, "recent_events": []},
+    ResourceKey.REQUESTS: {
         "requests_submitted": 0,
         "requests_to_prepare": 0,
         "requests_ready": 0,
@@ -61,10 +62,10 @@ AREA_FIELDS: dict[str, ITOverviewPart] = {
         "requests_my_teams": 0,
         "requests_unassigned": 0,
     },
-    "procurement": {"orders_to_place": 0, "orders_in_transit": 0},
-    "consumables": {"low_consumables": 0},
-    "issues": {"open_issues": 0, "issues_mine": 0},
-    "licenses": {"licenses_expiring": 0},
+    ResourceKey.PROCUREMENT: {"orders_to_place": 0, "orders_in_transit": 0},
+    ResourceKey.CONSUMABLES: {"low_consumables": 0},
+    ResourceKey.ISSUES: {"open_issues": 0, "issues_mine": 0},
+    ResourceKey.LICENSES: {"licenses_expiring": 0},
 }
 
 

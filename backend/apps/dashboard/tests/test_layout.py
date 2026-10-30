@@ -39,8 +39,10 @@ def test_dashboard_layout_is_saved_per_user(it_client):
     }
     response = it_client.patch("/api/auth/me", {"dashboard_settings": layout}, content_type=JSON)
     assert response.status_code == 200, response.content
-    assert response.json()["dashboard_settings"] == layout
-    assert it_client.get("/api/auth/me").json()["dashboard_settings"] == layout
+    # The first instance of a widget has no "widget"; the API sends it as null.
+    expected = {"widgets": [{"widget": None, **widget} for widget in layout["widgets"]]}
+    assert response.json()["dashboard_settings"] == expected
+    assert it_client.get("/api/auth/me").json()["dashboard_settings"] == expected
 
 
 def test_dashboard_layout_drops_malformed_entries(it_client):
@@ -70,6 +72,7 @@ def test_dashboard_layout_drops_malformed_entries(it_client):
         "widgets": [
             {
                 "id": "requests",
+                "widget": None,
                 "visible": True,
                 "size": "large",
                 "height": "auto",
@@ -89,8 +92,28 @@ def test_empty_layout_restores_the_default(it_client):
         content_type=JSON,
     )
     response = it_client.patch("/api/auth/me", {"dashboard_settings": {}}, content_type=JSON)
-    assert response.json()["dashboard_settings"] == {}
+    assert response.json()["dashboard_settings"] == {"widgets": []}
     assert User.objects.get(username="it").dashboard_settings == {}
+
+
+def test_layouts_saved_before_a_field_existed_get_its_default(it_client):
+    User.objects.filter(username="it").update(
+        dashboard_settings={"widgets": [{"id": "requests", "visible": True, "size": "medium"}]}
+    )
+    assert it_client.get("/api/auth/me").json()["dashboard_settings"] == {
+        "widgets": [
+            {
+                "id": "requests",
+                "widget": None,
+                "visible": True,
+                "size": "medium",
+                "height": "auto",
+                "hidden_cards": [],
+                "card_order": [],
+                "options": {},
+            }
+        ]
+    }
 
 
 def test_widget_data_for_it(it_client):

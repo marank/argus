@@ -2,7 +2,7 @@ from typing import Any
 
 from django.test import Client
 
-from apps.core.features import effective_flags
+from apps.core.features import FeatureKey, effective_flags
 
 JSON = "application/json"
 
@@ -27,9 +27,9 @@ def test_everything_is_on_by_default(employee_client):
 
 def test_feature_follows_its_modules():
     flags = effective_flags({"licenses": False})
-    assert flags["calendar_license_expiry"] is False
-    assert flags["software_requests"] is False
-    assert flags["calendar_warranty"] is True
+    assert flags[FeatureKey.CALENDAR_LICENSE_EXPIRY] is False
+    assert flags[FeatureKey.SOFTWARE_REQUESTS] is False
+    assert flags[FeatureKey.CALENDAR_WARRANTY] is True
 
 
 def test_only_administrators_change_settings(it_client):

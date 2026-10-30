@@ -4,7 +4,7 @@ import pytest
 from django.test import Client
 
 from apps.accounts.models import Role, User
-from apps.accounts.permissions import RESOURCE_KEYS, can, effective_permissions
+from apps.accounts.permissions import PermissionLevel, ResourceKey, can, effective_permissions
 from apps.masterdata.models import Category, Manufacturer
 
 JSON = "application/json"
@@ -80,11 +80,11 @@ def test_unknown_areas_and_levels_are_dropped(staff):
 
 def test_superusers_and_employees(demo):
     admin = User.objects.get(username="admin")
-    assert effective_permissions(admin) == dict.fromkeys(RESOURCE_KEYS, "write")
+    assert effective_permissions(admin) == dict.fromkeys(ResourceKey, PermissionLevel.WRITE)
     # Roles do nothing for people outside IT.
     employee = User.objects.get(username="employee")
     grant(employee, assets="write")
-    assert not can(employee, "assets")
+    assert not can(employee, ResourceKey.ASSETS)
 
 
 def test_asset_request_rights(staff, staff_client, employee_client):
@@ -129,7 +129,7 @@ def test_only_administrators_manage_roles(staff, staff_client, it_client):
     assert response.status_code == 201, response.content
     assert response.json()["members"][0]["username"] == "staff"
     resources = admin.get("/api/accounts/roles/resources").json()
-    assert {r["key"] for r in resources} == RESOURCE_KEYS
+    assert {r["key"] for r in resources} == set(ResourceKey)
     assert staff_client.get("/api/auth/me").json()["permissions"] == {
         "users": "write",
         "procurement": "write",

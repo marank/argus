@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404
 from ninja import FilterLookup, FilterSchema, Query, Router
 from ninja.pagination import paginate
 
+from apps.accounts.permissions import ResourceKey
 from apps.accounts.services import assignment
 from apps.accounts.services.assignment import Assigned, assigned_q
 from apps.core.api.pagination import Pagination
@@ -22,7 +23,7 @@ from apps.inventory.schemas.asset_issue import (
 from apps.inventory.services import notifications
 from apps.inventory.services.issues import post_message, update_issue
 
-router = Router(tags=["issues"], auth=permission_auth("issues"))
+router = Router(tags=["issues"], auth=permission_auth(ResourceKey.ISSUES))
 
 
 class IssueFilter(FilterSchema):

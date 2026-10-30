@@ -11,7 +11,7 @@ from ninja import FilterLookup, FilterSchema, Query, Router, Status
 from ninja.pagination import paginate
 
 from apps.accounts.models import User
-from apps.accounts.permissions import WRITE, can
+from apps.accounts.permissions import PermissionLevel, ResourceKey, can
 from apps.accounts.services.assignment import Assigned, assigned_q
 from apps.core.api.pagination import Pagination
 from apps.core.api.querying import order, search
@@ -39,7 +39,7 @@ from .queries import get_asset_request, get_for_update, visible_asset_requests
 
 router = Router(tags=["requests"])
 # IT's decisions on requests; employees only list, create and cancel their own.
-requests_write = permission_auth("requests", WRITE)
+requests_write = permission_auth(ResourceKey.REQUESTS, PermissionLevel.WRITE)
 
 
 def _employee(pk: UUID) -> User:
@@ -107,7 +107,7 @@ def list_asset_requests(
 def create_asset_request(request: AuthedRequest, payload: AssetRequestIn) -> Status[AssetRequest]:
     data = payload.dict(exclude={"items", "requester", "follows"})
     requester = request.user
-    may_record = can(request.user, "requests", WRITE)
+    may_record = can(request.user, ResourceKey.REQUESTS, PermissionLevel.WRITE)
     if payload.requester and may_record:
         requester = _employee(payload.requester)
     if payload.follows:

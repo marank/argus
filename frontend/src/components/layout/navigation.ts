@@ -25,20 +25,18 @@ import {
   UsersRound,
   Wrench,
 } from '@lucide/vue'
+import type { Schemas } from '@/api/types'
 import type { Component } from 'vue'
 import type { RouteLocationRaw } from 'vue-router'
-
-import type { PermissionKey } from '@/types/accounts'
-import type { ModuleKey } from '@/types/settings'
 
 export interface NavItem {
   key: string
   /** Hidden while this module is switched off in the site settings. */
-  module?: ModuleKey
+  module?: Schemas['ModuleKey']
   /** Only for department approvers. */
   approver?: boolean
   /** Hidden unless the user's roles allow reading this area. */
-  permission?: PermissionKey
+  permission?: Schemas['ResourceKey']
   /** Only for administrators. */
   superuser?: boolean
   /** Shows a count from the menu counts on the right. */

@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404
 from ninja import FilterLookup, FilterSchema, Query, Router, Status
 from ninja.pagination import paginate
 
+from apps.accounts.permissions import ResourceKey
 from apps.core.api.pagination import Pagination
 from apps.core.api.querying import order, search
 from apps.core.api.security import AuthedRequest, permission_auth
@@ -19,7 +20,7 @@ from apps.procurement.schemas.purchase_order import (
 )
 from apps.procurement.services import orders as order_service
 
-router = Router(tags=["procurement"], auth=permission_auth("procurement"))
+router = Router(tags=["procurement"], auth=permission_auth(ResourceKey.PROCUREMENT))
 
 
 class OrderFilter(FilterSchema):

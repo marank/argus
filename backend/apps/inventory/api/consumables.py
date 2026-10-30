@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404
 from ninja import FilterLookup, FilterSchema, Query, Router, Status
 from ninja.pagination import paginate
 
+from apps.accounts.permissions import ResourceKey
 from apps.core.api.pagination import Pagination
 from apps.core.api.querying import order, search
 from apps.core.api.security import AuthedRequest, permission_auth
@@ -19,7 +20,7 @@ from apps.inventory.schemas.consumable import (
 )
 from apps.inventory.services.consumables import get_consumable, move_consumable
 
-router = Router(tags=["consumables"], auth=permission_auth("consumables"))
+router = Router(tags=["consumables"], auth=permission_auth(ResourceKey.CONSUMABLES))
 
 
 class ConsumableFilter(FilterSchema):

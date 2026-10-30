@@ -13,7 +13,7 @@ from procrastinate import JobContext, RetryStrategy
 from procrastinate.contrib.django import app
 
 from apps.core.models import MailSettings, Notification, NotificationLog
-from apps.core.notifications import EVENT_KEYS, link, mail_ready, send_mail
+from apps.core.notifications import NotificationEvent, link, mail_ready, send_mail
 from apps.core.services.reminders import send_due_reminders
 
 # Backs off from seconds to hours and gives up after about a day.
@@ -37,7 +37,7 @@ def send_notification(
     if not mail_ready(settings):
         return
     # Kinds the recipient can switch off; mails sent on purpose by IT are not among them.
-    manage_url = link(settings, "/profile/notifications") if event in EVENT_KEYS else ""
+    manage_url = link(settings, "/profile/notifications") if event in NotificationEvent else ""
     with translation.override(language):
         send_mail(settings, to, subject, body, url=url, manage_url=manage_url)
     if key:

@@ -8,7 +8,7 @@ from ninja import FilterLookup, FilterSchema
 from ninja.errors import HttpError
 
 from apps.accounts.models import User
-from apps.accounts.permissions import WRITE, can
+from apps.accounts.permissions import PermissionLevel, ResourceKey, can
 from apps.accounts.schemas import UserIn, UserOut
 from apps.accounts.services import two_factor
 from apps.core.api.crud import CrudConfig, build_crud_router
@@ -50,7 +50,9 @@ def check_user_input(request: AuthedRequest, data: dict[str, Any], user: User | 
     """
     if changes_members(data, user, "roles") and not request.user.is_superuser:
         raise HttpError(403, _("Only administrators can assign roles."))
-    if changes_members(data, user, "teams") and not can(request.user, "teams", WRITE):
+    if changes_members(data, user, "teams") and not can(
+        request.user, ResourceKey.TEAMS, PermissionLevel.WRITE
+    ):
         raise HttpError(403, _("You may not change teams."))
 
     own = user is not None and user.pk == request.user.pk
@@ -90,7 +92,7 @@ router = build_crud_router(
         out_schema=UserOut,
         in_schema=UserIn,
         filter_schema=UserFilter,
-        permission="users",
+        permission=ResourceKey.USERS,
         check_change=protect_administrators,
         check_input=check_user_input,
         new=new_user,
@@ -113,7 +115,11 @@ router = build_crud_router(
 )
 
 
-@router.post("/{uuid:pk}/two-factor/reset", response=UserOut, auth=permission_auth("users", WRITE))
+@router.post(
+    "/{uuid:pk}/two-factor/reset",
+    response=UserOut,
+    auth=permission_auth(ResourceKey.USERS, PermissionLevel.WRITE),
+)
 def reset_two_factor(request: AuthedRequest, pk: UUID) -> User:
     """For users who lost their phone and backup codes: they sign in with the password alone again."""
     user = get_object_or_404(User.objects.select_related("department", "terminal_location__parent"), pk=pk)

@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404
 from ninja import FilterLookup, FilterSchema, Query, Router, Status
 from ninja.pagination import paginate
 
+from apps.accounts.permissions import ResourceKey
 from apps.core.api.pagination import Pagination
 from apps.core.api.querying import search
 from apps.core.api.security import AuthedRequest, permission_auth
@@ -14,7 +15,7 @@ from apps.inventory.models import Asset, AssetEvent
 from apps.inventory.schemas.asset_event import AssetEventIn, AssetEventOut, AssetEventWithAssetOut
 from apps.inventory.services import assets as asset_service
 
-router = Router(tags=["asset events"], auth=permission_auth("assets"))
+router = Router(tags=["asset events"], auth=permission_auth(ResourceKey.ASSETS))
 
 
 class EventFilter(FilterSchema):

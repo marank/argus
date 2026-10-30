@@ -30,7 +30,7 @@ import { useAssigned } from '@/composables/useAssigned'
 import { toIsoDate, useFormat } from '@/composables/useFormat'
 import type { Schemas } from '@/api/types'
 import { useTheme } from '@/theme/useTheme'
-import type { FeatureKey } from '@/types/settings'
+
 import { CALENDAR_KINDS } from '@/types/calendar'
 import { useFeaturesStore } from '@/stores/features'
 
@@ -51,7 +51,7 @@ const { isDark } = useTheme()
 const calendar = ref<InstanceType<typeof FullCalendar> | null>(null)
 const view = useStorage<ViewName>('argus.calendar-view', 'dayGridMonth')
 /** Calendar kinds that can be switched off in the site settings. */
-const KIND_FEATURES: Partial<Record<CalendarKind, FeatureKey>> = {
+const KIND_FEATURES: Partial<Record<CalendarKind, Schemas['FeatureKey']>> = {
   warranty: 'calendar_warranty',
   license: 'calendar_license_expiry',
   delivery: 'calendar_deliveries',

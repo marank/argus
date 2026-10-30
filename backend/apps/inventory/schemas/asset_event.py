@@ -3,9 +3,10 @@ from decimal import Decimal
 from uuid import UUID
 
 from django.utils import timezone
-from ninja import Field, Schema
+from ninja import Field
 
 from apps.accounts.schemas import UserRefOut
+from apps.core.schemas.base import Schema
 from apps.inventory.models import AssetEventKind
 
 from .refs import AssetRefOut

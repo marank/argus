@@ -4,6 +4,7 @@ from uuid import UUID
 from django.db.models import Q
 from ninja import FilterLookup, FilterSchema
 
+from apps.accounts.permissions import ResourceKey
 from apps.core.api.crud import CrudConfig, build_crud_router
 from apps.masterdata.models import AssetModel
 from apps.masterdata.schemas.asset_model import AssetModelIn, AssetModelOut
@@ -32,7 +33,7 @@ router = build_crud_router(
         out_schema=AssetModelOut,
         in_schema=AssetModelIn,
         filter_schema=AssetModelFilter,
-        permission="models",
+        permission=ResourceKey.MODELS,
         search_fields=("name", "designation", "manufacturer__name", "part_number", "ean", "category__name"),
         ordering_fields=(
             "name",

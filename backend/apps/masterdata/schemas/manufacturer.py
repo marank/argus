@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from ninja import Schema
+from apps.core.schemas.base import Schema
 
 
 class ManufacturerOut(Schema):

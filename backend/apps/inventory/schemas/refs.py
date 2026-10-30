@@ -1,7 +1,6 @@
 from uuid import UUID
 
-from ninja import Schema
-
+from apps.core.schemas.base import Schema
 from apps.inventory.models import AssetStatus
 from apps.masterdata.schemas.refs import AssetModelRefOut
 

@@ -8,6 +8,7 @@ from django.utils.translation import gettext as _
 from ninja import FilterLookup, FilterSchema, Query, Router, Status
 from ninja.pagination import paginate
 
+from apps.accounts.permissions import ResourceKey
 from apps.core.api.pagination import Pagination
 from apps.core.api.querying import order, search
 from apps.core.api.security import AuthedRequest, permission_auth
@@ -17,7 +18,7 @@ from apps.inventory.schemas.license import LicenseAssignIn, LicenseDetailOut, Li
 from apps.inventory.services import licenses as license_service
 from apps.masterdata.models import Category
 
-router = Router(tags=["licenses"], auth=permission_auth("licenses"))
+router = Router(tags=["licenses"], auth=permission_auth(ResourceKey.LICENSES))
 
 SEARCH_FIELDS = (
     "model__name",

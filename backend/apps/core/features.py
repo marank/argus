@@ -7,33 +7,59 @@ requires are on. Everything is on by default.
 
 import re
 from dataclasses import dataclass
+from enum import StrEnum
+
+
+class ModuleKey(StrEnum):
+    CONSUMABLES = "consumables"
+    LICENSES = "licenses"
+    PROCUREMENT = "procurement"
+    CALENDAR = "calendar"
+    ISSUES = "issues"
+    TERMINAL = "terminal"
+
+
+class FeatureKey(StrEnum):
+    CALENDAR_WARRANTY = "calendar_warranty"
+    CALENDAR_LICENSE_EXPIRY = "calendar_license_expiry"
+    CALENDAR_DELIVERIES = "calendar_deliveries"
+    CONSUMABLE_QUICK_PICK = "consumable_quick_pick"
+    SOFTWARE_REQUESTS = "software_requests"
+    ATTENTION_MOTION = "attention_motion"
+
+
+type FlagKey = ModuleKey | FeatureKey
+
+
+class FlagKind(StrEnum):
+    MODULE = "module"
+    FEATURE = "feature"
 
 
 @dataclass(frozen=True)
 class Flag:
-    key: str
-    kind: str  # "module" or "feature"
-    requires: tuple[str, ...] = ()
+    key: FlagKey
+    # Modules that must be on for a feature to take effect.
+    requires: tuple[ModuleKey, ...] = ()
+
+    @property
+    def kind(self) -> FlagKind:
+        return FlagKind.MODULE if isinstance(self.key, ModuleKey) else FlagKind.FEATURE
 
 
 FLAGS: tuple[Flag, ...] = (
-    Flag("consumables", "module"),
-    Flag("licenses", "module"),
-    Flag("procurement", "module"),
-    Flag("calendar", "module"),
-    Flag("issues", "module"),
-    Flag("terminal", "module"),
-    Flag("calendar_warranty", "feature", ("calendar",)),
-    Flag("calendar_license_expiry", "feature", ("calendar", "licenses")),
-    Flag("calendar_deliveries", "feature", ("calendar", "procurement")),
-    Flag("consumable_quick_pick", "feature", ("consumables",)),
-    Flag("software_requests", "feature", ("licenses",)),
-    Flag("attention_motion", "feature"),
+    *(Flag(module) for module in ModuleKey),
+    Flag(FeatureKey.CALENDAR_WARRANTY, (ModuleKey.CALENDAR,)),
+    Flag(FeatureKey.CALENDAR_LICENSE_EXPIRY, (ModuleKey.CALENDAR, ModuleKey.LICENSES)),
+    Flag(FeatureKey.CALENDAR_DELIVERIES, (ModuleKey.CALENDAR, ModuleKey.PROCUREMENT)),
+    Flag(FeatureKey.CONSUMABLE_QUICK_PICK, (ModuleKey.CONSUMABLES,)),
+    Flag(FeatureKey.SOFTWARE_REQUESTS, (ModuleKey.LICENSES,)),
+    Flag(FeatureKey.ATTENTION_MOTION),
 )
-FLAG_KEYS = {flag.key for flag in FLAGS}
+FLAG_KEYS: set[FlagKey] = {flag.key for flag in FLAGS}
 
 
-def effective_flags(stored: dict[str, object]) -> dict[str, bool]:
+def effective_flags(stored: dict[str, object]) -> dict[FlagKey, bool]:
     """Stored switches with defaults, features off while a required module is off."""
     values = {flag.key: bool(stored.get(flag.key, True)) for flag in FLAGS}
     for flag in FLAGS:
@@ -42,33 +68,33 @@ def effective_flags(stored: dict[str, object]) -> dict[str, bool]:
     return values
 
 
-def current_flags() -> dict[str, bool]:
+def current_flags() -> dict[FlagKey, bool]:
     from apps.core.models import SiteSettings
 
     return effective_flags(SiteSettings.load().flags)
 
 
-def is_enabled(key: str) -> bool:
+def is_enabled(key: FlagKey) -> bool:
     return current_flags()[key]
 
 
 # API paths that belong to a module or feature; disabled ones answer 404.
-GUARDED_PATHS: tuple[tuple[re.Pattern[str], str], ...] = tuple(
+GUARDED_PATHS: tuple[tuple[re.Pattern[str], FlagKey], ...] = tuple(
     (re.compile(pattern), key)
     for pattern, key in (
-        (r"^/api/inventory/consumables", "consumables"),
-        (r"^/api/portal/my-consumables", "consumable_quick_pick"),
-        (r"^/api/inventory/licenses", "licenses"),
-        (r"^/api/portal/my-licenses", "licenses"),
-        (r"^/api/procurement", "procurement"),
-        (r"^/api/calendar", "calendar"),
-        (r"^/api/inventory/issues", "issues"),
-        (r"^/api/portal/my-issues", "issues"),
-        (r"^/api/portal/my-assets/[^/]+/issues", "issues"),
-        (r"^/api/terminal", "terminal"),
+        (r"^/api/inventory/consumables", ModuleKey.CONSUMABLES),
+        (r"^/api/portal/my-consumables", FeatureKey.CONSUMABLE_QUICK_PICK),
+        (r"^/api/inventory/licenses", ModuleKey.LICENSES),
+        (r"^/api/portal/my-licenses", ModuleKey.LICENSES),
+        (r"^/api/procurement", ModuleKey.PROCUREMENT),
+        (r"^/api/calendar", ModuleKey.CALENDAR),
+        (r"^/api/inventory/issues", ModuleKey.ISSUES),
+        (r"^/api/portal/my-issues", ModuleKey.ISSUES),
+        (r"^/api/portal/my-assets/[^/]+/issues", ModuleKey.ISSUES),
+        (r"^/api/terminal", ModuleKey.TERMINAL),
     )
 )
 
 
-def guard_for(path: str) -> str | None:
+def guard_for(path: str) -> FlagKey | None:
     return next((key for pattern, key in GUARDED_PATHS if pattern.match(path)), None)

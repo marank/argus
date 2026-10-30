@@ -1,10 +1,13 @@
 import uuid
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 from django.db.models.functions import Lower
 from django.utils.translation import gettext_lazy as _
+
+if TYPE_CHECKING:
+    from apps.accounts.permissions import PermissionLevel, ResourceKey
 
 
 class CaseInsensitiveUserManager(UserManager["User"]):
@@ -23,7 +26,7 @@ class User(AbstractUser):
 
     objects: ClassVar[CaseInsensitiveUserManager] = CaseInsensitiveUserManager()
     # Cache of apps.accounts.permissions.effective_permissions, per user object.
-    _argus_permissions: dict[str, str] | None = None
+    _argus_permissions: dict[ResourceKey, PermissionLevel] | None = None
 
     class Language(models.TextChoices):
         ENGLISH = "en", _("English")
@@ -111,7 +114,7 @@ class User(AbstractUser):
         return self.is_staff or self.is_superuser
 
     @property
-    def permissions(self) -> dict[str, str]:
+    def permissions(self) -> dict[ResourceKey, PermissionLevel]:
         """Rights from the user's roles, per area (see apps.accounts.permissions)."""
         from apps.accounts.permissions import effective_permissions
 

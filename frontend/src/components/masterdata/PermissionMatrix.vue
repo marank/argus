@@ -5,7 +5,6 @@ import { useI18n } from 'vue-i18n'
 
 import { rolesApi } from '@/api/accounts'
 import type { Schemas } from '@/api/types'
-import type { PermissionLevel } from '@/types/accounts'
 
 /**
  * The rights of a role in the edit drawer: per area none, read or write.
@@ -25,12 +24,12 @@ const groups = computed(() =>
   })),
 )
 
-type Permissions = Partial<Record<string, PermissionLevel>>
+type Permissions = Partial<Record<string, Schemas['PermissionLevel']>>
 const permissions = () => (props.form.permissions ?? {}) as Permissions
 
 const levelOf = (key: string) => permissions()[key] ?? 'none'
 
-function setLevel(key: string, level: PermissionLevel | 'none') {
+function setLevel(key: string, level: Schemas['PermissionLevel'] | 'none') {
   const next = { ...permissions() }
   if (level === 'none') delete next[key]
   else next[key] = level
@@ -39,7 +38,7 @@ function setLevel(key: string, level: PermissionLevel | 'none') {
 }
 
 /** Sets every area of a group at once. */
-function setGroup(group: (typeof GROUPS)[number], level: PermissionLevel | 'none') {
+function setGroup(group: (typeof GROUPS)[number], level: Schemas['PermissionLevel'] | 'none') {
   for (const resource of groups.value.find((g) => g.group === group)?.resources ?? [])
     setLevel(resource.key, level)
 }
@@ -74,7 +73,9 @@ const LEVELS = ['none', 'read', 'write'] as const
             :value="levelOf(resource.key)"
             size="small"
             :disabled="readonly"
-            @update:value="(level: PermissionLevel | 'none') => setLevel(resource.key, level)"
+            @update:value="
+              (level: Schemas['PermissionLevel'] | 'none') => setLevel(resource.key, level)
+            "
           >
             <NRadioButton v-for="level in LEVELS" :key="level" :value="level">
               {{ t(`masterdata.roles.levels.${level}`) }}

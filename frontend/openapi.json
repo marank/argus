@@ -653,6 +653,7 @@
           "created_at",
           "updated_at",
           "components",
+          "asset_request",
           "consumables",
           "model_consumables",
           "licenses",
@@ -1892,8 +1893,11 @@
           "warranty_months",
           "compatible_with",
           "number_sequence",
+          "effective_number_sequence",
           "is_requestable",
-          "is_active"
+          "is_active",
+          "team",
+          "effective_team"
         ],
         "title": "AssetModelOut",
         "type": "object"
@@ -2763,6 +2767,9 @@
           "handover_mode",
           "is_overdue",
           "pickup_at",
+          "item_count",
+          "unit_count",
+          "summary",
           "created_at",
           "assigned_team",
           "assignee"
@@ -3142,6 +3149,9 @@
           "handover_mode",
           "is_overdue",
           "pickup_at",
+          "item_count",
+          "unit_count",
+          "summary",
           "created_at",
           "assigned_team",
           "assignee",
@@ -3158,12 +3168,16 @@
           "approver",
           "approval_decided_at",
           "approval_comment",
+          "approvers",
+          "can_approve",
           "confirmed_at",
           "handed_out_at",
           "completed_at",
           "items",
           "handover",
-          "follows"
+          "returns",
+          "follows",
+          "events"
         ],
         "title": "AssetRequestOut",
         "type": "object"
@@ -3544,7 +3558,9 @@
         },
         "required": [
           "assets",
-          "consumables"
+          "consumables",
+          "licenses",
+          "devices"
         ],
         "title": "CandidatesOut",
         "type": "object"
@@ -3957,7 +3973,9 @@
           "requires_approval",
           "needs_approval",
           "sort_order",
-          "path"
+          "path",
+          "team",
+          "effective_team"
         ],
         "title": "CategoryOut",
         "type": "object"
@@ -4318,7 +4336,8 @@
           "model",
           "location",
           "quantity",
-          "min_quantity"
+          "min_quantity",
+          "default_supplier"
         ],
         "title": "ConsumableNeedItemOut",
         "type": "object"
@@ -4479,6 +4498,9 @@
             "additionalProperties": {
               "type": "boolean"
             },
+            "propertyNames": {
+              "$ref": "#/components/schemas/NotificationEvent"
+            },
             "title": "App Notification Settings",
             "type": "object"
           },
@@ -4487,9 +4509,7 @@
             "type": "boolean"
           },
           "dashboard_settings": {
-            "additionalProperties": true,
-            "title": "Dashboard Settings",
-            "type": "object"
+            "$ref": "#/components/schemas/DashboardLayoutOut"
           },
           "department": {
             "anyOf": [
@@ -4561,12 +4581,18 @@
             "additionalProperties": {
               "type": "boolean"
             },
+            "propertyNames": {
+              "$ref": "#/components/schemas/NotificationEvent"
+            },
             "title": "Notification Settings",
             "type": "object"
           },
           "permissions": {
             "additionalProperties": {
-              "type": "string"
+              "$ref": "#/components/schemas/PermissionLevel"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/ResourceKey"
             },
             "title": "Permissions",
             "type": "object"
@@ -4634,6 +4660,9 @@
           "is_active",
           "is_ldap_user",
           "approval_exempt",
+          "two_factor",
+          "roles",
+          "teams",
           "permissions",
           "language",
           "notification_settings",
@@ -4642,6 +4671,83 @@
           "is_approver"
         ],
         "title": "CurrentUserOut",
+        "type": "object"
+      },
+      "DashboardLayoutOut": {
+        "properties": {
+          "widgets": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/DashboardWidgetOut"
+            },
+            "title": "Widgets",
+            "type": "array"
+          }
+        },
+        "required": [
+          "widgets"
+        ],
+        "title": "DashboardLayoutOut",
+        "type": "object"
+      },
+      "DashboardWidgetOut": {
+        "properties": {
+          "card_order": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Card Order",
+            "type": "array"
+          },
+          "height": {
+            "$ref": "#/components/schemas/WidgetHeight"
+          },
+          "hidden_cards": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Hidden Cards",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "options": {
+            "additionalProperties": true,
+            "title": "Options",
+            "type": "object"
+          },
+          "size": {
+            "$ref": "#/components/schemas/WidgetSize"
+          },
+          "visible": {
+            "title": "Visible",
+            "type": "boolean"
+          },
+          "widget": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Widget"
+          }
+        },
+        "required": [
+          "id",
+          "widget",
+          "visible",
+          "size",
+          "height",
+          "hidden_cards",
+          "card_order",
+          "options"
+        ],
+        "title": "DashboardWidgetOut",
         "type": "object"
       },
       "DeclineIn": {
@@ -4787,7 +4893,12 @@
           "icon",
           "code",
           "cost_center",
-          "sort_order"
+          "sort_order",
+          "member_count",
+          "parent",
+          "path",
+          "approvers",
+          "effective_approvers"
         ],
         "title": "DepartmentOut",
         "type": "object"
@@ -5178,19 +5289,47 @@
         "title": "ExtendIn",
         "type": "object"
       },
+      "FeatureKey": {
+        "enum": [
+          "calendar_warranty",
+          "calendar_license_expiry",
+          "calendar_deliveries",
+          "consumable_quick_pick",
+          "software_requests",
+          "attention_motion"
+        ],
+        "title": "FeatureKey",
+        "type": "string"
+      },
+      "FlagKey": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/ModuleKey"
+          },
+          {
+            "$ref": "#/components/schemas/FeatureKey"
+          }
+        ]
+      },
+      "FlagKind": {
+        "enum": [
+          "module",
+          "feature"
+        ],
+        "title": "FlagKind",
+        "type": "string"
+      },
       "FlagOut": {
         "properties": {
           "key": {
-            "title": "Key",
-            "type": "string"
+            "$ref": "#/components/schemas/FlagKey"
           },
           "kind": {
-            "title": "Kind",
-            "type": "string"
+            "$ref": "#/components/schemas/FlagKind"
           },
           "requires": {
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/ModuleKey"
             },
             "title": "Requires",
             "type": "array"
@@ -5876,7 +6015,8 @@
           "display_name",
           "email",
           "phone",
-          "job_title"
+          "job_title",
+          "department"
         ],
         "title": "IssueReporterOut",
         "type": "object"
@@ -7724,6 +7864,18 @@
         "title": "MenuCountsOut",
         "type": "object"
       },
+      "ModuleKey": {
+        "enum": [
+          "consumables",
+          "licenses",
+          "procurement",
+          "calendar",
+          "issues",
+          "terminal"
+        ],
+        "title": "ModuleKey",
+        "type": "string"
+      },
       "MyAssetOut": {
         "properties": {
           "asset_request_number": {
@@ -7949,7 +8101,8 @@
           "label",
           "is_free_text",
           "category",
-          "asset_model"
+          "asset_model",
+          "default_supplier"
         ],
         "title": "NeedItemOut",
         "type": "object"
@@ -7978,6 +8131,40 @@
         "title": "NeedsOut",
         "type": "object"
       },
+      "NotificationAudience": {
+        "enum": [
+          "employee",
+          "it",
+          "approver"
+        ],
+        "title": "NotificationAudience",
+        "type": "string"
+      },
+      "NotificationEvent": {
+        "description": "Notification kinds that the site and each person can switch off.",
+        "enum": [
+          "approval_requested",
+          "request_submitted",
+          "issue_reported",
+          "issue_answered",
+          "assigned_to_me",
+          "license_expiring",
+          "request_confirmed",
+          "request_rejected",
+          "request_cancelled",
+          "request_ready",
+          "request_rescheduled",
+          "request_handed_out",
+          "request_extended",
+          "request_returned",
+          "return_reminder",
+          "return_overdue",
+          "issue_message",
+          "issue_resolved"
+        ],
+        "title": "NotificationEvent",
+        "type": "string"
+      },
       "NotificationEventOut": {
         "properties": {
           "app": {
@@ -7985,12 +8172,10 @@
             "type": "boolean"
           },
           "audience": {
-            "title": "Audience",
-            "type": "string"
+            "$ref": "#/components/schemas/NotificationAudience"
           },
           "key": {
-            "title": "Key",
-            "type": "string"
+            "$ref": "#/components/schemas/NotificationEvent"
           },
           "mail": {
             "title": "Mail",
@@ -8087,12 +8272,18 @@
             "additionalProperties": {
               "type": "boolean"
             },
+            "propertyNames": {
+              "$ref": "#/components/schemas/NotificationEvent"
+            },
             "title": "App",
             "type": "object"
           },
           "mail": {
             "additionalProperties": {
               "type": "boolean"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/NotificationEvent"
             },
             "title": "Mail",
             "type": "object"
@@ -8585,7 +8776,8 @@
           "category_icon",
           "valid_until",
           "is_expired",
-          "assigned_at"
+          "assigned_at",
+          "device"
         ],
         "title": "OwnLicenseOut",
         "type": "object"
@@ -8980,6 +9172,14 @@
         ],
         "title": "PasswordIn",
         "type": "object"
+      },
+      "PermissionLevel": {
+        "enum": [
+          "read",
+          "write"
+        ],
+        "title": "PermissionLevel",
+        "type": "string"
       },
       "PickupOut": {
         "properties": {
@@ -9377,6 +9577,7 @@
           "expected_date",
           "supplier_reference",
           "total",
+          "line_count",
           "created_at"
         ],
         "title": "PurchaseOrderListOut",
@@ -9489,6 +9690,7 @@
           "expected_date",
           "supplier_reference",
           "total",
+          "line_count",
           "created_at",
           "delivery_location",
           "notes",
@@ -9739,15 +9941,44 @@
         "title": "ResolveItemIn",
         "type": "object"
       },
+      "ResourceGroup": {
+        "description": "Grouping in the role editor.",
+        "enum": [
+          "masterdata",
+          "operations"
+        ],
+        "title": "ResourceGroup",
+        "type": "string"
+      },
+      "ResourceKey": {
+        "description": "Areas of the app that roles grant rights on.",
+        "enum": [
+          "models",
+          "categories",
+          "manufacturers",
+          "suppliers",
+          "locations",
+          "departments",
+          "teams",
+          "users",
+          "number_sequences",
+          "requests",
+          "assets",
+          "consumables",
+          "licenses",
+          "issues",
+          "procurement"
+        ],
+        "title": "ResourceKey",
+        "type": "string"
+      },
       "ResourceOut": {
         "properties": {
           "group": {
-            "title": "Group",
-            "type": "string"
+            "$ref": "#/components/schemas/ResourceGroup"
           },
           "key": {
-            "title": "Key",
-            "type": "string"
+            "$ref": "#/components/schemas/ResourceKey"
           }
         },
         "required": [
@@ -9861,7 +10092,10 @@
           },
           "permissions": {
             "additionalProperties": {
-              "type": "string"
+              "$ref": "#/components/schemas/PermissionLevel"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/ResourceKey"
             },
             "title": "Permissions",
             "type": "object"
@@ -10012,6 +10246,9 @@
             "additionalProperties": {
               "type": "boolean"
             },
+            "propertyNames": {
+              "$ref": "#/components/schemas/FlagKey"
+            },
             "title": "Flags",
             "type": "object"
           },
@@ -10036,6 +10273,9 @@
           "stored": {
             "additionalProperties": {
               "type": "boolean"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/FlagKey"
             },
             "title": "Stored",
             "type": "object"
@@ -10829,7 +11069,9 @@
           "title",
           "requester",
           "pickup_at",
-          "pickup_location"
+          "pickup_location",
+          "unit_count",
+          "summary"
         ],
         "title": "TerminalPickupOut",
         "type": "object"
@@ -10976,7 +11218,9 @@
           }
         },
         "required": [
-          "two_factor"
+          "two_factor",
+          "email_hint",
+          "code_sent"
         ],
         "title": "TwoFactorChallengeOut",
         "type": "object"
@@ -11043,7 +11287,12 @@
           }
         },
         "required": [
-          "method"
+          "method",
+          "secret",
+          "uri",
+          "qr_svg",
+          "email_hint",
+          "code_sent"
         ],
         "title": "TwoFactorSetupOut",
         "type": "object"
@@ -11452,7 +11701,10 @@
           "terminal_location",
           "is_active",
           "is_ldap_user",
-          "approval_exempt"
+          "approval_exempt",
+          "two_factor",
+          "roles",
+          "teams"
         ],
         "title": "UserOut",
         "type": "object"
@@ -11531,6 +11783,26 @@
         ],
         "title": "WaitingRequestOut",
         "type": "object"
+      },
+      "WidgetHeight": {
+        "description": "``auto`` fits the content (and the row); the others are fixed heights that scroll.",
+        "enum": [
+          "auto",
+          "small",
+          "medium",
+          "large"
+        ],
+        "title": "WidgetHeight",
+        "type": "string"
+      },
+      "WidgetSize": {
+        "enum": [
+          "small",
+          "medium",
+          "large"
+        ],
+        "title": "WidgetSize",
+        "type": "string"
       }
     },
     "securitySchemes": {

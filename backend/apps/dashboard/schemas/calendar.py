@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Literal
 
-from ninja import Schema
+from apps.core.schemas.base import Schema
 
 
 class CalendarEntryOut(Schema):

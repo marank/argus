@@ -7,13 +7,14 @@ import typing
 from collections import defaultdict
 from collections.abc import Iterable
 
-from ninja import Schema
+from ninja import Schema as NinjaSchema
 
 import config.api  # noqa: F401 - imports every schema module
+from apps.core.schemas.base import Schema
 
 
-def subclasses(cls: type[Schema]) -> set[type[Schema]]:
-    found: set[type[Schema]] = set()
+def subclasses(cls: type[NinjaSchema]) -> set[type[NinjaSchema]]:
+    found: set[type[NinjaSchema]] = set()
     for sub in cls.__subclasses__():
         found |= {sub} | subclasses(sub)
     return found
@@ -39,8 +40,20 @@ def clashes(classes: Iterable[type]) -> dict[str, list[str]]:
     }
 
 
-def api_schemas() -> set[type[Schema]]:
-    return {schema for schema in subclasses(Schema) if schema.__module__.startswith("apps.")}
+def api_schemas() -> set[type[NinjaSchema]]:
+    return {schema for schema in subclasses(NinjaSchema) if schema.__module__.startswith("apps.")}
+
+
+def test_schemas_use_the_argus_base():
+    """Only apps.core.schemas.base.Schema publishes always-sent response fields as required."""
+    from ninja import FilterSchema
+
+    plain = {
+        f"{schema.__module__}.{schema.__qualname__}"
+        for schema in api_schemas()
+        if not issubclass(schema, (Schema, FilterSchema))
+    }
+    assert plain == set()
 
 
 def test_schema_names_are_unique():

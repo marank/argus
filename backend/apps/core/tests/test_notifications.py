@@ -362,11 +362,16 @@ def test_each_channel_has_its_own_switches(
 
 
 def test_a_reminder_shows_once(demo, employee_client):
-    from apps.core.notifications import notify
+    from apps.core.notifications import NotificationEvent, notify
 
     employee = User.objects.get(username="employee")
     for _ in range(2):
-        notify("return_reminder", [employee], lambda user: ("Reminder", "Bring it back."), key="r:1")
+        notify(
+            NotificationEvent.RETURN_REMINDER,
+            [employee],
+            lambda user: ("Reminder", "Bring it back."),
+            key="r:1",
+        )
     assert employee_client.get("/api/notifications/unread").json() == {"unread": 1}
 
 

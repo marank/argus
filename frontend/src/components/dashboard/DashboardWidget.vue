@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { ArrowDown, ArrowUp, GripVertical, Pencil, Scaling, X } from '@lucide/vue'
+import type { Schemas } from '@/api/types'
 import { NButton, NInput, NPopover, type PopoverInst } from 'naive-ui'
 import { ref, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
-
-import type { WidgetHeight, WidgetSettings, WidgetSize } from '@/types/accounts'
 
 /**
  * Places a dashboard widget in the grid. While editing it adds a bar to move,
@@ -15,7 +14,7 @@ defineProps<{
   /** The name the user gave a widget that allows several; undefined where it cannot be named. */
   customTitle?: string
   icon: Component
-  settings: WidgetSettings
+  settings: Schemas['DashboardWidgetOut']
   editing?: boolean
   interactive?: boolean
   first?: boolean
@@ -24,8 +23,8 @@ defineProps<{
 const emit = defineEmits<{
   remove: []
   rename: [title: string]
-  resize: [size: WidgetSize]
-  setHeight: [height: WidgetHeight]
+  resize: [size: Schemas['WidgetSize']]
+  setHeight: [height: Schemas['WidgetHeight']]
   move: [delta: number]
 }>()
 
@@ -45,17 +44,17 @@ function followButton() {
   requestAnimationFrame(step)
 }
 
-function resize(size: WidgetSize) {
+function resize(size: Schemas['WidgetSize']) {
   emit('resize', size)
   followButton()
 }
 
-function setHeight(height: WidgetHeight) {
+function setHeight(height: Schemas['WidgetHeight']) {
   emit('setHeight', height)
   followButton()
 }
-const SIZES: WidgetSize[] = ['small', 'medium', 'large']
-const HEIGHTS: WidgetHeight[] = ['auto', 'small', 'medium', 'large']
+const SIZES: Schemas['WidgetSize'][] = ['small', 'medium', 'large']
+const HEIGHTS: Schemas['WidgetHeight'][] = ['auto', 'small', 'medium', 'large']
 </script>
 
 <template>

@@ -13,6 +13,7 @@ dependencies = [
     "segno>=1.6",
     "uvicorn>=0.54.0",
     "django-stubs-ext>=6.1.2",
+    "pydantic>=2.14.1",
 ]
 
 [dependency-groups]

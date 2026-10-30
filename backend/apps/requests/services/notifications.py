@@ -7,7 +7,7 @@ from django.utils import formats, timezone
 from django.utils.translation import gettext as _
 
 from apps.accounts.services.assignment import responsible_staff
-from apps.core.notifications import notify
+from apps.core.notifications import DirectNotification, NotificationEvent, notify
 from apps.requests.models import AssetRequest, AssetRequestStatus
 
 if TYPE_CHECKING:
@@ -43,7 +43,7 @@ def request_submitted(asset_request: AssetRequest) -> None:
         return subject, f"{body}\n\n{_items(asset_request)}"
 
     notify(
-        "request_submitted",
+        NotificationEvent.REQUEST_SUBMITTED,
         responsible_staff(asset_request).exclude(pk=asset_request.requester_id),
         render,
         path=f"/requests/{asset_request.pk}",
@@ -63,7 +63,7 @@ def approval_requested(asset_request: AssetRequest) -> None:
         return subject, f"{body}\n\n{_items(asset_request)}"
 
     notify(
-        "approval_requested",
+        NotificationEvent.APPROVAL_REQUESTED,
         asset_request.approvers().exclude(pk=asset_request.requester_id),
         render,
         path=f"/portal/approvals/{asset_request.pk}",
@@ -84,7 +84,12 @@ def approval_declined(asset_request: AssetRequest) -> None:
             body += "\n\n" + _("Comment: %(comment)s") % {"comment": asset_request.approval_comment}
         return subject, f"{body}\n\n{_items(asset_request)}"
 
-    notify("request_rejected", [asset_request.requester], render, path=f"/portal/requests/{asset_request.pk}")
+    notify(
+        NotificationEvent.REQUEST_REJECTED,
+        [asset_request.requester],
+        render,
+        path=f"/portal/requests/{asset_request.pk}",
+    )
 
 
 def request_assigned(asset_request: AssetRequest) -> None:
@@ -99,7 +104,7 @@ def request_assigned(asset_request: AssetRequest) -> None:
         }
         return subject, f"{body}\n\n{_items(asset_request)}"
 
-    notify("assigned_to_me", [assignee], render, path=f"/requests/{asset_request.pk}")
+    notify(NotificationEvent.ASSIGNED_TO_ME, [assignee], render, path=f"/requests/{asset_request.pk}")
 
 
 def request_decided(asset_request: AssetRequest) -> None:
@@ -119,7 +124,7 @@ def request_decided(asset_request: AssetRequest) -> None:
         return subject, f"{body}\n\n{_items(asset_request)}"
 
     notify(
-        "request_confirmed" if confirmed else "request_rejected",
+        NotificationEvent.REQUEST_CONFIRMED if confirmed else NotificationEvent.REQUEST_REJECTED,
         [asset_request.requester],
         render,
         path=f"/portal/requests/{asset_request.pk}",
@@ -133,7 +138,12 @@ def request_ready(asset_request: AssetRequest) -> None:
         pickup = _pickup(asset_request)
         return subject, "\n\n".join(part for part in (body, pickup, _items(asset_request)) if part)
 
-    notify("request_ready", [asset_request.requester], render, path=f"/portal/requests/{asset_request.pk}")
+    notify(
+        NotificationEvent.REQUEST_READY,
+        [asset_request.requester],
+        render,
+        path=f"/portal/requests/{asset_request.pk}",
+    )
 
 
 def return_reminder(asset_request: AssetRequest) -> None:
@@ -149,7 +159,7 @@ def return_reminder(asset_request: AssetRequest) -> None:
         return subject, f"{body}\n\n{_items(asset_request)}"
 
     notify(
-        "return_reminder",
+        NotificationEvent.RETURN_REMINDER,
         [asset_request.requester],
         render,
         key=f"{asset_request.pk}:{asset_request.end_date}",
@@ -167,7 +177,7 @@ def return_overdue(asset_request: AssetRequest) -> None:
         return subject, f"{body}\n\n{_items(asset_request)}"
 
     notify(
-        "return_overdue",
+        NotificationEvent.RETURN_OVERDUE,
         [asset_request.requester],
         render,
         key=f"{asset_request.pk}:{asset_request.end_date}",
@@ -192,11 +202,10 @@ def return_requested(asset_request: AssetRequest, sender: User) -> None:
         return subject, f"{body}\n\n{_items(asset_request)}\n\n{signature}"
 
     notify(
-        "return_requested",
+        DirectNotification.RETURN_REQUESTED,
         [asset_request.requester],
         render,
         path=f"/portal/requests/{asset_request.pk}",
-        direct=True,
     )
 
 
@@ -214,7 +223,10 @@ def request_rescheduled(asset_request: AssetRequest) -> None:
         return subject, "\n\n".join(part for part in (body, how, _pickup(asset_request)) if part)
 
     notify(
-        "request_rescheduled", [asset_request.requester], render, path=f"/portal/requests/{asset_request.pk}"
+        NotificationEvent.REQUEST_RESCHEDULED,
+        [asset_request.requester],
+        render,
+        path=f"/portal/requests/{asset_request.pk}",
     )
 
 
@@ -228,7 +240,12 @@ def request_extended(asset_request: AssetRequest, previous: date | None) -> None
         }
         return subject, f"{body}\n\n{_items(asset_request)}"
 
-    notify("request_extended", [asset_request.requester], render, path=f"/portal/requests/{asset_request.pk}")
+    notify(
+        NotificationEvent.REQUEST_EXTENDED,
+        [asset_request.requester],
+        render,
+        path=f"/portal/requests/{asset_request.pk}",
+    )
 
 
 def request_cancelled(asset_request: AssetRequest, by: User | None) -> None:
@@ -242,7 +259,10 @@ def request_cancelled(asset_request: AssetRequest, by: User | None) -> None:
         return subject, f"{body}\n\n{_items(asset_request)}"
 
     notify(
-        "request_cancelled", [asset_request.requester], render, path=f"/portal/requests/{asset_request.pk}"
+        NotificationEvent.REQUEST_CANCELLED,
+        [asset_request.requester],
+        render,
+        path=f"/portal/requests/{asset_request.pk}",
     )
 
 
@@ -262,7 +282,10 @@ def request_handed_out(asset_request: AssetRequest, devices: list[str], received
         return subject, "\n\n".join(parts)
 
     notify(
-        "request_handed_out", [asset_request.requester], render, path=f"/portal/requests/{asset_request.pk}"
+        NotificationEvent.REQUEST_HANDED_OUT,
+        [asset_request.requester],
+        render,
+        path=f"/portal/requests/{asset_request.pk}",
     )
 
 
@@ -284,4 +307,9 @@ def request_returned(
             parts.append(_("Still to return:") + "\n" + _devices(open_))
         return subject, "\n\n".join(parts)
 
-    notify("request_returned", [asset_request.requester], render, path=f"/portal/requests/{asset_request.pk}")
+    notify(
+        NotificationEvent.REQUEST_RETURNED,
+        [asset_request.requester],
+        render,
+        path=f"/portal/requests/{asset_request.pk}",
+    )

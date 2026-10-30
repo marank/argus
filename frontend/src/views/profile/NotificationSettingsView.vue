@@ -7,6 +7,7 @@ import PageHeader from '@/components/common/PageHeader.vue'
 import NotificationMatrix, {
   type NotificationGroup,
 } from '@/components/settings/NotificationMatrix.vue'
+import type { Schemas } from '@/api/types'
 import { useAuthStore } from '@/stores/auth'
 import { useFeaturesStore } from '@/stores/features'
 import type { NotificationChannel } from '@/types/settings'
@@ -46,12 +47,16 @@ const stored = (channel: NotificationChannel) =>
   (channel === 'mail' ? auth.user?.notification_settings : auth.user?.app_notification_settings) ??
   {}
 
-function state(key: string, channel: NotificationChannel) {
+function state(key: Schemas['NotificationEvent'], channel: NotificationChannel) {
   const available = !!site.value.get(key)?.[channel] && (channel === 'app' || mailPossible.value)
   return available ? { value: stored(channel)[key] ?? true } : { value: false, disabled: true }
 }
 
-async function toggle(key: string, channel: NotificationChannel, value: boolean) {
+async function toggle(
+  key: Schemas['NotificationEvent'],
+  channel: NotificationChannel,
+  value: boolean,
+) {
   try {
     await auth.changeNotifications({
       notification_settings: auth.user?.notification_settings ?? {},

@@ -2,7 +2,7 @@ from collections.abc import Callable
 from typing import Any
 from uuid import UUID
 
-from ninja import Schema
+from apps.core.schemas.base import Schema
 
 
 class RefOut(Schema):

@@ -1,7 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router'
-
-import type { PermissionKey } from '@/types/accounts'
-import type { ModuleKey } from '@/types/settings'
+import type { Schemas } from '@/api/types'
 
 declare module 'vue-router' {
   interface RouteMeta {
@@ -14,13 +12,13 @@ declare module 'vue-router' {
     /** Restricted to department approvers. */
     approver?: boolean
     /** Area the user's roles must allow reading. */
-    permission?: PermissionKey
+    permission?: Schemas['ResourceKey']
     /** Pickup terminal pages (terminal account and IT staff). */
     terminal?: boolean
     /** i18n key of the page title. */
     title?: string
     /** Module that can be switched off in the site settings. */
-    module?: ModuleKey
+    module?: Schemas['ModuleKey']
     /** Settings section a sub-page belongs to (highlighted in the settings menu). */
     section?: string
   }

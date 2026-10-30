@@ -44,7 +44,7 @@ const groups = computed<NotificationGroup[]>(() => {
   }))
 })
 
-const state = (key: string, channel: NotificationChannel) => ({
+const state = (key: Schemas['NotificationEvent'], channel: NotificationChannel) => ({
   value: form[channel][key] ?? false,
 })
 

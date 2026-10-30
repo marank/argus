@@ -13,7 +13,7 @@ from django.utils.translation import gettext as _
 from apps.accounts.models import Team, User
 from apps.accounts.services import assignment
 from apps.core.exceptions import BusinessError
-from apps.core.features import is_enabled
+from apps.core.features import FeatureKey, is_enabled
 from apps.core.models import SiteSettings
 from apps.inventory.models import (
     Asset,
@@ -86,7 +86,7 @@ def _validate_pickup_wish(day: date | None, start: date) -> None:
 
 def _require_requestable(line: AssetRequestItem) -> None:
     """Employees can only request what the portal catalog offers them (``portal.catalog``)."""
-    software_off = not is_enabled("software_requests")
+    software_off = not is_enabled(FeatureKey.SOFTWARE_REQUESTS)
     model = line.asset_model
     categories = {c for c in (line.category, model.category if model else None) if c}
     model_offered = not model or (

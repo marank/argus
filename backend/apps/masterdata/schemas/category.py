@@ -1,12 +1,11 @@
 from typing import Any
 from uuid import UUID
 
-from ninja import Schema
-
 from apps.accounts.models import Team
 from apps.accounts.schemas import TeamRefOut, default_team
 from apps.core.api.security import context_is_it_staff
 from apps.core.schemas import RefOut
+from apps.core.schemas.base import Schema
 from apps.masterdata.models import Category, CategoryKind
 
 

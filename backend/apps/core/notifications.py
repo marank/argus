@@ -1,19 +1,21 @@
 """Notifications by email and in the app (the bell).
 
-Every notification kind is listed in ``EVENTS`` with its audience. Each channel has
-its own switches: site-wide in the notification settings (``MailSettings.events``
-for email, ``app_events`` for the app) and per person (``User.notification_settings``
-and ``app_notification_settings``); a person can only switch off what is on
-site-wide. Email also needs a working mail setup; the app does not. Mails are queued
-as background jobs together with the surrounding transaction (``apps.core.jobs``); a
-failing server never breaks the action that caused the mail. In-app notifications are
-stored right away and announced to the recipient's open tabs (``apps.core.live``).
+Every notification kind that can be switched off is a ``NotificationEvent``, listed in
+``EVENTS`` with its audience. Each channel has its own switches: site-wide in the
+notification settings (``MailSettings.events`` for email, ``app_events`` for the app)
+and per person (``User.notification_settings`` and ``app_notification_settings``); a
+person can only switch off what is on site-wide. Email also needs a working mail
+setup; the app does not. Mails are queued as background jobs together with the
+surrounding transaction (``apps.core.jobs``); a failing server never breaks the action
+that caused the mail. In-app notifications are stored right away and announced to the
+recipient's open tabs (``apps.core.live``).
 """
 
 import email.policy
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from email.message import EmailMessage
+from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 
@@ -30,57 +32,98 @@ if TYPE_CHECKING:
     from apps.core.models import MailSettings
 
 
+class NotificationEvent(StrEnum):
+    """Notification kinds that the site and each person can switch off."""
+
+    APPROVAL_REQUESTED = "approval_requested"
+    REQUEST_SUBMITTED = "request_submitted"
+    ISSUE_REPORTED = "issue_reported"
+    ISSUE_ANSWERED = "issue_answered"
+    ASSIGNED_TO_ME = "assigned_to_me"
+    LICENSE_EXPIRING = "license_expiring"
+    REQUEST_CONFIRMED = "request_confirmed"
+    REQUEST_REJECTED = "request_rejected"
+    REQUEST_CANCELLED = "request_cancelled"
+    REQUEST_READY = "request_ready"
+    REQUEST_RESCHEDULED = "request_rescheduled"
+    REQUEST_HANDED_OUT = "request_handed_out"
+    REQUEST_EXTENDED = "request_extended"
+    REQUEST_RETURNED = "request_returned"
+    RETURN_REMINDER = "return_reminder"
+    RETURN_OVERDUE = "return_overdue"
+    ISSUE_MESSAGE = "issue_message"
+    ISSUE_RESOLVED = "issue_resolved"
+
+
+class DirectNotification(StrEnum):
+    """Sent on purpose by IT; no switch applies (see ``notify``)."""
+
+    RETURN_REQUESTED = "return_requested"
+
+
+class NotificationAudience(StrEnum):
+    EMPLOYEE = "employee"  # the person concerned
+    IT = "it"  # the IT department
+    APPROVER = "approver"  # department approvers
+
+
 @dataclass(frozen=True)
 class Event:
-    key: str
-    # "employee": the person concerned; "it": the IT department; "approver": department approvers
-    audience: str
+    key: NotificationEvent
+    audience: NotificationAudience
 
 
 EVENTS: tuple[Event, ...] = (
-    Event("approval_requested", "approver"),
-    Event("request_submitted", "it"),
-    Event("issue_reported", "it"),
-    Event("issue_answered", "it"),
-    Event("assigned_to_me", "it"),
-    Event("license_expiring", "it"),
-    Event("request_confirmed", "employee"),
-    Event("request_rejected", "employee"),
-    Event("request_cancelled", "employee"),
-    Event("request_ready", "employee"),
-    Event("request_rescheduled", "employee"),
-    Event("request_handed_out", "employee"),
-    Event("request_extended", "employee"),
-    Event("request_returned", "employee"),
-    Event("return_reminder", "employee"),
-    Event("return_overdue", "employee"),
-    Event("issue_message", "employee"),
-    Event("issue_resolved", "employee"),
+    Event(NotificationEvent.APPROVAL_REQUESTED, NotificationAudience.APPROVER),
+    Event(NotificationEvent.REQUEST_SUBMITTED, NotificationAudience.IT),
+    Event(NotificationEvent.ISSUE_REPORTED, NotificationAudience.IT),
+    Event(NotificationEvent.ISSUE_ANSWERED, NotificationAudience.IT),
+    Event(NotificationEvent.ASSIGNED_TO_ME, NotificationAudience.IT),
+    Event(NotificationEvent.LICENSE_EXPIRING, NotificationAudience.IT),
+    Event(NotificationEvent.REQUEST_CONFIRMED, NotificationAudience.EMPLOYEE),
+    Event(NotificationEvent.REQUEST_REJECTED, NotificationAudience.EMPLOYEE),
+    Event(NotificationEvent.REQUEST_CANCELLED, NotificationAudience.EMPLOYEE),
+    Event(NotificationEvent.REQUEST_READY, NotificationAudience.EMPLOYEE),
+    Event(NotificationEvent.REQUEST_RESCHEDULED, NotificationAudience.EMPLOYEE),
+    Event(NotificationEvent.REQUEST_HANDED_OUT, NotificationAudience.EMPLOYEE),
+    Event(NotificationEvent.REQUEST_EXTENDED, NotificationAudience.EMPLOYEE),
+    Event(NotificationEvent.REQUEST_RETURNED, NotificationAudience.EMPLOYEE),
+    Event(NotificationEvent.RETURN_REMINDER, NotificationAudience.EMPLOYEE),
+    Event(NotificationEvent.RETURN_OVERDUE, NotificationAudience.EMPLOYEE),
+    Event(NotificationEvent.ISSUE_MESSAGE, NotificationAudience.EMPLOYEE),
+    Event(NotificationEvent.ISSUE_RESOLVED, NotificationAudience.EMPLOYEE),
 )
-EVENT_KEYS = {event.key for event in EVENTS}
-AUDIENCE = {event.key: event.audience for event in EVENTS}
 
 
-def site_events(stored: dict[str, object]) -> dict[str, bool]:
+def known_events(switches: object) -> dict[NotificationEvent, bool]:
+    """Stored switches of notification kinds that exist (others are left out)."""
+    if not isinstance(switches, dict):
+        return {}
+    return {
+        NotificationEvent(key): bool(value) for key, value in switches.items() if key in NotificationEvent
+    }
+
+
+def site_events(stored: dict[str, object]) -> dict[NotificationEvent, bool]:
     """Notification kinds switched on site-wide (all on by default)."""
     return {event.key: bool(stored.get(event.key, True)) for event in EVENTS}
 
 
-def receivable(user: User) -> set[str]:
+def receivable(user: User) -> set[NotificationEvent]:
     """Kinds ``user`` can get, and so switch off: their own, plus IT and approver ones by role."""
-    audiences = {"employee"}
+    audiences = {NotificationAudience.EMPLOYEE}
     if user.is_it_staff:
-        audiences.add("it")
+        audiences.add(NotificationAudience.IT)
     if user.is_approver:
-        audiences.add("approver")
+        audiences.add(NotificationAudience.APPROVER)
     return {event.key for event in EVENTS if event.audience in audiences}
 
 
-def user_wants(user: User, event: str) -> bool:
+def user_wants(user: User, event: NotificationEvent) -> bool:
     return bool((user.notification_settings or {}).get(event, True))
 
 
-def user_wants_app(user: User, event: str) -> bool:
+def user_wants_app(user: User, event: NotificationEvent) -> bool:
     return bool((user.app_notification_settings or {}).get(event, True))
 
 
@@ -208,13 +251,12 @@ def mail_ready(settings: MailSettings) -> bool:
 
 
 def notify(
-    event: str,
+    event: NotificationEvent | DirectNotification,
     recipients: Iterable[User],
     render: Render,
     *,
     key: str = "",
     path: str = "",
-    direct: bool = False,
 ) -> None:
     """Notify each recipient of ``event``; ``render(user)`` returns (subject, body).
 
@@ -222,8 +264,8 @@ def notify(
     the notification only once per channel (reminders): an email counts as sent once
     delivered, and is not queued again while it waits for a retry. ``path`` is the
     page it is about: the email links to it when the app address is configured, the
-    app opens it. ``direct``: sent on purpose by IT (not listed in ``EVENTS``), so the
-    site-wide and personal switches do not apply.
+    app opens it. A ``DirectNotification`` is sent on purpose by IT, so the site-wide
+    and personal switches do not apply.
     """
     from apps.core import tasks
     from apps.core.jobs import defer
@@ -231,16 +273,23 @@ def notify(
     from apps.core.models import MailSettings, Notification, NotificationLog
 
     settings = MailSettings.load()
-    by_mail = mail_ready(settings) and (direct or site_events(settings.events)[event])
-    in_app = direct or site_events(settings.app_events)[event]
+    if isinstance(event, DirectNotification):
+        by_mail, in_app = mail_ready(settings), True
+    else:
+        by_mail = mail_ready(settings) and site_events(settings.events)[event]
+        in_app = site_events(settings.app_events)[event]
     if not (by_mail or in_app):
         return
 
     for user in recipients:
         if not user.is_active or user.is_terminal:
             continue
-        mail = by_mail and bool(user.email) and (direct or user_wants(user, event))
-        app = in_app and (direct or user_wants_app(user, event))
+        mail = (
+            by_mail
+            and bool(user.email)
+            and (isinstance(event, DirectNotification) or user_wants(user, event))
+        )
+        app = in_app and (isinstance(event, DirectNotification) or user_wants_app(user, event))
         if key:
             mail = mail and not NotificationLog.objects.filter(event=event, key=key, recipient=user).exists()
             app = app and not Notification.objects.filter(event=event, key=key, recipient=user).exists()

@@ -6,21 +6,22 @@ can see what they may switch off for themselves), and whether LDAP login is on.
 
 from typing import Any
 
-from ninja import Field, Router, Schema
+from ninja import Field, Router
 
 from apps.core.api.security import AuthedRequest, session_auth, superuser_auth
-from apps.core.features import FLAG_KEYS, FLAGS, current_flags
+from apps.core.features import FLAG_KEYS, FLAGS, FlagKey, FlagKind, ModuleKey, current_flags
 from apps.core.models import MailSettings, SiteSettings
 from apps.core.models.site_settings import RULE_FIELDS
-from apps.core.notifications import EVENTS, mail_ready, site_events
+from apps.core.notifications import EVENTS, NotificationAudience, NotificationEvent, mail_ready, site_events
+from apps.core.schemas.base import Schema
 
 router = Router(tags=["settings"])
 
 
 class FlagOut(Schema):
-    key: str
-    kind: str
-    requires: list[str]
+    key: FlagKey
+    kind: FlagKind
+    requires: list[ModuleKey]
 
 
 class RulesSchema(Schema):
@@ -32,8 +33,8 @@ class RulesSchema(Schema):
 
 
 class NotificationEventOut(Schema):
-    key: str
-    audience: str
+    key: NotificationEvent
+    audience: NotificationAudience
     # Switched on site-wide, per channel.
     mail: bool
     app: bool
@@ -41,9 +42,9 @@ class NotificationEventOut(Schema):
 
 class SiteSettingsOut(Schema):
     # Effective values: a feature is off while a module it needs is off.
-    flags: dict[str, bool]
+    flags: dict[FlagKey, bool]
     # What the administrator switched, before dependencies are applied.
-    stored: dict[str, bool]
+    stored: dict[FlagKey, bool]
     definitions: list[FlagOut]
     rules: RulesSchema
     mail_enabled: bool

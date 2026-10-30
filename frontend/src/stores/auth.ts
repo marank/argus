@@ -5,7 +5,6 @@ import { authApi, isChallenge } from '@/api/auth'
 import { ApiError } from '@/api/client'
 import { setLocale } from '@/i18n'
 import type { Schemas } from '@/api/types'
-import type { PermissionKey, PermissionLevel } from '@/types/accounts'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<Schemas['CurrentUserOut'] | null>(null)
@@ -18,7 +17,10 @@ export const useAuthStore = defineStore('auth', () => {
   const isApprover = computed(() => user.value?.is_approver ?? false)
 
   /** Whether the user's roles allow reading (or with `write`, changing) an area. */
-  function can(resource: PermissionKey, level: PermissionLevel = 'read'): boolean {
+  function can(
+    resource: Schemas['ResourceKey'],
+    level: Schemas['PermissionLevel'] = 'read',
+  ): boolean {
     const granted = user.value?.permissions?.[resource]
     return level === 'read' ? !!granted : granted === 'write'
   }

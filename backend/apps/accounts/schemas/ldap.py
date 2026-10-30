@@ -1,6 +1,8 @@
 from typing import Literal
 
-from ninja import Field, Schema
+from ninja import Field
+
+from apps.core.schemas.base import Schema
 
 
 class LdapSettingsBase(Schema):

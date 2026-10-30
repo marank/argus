@@ -2,10 +2,11 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from ninja import Field, Schema
+from ninja import Field
 
 from apps.accounts.schemas import UserRefOut
 from apps.core.schemas import RefOut
+from apps.core.schemas.base import Schema
 from apps.masterdata.schemas.refs import AssetModelRefOut, LocationRefOut
 from apps.procurement.models import PurchaseOrder, PurchaseOrderLine, PurchaseOrderStatus
 

@@ -5,10 +5,12 @@ from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
-from ninja import Router, Schema
+from ninja import Router
 
+from apps.accounts.permissions import ResourceKey
 from apps.core.api.security import AuthedRequest, permission_auth
 from apps.core.exceptions import BusinessError
+from apps.core.schemas.base import Schema
 from apps.inventory.models import Asset, Consumable, License
 from apps.inventory.services.availability import pool_assets, pool_consumables, pool_licenses
 from apps.masterdata.models import AssetModel
@@ -24,7 +26,7 @@ from apps.requests.services import workflow
 
 from .queries import get_asset_request, get_for_update
 
-router = Router(tags=["request preparation"], auth=permission_auth("requests"))
+router = Router(tags=["request preparation"], auth=permission_auth(ResourceKey.REQUESTS))
 
 
 class AutoAllocateOut(Schema):

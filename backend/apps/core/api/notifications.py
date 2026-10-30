@@ -6,13 +6,14 @@ from uuid import UUID
 from django.db.models import QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from ninja import Router, Schema
+from ninja import Router
 from ninja.pagination import paginate
 
 from apps.core.api.pagination import Pagination
 from apps.core.api.security import AuthedRequest
 from apps.core.live import publish
 from apps.core.models import Notification
+from apps.core.schemas.base import Schema
 
 router = Router(tags=["notifications"])
 

@@ -2598,7 +2598,7 @@ export interface components {
     }
     /** AssetDetailOut */
     AssetDetailOut: {
-      asset_request?: components['schemas']['ActiveAssetRequestOut'] | null
+      asset_request: components['schemas']['ActiveAssetRequestOut'] | null
       /** Assigned Since */
       assigned_since: string | null
       assigned_to: components['schemas']['UserRefOut'] | null
@@ -3053,8 +3053,8 @@ export interface components {
       designation: string
       /** Ean */
       ean: string
-      effective_number_sequence?: components['schemas']['RefOut'] | null
-      effective_team?: components['schemas']['TeamRefOut'] | null
+      effective_number_sequence: components['schemas']['RefOut'] | null
+      effective_team: components['schemas']['TeamRefOut'] | null
       /** Full Name */
       full_name: string
       /**
@@ -3076,7 +3076,7 @@ export interface components {
       part_number: string
       /** Specifications */
       specifications: string
-      team?: components['schemas']['TeamRefOut'] | null
+      team: components['schemas']['TeamRefOut'] | null
       tracking: components['schemas']['Tracking']
       /** Warranty Months */
       warranty_months: number
@@ -3766,7 +3766,7 @@ export interface components {
       code: string
       /** Description */
       description: string
-      effective_team?: components['schemas']['TeamRefOut'] | null
+      effective_team: components['schemas']['TeamRefOut'] | null
       /** Icon */
       icon: string
       /**
@@ -3791,7 +3791,7 @@ export interface components {
       requires_approval: boolean
       /** Sort Order */
       sort_order: number
-      team?: components['schemas']['TeamRefOut'] | null
+      team: components['schemas']['TeamRefOut'] | null
     }
     /** CategoryRefOut */
     CategoryRefOut: {
@@ -3930,7 +3930,7 @@ export interface components {
     }
     /** ConsumableNeedItemOut */
     ConsumableNeedItemOut: {
-      default_supplier?: components['schemas']['RefOut'] | null
+      default_supplier: components['schemas']['RefOut'] | null
       /**
        * Id
        * Format: uuid
@@ -4020,10 +4020,7 @@ export interface components {
       }
       /** Approval Exempt */
       approval_exempt: boolean
-      /** Dashboard Settings */
-      dashboard_settings: {
-        [key: string]: unknown
-      }
+      dashboard_settings: components['schemas']['DashboardLayoutOut']
       department: components['schemas']['RefOut'] | null
       /** Display Name */
       display_name: string
@@ -4061,7 +4058,7 @@ export interface components {
       }
       /** Permissions */
       permissions: {
-        [key: string]: string
+        [key: string]: components['schemas']['PermissionLevel']
       }
       /** Phone */
       phone: string
@@ -4076,9 +4073,36 @@ export interface components {
        */
       teams: components['schemas']['RefOut'][]
       terminal_location: components['schemas']['LocationRefOut'] | null
-      two_factor?: components['schemas']['TwoFactorMethod'] | null
+      two_factor: components['schemas']['TwoFactorMethod'] | null
       /** Username */
       username: string
+    }
+    /** DashboardLayoutOut */
+    DashboardLayoutOut: {
+      /**
+       * Widgets
+       * @default []
+       */
+      widgets: components['schemas']['DashboardWidgetOut'][]
+    }
+    /** DashboardWidgetOut */
+    DashboardWidgetOut: {
+      /** Card Order */
+      card_order: string[]
+      height: components['schemas']['WidgetHeight']
+      /** Hidden Cards */
+      hidden_cards: string[]
+      /** Id */
+      id: string
+      /** Options */
+      options: {
+        [key: string]: unknown
+      }
+      size: components['schemas']['WidgetSize']
+      /** Visible */
+      visible: boolean
+      /** Widget */
+      widget: string | null
     }
     /** DeclineIn */
     DeclineIn: {
@@ -4143,7 +4167,7 @@ export interface components {
       member_count: number
       /** Name */
       name: string
-      parent?: components['schemas']['RefOut'] | null
+      parent: components['schemas']['RefOut'] | null
       /**
        * Path
        * @default []
@@ -4309,14 +4333,29 @@ export interface components {
        */
       end_date: string
     }
+    /**
+     * FeatureKey
+     * @enum {string}
+     */
+    FeatureKey:
+      | 'calendar_warranty'
+      | 'calendar_license_expiry'
+      | 'calendar_deliveries'
+      | 'consumable_quick_pick'
+      | 'software_requests'
+      | 'attention_motion'
+    FlagKey: components['schemas']['ModuleKey'] | components['schemas']['FeatureKey']
+    /**
+     * FlagKind
+     * @enum {string}
+     */
+    FlagKind: 'module' | 'feature'
     /** FlagOut */
     FlagOut: {
-      /** Key */
-      key: string
-      /** Kind */
-      kind: string
+      key: components['schemas']['FlagKey']
+      kind: components['schemas']['FlagKind']
       /** Requires */
-      requires: string[]
+      requires: components['schemas']['ModuleKey'][]
     }
     /**
      * FollowsOut
@@ -4560,7 +4599,7 @@ export interface components {
     /** IssueReporterOut */
     IssueReporterOut: {
       /** Department */
-      department?: string | null
+      department: string | null
       /** Display Name */
       display_name: string
       /** Email */
@@ -5311,6 +5350,11 @@ export interface components {
       /** Requests */
       requests: number
     }
+    /**
+     * ModuleKey
+     * @enum {string}
+     */
+    ModuleKey: 'consumables' | 'licenses' | 'procurement' | 'calendar' | 'issues' | 'terminal'
     /** MyAssetOut */
     MyAssetOut: {
       /** Asset Request Number */
@@ -5376,7 +5420,7 @@ export interface components {
     NeedItemOut: {
       asset_model: components['schemas']['AssetModelRefOut'] | null
       category: components['schemas']['CategoryRefOut'] | null
-      default_supplier?: components['schemas']['RefOut'] | null
+      default_supplier: components['schemas']['RefOut'] | null
       /**
        * Id
        * Format: uuid
@@ -5394,14 +5438,41 @@ export interface components {
       /** Requests */
       requests: components['schemas']['AssetRequestNeedOut'][]
     }
+    /**
+     * NotificationAudience
+     * @enum {string}
+     */
+    NotificationAudience: 'employee' | 'it' | 'approver'
+    /**
+     * NotificationEvent
+     * @description Notification kinds that the site and each person can switch off.
+     * @enum {string}
+     */
+    NotificationEvent:
+      | 'approval_requested'
+      | 'request_submitted'
+      | 'issue_reported'
+      | 'issue_answered'
+      | 'assigned_to_me'
+      | 'license_expiring'
+      | 'request_confirmed'
+      | 'request_rejected'
+      | 'request_cancelled'
+      | 'request_ready'
+      | 'request_rescheduled'
+      | 'request_handed_out'
+      | 'request_extended'
+      | 'request_returned'
+      | 'return_reminder'
+      | 'return_overdue'
+      | 'issue_message'
+      | 'issue_resolved'
     /** NotificationEventOut */
     NotificationEventOut: {
       /** App */
       app: boolean
-      /** Audience */
-      audience: string
-      /** Key */
-      key: string
+      audience: components['schemas']['NotificationAudience']
+      key: components['schemas']['NotificationEvent']
       /** Mail */
       mail: boolean
     }
@@ -5644,7 +5715,7 @@ export interface components {
       assigned_at: string
       /** Category Icon */
       category_icon: string
-      device?: components['schemas']['LicensedDeviceOut'] | null
+      device: components['schemas']['LicensedDeviceOut'] | null
       /**
        * Id
        * Format: uuid
@@ -5787,6 +5858,11 @@ export interface components {
       /** Password */
       password: string
     }
+    /**
+     * PermissionLevel
+     * @enum {string}
+     */
+    PermissionLevel: 'read' | 'write'
     /** PickupOut */
     PickupOut: {
       /**
@@ -6064,12 +6140,37 @@ export interface components {
        */
       asset_model: string
     }
+    /**
+     * ResourceGroup
+     * @description Grouping in the role editor.
+     * @enum {string}
+     */
+    ResourceGroup: 'masterdata' | 'operations'
+    /**
+     * ResourceKey
+     * @description Areas of the app that roles grant rights on.
+     * @enum {string}
+     */
+    ResourceKey:
+      | 'models'
+      | 'categories'
+      | 'manufacturers'
+      | 'suppliers'
+      | 'locations'
+      | 'departments'
+      | 'teams'
+      | 'users'
+      | 'number_sequences'
+      | 'requests'
+      | 'assets'
+      | 'consumables'
+      | 'licenses'
+      | 'issues'
+      | 'procurement'
     /** ResourceOut */
     ResourceOut: {
-      /** Group */
-      group: string
-      /** Key */
-      key: string
+      group: components['schemas']['ResourceGroup']
+      key: components['schemas']['ResourceKey']
     }
     /** ReturnIn */
     ReturnIn: {
@@ -6132,7 +6233,7 @@ export interface components {
       name: string
       /** Permissions */
       permissions: {
-        [key: string]: string
+        [key: string]: components['schemas']['PermissionLevel']
       }
     }
     /** RulesSchema */
@@ -6808,7 +6909,7 @@ export interface components {
        */
       teams: components['schemas']['RefOut'][]
       terminal_location: components['schemas']['LocationRefOut'] | null
-      two_factor?: components['schemas']['TwoFactorMethod'] | null
+      two_factor: components['schemas']['TwoFactorMethod'] | null
       /** Username */
       username: string
     }
@@ -6848,6 +6949,17 @@ export interface components {
       /** Title */
       title: string
     }
+    /**
+     * WidgetHeight
+     * @description ``auto`` fits the content (and the row); the others are fixed heights that scroll.
+     * @enum {string}
+     */
+    WidgetHeight: 'auto' | 'small' | 'medium' | 'large'
+    /**
+     * WidgetSize
+     * @enum {string}
+     */
+    WidgetSize: 'small' | 'medium' | 'large'
   }
   responses: never
   parameters: never

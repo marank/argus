@@ -2,12 +2,13 @@ from datetime import date, datetime
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
 from uuid import UUID
 
-from ninja import Field, Schema
+from ninja import Field
 
 from apps.accounts.models import User
 from apps.accounts.schemas import TeamRefOut, UserRefOut
 from apps.core.api.security import context_is_it_staff
 from apps.core.schemas import RefOut
+from apps.core.schemas.base import Schema
 from apps.inventory.models import Asset, License
 from apps.inventory.schemas.refs import AssetRefOut
 from apps.masterdata.schemas.refs import AssetModelRefOut, CategoryRefOut, LocationRefOut

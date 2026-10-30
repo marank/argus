@@ -6,7 +6,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404
 
 from apps.accounts.models import Department, User
-from apps.accounts.permissions import can
+from apps.accounts.permissions import ResourceKey, can
 from apps.core.api.security import AuthedRequest
 from apps.requests.models import (
     AssetRequest,
@@ -61,7 +61,7 @@ def asset_request_queryset() -> QuerySet[AssetRequest]:
 
 def visible_asset_requests(request: AuthedRequest) -> QuerySet[AssetRequest]:
     queryset = asset_request_queryset()
-    if can(request.user, "requests"):
+    if can(request.user, ResourceKey.REQUESTS):
         return queryset
     return queryset.filter(requester=request.user)
 

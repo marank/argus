@@ -3,10 +3,11 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from ninja import Field, Schema
+from ninja import Field
 
 from apps.accounts.schemas import UserRefOut
 from apps.core.schemas import RefOut
+from apps.core.schemas.base import Schema
 from apps.inventory.models import Asset, AssetIssue, AssetStatus, LicenseAssignment
 from apps.inventory.schemas.asset_issue import OwnIssueOut
 from apps.inventory.schemas.license import AssetLicenseOut

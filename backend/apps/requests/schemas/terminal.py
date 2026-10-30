@@ -1,9 +1,10 @@
 from datetime import date, datetime
 from uuid import UUID
 
-from ninja import Field, Schema
+from ninja import Field
 
 from apps.core.schemas import RefOut
+from apps.core.schemas.base import Schema
 from apps.inventory.schemas.refs import AssetRefOut
 from apps.masterdata.schemas.refs import LocationRefOut
 from apps.requests.models import (

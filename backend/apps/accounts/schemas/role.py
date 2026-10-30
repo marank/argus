@@ -1,8 +1,8 @@
 from uuid import UUID
 
-from ninja import Schema
-
 from apps.accounts.models import Role, User
+from apps.accounts.permissions import PermissionLevel, ResourceGroup, ResourceKey, clean_permissions
+from apps.core.schemas.base import Schema
 
 from .user import UserRefOut
 
@@ -12,8 +12,13 @@ class RoleOut(Schema):
     name: str
     description: str
     # Area → "read" or "write"; areas left out are not accessible.
-    permissions: dict[str, str]
+    permissions: dict[ResourceKey, PermissionLevel]
     members: list[UserRefOut]
+
+    @staticmethod
+    def resolve_permissions(obj: Role) -> dict[ResourceKey, PermissionLevel]:
+        # Stored rights of areas that no longer exist are not sent.
+        return clean_permissions(obj.permissions)
 
     @staticmethod
     def resolve_members(obj: Role) -> list[User]:
@@ -28,5 +33,5 @@ class RoleIn(Schema):
 
 
 class ResourceOut(Schema):
-    key: str
-    group: str
+    key: ResourceKey
+    group: ResourceGroup

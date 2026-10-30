@@ -1,8 +1,7 @@
 from typing import Literal
 
-from ninja import Schema
-
 from apps.accounts.models import TwoFactorMethod
+from apps.core.schemas.base import Schema
 
 Method = Literal["email", "totp"]
 

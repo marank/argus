@@ -2,11 +2,12 @@ from datetime import date, datetime
 from typing import Any, Literal
 from uuid import UUID
 
-from ninja import Field, Schema
+from ninja import Field
 
 from apps.accounts.models import Team, User
 from apps.accounts.schemas import TeamRefOut, UserRefOut
 from apps.core.api.security import context_is_it_staff
+from apps.core.schemas.base import Schema
 from apps.inventory.models import (
     Asset,
     AssetIssue,

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import type { Schemas } from '@/api/types'
 
 import {
   defaultLayout,
@@ -9,15 +10,18 @@ import {
   resolveLayout,
   widgetType,
 } from '@/components/dashboard/widgets'
-import type { WidgetSettings } from '@/types/accounts'
 
 const defs = [
   { id: 'a', size: 'large' as const },
   { id: 'b', size: 'medium' as const },
   { id: 'c', size: 'small' as const },
 ]
-const widget = (id: string, extra: Partial<WidgetSettings> = {}): WidgetSettings => ({
+const widget = (
+  id: string,
+  extra: Partial<Schemas['DashboardWidgetOut']> = {},
+): Schemas['DashboardWidgetOut'] => ({
   id,
+  widget: null,
   visible: true,
   size: 'large',
   height: 'auto',
@@ -65,21 +69,6 @@ describe('dashboard layout', () => {
     expect(
       isDefaultLayout(defs, resolveLayout(defs, [widget('b'), widget('a'), widget('c')])),
     ).toBe(false)
-  })
-
-  it('fills in the height of layouts saved before it existed', () => {
-    const old = { id: 'a', visible: true, size: 'large' } as unknown as WidgetSettings
-    expect(resolveLayout(defs, [old])[0]!.height).toBe('auto')
-  })
-
-  it('fills in the card order of layouts saved before it existed', () => {
-    const old = {
-      id: 'a',
-      visible: true,
-      size: 'large',
-      hidden_cards: [],
-    } as unknown as WidgetSettings
-    expect(resolveLayout(defs, [old])[0]!.card_order).toEqual([])
   })
 })
 

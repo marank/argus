@@ -1,11 +1,14 @@
 from typing import Any
 from uuid import UUID
 
-from ninja import Schema
-
 from apps.accounts.models import Role, Team, TwoFactorMethod, User
+from apps.accounts.permissions import PermissionLevel, ResourceKey
+from apps.accounts.services import dashboard_layout
+from apps.accounts.services.dashboard_layout import WidgetHeight, WidgetSize
 from apps.core.api.security import context_is_it_staff
+from apps.core.notifications import NotificationEvent, known_events
 from apps.core.schemas import RefOut
+from apps.core.schemas.base import Schema
 from apps.masterdata.schemas.refs import LocationRefOut
 
 
@@ -56,15 +59,48 @@ class UserOut(Schema):
         return two_factor.method if two_factor else None
 
 
+class DashboardWidgetOut(Schema):
+    id: str
+    # Further instances of a widget name the widget they show; null on the first.
+    widget: str | None = None
+    visible: bool
+    size: WidgetSize
+    height: WidgetHeight
+    # Cards of a key figure panel the user switched off.
+    hidden_cards: list[str]
+    # Cards in the user's order; empty keeps the default order.
+    card_order: list[str]
+    # The widget's own settings, such as the text of the notes widget.
+    options: dict[str, Any]
+
+
+class DashboardLayoutOut(Schema):
+    # In the order on screen; empty means the default layout.
+    widgets: list[DashboardWidgetOut] = []
+
+
 class CurrentUserOut(UserOut):
     # Area → "read" or "write" from the user's roles (everything for administrators).
-    permissions: dict[str, str]
+    permissions: dict[ResourceKey, PermissionLevel]
     language: User.Language
-    notification_settings: dict[str, bool]
-    app_notification_settings: dict[str, bool]
-    dashboard_settings: dict[str, Any]
+    # Notifications the user switched off, by email and in the app.
+    notification_settings: dict[NotificationEvent, bool]
+    app_notification_settings: dict[NotificationEvent, bool]
+    dashboard_settings: DashboardLayoutOut
     # Decides on requests of at least one department (shows the approvals page).
     is_approver: bool
+
+    @staticmethod
+    def resolve_notification_settings(obj: User) -> dict[NotificationEvent, bool]:
+        return known_events(obj.notification_settings)
+
+    @staticmethod
+    def resolve_app_notification_settings(obj: User) -> dict[NotificationEvent, bool]:
+        return known_events(obj.app_notification_settings)
+
+    @staticmethod
+    def resolve_dashboard_settings(obj: User) -> dashboard_layout.Layout:
+        return dashboard_layout.clean(obj.dashboard_settings)
 
 
 class UserIn(Schema):
