@@ -7,6 +7,7 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import BrandMark from '@/components/common/BrandMark.vue'
+import BrandWordmark from '@/components/common/BrandWordmark.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useAuthStore } from '@/stores/auth'
 
@@ -33,7 +34,7 @@ function toggleLanguage() {
     <header>
       <RouterLink :to="{ name: 'terminal' }" class="brand">
         <BrandMark :size="28" />
-        <span class="wordmark">ARGUS</span>
+        <BrandWordmark :height="18" class="wordmark" />
         <span class="eyebrow">{{ t('terminal.title') }}</span>
       </RouterLink>
       <div class="right">
@@ -85,13 +86,7 @@ header {
   text-decoration: none;
 }
 .wordmark {
-  font-family: var(--ar-font-mono);
-  font-weight: 700;
-  font-size: 16px;
-  letter-spacing: 0.28em;
   color: var(--ar-text);
-  /* Centre the capitals, not the line box, against the mark. */
-  text-box: trim-both cap alphabetic;
 }
 .right {
   display: flex;

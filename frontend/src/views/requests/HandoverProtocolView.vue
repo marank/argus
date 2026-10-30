@@ -8,6 +8,7 @@ import { useI18n } from 'vue-i18n'
 import { requestsApi } from '@/api/requests'
 import type { Schemas } from '@/api/types'
 import BrandMark from '@/components/common/BrandMark.vue'
+import BrandWordmark from '@/components/common/BrandWordmark.vue'
 import { useFormat } from '@/composables/useFormat'
 import { allocationModel } from '@/utils/requests'
 
@@ -63,7 +64,7 @@ const returns = computed(() => {
   <div v-if="assetRequest" class="sheet">
     <header>
       <div>
-        <div class="brand mono"><BrandMark :size="20" />ARGUS</div>
+        <div class="brand"><BrandMark :size="20" /><BrandWordmark :height="13" /></div>
         <h1>{{ t('handover.protocol') }}</h1>
       </div>
       <div class="mono right">
@@ -220,8 +221,6 @@ header {
   display: flex;
   align-items: center;
   gap: 8px;
-  letter-spacing: 0.3em;
-  font-weight: 700;
   color: #0e7490;
 }
 h1 {

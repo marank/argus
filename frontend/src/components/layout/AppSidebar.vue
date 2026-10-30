@@ -7,6 +7,7 @@ import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
 
 import BrandMark from '@/components/common/BrandMark.vue'
+import BrandWordmark from '@/components/common/BrandWordmark.vue'
 import { useLive } from '@/composables/useLive'
 import { useAuthStore } from '@/stores/auth'
 import { useFeaturesStore } from '@/stores/features'
@@ -168,7 +169,7 @@ const nodeProps = (option: MenuOption) => {
   <nav class="sidebar" :class="{ collapsed }">
     <RouterLink to="/" class="brand">
       <BrandMark :size="24" />
-      <span v-if="!collapsed" class="wordmark">ARGUS</span>
+      <BrandWordmark v-if="!collapsed" :height="16" class="wordmark" />
     </RouterLink>
     <!-- Only the menu scrolls on low screens; the brand stays at the top. -->
     <NScrollbar
@@ -225,13 +226,7 @@ const nodeProps = (option: MenuOption) => {
   opacity: 1;
 }
 .wordmark {
-  font-family: var(--ar-font-mono);
-  font-weight: 700;
-  font-size: 14px;
-  letter-spacing: 0.28em;
   color: var(--ar-text);
-  /* Centre the capitals, not the line box, against the mark. */
-  text-box: trim-both cap alphabetic;
 }
 :deep(.n-menu-item-group-title) {
   font-family: var(--ar-font-mono);

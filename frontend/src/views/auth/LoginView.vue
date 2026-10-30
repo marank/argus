@@ -10,6 +10,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { authApi } from '@/api/auth'
 import { ApiError, isUnreachable } from '@/api/client'
 import BrandMark from '@/components/common/BrandMark.vue'
+import BrandWordmark from '@/components/common/BrandWordmark.vue'
 import CodeInput from '@/components/common/CodeInput.vue'
 import { useAuthStore } from '@/stores/auth'
 
@@ -154,8 +155,8 @@ function back() {
     <div class="panel">
       <div class="brand">
         <BrandMark :size="36" />
-        <div>
-          <div class="wordmark">ARGUS</div>
+        <div class="brand-text">
+          <BrandWordmark :height="22" class="wordmark" />
           <div class="eyebrow">{{ t('auth.subtitle') }}</div>
         </div>
       </div>
@@ -302,12 +303,20 @@ function back() {
   gap: 12px;
   color: var(--ar-primary);
 }
+/* As tall as the tile: the wordmark flush with its top, the subtitle's baseline with its bottom. */
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 36px;
+}
 .wordmark {
-  font-family: var(--ar-font-mono);
-  font-weight: 700;
-  font-size: 18px;
-  letter-spacing: 0.3em;
+  display: block;
   color: var(--ar-text);
+}
+.brand-text .eyebrow {
+  line-height: 1;
+  text-box: trim-both cap alphabetic;
 }
 h1 {
   margin: 26px 0 18px;
