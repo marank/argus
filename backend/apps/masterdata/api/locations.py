@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from django.db.models import F
+from django.db.models import F, QuerySet
 from django.db.models.functions import Coalesce
 from ninja import FilterLookup, FilterSchema
 
@@ -10,7 +10,7 @@ from apps.masterdata.models import Location
 from apps.masterdata.schemas.location import LocationIn, LocationOut
 
 
-def location_queryset():
+def location_queryset() -> QuerySet[Location]:
     # `site`: name of the top-level location (up to four levels), used to group the list.
     return Location.objects.select_related("parent__parent").annotate(
         site=Coalesce(

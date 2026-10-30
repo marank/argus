@@ -3,7 +3,7 @@ from typing import Annotated
 from uuid import UUID
 
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -81,7 +81,7 @@ def list_asset_requests(
     ordering: str | None = None,
     mine: bool = False,
     assigned: Assigned | None = None,
-):
+) -> QuerySet[AssetRequest]:
     """IT staff with the right to see requests see all of them, everyone else their own.
 
     ``assigned``: ``me`` – assigned to the current user; ``my_teams`` – to one of
@@ -104,7 +104,7 @@ def list_asset_requests(
 
 
 @router.post("", response={201: AssetRequestOut})
-def create_asset_request(request: AuthedRequest, payload: AssetRequestIn):
+def create_asset_request(request: AuthedRequest, payload: AssetRequestIn) -> Status[AssetRequest]:
     data = payload.dict(exclude={"items", "requester", "follows"})
     requester = request.user
     may_record = can(request.user, "requests", WRITE)
@@ -123,7 +123,7 @@ def create_asset_request(request: AuthedRequest, payload: AssetRequestIn):
 
 
 @router.post("/direct", response={201: AssetRequestOut}, auth=requests_write)
-def create_direct(request: AuthedRequest, payload: DirectRequestIn):
+def create_direct(request: AuthedRequest, payload: DirectRequestIn) -> Status[AssetRequest]:
     """A request with specific devices from stock: confirmed and allocated right away."""
     requester = _employee(payload.requester) if payload.requester else request.user
     asset_request = workflow.prepare_direct(
@@ -137,7 +137,7 @@ def create_direct(request: AuthedRequest, payload: DirectRequestIn):
 
 
 @router.post("/quick", response={201: AssetRequestOut}, auth=requests_write)
-def quick_assign(request: AuthedRequest, payload: QuickAssignIn):
+def quick_assign(request: AuthedRequest, payload: QuickAssignIn) -> Status[AssetRequest]:
     """A device from stock assigned to an employee in one step: recorded as handed out."""
     requester = _employee(payload.requester)
     asset_request = workflow.quick_assign(
@@ -152,13 +152,13 @@ def quick_assign(request: AuthedRequest, payload: QuickAssignIn):
 
 
 @router.get("/{uuid:pk}", response=AssetRequestOut)
-def get_asset_request_detail(request: AuthedRequest, pk: UUID):
+def get_asset_request_detail(request: AuthedRequest, pk: UUID) -> AssetRequest:
     return get_asset_request(request, pk, as_approver=True)
 
 
 @router.post("/{uuid:pk}/cancel", response=AssetRequestOut)
 @transaction.atomic
-def cancel(request: AuthedRequest, pk: UUID):
+def cancel(request: AuthedRequest, pk: UUID) -> AssetRequest:
     get_asset_request(request, pk)  # only a request the user may see
     workflow.cancel(get_for_update(pk), request.user)
     return get_asset_request(request, pk)
@@ -166,7 +166,7 @@ def cancel(request: AuthedRequest, pk: UUID):
 
 @router.post("/{uuid:pk}/confirm", response=AssetRequestOut, auth=requests_write)
 @transaction.atomic
-def confirm(request: AuthedRequest, pk: UUID, payload: ConfirmIn):
+def confirm(request: AuthedRequest, pk: UUID, payload: ConfirmIn) -> AssetRequest:
     quantities = {item.id: item.quantity_confirmed for item in payload.items}
     workflow.confirm(get_for_update(pk), request.user, quantities, payload.comment)
     return get_asset_request(request, pk)
@@ -174,14 +174,14 @@ def confirm(request: AuthedRequest, pk: UUID, payload: ConfirmIn):
 
 @router.post("/{uuid:pk}/reject", response=AssetRequestOut, auth=requests_write)
 @transaction.atomic
-def reject(request: AuthedRequest, pk: UUID, payload: RejectIn):
+def reject(request: AuthedRequest, pk: UUID, payload: RejectIn) -> AssetRequest:
     workflow.reject(get_for_update(pk), request.user, payload.comment)
     return get_asset_request(request, pk)
 
 
 @router.post("/{uuid:pk}/schedule", response=AssetRequestOut, auth=requests_write)
 @transaction.atomic
-def schedule(request: AuthedRequest, pk: UUID, payload: ScheduleIn):
+def schedule(request: AuthedRequest, pk: UUID, payload: ScheduleIn) -> AssetRequest:
     workflow.reschedule(
         get_for_update(pk),
         request.user,
@@ -195,7 +195,7 @@ def schedule(request: AuthedRequest, pk: UUID, payload: ScheduleIn):
 
 @router.post("/{uuid:pk}/ready", response=AssetRequestOut, auth=requests_write)
 @transaction.atomic
-def mark_ready(request: AuthedRequest, pk: UUID, payload: ReadyIn):
+def mark_ready(request: AuthedRequest, pk: UUID, payload: ReadyIn) -> AssetRequest:
     given = payload.model_fields_set
     workflow.mark_ready(
         get_for_update(pk),
@@ -211,7 +211,7 @@ def mark_ready(request: AuthedRequest, pk: UUID, payload: ReadyIn):
 
 @router.post("/{uuid:pk}/reopen", response=AssetRequestOut, auth=requests_write)
 @transaction.atomic
-def reopen(request: AuthedRequest, pk: UUID):
+def reopen(request: AuthedRequest, pk: UUID) -> AssetRequest:
     """Take a ready request back into preparation."""
     workflow.reopen(get_for_update(pk), request.user)
     return get_asset_request(request, pk)
@@ -219,7 +219,7 @@ def reopen(request: AuthedRequest, pk: UUID):
 
 @router.post("/{uuid:pk}/extend", response=AssetRequestOut, auth=requests_write)
 @transaction.atomic
-def extend(request: AuthedRequest, pk: UUID, payload: ExtendIn):
+def extend(request: AuthedRequest, pk: UUID, payload: ExtendIn) -> AssetRequest:
     """Move the return date of a handed-out request."""
     workflow.extend(get_for_update(pk), request.user, payload.end_date)
     return get_asset_request(request, pk)
@@ -227,7 +227,7 @@ def extend(request: AuthedRequest, pk: UUID, payload: ExtendIn):
 
 @router.post("/{uuid:pk}/remind", response=AssetRequestOut, auth=requests_write)
 @transaction.atomic
-def remind(request: AuthedRequest, pk: UUID):
+def remind(request: AuthedRequest, pk: UUID) -> AssetRequest:
     """Email the employee to return the devices."""
     workflow.remind(get_for_update(pk), request.user)
     return get_asset_request(request, pk)
@@ -235,14 +235,14 @@ def remind(request: AuthedRequest, pk: UUID):
 
 @router.post("/{uuid:pk}/assign", response=AssetRequestOut, auth=requests_write)
 @transaction.atomic
-def assign(request: AuthedRequest, pk: UUID, payload: AssignIn):
+def assign(request: AuthedRequest, pk: UUID, payload: AssignIn) -> AssetRequest:
     workflow.assign(get_for_update(pk), payload.team, payload.assignee, request.user)
     return get_asset_request(request, pk)
 
 
 @router.post("/{uuid:pk}/hand-out", response=AssetRequestOut, auth=requests_write)
 @transaction.atomic
-def hand_out(request: AuthedRequest, pk: UUID, payload: HandOutIn):
+def hand_out(request: AuthedRequest, pk: UUID, payload: HandOutIn) -> AssetRequest:
     """Hand out without the pickup terminal; documented by the IT staff member."""
     workflow.hand_out(
         get_for_update(pk),

@@ -1,16 +1,20 @@
 from datetime import date, datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from ninja import Field, Schema
 
 from apps.accounts.schemas import UserRefOut
 from apps.core.schemas import RefOut
-from apps.inventory.models import Asset
+from apps.inventory.models import Asset, AssetIssue, LicenseAssignment
 from apps.inventory.schemas.asset_issue import OwnIssueOut
 from apps.inventory.schemas.license import AssetLicenseOut
 from apps.masterdata.models import AssetModel
 from apps.masterdata.schemas.refs import AssetModelRefOut, CategoryRefOut, LocationRefOut
+
+if TYPE_CHECKING:
+    from apps.requests.models import AssetRequest
 
 
 class AssetOut(Schema):
@@ -54,29 +58,29 @@ class AssetDetailOut(AssetOut):
     open_issues: list[OwnIssueOut]
 
     @staticmethod
-    def resolve_open_issues(obj: Asset):
+    def resolve_open_issues(obj: Asset) -> list[AssetIssue]:
         return list(obj.issues.exclude(status="resolved"))
 
     @staticmethod
-    def resolve_licenses(obj: Asset):
+    def resolve_licenses(obj: Asset) -> list[LicenseAssignment]:
         return list(obj.license_assignments.select_related("license__model__manufacturer"))
 
     @staticmethod
-    def resolve_consumables(obj: Asset):
+    def resolve_consumables(obj: Asset) -> list[AssetModel]:
         return list(obj.consumables.select_related("manufacturer"))
 
     @staticmethod
-    def resolve_model_consumables(obj: Asset):
+    def resolve_model_consumables(obj: Asset) -> list[AssetModel]:
         return list(
             obj.model.compatible_with.filter(tracking=AssetModel.Tracking.BULK).select_related("manufacturer")
         )
 
     @staticmethod
-    def resolve_components(obj: Asset):
+    def resolve_components(obj: Asset) -> list[Asset]:
         return list(obj.components.all())
 
     @staticmethod
-    def resolve_asset_request(obj: Asset):
+    def resolve_asset_request(obj: Asset) -> AssetRequest | None:
         allocation = (
             obj.asset_request_allocations.filter(returned_at__isnull=True)
             .select_related("item__asset_request__requester")

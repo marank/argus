@@ -1,12 +1,20 @@
 """Resolve a scanned code (inventory number, serial number, IMEI or EAN)."""
 
+from typing import Literal, TypedDict
+
 from django.db.models import Q
 
 from apps.inventory.models import Asset
 from apps.masterdata.models import AssetModel
 
 
-def lookup_code(code: str) -> dict:
+class LookupResult(TypedDict):
+    kind: Literal["asset", "model", "multiple", "none"]
+    assets: list[Asset]
+    models: list[AssetModel]
+
+
+def lookup_code(code: str) -> LookupResult:
     code = code.strip()
     if not code:
         return {"kind": "none", "assets": [], "models": []}
@@ -24,6 +32,7 @@ def lookup_code(code: str) -> dict:
             Q(ean=code) | Q(part_number__iexact=code)
         )[:20]
     )
+    kind: Literal["asset", "model", "multiple", "none"]
     if len(assets) == 1 and not models:
         kind = "asset"
     elif len(models) == 1 and not assets:

@@ -13,7 +13,7 @@ from django.utils import timezone
 from apps.inventory.models import Asset, Consumable, License
 
 
-def _model_filter(category_id: UUID | None, model_id: UUID | None) -> dict:
+def _model_filter(category_id: UUID | None, model_id: UUID | None) -> dict[str, UUID]:
     """A model, or the category's own models: subcategories hold accessories, not "any device"."""
     if model_id:
         return {"model_id": model_id}

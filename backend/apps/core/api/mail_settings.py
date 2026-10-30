@@ -1,5 +1,7 @@
 """SMTP server and sender (administrators only); the switches per kind are in ``notification_settings``."""
 
+from typing import TypedDict
+
 from django.utils.translation import gettext as _
 from ninja import Router, Schema
 from ninja.errors import HttpError
@@ -40,7 +42,19 @@ class TestMailIn(Schema):
     to: str
 
 
-def _out(settings: MailSettings) -> dict:
+class MailSettingsValues(TypedDict):
+    enabled: bool
+    host: str
+    port: int
+    security: str
+    username: str
+    password_set: bool
+    from_email: str
+    from_name: str
+    app_url: str
+
+
+def _out(settings: MailSettings) -> MailSettingsValues:
     return {
         "enabled": settings.enabled,
         "host": settings.host,
@@ -55,12 +69,12 @@ def _out(settings: MailSettings) -> dict:
 
 
 @router.get("", response=MailSettingsOut)
-def get_mail_settings(request: AuthedRequest):
+def get_mail_settings(request: AuthedRequest) -> MailSettingsValues:
     return _out(MailSettings.load())
 
 
 @router.put("", response=MailSettingsOut)
-def update_mail_settings(request: AuthedRequest, payload: MailSettingsIn):
+def update_mail_settings(request: AuthedRequest, payload: MailSettingsIn) -> MailSettingsValues:
     settings = MailSettings.load()
     data = payload.dict()
     password = data.pop("password")
@@ -76,7 +90,7 @@ def update_mail_settings(request: AuthedRequest, payload: MailSettingsIn):
 
 
 @router.post("/test", response={200: dict})
-def send_test_mail(request: AuthedRequest, payload: TestMailIn):
+def send_test_mail(request: AuthedRequest, payload: TestMailIn) -> dict[str, str]:
     """Send a test email with the stored settings."""
     settings = MailSettings.load()
     if not (settings.host and settings.from_email):

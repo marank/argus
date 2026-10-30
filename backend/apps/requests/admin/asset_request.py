@@ -1,10 +1,11 @@
 from django.contrib import admin
+from django.http import HttpRequest
 from django.utils.translation import gettext_lazy as _
 
 from apps.requests.models import AssetRequest, AssetRequestEvent, AssetRequestItem, Handover
 
 
-class AssetRequestItemInline(admin.TabularInline):
+class AssetRequestItemInline(admin.TabularInline[AssetRequestItem, AssetRequest]):
     model = AssetRequestItem
     extra = 0
     fields = [
@@ -20,7 +21,7 @@ class AssetRequestItemInline(admin.TabularInline):
     show_change_link = True
 
 
-class AssetRequestEventInline(admin.TabularInline):
+class AssetRequestEventInline(admin.TabularInline[AssetRequestEvent, AssetRequest]):
     """The history as the workflow wrote it; not editable."""
 
     model = AssetRequestEvent
@@ -29,11 +30,11 @@ class AssetRequestEventInline(admin.TabularInline):
     fields = ("at", "kind", "actor", "data")
     readonly_fields = fields
 
-    def has_add_permission(self, request, obj=None) -> bool:
+    def has_add_permission(self, request: HttpRequest, obj: AssetRequest | None = None) -> bool:
         return False
 
 
-class HandoverInline(admin.StackedInline):
+class HandoverInline(admin.StackedInline[Handover, AssetRequest]):
     model = Handover
     extra = 0
     can_delete = False
@@ -49,18 +50,18 @@ class HandoverInline(admin.StackedInline):
     )
     readonly_fields = fields
 
-    def has_add_permission(self, request, obj=None) -> bool:
+    def has_add_permission(self, request: HttpRequest, obj: AssetRequest | None = None) -> bool:
         return False
 
     @admin.display(description=_("signature"))
-    def signature_preview(self, obj: Handover):
+    def signature_preview(self, obj: Handover) -> str:
         from .handover import signature_image
 
         return signature_image(obj)
 
 
 @admin.register(AssetRequest)
-class AssetRequestAdmin(admin.ModelAdmin):
+class AssetRequestAdmin(admin.ModelAdmin[AssetRequest]):
     list_display = [
         "number",
         "title",

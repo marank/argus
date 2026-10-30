@@ -1,8 +1,9 @@
+from typing import Any
 from uuid import UUID
 
 from ninja import Schema
 
-from apps.accounts.models import User
+from apps.accounts.models import Role, Team, User
 from apps.core.api.security import context_is_it_staff
 from apps.core.schemas import RefOut
 from apps.masterdata.schemas.refs import LocationRefOut
@@ -39,15 +40,15 @@ class UserOut(Schema):
     teams: list[RefOut] = []
 
     @staticmethod
-    def resolve_roles(obj: User, context) -> list:
+    def resolve_roles(obj: User, context: dict[str, Any] | None) -> list[Role]:
         return list(obj.roles.all()) if context_is_it_staff(context) else []
 
     @staticmethod
-    def resolve_teams(obj: User, context) -> list:
+    def resolve_teams(obj: User, context: dict[str, Any] | None) -> list[Team]:
         return list(obj.teams.all()) if context_is_it_staff(context) else []
 
     @staticmethod
-    def resolve_two_factor(obj: User, context):
+    def resolve_two_factor(obj: User, context: dict[str, Any] | None) -> str | None:
         request = (context or {}).get("request")
         if not (context_is_it_staff(context) or (request and request.user.pk == obj.pk)):
             return None
@@ -61,7 +62,7 @@ class CurrentUserOut(UserOut):
     language: str
     notification_settings: dict[str, bool]
     app_notification_settings: dict[str, bool]
-    dashboard_settings: dict
+    dashboard_settings: dict[str, Any]
     # Decides on requests of at least one department (shows the approvals page).
     is_approver: bool
 
@@ -93,4 +94,4 @@ class PreferencesIn(Schema):
     notification_settings: dict[str, bool] | None = None
     app_notification_settings: dict[str, bool] | None = None
     # The own dashboard layout; an empty object restores the default.
-    dashboard_settings: dict | None = None
+    dashboard_settings: dict[str, Any] | None = None

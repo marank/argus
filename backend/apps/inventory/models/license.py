@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
@@ -6,6 +8,9 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from apps.core.models import TimeStampedModel
+
+if TYPE_CHECKING:
+    from .asset import Asset
 
 
 class License(TimeStampedModel):
@@ -71,6 +76,10 @@ class License(TimeStampedModel):
     @property
     def is_expired(self) -> bool:
         return bool(self.valid_until and self.valid_until < timezone.localdate())
+
+    # Set for a request's allocation (apps/requests/schemas/asset_request.py): the device
+    # the seat is assigned to. Not a column.
+    device: Asset | None
 
 
 class LicenseAssignment(TimeStampedModel):

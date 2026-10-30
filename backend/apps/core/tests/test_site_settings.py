@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.test import Client
 
 from apps.core.features import effective_flags
@@ -11,10 +13,11 @@ def admin_client() -> Client:
     return client
 
 
-def switch(client: Client, **flags: bool) -> dict:
+def switch(client: Client, **flags: bool) -> dict[str, Any]:
     response = client.put("/api/settings/site", {"flags": flags}, content_type=JSON)
     assert response.status_code == 200, response.content
-    return response.json()
+    result: dict[str, Any] = response.json()
+    return result
 
 
 def test_everything_is_on_by_default(employee_client):

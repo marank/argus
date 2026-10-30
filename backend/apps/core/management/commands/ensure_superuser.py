@@ -7,6 +7,7 @@ The password is taken as given (no password rules); to change it later use ``set
 """
 
 import os
+from typing import Any
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
@@ -15,7 +16,7 @@ from django.core.management.base import BaseCommand
 class Command(BaseCommand):
     help = "Create a superuser from ADMIN_* variables, or make the existing user one again."
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         username = os.environ.get("ADMIN_USERNAME", "").strip()
         password = os.environ.get("ADMIN_PASSWORD", "")
         if not username or not password:

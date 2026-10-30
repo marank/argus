@@ -1,5 +1,9 @@
+from typing import cast
+
 from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.db.models import QuerySet
+from django.http import HttpRequest
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext
 
@@ -8,7 +12,7 @@ from apps.accounts.services import two_factor
 
 
 @admin.register(User)
-class UserAdmin(BaseUserAdmin):
+class UserAdmin(BaseUserAdmin[User]):
     list_display = [
         "username",
         "first_name",
@@ -47,9 +51,11 @@ class UserAdmin(BaseUserAdmin):
         return method.get_method_display() if method else "—"
 
     @admin.action(description=_("Reset two-factor authentication"))
-    def reset_two_factor(self, request, queryset):
-        users = list(queryset.exclude(pk=request.user.pk))
-        if not request.user.is_superuser:
+    def reset_two_factor(self, request: HttpRequest, queryset: QuerySet[User]) -> None:
+        # The admin site only lets signed-in staff run actions.
+        current = cast(User, request.user)
+        users = list(queryset.exclude(pk=current.pk))
+        if not current.is_superuser:
             users = [u for u in users if not u.is_superuser]
         for user in users:
             two_factor.disable(user)

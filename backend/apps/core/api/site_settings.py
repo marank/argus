@@ -4,6 +4,8 @@ Modules and features, deadlines, which email notifications exist (so users
 can see what they may switch off for themselves), and whether LDAP login is on.
 """
 
+from typing import Any
+
 from ninja import Field, Router, Schema
 
 from apps.core.api.security import AuthedRequest, session_auth, superuser_auth
@@ -64,7 +66,7 @@ def _ldap_enabled() -> bool:
         return False
 
 
-def _out() -> dict:
+def _out() -> dict[str, Any]:
     site = SiteSettings.load()
     mail = MailSettings.load()
     mail_events, app_events = site_events(mail.events), site_events(mail.app_events)
@@ -91,12 +93,12 @@ def _out() -> dict:
 
 
 @router.get("", response=SiteSettingsOut, auth=session_auth)
-def get_site_settings(request: AuthedRequest):
+def get_site_settings(request: AuthedRequest) -> dict[str, Any]:
     return _out()
 
 
 @router.put("", response=SiteSettingsOut, auth=superuser_auth)
-def update_site_settings(request: AuthedRequest, payload: SiteSettingsIn):
+def update_site_settings(request: AuthedRequest, payload: SiteSettingsIn) -> dict[str, Any]:
     site = SiteSettings.load()
     site.flags = {**site.flags, **{k: v for k, v in payload.flags.items() if k in FLAG_KEYS}}
     if payload.rules:

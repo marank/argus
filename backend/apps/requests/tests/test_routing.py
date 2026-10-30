@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from typing import Any
 
 import pytest
 from django.core import mail
@@ -30,7 +31,7 @@ def staff(demo) -> dict[str, User]:
     return {"it": it, "nav": other}
 
 
-def submit(client, item: dict) -> dict:
+def submit(client, item: dict[str, Any]) -> dict[str, Any]:
     start = date.today() + timedelta(days=2)
     response = client.post(
         "/api/requests",
@@ -44,10 +45,11 @@ def submit(client, item: dict) -> dict:
         content_type=JSON,
     )
     assert response.status_code == 201, response.content
-    return response.json()
+    body: dict[str, Any] = response.json()
+    return body
 
 
-def team_of(asset_request: dict) -> Team | None:
+def team_of(asset_request: dict[str, Any]) -> Team | None:
     return AssetRequest.objects.get(pk=asset_request["id"]).assigned_team
 
 

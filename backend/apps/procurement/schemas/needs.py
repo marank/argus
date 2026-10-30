@@ -5,7 +5,10 @@ from ninja import Schema
 
 from apps.accounts.schemas import UserRefOut
 from apps.core.schemas import RefOut
+from apps.inventory.models import Consumable
+from apps.masterdata.models import Supplier
 from apps.masterdata.schemas.refs import AssetModelRefOut, CategoryRefOut, LocationRefOut
+from apps.requests.models import AssetRequestItem
 
 
 class NeedAssetRequestOut(Schema):
@@ -26,8 +29,8 @@ class NeedItemOut(Schema):
     default_supplier: RefOut | None = None
 
     @staticmethod
-    def resolve_default_supplier(obj):
-        return obj.asset_model.default_supplier if obj.asset_model_id else None
+    def resolve_default_supplier(obj: AssetRequestItem) -> Supplier | None:
+        return obj.asset_model.default_supplier if obj.asset_model else None
 
 
 class AssetRequestNeedOut(Schema):
@@ -48,7 +51,7 @@ class ConsumableNeedItemOut(Schema):
     default_supplier: RefOut | None = None
 
     @staticmethod
-    def resolve_default_supplier(obj):
+    def resolve_default_supplier(obj: Consumable) -> Supplier | None:
         return obj.model.default_supplier
 
 

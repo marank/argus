@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Literal
+from typing import TYPE_CHECKING, Any, Literal, TypedDict
 from uuid import UUID
 
 from ninja import Field, Schema
@@ -8,9 +8,22 @@ from apps.accounts.models import User
 from apps.accounts.schemas import TeamRefOut, UserRefOut
 from apps.core.api.security import context_is_it_staff
 from apps.core.schemas import RefOut
+from apps.inventory.models import License
 from apps.inventory.schemas.refs import AssetRefOut
 from apps.masterdata.schemas.refs import AssetModelRefOut, CategoryRefOut, LocationRefOut
-from apps.requests.models import AssetRequest, AssetRequestEvent
+from apps.requests.models import (
+    AssetRequest,
+    AssetRequestAllocation,
+    AssetRequestEvent,
+    AssetRequestItem,
+    DeviceReturn,
+    Handover,
+)
+
+if TYPE_CHECKING:
+    from django_stubs_ext import WithAnnotations
+
+    from apps.accounts.models import Team
 
 
 class ConsumableRefOut(Schema):
@@ -47,15 +60,16 @@ class AllocationOut(Schema):
     category_icon: str
 
     @staticmethod
-    def resolve_license(obj):
-        if not obj.license_id:
+    def resolve_license(obj: AssetRequestAllocation) -> License | None:
+        license = obj.license
+        if license is None:
             return None
         assignment = obj.license_assignment
-        obj.license.device = assignment.asset if assignment and assignment.asset_id else None
-        return obj.license
+        license.device = assignment.asset if assignment and assignment.asset_id else None
+        return license
 
     @staticmethod
-    def resolve_category_icon(obj) -> str:
+    def resolve_category_icon(obj: AssetRequestAllocation) -> str:
         return obj.model.category.icon
 
 
@@ -75,7 +89,7 @@ class AssetRequestItemOut(Schema):
     allocations: list[AllocationOut]
 
     @staticmethod
-    def resolve_allocations(obj):
+    def resolve_allocations(obj: AssetRequestItem) -> list[AssetRequestAllocation]:
         return list(obj.allocations.all())
 
 
@@ -105,23 +119,23 @@ class AssetRequestListOut(Schema):
     assignee: UserRefOut | None = None
 
     @staticmethod
-    def resolve_assigned_team(obj, context):
+    def resolve_assigned_team(obj: AssetRequest, context: dict[str, Any] | None) -> Team | None:
         return obj.assigned_team if context_is_it_staff(context) else None
 
     @staticmethod
-    def resolve_assignee(obj, context):
+    def resolve_assignee(obj: AssetRequest, context: dict[str, Any] | None) -> User | None:
         return obj.assignee if context_is_it_staff(context) else None
 
     @staticmethod
-    def resolve_summary(obj) -> str:
+    def resolve_summary(obj: AssetRequest) -> str:
         return ", ".join(f"{i.quantity_requested}× {i.label}" for i in obj.items.all())
 
     @staticmethod
-    def resolve_item_count(obj) -> int:
+    def resolve_item_count(obj: AssetRequest) -> int:
         return len(obj.items.all())
 
     @staticmethod
-    def resolve_unit_count(obj) -> int:
+    def resolve_unit_count(obj: AssetRequest) -> int:
         return sum(i.quantity_target for i in obj.items.all())
 
 
@@ -160,7 +174,7 @@ class AssetRequestEventOut(Schema):
     kind: str
     at: datetime
     actor: UserRefOut | None
-    data: dict
+    data: dict[str, Any]
 
 
 def pending_approvers(asset_request: AssetRequest) -> list[User]:
@@ -202,7 +216,7 @@ class AssetRequestOut(AssetRequestListOut):
     events: list[AssetRequestEventOut] = []
 
     @staticmethod
-    def resolve_events(obj, context) -> list:
+    def resolve_events(obj: AssetRequest, context: dict[str, Any] | None) -> list[AssetRequestEvent]:
         events = list(obj.events.all())
         if context_is_it_staff(context):
             return events
@@ -215,25 +229,25 @@ class AssetRequestOut(AssetRequestListOut):
         return [e for e in events if e.kind in kinds]
 
     @staticmethod
-    def resolve_approvers(obj) -> list:
+    def resolve_approvers(obj: AssetRequest) -> list[User]:
         return pending_approvers(obj)
 
     @staticmethod
-    def resolve_can_approve(obj, context) -> bool:
+    def resolve_can_approve(obj: AssetRequest, context: dict[str, Any] | None) -> bool:
         request = (context or {}).get("request")
         return request is not None and any(user.pk == request.user.pk for user in pending_approvers(obj))
 
     @staticmethod
-    def resolve_returns(obj):
+    def resolve_returns(obj: AssetRequest) -> list[DeviceReturn]:
         return list(obj.returns.all())
 
     @staticmethod
-    def resolve_items(obj):
+    def resolve_items(obj: AssetRequest) -> list[AssetRequestItem]:
         return list(obj.items.all())
 
     @staticmethod
-    def resolve_handover(obj):
-        return getattr(obj, "handover", None) if hasattr(obj, "handover") else None
+    def resolve_handover(obj: AssetRequest) -> Handover | None:
+        return obj.handover if hasattr(obj, "handover") else None
 
 
 class AssetRequestItemIn(Schema):
@@ -392,6 +406,10 @@ class ConsumableCandidateOut(Schema):
     available_quantity: int
 
 
+class UsedSeats(TypedDict):
+    used: int
+
+
 class LicenseCandidateOut(Schema):
     id: UUID
     model: AssetModelRefOut
@@ -401,7 +419,7 @@ class LicenseCandidateOut(Schema):
     free_seats: int
 
     @staticmethod
-    def resolve_free_seats(obj) -> int:
+    def resolve_free_seats(obj: WithAnnotations[License, UsedSeats]) -> int:
         return obj.seats - obj.used
 
 

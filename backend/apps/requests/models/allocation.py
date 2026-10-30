@@ -1,9 +1,14 @@
+from typing import TYPE_CHECKING
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from apps.core.models import UUIDModel
+
+if TYPE_CHECKING:
+    from apps.masterdata.models import AssetModel
 
 
 class AssetRequestAllocation(UUIDModel):
@@ -88,7 +93,7 @@ class AssetRequestAllocation(UUIDModel):
         return f"{self.item.asset_request.number}: {target}"
 
     @property
-    def model(self):
+    def model(self) -> AssetModel:
         """The catalog model of what was allocated."""
         if self.asset:
             return self.asset.model

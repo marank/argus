@@ -1,5 +1,6 @@
 """What still has to be ordered: open request demand and consumables below minimum."""
 
+from typing import TypedDict
 from uuid import UUID
 
 from django.db.models import F, Sum
@@ -35,7 +36,28 @@ def _on_order_by_model() -> dict[UUID, int]:
     return {row["asset_model"]: row["open"] for row in rows}
 
 
-def asset_request_needs() -> list[dict]:
+class AssetRequestNeed(TypedDict):
+    asset_request_item: AssetRequestItem
+    asset_request: AssetRequest
+    missing: int
+    available: int
+    on_order: int
+    to_order: int
+
+
+class ConsumableNeed(TypedDict):
+    consumable: Consumable
+    missing: int
+    on_order: int
+    to_order: int
+
+
+class Needs(TypedDict):
+    requests: list[AssetRequestNeed]
+    consumables: list[ConsumableNeed]
+
+
+def asset_request_needs() -> list[AssetRequestNeed]:
     on_order = _on_order_by_item()
     items = AssetRequestItem.objects.filter(
         asset_request__status__in=(AssetRequest.Status.SUBMITTED, AssetRequest.Status.CONFIRMED)
@@ -45,7 +67,7 @@ def asset_request_needs() -> list[dict]:
         "asset_model__default_supplier",
         "category",
     )
-    needs = []
+    needs: list[AssetRequestNeed] = []
     for item in items:
         missing = item.quantity_missing
         if not missing:
@@ -71,9 +93,9 @@ def asset_request_needs() -> list[dict]:
     return needs
 
 
-def consumable_needs() -> list[dict]:
+def consumable_needs() -> list[ConsumableNeed]:
     on_order = _on_order_by_model()
-    needs = []
+    needs: list[ConsumableNeed] = []
     for consumable in Consumable.objects.filter(quantity__lt=F("min_quantity")).select_related(
         "model__manufacturer", "model__default_supplier", "location__parent"
     ):

@@ -1,6 +1,7 @@
 """Session based login for the single page app."""
 
 import json
+from typing import Any
 
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpRequest
@@ -10,7 +11,7 @@ from ninja import Router, Schema, Status
 from ninja.errors import HttpError
 from ninja.utils import check_csrf
 
-from apps.accounts.models import TwoFactor
+from apps.accounts.models import TwoFactor, User
 from apps.accounts.schemas import CodeIn, CurrentUserOut, PreferencesIn, TwoFactorChallengeOut
 from apps.accounts.services import throttle, two_factor
 from apps.core.api.security import AuthedRequest, session_auth
@@ -31,14 +32,14 @@ def require_csrf(request: HttpRequest) -> None:
 
 
 @router.get("/csrf", auth=None, response={204: None})
-def csrf(request: HttpRequest):
+def csrf(request: HttpRequest) -> Status[None]:
     """Sets the ``csrftoken`` cookie the frontend sends back as ``X-CSRFToken``."""
     get_token(request)
     return Status(204, None)
 
 
 @router.post("/login", auth=None, response={200: CurrentUserOut, 202: TwoFactorChallengeOut})
-def login_view(request: HttpRequest, payload: LoginIn):
+def login_view(request: HttpRequest, payload: LoginIn) -> Status[two_factor.LoginChallenge] | User:
     """Signs in, or (202) asks for the second step when the user switched it on."""
     require_csrf(request)
     request.session.pop(two_factor.PENDING_LOGIN, None)
@@ -59,7 +60,7 @@ def login_view(request: HttpRequest, payload: LoginIn):
     return user
 
 
-def pending_or_401(request: HttpRequest):
+def pending_or_401(request: HttpRequest) -> tuple[two_factor.LoginState, User]:
     pending = two_factor.pending_login(request.session)
     if pending is None:
         raise HttpError(401, _("The sign-in has expired. Please enter your password again."))
@@ -67,7 +68,7 @@ def pending_or_401(request: HttpRequest):
 
 
 @router.post("/login/verify", auth=None, response=CurrentUserOut)
-def verify_login(request: HttpRequest, payload: CodeIn):
+def verify_login(request: HttpRequest, payload: CodeIn) -> User:
     """Second step: the app or email code, or a backup code."""
     require_csrf(request)
     state, user = pending_or_401(request)
@@ -88,7 +89,7 @@ def verify_login(request: HttpRequest, payload: CodeIn):
 
 
 @router.post("/login/resend", auth=None, response=TwoFactorChallengeOut)
-def resend_login_code(request: HttpRequest):
+def resend_login_code(request: HttpRequest) -> two_factor.LoginChallenge:
     """Sends a new email code for the pending sign-in."""
     require_csrf(request)
     state, user = pending_or_401(request)
@@ -102,7 +103,7 @@ def resend_login_code(request: HttpRequest):
 
 
 @router.post("/logout", response={204: None})
-def logout_view(request: AuthedRequest):
+def logout_view(request: AuthedRequest) -> Status[None]:
     logout(request)
     return Status(204, None)
 
@@ -114,20 +115,20 @@ DASHBOARD_HEIGHTS = {"auto", "small", "medium", "large"}
 WIDGET_OPTIONS_MAX = 10_000
 
 
-def card_keys(value) -> list[str]:
+def card_keys(value: object) -> list[str]:
     """Distinct card keys in their given order."""
     if not isinstance(value, list):
         return []
     return list(dict.fromkeys(c for c in value if isinstance(c, str) and 0 < len(c) <= 50))[:50]
 
 
-def widget_options(value) -> dict:
+def widget_options(value: object) -> dict[str, Any]:
     if not isinstance(value, dict) or len(json.dumps(value, ensure_ascii=False)) > WIDGET_OPTIONS_MAX:
         return {}
     return value
 
 
-def clean_dashboard_settings(value: dict | None) -> dict:
+def clean_dashboard_settings(value: dict[str, Any] | None) -> dict[str, Any]:
     """Keeps only well-formed widget entries; the frontend owns the widget and card ids."""
     widgets, seen = [], set()
     for entry in (value or {}).get("widgets") or []:
@@ -156,12 +157,12 @@ def clean_dashboard_settings(value: dict | None) -> dict:
 
 
 @router.get("/me", response=CurrentUserOut)
-def me(request: AuthedRequest):
+def me(request: AuthedRequest) -> User:
     return request.user
 
 
 @router.patch("/me", response=CurrentUserOut)
-def update_preferences(request: AuthedRequest, payload: PreferencesIn):
+def update_preferences(request: AuthedRequest, payload: PreferencesIn) -> User:
     user = request.user
     for name, value in payload.dict(exclude_unset=True).items():
         if name in ("notification_settings", "app_notification_settings"):

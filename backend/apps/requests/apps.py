@@ -7,7 +7,7 @@ class RequestsConfig(AppConfig):
     label = "requests"
     verbose_name = _("Requests")
 
-    def ready(self):
+    def ready(self) -> None:
         from . import live
 
         live.connect()

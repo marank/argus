@@ -1,11 +1,13 @@
 """The user's own two-factor sign-in: switch it on, change the method, new backup codes, switch off."""
 
+from typing import TypedDict
+
 from django.contrib.auth import authenticate
 from django.utils.translation import gettext as _
 from ninja import Router, Status
 from ninja.errors import HttpError
 
-from apps.accounts.models import TwoFactor
+from apps.accounts.models import TwoFactor, User
 from apps.accounts.schemas import (
     BackupCodesOut,
     CodeIn,
@@ -33,7 +35,14 @@ def confirm_password(request: AuthedRequest, password: str) -> None:
     throttle.clear(key)
 
 
-def status(user) -> dict:
+class TwoFactorStatus(TypedDict):
+    method: str | None
+    backup_codes_left: int
+    email_available: bool
+    email_hint: str
+
+
+def status(user: User) -> TwoFactorStatus:
     return {
         "method": two_factor.method_of(user),
         "backup_codes_left": two_factor.backup_codes_left(user),
@@ -43,12 +52,12 @@ def status(user) -> dict:
 
 
 @router.get("", response=TwoFactorStatusOut)
-def get_status(request: AuthedRequest):
+def get_status(request: AuthedRequest) -> TwoFactorStatus:
     return status(request.user)
 
 
 @router.post("/setup", response=TwoFactorSetupOut)
-def start_setup(request: AuthedRequest, payload: TwoFactorSetupIn):
+def start_setup(request: AuthedRequest, payload: TwoFactorSetupIn) -> two_factor.SetupResult:
     """First step of switching a method on: the QR code, or a code sent by email."""
     confirm_password(request, payload.password)
     if payload.method == TwoFactor.Method.EMAIL.value and not two_factor.email_available(request.user):
@@ -59,7 +68,7 @@ def start_setup(request: AuthedRequest, payload: TwoFactorSetupIn):
 
 
 @router.post("/setup/resend", response=TwoFactorSetupOut)
-def resend_setup_code(request: AuthedRequest):
+def resend_setup_code(request: AuthedRequest) -> two_factor.SetupResult:
     state = two_factor.pending_setup(request.session)
     if state is None or state["method"] != TwoFactor.Method.EMAIL:
         raise HttpError(409, _("The setup has expired. Please start again."))
@@ -71,7 +80,7 @@ def resend_setup_code(request: AuthedRequest):
 
 
 @router.post("/setup/confirm", response=BackupCodesOut)
-def confirm_setup(request: AuthedRequest, payload: CodeIn):
+def confirm_setup(request: AuthedRequest, payload: CodeIn) -> dict[str, list[str]]:
     """Second step: the first code proves the app or address works; returns new backup codes."""
     state = two_factor.pending_setup(request.session)
     if state is None:
@@ -93,7 +102,7 @@ def confirm_setup(request: AuthedRequest, payload: CodeIn):
 
 
 @router.post("/backup-codes", response=BackupCodesOut)
-def renew_backup_codes(request: AuthedRequest, payload: PasswordIn):
+def renew_backup_codes(request: AuthedRequest, payload: PasswordIn) -> dict[str, list[str]]:
     """New backup codes; the old ones stop working."""
     confirm_password(request, payload.password)
     if two_factor.method_of(request.user) is None:
@@ -102,7 +111,7 @@ def renew_backup_codes(request: AuthedRequest, payload: PasswordIn):
 
 
 @router.post("/disable", response={204: None})
-def disable(request: AuthedRequest, payload: PasswordIn):
+def disable(request: AuthedRequest, payload: PasswordIn) -> Status[None]:
     confirm_password(request, payload.password)
     two_factor.disable(request.user)
     return Status(204, None)

@@ -1,11 +1,11 @@
-from django.db.models import Case, Count, IntegerField, Value, When
+from django.db.models import Case, Count, IntegerField, QuerySet, Value, When
 
 from apps.accounts.models import Department
 from apps.accounts.schemas import DepartmentIn, DepartmentOut
 from apps.core.api.crud import CrudConfig, build_crud_router
 
 
-def department_queryset():
+def department_queryset() -> QuerySet[Department]:
     # `tree_position`: parents before their subdepartments; the default order of every list.
     positions = Department.tree_positions()
     return (

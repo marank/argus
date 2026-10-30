@@ -9,7 +9,7 @@ from datetime import timedelta
 from uuid import UUID
 
 from django.utils import timezone, translation
-from procrastinate import RetryStrategy
+from procrastinate import JobContext, RetryStrategy
 from procrastinate.contrib.django import app
 
 from apps.core.models import MailSettings, Notification, NotificationLog
@@ -62,7 +62,7 @@ def remove_read_notifications(timestamp: int) -> None:
 
 @app.periodic(cron="30 3 * * *")
 @app.task(pass_context=True)
-async def remove_old_jobs(context, timestamp: int) -> None:
+async def remove_old_jobs(context: JobContext, timestamp: int) -> None:
     """Finished jobs hold recipients and mail texts; keep them only briefly."""
     manager = context.app.job_manager
     await manager.delete_old_jobs(nb_hours=24)

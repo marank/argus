@@ -1,4 +1,5 @@
 from datetime import date, datetime, timedelta
+from typing import Any
 
 from django.utils import timezone
 
@@ -156,7 +157,7 @@ def test_auto_allocate_a_single_item(employee_client, it_client):
     assert allocated == {laptop["id"]: 0, headset["id"]: 1}
 
 
-def _ready_request(employee_client, it_client, **ready) -> dict:
+def _ready_request(employee_client, it_client, **ready) -> dict[str, Any]:
     headsets = Category.objects.get(code="headsets")
     start = date.today() + timedelta(days=2)
     asset_request = employee_client.post(
@@ -180,7 +181,8 @@ def _ready_request(employee_client, it_client, **ready) -> dict:
     it_client.post(f"{base}/auto-allocate")
     response = it_client.post(f"{base}/ready", ready, content_type="application/json")
     assert response.status_code == 200, response.content
-    return response.json()
+    body: dict[str, Any] = response.json()
+    return body
 
 
 def test_ready_can_skip_the_device_check(employee_client, it_client, terminal_client):

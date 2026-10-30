@@ -1,12 +1,15 @@
+from typing import Any
+
 from django import forms
 from django.contrib import admin, messages
+from django.http import HttpRequest, HttpResponse
 from django.utils.translation import gettext_lazy as _
 
 from apps.accounts.models import LdapSettings
 from apps.accounts.services import ldap
 
 
-class LdapSettingsForm(forms.ModelForm):
+class LdapSettingsForm(forms.ModelForm[LdapSettings]):
     bind_password = forms.CharField(
         label=_("bind password"),
         required=False,
@@ -19,7 +22,7 @@ class LdapSettingsForm(forms.ModelForm):
         model = LdapSettings
         fields = ldap.CONFIG_FIELDS
 
-    def clean(self):
+    def clean(self) -> dict[str, Any]:
         super().clean()
         data = self.cleaned_data
         if data.get("clear_bind_password"):
@@ -30,7 +33,7 @@ class LdapSettingsForm(forms.ModelForm):
 
 
 @admin.register(LdapSettings)
-class LdapSettingsAdmin(admin.ModelAdmin):
+class LdapSettingsAdmin(admin.ModelAdmin[LdapSettings]):
     """Single settings row; fields set via LDAP_* environment variables are read-only."""
 
     form = LdapSettingsForm
@@ -65,28 +68,30 @@ class LdapSettingsAdmin(admin.ModelAdmin):
         ),
     ]
 
-    def has_module_permission(self, request):
+    def has_module_permission(self, request: HttpRequest) -> bool:
         return request.user.is_superuser
 
-    def has_view_permission(self, request, obj=None):
+    def has_view_permission(self, request: HttpRequest, obj: LdapSettings | None = None) -> bool:
         return request.user.is_superuser
 
-    def has_change_permission(self, request, obj=None):
+    def has_change_permission(self, request: HttpRequest, obj: LdapSettings | None = None) -> bool:
         return request.user.is_superuser
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request: HttpRequest) -> bool:
         return request.user.is_superuser and not LdapSettings.objects.exists()
 
-    def has_delete_permission(self, request, obj=None):
+    def has_delete_permission(self, request: HttpRequest, obj: LdapSettings | None = None) -> bool:
         return False
 
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: HttpRequest, obj: LdapSettings | None = None) -> list[str]:
         locked = set(ldap.env_overrides())
         if "bind_password" in locked:
             locked.add("clear_bind_password")
         return sorted(locked)
 
-    def render_change_form(self, request, context, *args, **kwargs):
+    def render_change_form(
+        self, request: HttpRequest, context: dict[str, Any], *args: Any, **kwargs: Any
+    ) -> HttpResponse:
         locked = ldap.env_overrides()
         if locked and request.method == "GET":
             names = ", ".join(ldap.env_name(field) for field in sorted(locked))

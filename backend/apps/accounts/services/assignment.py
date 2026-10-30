@@ -4,10 +4,10 @@ Models taking part have two optional foreign keys, ``assigned_team`` and ``assig
 """
 
 from collections.abc import Iterable
-from typing import Literal
+from typing import Literal, Protocol
 from uuid import UUID
 
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from django.utils.translation import gettext as _
 
 from apps.accounts.models import Team, User
@@ -15,6 +15,21 @@ from apps.core.exceptions import BusinessError
 
 # Quick filters of the IT lists: assigned to me, to one of my teams (or me), to nobody.
 Assigned = Literal["me", "my_teams", "nobody"]
+
+
+class Assignable(Protocol):
+    """A model with ``assigned_team`` and ``assignee`` (and ``updated_at``)."""
+
+    assigned_team: Team | None
+    assignee: User | None
+
+    @property
+    def assigned_team_id(self) -> UUID | None: ...
+
+    @property
+    def assignee_id(self) -> UUID | None: ...
+
+    def save(self, *, update_fields: Iterable[str] | None = None) -> None: ...
 
 
 def resolve_assignment(team_id: UUID | None, assignee_id: UUID | None) -> tuple[Team | None, User | None]:
@@ -27,7 +42,7 @@ def resolve_assignment(team_id: UUID | None, assignee_id: UUID | None) -> tuple[
     return team, assignee
 
 
-def assign(obj, team_id: UUID | None, assignee_id: UUID | None, by: User) -> bool:
+def assign(obj: Assignable, team_id: UUID | None, assignee_id: UUID | None, by: User) -> bool:
     """Set team and assignee of ``obj``; either may stay empty.
 
     Returns whether someone else than ``by`` became the assignee (and should hear of it).
@@ -44,7 +59,7 @@ def route(candidates: Iterable[Team | None]) -> Team | None:
     return next((team for team in candidates if team), None) or Team.objects.filter(is_default=True).first()
 
 
-def responsible_staff(obj):
+def responsible_staff(obj: Assignable) -> QuerySet[User]:
     """Who hears of something new: the assignee and the members of its team, or all of
     IT while nobody is responsible (or the team has no active IT members)."""
     from apps.core.notifications import it_staff

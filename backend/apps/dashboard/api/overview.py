@@ -5,7 +5,13 @@ from ninja import Router, Schema
 
 from apps.accounts.permissions import can
 from apps.core.api.security import AuthedRequest, it_staff_auth
-from apps.dashboard.services.overview import employee_overview, it_overview
+from apps.dashboard.services.overview import (
+    EmployeeOverview,
+    ITOverview,
+    ITOverviewPart,
+    employee_overview,
+    it_overview,
+)
 from apps.inventory.schemas.asset_event import AssetEventWithAssetOut
 
 router = Router(tags=["dashboard"])
@@ -44,7 +50,7 @@ class EmployeeOverviewOut(Schema):
 
 
 # Figures each area contributes; they stay empty without the right to read the area.
-AREA_FIELDS: dict[str, dict[str, object]] = {
+AREA_FIELDS: dict[str, ITOverviewPart] = {
     "assets": {"asset_status": {}, "warranty_expiring": 0, "recent_events": []},
     "requests": {
         "requests_submitted": 0,
@@ -63,7 +69,7 @@ AREA_FIELDS: dict[str, dict[str, object]] = {
 
 
 @router.get("/it", response=ITOverviewOut, auth=it_staff_auth)
-def it(request: AuthedRequest):
+def it(request: AuthedRequest) -> ITOverview:
     overview = it_overview(request.user)
     for area, empty in AREA_FIELDS.items():
         if not can(request.user, area):
@@ -72,5 +78,5 @@ def it(request: AuthedRequest):
 
 
 @router.get("/me", response=EmployeeOverviewOut)
-def me(request: AuthedRequest):
+def me(request: AuthedRequest) -> EmployeeOverview:
     return employee_overview(request.user)

@@ -9,6 +9,8 @@ the second sign-in step for someone who lost their phone and backup codes.
 """
 
 import getpass
+from argparse import ArgumentParser
+from typing import Any
 
 from django.core.management.base import BaseCommand, CommandError
 
@@ -19,7 +21,7 @@ from apps.accounts.services import throttle, two_factor
 class Command(BaseCommand):
     help = "Set a new password for an account (any password is accepted)."
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: ArgumentParser) -> None:
         parser.add_argument("username")
         parser.add_argument(
             "--password", help="The new password; without it the command asks (not shown, twice)."
@@ -30,7 +32,9 @@ class Command(BaseCommand):
             help="Also switch off the second sign-in step (app or email code, backup codes).",
         )
 
-    def handle(self, *args, username: str, password: str | None, reset_two_factor: bool, **options):
+    def handle(
+        self, *args: Any, username: str, password: str | None, reset_two_factor: bool, **options: Any
+    ) -> None:
         user = User.objects.filter(username__iexact=username).first()
         if user is None:
             raise CommandError(f"There is no account “{username}”.")

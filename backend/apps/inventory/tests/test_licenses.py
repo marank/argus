@@ -1,5 +1,6 @@
 import uuid
 from datetime import date, timedelta
+from typing import Any
 
 from apps.accounts.models import User
 from apps.inventory.models import Asset, License
@@ -8,7 +9,7 @@ from apps.masterdata.models import AssetModel, Category
 JSON = "application/json"
 
 
-def license_payload(model: AssetModel, **changes) -> dict:
+def license_payload(model: AssetModel, **changes) -> dict[str, Any]:
     return {"model": str(model.pk), "seats": 2, "assign_to": "user", **changes}
 
 

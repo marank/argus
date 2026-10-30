@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING, TypedDict
 
 from django.contrib import admin
-from django.db.models import Count
+from django.db.models import Count, QuerySet
+from django.http import HttpRequest
 from django.utils.translation import gettext_lazy as _
 
 from apps.inventory.models import License, LicenseAssignment
@@ -14,7 +15,7 @@ class UsedSeats(TypedDict):
     used_seats: int
 
 
-class LicenseAssignmentInline(admin.TabularInline):
+class LicenseAssignmentInline(admin.TabularInline[LicenseAssignment, License]):
     model = LicenseAssignment
     extra = 0
     fields = ["user", "asset", "note", "assigned_by", "created_at"]
@@ -23,7 +24,7 @@ class LicenseAssignmentInline(admin.TabularInline):
 
 
 @admin.register(License)
-class LicenseAdmin(admin.ModelAdmin):
+class LicenseAdmin(admin.ModelAdmin[License]):
     list_display = ["model", "reference", "assign_to", "seats", "seats_used", "valid_until", "supplier"]
     list_filter = ["assign_to", "model__category", "model__manufacturer"]
     search_fields = ["model__name", "model__manufacturer__name", "reference", "license_key"]
@@ -33,7 +34,7 @@ class LicenseAdmin(admin.ModelAdmin):
     date_hierarchy = "valid_until"
     inlines = [LicenseAssignmentInline]
 
-    def get_queryset(self, request):
+    def get_queryset(self, request: HttpRequest) -> QuerySet[License]:
         return super().get_queryset(request).annotate(used_seats=Count("assignments"))
 
     @admin.display(description=_("seats used"), ordering="used_seats")

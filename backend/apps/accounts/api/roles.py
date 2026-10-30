@@ -1,5 +1,5 @@
 from apps.accounts.models import Role
-from apps.accounts.permissions import RESOURCES
+from apps.accounts.permissions import RESOURCES, Resource
 from apps.accounts.schemas.role import ResourceOut, RoleIn, RoleOut
 from apps.core.api.crud import CrudConfig, build_crud_router
 from apps.core.api.security import AuthedRequest, superuser_auth
@@ -22,6 +22,6 @@ router = build_crud_router(
 
 
 @router.get("/resources", response=list[ResourceOut])
-def resources(request: AuthedRequest):
+def resources(request: AuthedRequest) -> tuple[Resource, ...]:
     """The areas a role can grant, in the order of the role editor."""
     return RESOURCES

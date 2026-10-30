@@ -1,3 +1,4 @@
+from typing import Any
 from uuid import UUID
 
 from ninja import ModelSchema, Schema
@@ -31,11 +32,11 @@ class DepartmentOut(ModelSchema):
         return [d.name for d in reversed(obj.ancestors())] + [obj.name]
 
     @staticmethod
-    def resolve_approvers(obj: Department) -> list:
+    def resolve_approvers(obj: Department) -> list[User]:
         return list(obj.approvers.all())
 
     @staticmethod
-    def resolve_effective_approvers(obj: Department, context) -> list:
+    def resolve_effective_approvers(obj: Department, context: dict[str, Any] | None) -> list[User]:
         source = per_response(context, "department_approval_sources", Department.approval_sources).get(obj.pk)
         if source is None:
             return []

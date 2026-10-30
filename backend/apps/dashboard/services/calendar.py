@@ -30,7 +30,7 @@ class Entry:
     status: str = ""
     overdue: bool = False
     due: date | None = None
-    link: dict = field(default_factory=dict)
+    link: dict[str, str] = field(default_factory=dict)
     details: list[str] = field(default_factory=list)
 
 

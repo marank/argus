@@ -5,7 +5,7 @@ from apps.masterdata.models import AssetModel
 
 
 @admin.register(AssetModel)
-class AssetModelAdmin(admin.ModelAdmin):
+class AssetModelAdmin(admin.ModelAdmin[AssetModel]):
     list_display = [
         "name",
         "designation",

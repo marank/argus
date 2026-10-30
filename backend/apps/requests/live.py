@@ -1,6 +1,6 @@
 """Live update signals for requests (see ``apps.core.live``)."""
 
-from apps.core.live import track
+from apps.core.live import Signal, track
 
 
 def connect() -> None:
@@ -13,7 +13,7 @@ def connect() -> None:
         Handover,
     )
 
-    def asset_request(r):
+    def asset_request(r: AssetRequest) -> Signal:
         # The requester, whoever decided the approval and, while it waits, everyone who may approve.
         users = [r.requester_id, r.approver_id]
         if r.status == AssetRequest.Status.PENDING_APPROVAL:

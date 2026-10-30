@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from django.http import HttpRequest
 from django.utils.translation import gettext as _
@@ -6,6 +6,8 @@ from ninja.errors import HttpError
 from ninja.security import SessionAuth
 
 if TYPE_CHECKING:
+    from django.contrib.auth.models import AnonymousUser
+
     from apps.accounts.models import User
 
 
@@ -20,11 +22,11 @@ class AuthedRequest(HttpRequest):
     user: User
 
 
-def is_it_staff(user) -> bool:
+def is_it_staff(user: User | AnonymousUser | None) -> bool:
     return bool(user and user.is_authenticated and (user.is_staff or user.is_superuser))
 
 
-def context_is_it_staff(context) -> bool:
+def context_is_it_staff(context: dict[str, Any] | None) -> bool:
     """For schema resolvers: whether the response goes to IT staff (``context`` from ninja)."""
     request = (context or {}).get("request")
     return request is not None and is_it_staff(request.user)
@@ -37,8 +39,8 @@ class ITStaffAuth(SessionAuth):
     frontend can distinguish "not logged in" from "not allowed".
     """
 
-    def authenticate(self, request: HttpRequest, key: str | None):
-        user = super().authenticate(request, key)
+    def authenticate(self, request: HttpRequest, key: str | None) -> User | None:
+        user: User | None = super().authenticate(request, key)
         if user is None:
             return None
         if not is_it_staff(user):
@@ -53,15 +55,15 @@ class PermissionAuth(SessionAuth):
     or "read" for a lookup that is sent by POST.
     """
 
-    def __init__(self, resource: str, level: str | None = None):
+    def __init__(self, resource: str, level: str | None = None) -> None:
         super().__init__()
         self.resource = resource
         self.level = level
 
-    def authenticate(self, request: HttpRequest, key: str | None):
+    def authenticate(self, request: HttpRequest, key: str | None) -> User | None:
         from apps.accounts.permissions import READ, WRITE, can
 
-        user = super().authenticate(request, key)
+        user: User | None = super().authenticate(request, key)
         if user is None:
             return None
         if not is_it_staff(user):
@@ -79,8 +81,8 @@ def permission_auth(resource: str, level: str | None = None) -> PermissionAuth:
 class EmployeeAuth(SessionAuth):
     """Default API auth: any employee, but not the shared pickup terminal account."""
 
-    def authenticate(self, request: HttpRequest, key: str | None):
-        user = super().authenticate(request, key)
+    def authenticate(self, request: HttpRequest, key: str | None) -> User | None:
+        user: User | None = super().authenticate(request, key)
         if user is not None and getattr(user, "is_terminal", False):
             raise HttpError(403, _("The pickup terminal can only access hand-outs."))
         return user
@@ -89,8 +91,8 @@ class EmployeeAuth(SessionAuth):
 class TerminalAuth(SessionAuth):
     """The pickup terminal account, or IT staff (to test and support the terminal)."""
 
-    def authenticate(self, request: HttpRequest, key: str | None):
-        user = super().authenticate(request, key)
+    def authenticate(self, request: HttpRequest, key: str | None) -> User | None:
+        user: User | None = super().authenticate(request, key)
         if user is None:
             return None
         if not (getattr(user, "is_terminal", False) or is_it_staff(user)):
@@ -101,8 +103,8 @@ class TerminalAuth(SessionAuth):
 class SuperuserAuth(SessionAuth):
     """Administrators only (system settings such as the LDAP login)."""
 
-    def authenticate(self, request: HttpRequest, key: str | None):
-        user = super().authenticate(request, key)
+    def authenticate(self, request: HttpRequest, key: str | None) -> User | None:
+        user: User | None = super().authenticate(request, key)
         if user is None:
             return None
         if not user.is_superuser:

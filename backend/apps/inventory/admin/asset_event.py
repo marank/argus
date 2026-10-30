@@ -4,7 +4,7 @@ from apps.inventory.models import AssetEvent
 
 
 @admin.register(AssetEvent)
-class AssetEventAdmin(admin.ModelAdmin):
+class AssetEventAdmin(admin.ModelAdmin[AssetEvent]):
     """Service log across all devices, e.g. every battery replacement."""
 
     list_display = ["occurred_at", "asset", "kind", "component", "cost", "performed_by", "related_user"]

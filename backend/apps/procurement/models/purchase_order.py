@@ -1,4 +1,5 @@
 from decimal import Decimal
+from typing import Any
 
 from django.conf import settings
 from django.db import models
@@ -59,7 +60,7 @@ class PurchaseOrder(TimeStampedModel):
     def __str__(self) -> str:
         return self.number
 
-    def save(self, *args, **kwargs):
+    def save(self, *args: Any, **kwargs: Any) -> None:
         if not self.number:
             from apps.core.services.numbering import next_number
 

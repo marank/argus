@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -53,10 +55,10 @@ class Location(TimeStampedModel):
             node = node.parent
         return " / ".join(reversed(parts))
 
-    def descendant_ids(self) -> set:
+    def descendant_ids(self) -> set[UUID]:
         """IDs of this location and all locations below it."""
         # One query for the whole (small) tree instead of one per level.
-        children: dict = {}
+        children: dict[UUID, list[UUID]] = {}
         for pk, parent_id in Location.objects.filter(parent__isnull=False).values_list("pk", "parent_id"):
             children.setdefault(parent_id, []).append(pk)
         ids, frontier = {self.pk}, [self.pk]

@@ -1,8 +1,10 @@
+from typing import Any
 from uuid import UUID
 
 from django.db import transaction
 from django.utils.translation import gettext as _
 
+from apps.accounts.models import User
 from apps.core.exceptions import BusinessError
 from apps.inventory.models import Consumable, ConsumableMovement
 
@@ -17,10 +19,10 @@ def move_consumable(
     consumable: Consumable,
     delta: int,
     reason: str,
-    user=None,
+    user: User | None = None,
     *,
     release_reserved: int = 0,
-    **fields,
+    **fields: Any,
 ) -> ConsumableMovement:
     """Change the quantity of a consumable and record the movement.
 

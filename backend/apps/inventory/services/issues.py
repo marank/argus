@@ -1,8 +1,11 @@
+from typing import Any
+
 from django.db import transaction
 from django.db.models import Prefetch, QuerySet
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
+from apps.accounts.models import User
 from apps.accounts.services import assignment
 from apps.core.exceptions import BusinessError
 from apps.inventory.models import Asset, AssetEvent, AssetIssue, AssetIssueEntry
@@ -13,7 +16,7 @@ Status = AssetIssue.Status
 
 
 @transaction.atomic
-def report_issue(asset: Asset, user, kind: str, description: str) -> AssetIssue:
+def report_issue(asset: Asset, user: User, kind: str, description: str) -> AssetIssue:
     """An employee reports a problem with a device handed out to them."""
     description = description.strip()
     if not description:
@@ -36,11 +39,11 @@ def report_issue(asset: Asset, user, kind: str, description: str) -> AssetIssue:
     return issue
 
 
-def _is_reporter(issue: AssetIssue, user) -> bool:
-    return issue.reported_by_id == user.pk
+def _is_reporter(issue: AssetIssue, user: User) -> bool:
+    return bool(issue.reported_by_id == user.pk)
 
 
-def _add_entry(issue: AssetIssue, user, **fields) -> AssetIssueEntry:
+def _add_entry(issue: AssetIssue, user: User, **fields: Any) -> AssetIssueEntry:
     """Record a step; what IT does is news for the reporter until they look."""
     if not _is_reporter(issue, user) and not issue.unseen_update:
         issue.unseen_update = True
@@ -49,7 +52,7 @@ def _add_entry(issue: AssetIssue, user, **fields) -> AssetIssueEntry:
 
 
 @transaction.atomic
-def post_message(issue: AssetIssue, user, text: str, *, by_it: bool) -> AssetIssueEntry:
+def post_message(issue: AssetIssue, user: User, text: str, *, by_it: bool) -> AssetIssueEntry:
     """Reporter (``by_it`` false) or IT write to the other side, whatever the status."""
     text = text.strip()
     if not text:
@@ -63,7 +66,7 @@ def post_message(issue: AssetIssue, user, text: str, *, by_it: bool) -> AssetIss
 
 
 @transaction.atomic
-def update_issue(issue: AssetIssue, user, status: str, message: str = "", *, by_it: bool) -> AssetIssue:
+def update_issue(issue: AssetIssue, user: User, status: str, message: str = "", *, by_it: bool) -> AssetIssue:
     """Change the status, with an optional message sent along.
 
     IT may set any status; the reporter (``by_it`` false) may only mark the problem resolved.
@@ -98,7 +101,7 @@ def update_issue(issue: AssetIssue, user, status: str, message: str = "", *, by_
     return issue
 
 
-def mark_seen(user, issue: AssetIssue) -> None:
+def mark_seen(user: User, issue: AssetIssue) -> None:
     """The reporter opened the report: IT's updates are no longer news."""
     AssetIssue.objects.filter(pk=issue.pk, reported_by=user, unseen_update=True).update(unseen_update=False)
 

@@ -15,6 +15,7 @@ import logging
 import secrets
 import struct
 import time
+from typing import NotRequired, TypedDict
 from urllib.parse import quote
 
 import segno
@@ -46,12 +47,49 @@ PENDING_LOGIN = "argus_2fa_login"
 PENDING_SETUP = "argus_2fa_setup"
 
 
-def method_of(user) -> str | None:
+class PendingState(TypedDict):
+    """A pending login or setup in the session, with the email code sent for it (hashed)."""
+
+    expires: float
+    attempts: int
+    code: NotRequired[str]
+    code_expires: NotRequired[float]
+    code_sent: NotRequired[float]
+
+
+class LoginState(PendingState):
+    user: str  # id
+    backend: str
+
+
+class SetupState(PendingState):
+    method: str
+    secret: NotRequired[str]
+
+
+class LoginChallenge(TypedDict):
+    two_factor: str
+    email_hint: str
+    code_sent: bool
+
+
+class SetupResult(TypedDict):
+    method: str
+    # Authenticator app
+    secret: NotRequired[str]
+    uri: NotRequired[str]
+    qr_svg: NotRequired[str]
+    # Email
+    email_hint: NotRequired[str]
+    code_sent: NotRequired[bool]
+
+
+def method_of(user: User) -> str | None:
     two_factor = TwoFactor.objects.filter(user=user).first()
     return two_factor.method if two_factor else None
 
 
-def email_available(user) -> bool:
+def email_available(user: User) -> bool:
     """Whether codes by email can reach the user right now."""
     return bool(user.email) and mail_ready(MailSettings.load())
 
@@ -85,7 +123,7 @@ def match_totp(secret: str, code: str, after_step: int = 0) -> int | None:
     return None
 
 
-def provisioning_uri(secret: str, user) -> str:
+def provisioning_uri(secret: str, user: User) -> str:
     label = quote(f"{ISSUER}:{user.username}")
     return f"otpauth://totp/{label}?secret={secret}&issuer={quote(ISSUER)}&digits={TOTP_DIGITS}&period={TOTP_STEP}"
 
@@ -106,7 +144,7 @@ def new_email_code() -> str:
     return str(secrets.randbelow(10**TOTP_DIGITS)).zfill(TOTP_DIGITS)
 
 
-def send_email_code(user, code: str) -> bool:
+def send_email_code(user: User, code: str) -> bool:
     """Mails ``code`` right away; False when it could not be sent.
 
     Not a background job: the user waits for the code and should learn at once
@@ -131,23 +169,21 @@ def send_email_code(user, code: str) -> bool:
     return True
 
 
-def issue_email_code(state: dict, user) -> bool:
+def issue_email_code(state: PendingState, user: User) -> bool:
     """Puts a fresh email code into ``state`` (a pending login or setup) and sends it."""
     code = new_email_code()
-    state.update(
-        code=_hash_code("email", code),
-        code_expires=time.time() + EMAIL_CODE_TTL,
-        code_sent=time.time(),
-        attempts=0,
-    )
+    state["code"] = _hash_code("email", code)
+    state["code_expires"] = time.time() + EMAIL_CODE_TTL
+    state["code_sent"] = time.time()
+    state["attempts"] = 0
     return send_email_code(user, code)
 
 
-def can_resend(state: dict) -> bool:
+def can_resend(state: PendingState) -> bool:
     return time.time() - state.get("code_sent", 0) >= EMAIL_RESEND_AFTER
 
 
-def match_email_code(state: dict, code: str) -> bool:
+def match_email_code(state: PendingState, code: str) -> bool:
     return (
         bool(state.get("code"))
         and time.time() < state.get("code_expires", 0)
@@ -171,7 +207,7 @@ def format_backup_code(code: str) -> str:
 
 
 @transaction.atomic
-def new_backup_codes(user) -> list[str]:
+def new_backup_codes(user: User) -> list[str]:
     """Replaces all backup codes of ``user``; the plain codes are only returned here."""
     BackupCode.objects.filter(user=user).delete()
     codes = []
@@ -183,11 +219,11 @@ def new_backup_codes(user) -> list[str]:
     return codes
 
 
-def backup_codes_left(user) -> int:
+def backup_codes_left(user: User) -> int:
     return BackupCode.objects.filter(user=user, used_at__isnull=True).count()
 
 
-def use_backup_code(user, code: str) -> bool:
+def use_backup_code(user: User, code: str) -> bool:
     if len(normalize(code)) != BACKUP_CODE_LENGTH:
         return False
     for backup in BackupCode.objects.filter(user=user, used_at__isnull=True):
@@ -202,9 +238,9 @@ def use_backup_code(user, code: str) -> bool:
 # --- Signing in ---
 
 
-def start_login(session: SessionBase, user, two_factor: TwoFactor) -> dict:
+def start_login(session: SessionBase, user: User, two_factor: TwoFactor) -> LoginChallenge:
     """Remembers ``user`` until the second step; returns the challenge for the frontend."""
-    state = {
+    state: LoginState = {
         "user": str(user.pk),
         "backend": user.backend,
         "expires": time.time() + PENDING_TTL,
@@ -221,8 +257,8 @@ def start_login(session: SessionBase, user, two_factor: TwoFactor) -> dict:
     }
 
 
-def pending_login(session: SessionBase) -> tuple[dict, User] | None:
-    state = session.get(PENDING_LOGIN)
+def pending_login(session: SessionBase) -> tuple[LoginState, User] | None:
+    state: LoginState | None = session.get(PENDING_LOGIN)
     if not state or time.time() > state.get("expires", 0):
         session.pop(PENDING_LOGIN, None)
         return None
@@ -233,7 +269,7 @@ def pending_login(session: SessionBase) -> tuple[dict, User] | None:
     return state, user
 
 
-def check_login_code(user, state: dict, code: str) -> bool:
+def check_login_code(user: User, state: LoginState, code: str) -> bool:
     """The app or email code of the pending login, or one of the user's backup codes."""
     two_factor = user.two_factor
     digits = normalize(code)
@@ -255,21 +291,25 @@ def check_login_code(user, state: dict, code: str) -> bool:
 # --- Setting up ---
 
 
-def start_setup(session: SessionBase, user, method: str) -> dict:
-    state: dict = {"method": method, "expires": time.time() + PENDING_TTL, "attempts": 0}
-    result: dict = {"method": method}
+def start_setup(session: SessionBase, user: User, method: str) -> SetupResult:
+    state: SetupState = {"method": method, "expires": time.time() + PENDING_TTL, "attempts": 0}
+    result: SetupResult
     if method == TwoFactor.Method.TOTP:
-        state["secret"] = new_totp_secret()
-        uri = provisioning_uri(state["secret"], user)
-        result.update(secret=state["secret"], uri=uri, qr_svg=qr_svg(uri))
+        state["secret"] = secret = new_totp_secret()
+        uri = provisioning_uri(secret, user)
+        result = {"method": method, "secret": secret, "uri": uri, "qr_svg": qr_svg(uri)}
     else:
-        result.update(email_hint=email_hint(user.email), code_sent=issue_email_code(state, user))
+        result = {
+            "method": method,
+            "email_hint": email_hint(user.email),
+            "code_sent": issue_email_code(state, user),
+        }
     session[PENDING_SETUP] = state
     return result
 
 
-def pending_setup(session: SessionBase) -> dict | None:
-    state = session.get(PENDING_SETUP)
+def pending_setup(session: SessionBase) -> SetupState | None:
+    state: SetupState | None = session.get(PENDING_SETUP)
     if not state or time.time() > state.get("expires", 0):
         session.pop(PENDING_SETUP, None)
         return None
@@ -277,14 +317,18 @@ def pending_setup(session: SessionBase) -> dict | None:
 
 
 @transaction.atomic
-def finish_setup(user, state: dict, code: str) -> list[str] | None:
+def finish_setup(user: User, state: SetupState, code: str) -> list[str] | None:
     """Switches the method on when ``code`` fits; returns fresh backup codes."""
     digits = normalize(code)
     if state["method"] == TwoFactor.Method.TOTP:
         step = match_totp(state["secret"], digits)
         if step is None:
             return None
-        values = {"method": state["method"], "totp_secret": state["secret"], "totp_last_step": step}
+        values: dict[str, str | int] = {
+            "method": state["method"],
+            "totp_secret": state["secret"],
+            "totp_last_step": step,
+        }
     else:
         if not match_email_code(state, digits):
             return None
@@ -294,6 +338,6 @@ def finish_setup(user, state: dict, code: str) -> list[str] | None:
 
 
 @transaction.atomic
-def disable(user) -> None:
+def disable(user: User) -> None:
     TwoFactor.objects.filter(user=user).delete()
     BackupCode.objects.filter(user=user).delete()

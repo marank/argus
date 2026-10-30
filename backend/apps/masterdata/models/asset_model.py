@@ -1,8 +1,14 @@
+from typing import TYPE_CHECKING
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from apps.core.models import TimeStampedModel
+
+if TYPE_CHECKING:
+    from apps.accounts.models import Team
+    from apps.core.models import NumberSequence
 
 
 class AssetModel(TimeStampedModel):
@@ -107,11 +113,11 @@ class AssetModel(TimeStampedModel):
     def is_bulk(self) -> bool:
         return self.tracking == self.Tracking.BULK
 
-    def effective_team(self):
+    def effective_team(self) -> Team | None:
         """The responsible team: the model's own, otherwise the category's."""
         return self.team if self.team_id else self.category.effective_team()
 
-    def effective_number_sequence(self):
+    def effective_number_sequence(self) -> NumberSequence | None:
         """The sequence for new devices: the model's own, otherwise the category's (None = general)."""
         return self.number_sequence if self.number_sequence_id else self.category.number_sequence
 
@@ -128,3 +134,8 @@ class AssetModel(TimeStampedModel):
                     )
                 }
             )
+
+    # Set by the portal catalog (apps/requests/api/portal.py), not columns; declared last
+    # so the names shadow nothing in the class body.
+    available: int | None
+    reserved: int | None

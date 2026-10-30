@@ -38,7 +38,7 @@ def test_a_problem_report_signals_its_reporter(demo, signals):
 
 
 def test_signals_reach_it_and_the_named_users_only():
-    event = {"topic": "issue", "id": "1", "users": ["u1"], "staff": True}
+    event: live.Event = {"topic": "issue", "id": "1", "users": ["u1"], "staff": True}
     assert live.visible_to(event, "u1", is_staff=False)
     assert live.visible_to(event, "u2", is_staff=True)
     assert not live.visible_to(event, "u2", is_staff=False)

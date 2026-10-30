@@ -2,12 +2,14 @@
 
 import calendar
 from datetime import date
+from typing import Any
 
 from django.db import transaction
 from django.http import Http404
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
+from apps.accounts.models import User
 from apps.core.exceptions import BusinessError
 from apps.inventory.models import Asset, ConsumableMovement
 from apps.inventory.services import assets as asset_service
@@ -27,7 +29,7 @@ def _require_status(order: PurchaseOrder, *allowed: str) -> None:
         )
 
 
-def _save_lines(order: PurchaseOrder, lines: list[dict]) -> None:
+def _save_lines(order: PurchaseOrder, lines: list[dict[str, Any]]) -> None:
     if not lines:
         raise BusinessError(_("An order needs at least one line."))
     keep = []
@@ -50,7 +52,7 @@ def _save_lines(order: PurchaseOrder, lines: list[dict]) -> None:
 
 
 @transaction.atomic
-def create_order(data: dict, lines: list[dict], user) -> PurchaseOrder:
+def create_order(data: dict[str, Any], lines: list[dict[str, Any]], user: User) -> PurchaseOrder:
     order = PurchaseOrder(created_by=user)
     _apply(order, data)
     order.save()
@@ -59,7 +61,9 @@ def create_order(data: dict, lines: list[dict], user) -> PurchaseOrder:
 
 
 @transaction.atomic
-def update_order(order: PurchaseOrder, data: dict, lines: list[dict] | None) -> PurchaseOrder:
+def update_order(
+    order: PurchaseOrder, data: dict[str, Any], lines: list[dict[str, Any]] | None
+) -> PurchaseOrder:
     if lines is not None:
         _require_status(order, Status.DRAFT)
     _apply(order, data)
@@ -69,7 +73,7 @@ def update_order(order: PurchaseOrder, data: dict, lines: list[dict] | None) -> 
     return order
 
 
-def _apply(order: PurchaseOrder, data: dict) -> None:
+def _apply(order: PurchaseOrder, data: dict[str, Any]) -> None:
     for name, value in data.items():
         field = order._meta.get_field(name)
         setattr(order, f"{name}_id" if field.is_relation else name, value)
@@ -105,7 +109,7 @@ def _add_months(day: date, months: int) -> date:
 
 
 @transaction.atomic
-def receive(order: PurchaseOrder, receipts: list[dict], user) -> PurchaseOrder:
+def receive(order: PurchaseOrder, receipts: list[dict[str, Any]], user: User) -> PurchaseOrder:
     """Book a delivery: creates devices or increases consumable quantities.
 
     Devices that were ordered for a request are allocated to it right away

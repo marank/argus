@@ -1,4 +1,6 @@
-from django.http import JsonResponse
+from collections.abc import Callable
+
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.utils.translation import gettext as _
 
 from apps.core.features import current_flags, guard_for
@@ -7,10 +9,10 @@ from apps.core.features import current_flags, guard_for
 class ModuleGateMiddleware:
     """API calls of switched-off modules and features answer 404, as if they did not exist."""
 
-    def __init__(self, get_response):
+    def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]) -> None:
         self.get_response = get_response
 
-    def __call__(self, request):
+    def __call__(self, request: HttpRequest) -> HttpResponse:
         key = guard_for(request.path_info)
         if key and not current_flags()[key]:
             return JsonResponse({"detail": _("This module is switched off.")}, status=404)

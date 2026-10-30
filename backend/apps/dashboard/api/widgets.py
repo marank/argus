@@ -9,8 +9,11 @@ from apps.accounts.schemas import UserRefOut
 from apps.core.api.security import AuthedRequest, it_staff_auth, permission_auth
 from apps.core.schemas import RefOut
 from apps.dashboard.services import widgets
+from apps.inventory.models import Consumable
 from apps.inventory.schemas.refs import AssetRefOut
 from apps.masterdata.schemas.refs import AssetModelRefOut, LocationRefOut
+from apps.procurement.models import PurchaseOrder
+from apps.requests.models import AssetRequest
 
 router = Router(tags=["dashboard"], auth=it_staff_auth)
 
@@ -73,22 +76,22 @@ class TrendWeekOut(Schema):
 
 
 @router.get("/my-tasks", response=MyTasksOut)
-def my_tasks(request: AuthedRequest):
+def my_tasks(request: AuthedRequest) -> widgets.MyTasks:
     return widgets.my_tasks(request.user)
 
 
 @router.get("/overdue-returns", response=list[OverdueReturnOut], auth=permission_auth("requests"))
-def overdue_returns(request: AuthedRequest):
+def overdue_returns(request: AuthedRequest) -> list[AssetRequest]:
     return widgets.overdue_returns()
 
 
 @router.get("/team-load", response=TeamLoadOut)
-def team_load(request: AuthedRequest):
+def team_load(request: AuthedRequest) -> widgets.TeamLoad:
     return widgets.team_load()
 
 
 @router.get("/request-trend", response=list[TrendWeekOut], auth=permission_auth("requests"))
-def request_trend(request: AuthedRequest):
+def request_trend(request: AuthedRequest) -> list[widgets.TrendWeek]:
     return widgets.request_trend()
 
 
@@ -146,32 +149,32 @@ Days = Annotated[int, Query(ge=1, le=31)]
 
 
 @router.get("/upcoming", response=list[UpcomingOut], auth=permission_auth("requests"))
-def upcoming(request: AuthedRequest, days: Days = 7):
+def upcoming(request: AuthedRequest, days: Days = 7) -> list[AssetRequest]:
     return widgets.upcoming(days)
 
 
 @router.get("/due-returns", response=list[DueReturnOut], auth=permission_auth("requests"))
-def due_returns(request: AuthedRequest, days: Days = 3):
+def due_returns(request: AuthedRequest, days: Days = 3) -> list[AssetRequest]:
     return widgets.due_returns(days)
 
 
 @router.get("/expiring", response=list[ExpiringOut])
-def expiring(request: AuthedRequest):
+def expiring(request: AuthedRequest) -> list[widgets.Expiring]:
     """Only the licenses and devices the user may see."""
     allowed = {"license": can(request.user, "licenses"), "warranty": can(request.user, "assets")}
     return [row for row in widgets.expiring() if allowed.get(row["kind"], False)]
 
 
 @router.get("/low-stock", response=list[LowStockOut], auth=permission_auth("consumables"))
-def low_stock(request: AuthedRequest):
+def low_stock(request: AuthedRequest) -> list[Consumable]:
     return widgets.low_stock()
 
 
 @router.get("/open-orders", response=list[OpenOrderOut], auth=permission_auth("procurement"))
-def open_orders(request: AuthedRequest):
+def open_orders(request: AuthedRequest) -> list[PurchaseOrder]:
     return widgets.open_orders()
 
 
 @router.get("/waiting-requests", response=list[WaitingRequestOut], auth=permission_auth("requests"))
-def waiting_requests(request: AuthedRequest):
+def waiting_requests(request: AuthedRequest) -> list[AssetRequest]:
     return widgets.waiting_requests()

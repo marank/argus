@@ -35,7 +35,8 @@ def job_queue(settings):
 def queued() -> list[tuple[str, str]]:
     with connection.cursor() as cursor:
         cursor.execute("SELECT task_name, args FROM procrastinate_jobs WHERE status = 'todo' ORDER BY id")
-        return cursor.fetchall()
+        rows: list[tuple[str, str]] = cursor.fetchall()
+        return rows
 
 
 def run_jobs() -> None:

@@ -2,7 +2,7 @@ from datetime import date
 from typing import Annotated
 from uuid import UUID
 
-from django.db.models import ProtectedError, Q
+from django.db.models import ProtectedError, Q, QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from ninja import FilterLookup, FilterSchema, Query, Router, Status
@@ -72,7 +72,7 @@ class AssetFilter(FilterSchema):
         return Q(model__category_id__in=get_object_or_404(Category, pk=value).descendant_ids())
 
 
-def asset_queryset():
+def asset_queryset() -> QuerySet[Asset]:
     return Asset.objects.select_related(
         "model__manufacturer",
         "model__category",
@@ -90,24 +90,24 @@ def list_assets(
     filters: Query[AssetFilter],
     q: str | None = None,
     ordering: str | None = None,
-):
+) -> QuerySet[Asset]:
     queryset = search(filters.filter(asset_queryset()), q, SEARCH_FIELDS)
     return order(queryset, ordering, ORDERING_FIELDS)
 
 
 @router.get("/{uuid:pk}", response=AssetDetailOut)
-def get_asset(request: AuthedRequest, pk: UUID):
+def get_asset(request: AuthedRequest, pk: UUID) -> Asset:
     return get_object_or_404(asset_queryset(), pk=pk)
 
 
 @router.post("", response={201: AssetDetailOut})
-def create_asset(request: AuthedRequest, payload: AssetIn):
+def create_asset(request: AuthedRequest, payload: AssetIn) -> Status[Asset]:
     asset = asset_service.create_asset(payload.dict(), request.user)
     return Status(201, get_asset(request, asset.pk))
 
 
 @router.post("/bulk", response={201: list[AssetOut]})
-def bulk_create_assets(request: AuthedRequest, payload: AssetBulkIn):
+def bulk_create_assets(request: AuthedRequest, payload: AssetBulkIn) -> Status[list[Asset]]:
     """Create several devices of the same model from a list of scanned serial numbers."""
     data = payload.dict()
     serials = data.pop("serial_numbers")
@@ -116,14 +116,14 @@ def bulk_create_assets(request: AuthedRequest, payload: AssetBulkIn):
 
 
 @router.get("/series/preview", response=AssetSeriesPreviewOut)
-def preview_series(request: AuthedRequest, model: UUID, count: int = 1):
+def preview_series(request: AuthedRequest, model: UUID, count: int = 1) -> asset_service.SeriesPreview:
     """The inventory numbers a series of ``count`` devices of ``model`` would get."""
     asset_model = get_object_or_404(AssetModel.objects.select_related("category", "manufacturer"), pk=model)
     return asset_service.preview_series(asset_model, count)
 
 
 @router.post("/series", response={201: list[AssetOut]})
-def create_series(request: AuthedRequest, payload: AssetSeriesIn):
+def create_series(request: AuthedRequest, payload: AssetSeriesIn) -> Status[list[Asset]]:
     """Create several identical devices of one model, numbered in a row from its sequence."""
     data = payload.dict()
     count = data.pop("count")
@@ -132,14 +132,14 @@ def create_series(request: AuthedRequest, payload: AssetSeriesIn):
 
 
 @router.put("/{uuid:pk}", response=AssetDetailOut)
-def update_asset(request: AuthedRequest, pk: UUID, payload: AssetIn):
+def update_asset(request: AuthedRequest, pk: UUID, payload: AssetIn) -> Asset:
     asset = get_object_or_404(Asset, pk=pk)
     asset_service.update_asset(asset, payload.dict(), request.user)
     return get_asset(request, pk)
 
 
 @router.post("/{uuid:pk}/assign", response=AssetDetailOut)
-def assign_asset(request: AuthedRequest, pk: UUID, payload: AssignIn):
+def assign_asset(request: AuthedRequest, pk: UUID, payload: AssignIn) -> Asset:
     """Hand a device to an employee directly, or take it back with ``user: null``."""
     asset = get_object_or_404(Asset, pk=pk)
     asset_service.update_asset(asset, {"assigned_to": payload.user}, request.user)
@@ -147,7 +147,7 @@ def assign_asset(request: AuthedRequest, pk: UUID, payload: AssignIn):
 
 
 @router.delete("/{uuid:pk}", response={204: None})
-def delete_asset(request: AuthedRequest, pk: UUID):
+def delete_asset(request: AuthedRequest, pk: UUID) -> Status[None]:
     try:
         get_object_or_404(Asset, pk=pk).delete()
     except ProtectedError as exc:

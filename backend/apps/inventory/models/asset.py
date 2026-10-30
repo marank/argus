@@ -1,9 +1,14 @@
+from typing import TYPE_CHECKING, Any
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from apps.core.models import TimeStampedModel
+
+if TYPE_CHECKING:
+    from apps.masterdata.models import AssetModel
 
 
 class Asset(TimeStampedModel):
@@ -102,7 +107,7 @@ class Asset(TimeStampedModel):
     )
     notes = models.TextField(_("notes"), blank=True)
 
-    def consumable_models(self):
+    def consumable_models(self) -> models.QuerySet[AssetModel]:
         """Consumables for this device: its own plus those compatible with its model."""
         from apps.masterdata.models import AssetModel
 
@@ -134,7 +139,7 @@ class Asset(TimeStampedModel):
                 {"model": _("Only models tracked as individual devices can be added as devices.")}
             )
 
-    def save(self, *args, **kwargs):
+    def save(self, *args: Any, **kwargs: Any) -> None:
         if not self.inventory_number:
             from apps.core.services.numbering import next_number
 

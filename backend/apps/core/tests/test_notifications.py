@@ -312,7 +312,7 @@ def empty_bell(request):
 
 
 def _confirm(employee_client, it_client, django_capture_on_commit_callbacks) -> str:
-    rid = submit(employee_client).json()["id"]
+    rid: str = submit(employee_client).json()["id"]
     mail.outbox.clear()
     with django_capture_on_commit_callbacks(execute=True):
         it_client.post(f"/api/requests/{rid}/confirm", {"items": []}, content_type=JSON)

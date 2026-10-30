@@ -8,7 +8,7 @@ from apps.accounts.services.assignment import Assigned, assigned_q
 from apps.core.api.security import AuthedRequest, permission_auth
 from apps.core.features import current_flags
 from apps.dashboard.schemas.calendar import CalendarEntryOut
-from apps.dashboard.services.calendar import KINDS, calendar_entries
+from apps.dashboard.services.calendar import KINDS, Entry, calendar_entries
 
 # Calendar kinds that can be switched off in the site settings.
 KIND_FEATURES = {
@@ -29,7 +29,7 @@ def calendar(
     end: date,
     kinds: Query[list[str] | None] = None,
     assigned: Assigned | None = None,
-):
+) -> list[Entry]:
     """Lending periods, pickups, due returns, expected deliveries and warranty ends.
 
     ``assigned`` (``me``, ``my_teams``, ``nobody``) narrows the request entries.

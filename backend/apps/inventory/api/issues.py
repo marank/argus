@@ -33,7 +33,7 @@ class IssueFilter(FilterSchema):
     assignee: Annotated[UUID | None, FilterLookup("assignee_id")] = None
 
 
-def issue_queryset():
+def issue_queryset() -> QuerySet[AssetIssue]:
     return AssetIssue.objects.select_related(
         "asset__model__manufacturer",
         "asset__assigned_to",
@@ -52,7 +52,7 @@ def list_issues(
     q: str | None = None,
     ordering: str | None = None,
     assigned: Assigned | None = None,
-):
+) -> QuerySet[AssetIssue]:
     """``assigned`` works as for requests: ``me``, ``my_teams`` or ``nobody``."""
     queryset = search(
         filters.filter(issue_queryset()).filter(assigned_q(request.user, assigned)),
@@ -94,12 +94,12 @@ def issue_detail(issues: QuerySet[AssetIssue], pk: UUID) -> AssetIssue:
 
 
 @router.get("/{uuid:pk}", response=AssetIssueDetailOut)
-def detail(request: AuthedRequest, pk: UUID):
+def detail(request: AuthedRequest, pk: UUID) -> AssetIssue:
     return issue_detail(AssetIssue.objects.all(), pk)
 
 
 @router.put("/{uuid:pk}", response=AssetIssueDetailOut)
-def update(request: AuthedRequest, pk: UUID, payload: AssetIssueUpdateIn):
+def update(request: AuthedRequest, pk: UUID, payload: AssetIssueUpdateIn) -> AssetIssue:
     """Change the status (into work, resolved, reopened), optionally with a message."""
     issue = get_object_or_404(AssetIssue, pk=pk)
     update_issue(issue, request.user, payload.status, payload.message, by_it=True)
@@ -107,13 +107,13 @@ def update(request: AuthedRequest, pk: UUID, payload: AssetIssueUpdateIn):
 
 
 @router.post("/{uuid:pk}/messages", response=AssetIssueDetailOut)
-def message(request: AuthedRequest, pk: UUID, payload: IssueMessageIn):
+def message(request: AuthedRequest, pk: UUID, payload: IssueMessageIn) -> AssetIssue:
     post_message(get_object_or_404(AssetIssue, pk=pk), request.user, payload.text, by_it=True)
     return issue_detail(AssetIssue.objects.all(), pk)
 
 
 @router.post("/{uuid:pk}/assign", response=AssetIssueDetailOut)
-def assign(request: AuthedRequest, pk: UUID, payload: AssignIn):
+def assign(request: AuthedRequest, pk: UUID, payload: AssignIn) -> AssetIssue:
     issue = get_object_or_404(AssetIssue, pk=pk)
     if assignment.assign(issue, payload.team, payload.assignee, request.user):
         notifications.issue_assigned(issue)

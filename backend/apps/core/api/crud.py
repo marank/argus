@@ -111,17 +111,17 @@ def build_crud_router[M: models.Model](config: CrudConfig[M], *, tags: list[str]
         filters: Query[Filter],
         q: str | None = None,
         ordering: str | None = None,
-    ):
+    ) -> QuerySet[M]:
         queryset = filters.filter(config.get_queryset())
         queryset = search(queryset, q, config.search_fields)
         return order(queryset, ordering, config.ordering_fields)
 
     @router.get("/{uuid:pk}", response=Out, auth=read_auth)
-    def get_item(request: AuthedRequest, pk: UUID):
+    def get_item(request: AuthedRequest, pk: UUID) -> M:
         return get_instance(pk)
 
     @router.post("", response={201: Out}, auth=write_auth)
-    def create_item(request: AuthedRequest, payload: In):
+    def create_item(request: AuthedRequest, payload: In) -> Status[M]:
         data = payload.dict()
         if config.check_input:
             config.check_input(request, data, None)
@@ -130,7 +130,7 @@ def build_crud_router[M: models.Model](config: CrudConfig[M], *, tags: list[str]
         return Status(201, get_instance(instance.pk))
 
     @router.put("/{uuid:pk}", response=Out, auth=write_auth)
-    def update_item(request: AuthedRequest, pk: UUID, payload: In):
+    def update_item(request: AuthedRequest, pk: UUID, payload: In) -> M:
         instance = get_for_change(request, pk)
         data = payload.dict()
         if config.check_input:
@@ -139,7 +139,7 @@ def build_crud_router[M: models.Model](config: CrudConfig[M], *, tags: list[str]
         return get_instance(instance.pk)
 
     @router.delete("/{uuid:pk}", response={204: None}, auth=write_auth)
-    def delete_item(request: AuthedRequest, pk: UUID):
+    def delete_item(request: AuthedRequest, pk: UUID) -> Status[None]:
         instance = get_for_change(request, pk)
         if config.check_delete:
             config.check_delete(request, instance)

@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from typing import Any
 
 import pytest
 
@@ -9,7 +10,7 @@ from apps.masterdata.models import AssetModel, Category
 JSON = "application/json"
 
 
-def request(client, item: dict):
+def request(client, item: dict[str, Any]):
     start = date.today() + timedelta(days=2)
     data = {
         "title": "Catalog check",

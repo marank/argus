@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from typing import Any
 
 import pytest
 from django.core import mail
@@ -32,7 +33,7 @@ def approver_client(approval_setup) -> Client:
     return client
 
 
-def request(client, *categories: str, requester: User | None = None) -> dict:
+def request(client, *categories: str, requester: User | None = None) -> dict[str, Any]:
     start = date.today() + timedelta(days=3)
     payload = {
         "title": "Workshop",
@@ -47,7 +48,8 @@ def request(client, *categories: str, requester: User | None = None) -> dict:
         payload["requester"] = str(requester.pk)
     response = client.post("/api/requests", payload, content_type=JSON)
     assert response.status_code == 201, response.content
-    return response.json()
+    body: dict[str, Any] = response.json()
+    return body
 
 
 def test_request_waits_for_the_department_then_goes_to_it(
@@ -247,8 +249,9 @@ def test_menu_counts_show_open_requests_approvals_and_reports(
     from apps.inventory.models import Asset, AssetIssue
     from apps.inventory.services.issues import update_issue
 
-    def counts(client) -> dict:
-        return client.get("/api/portal/menu-counts").json()
+    def counts(client) -> dict[str, Any]:
+        body: dict[str, Any] = client.get("/api/portal/menu-counts").json()
+        return body
 
     before = counts(employee_client)
     request(employee_client, "laptops")

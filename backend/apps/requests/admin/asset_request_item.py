@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from apps.requests.models import AssetRequestAllocation, AssetRequestItem
 
 
-class AllocationInline(admin.TabularInline):
+class AllocationInline(admin.TabularInline[AssetRequestAllocation, AssetRequestItem]):
     model = AssetRequestAllocation
     extra = 0
     fields = [
@@ -25,7 +25,7 @@ class AllocationInline(admin.TabularInline):
 
 
 @admin.register(AssetRequestItem)
-class AssetRequestItemAdmin(admin.ModelAdmin):
+class AssetRequestItemAdmin(admin.ModelAdmin[AssetRequestItem]):
     list_display = ["asset_request", "label", "quantity_requested", "quantity_confirmed", "is_free_text"]
     list_filter = ["asset_request__status", "category"]
     search_fields = ["asset_request__number", "description", "asset_model__name", "category__name"]

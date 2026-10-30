@@ -36,7 +36,7 @@ class PreviewOut(Schema):
 
 
 @router.post("/preview", response=PreviewOut, auth=permission_auth("number_sequences", WRITE))
-def preview(request: AuthedRequest, payload: NumberSequenceIn):
+def preview(request: AuthedRequest, payload: NumberSequenceIn) -> dict[str, list[str]]:
     """Render a few example numbers for an unsaved configuration."""
     sequence = NumberSequence(**payload.dict())
     sequence.clean()
@@ -45,6 +45,6 @@ def preview(request: AuthedRequest, payload: NumberSequenceIn):
 
 
 @router.get("/{uuid:pk}/peek", response=PreviewOut)
-def peek(request: AuthedRequest, pk: UUID):
+def peek(request: AuthedRequest, pk: UUID) -> dict[str, list[str]]:
     sequence = get_object_or_404(NumberSequence, pk=pk)
     return {"examples": [sequence.preview()]}

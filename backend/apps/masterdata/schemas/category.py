@@ -1,7 +1,9 @@
+from typing import Any
 from uuid import UUID
 
 from ninja import Schema
 
+from apps.accounts.models import Team
 from apps.accounts.schemas import TeamRefOut, default_team
 from apps.core.api.security import context_is_it_staff
 from apps.core.schemas import RefOut
@@ -31,7 +33,7 @@ class CategoryOut(Schema):
     effective_team: TeamRefOut | None = None
 
     @staticmethod
-    def resolve_team(obj, context):
+    def resolve_team(obj: Category, context: dict[str, Any] | None) -> Team | None:
         return obj.team if context_is_it_staff(context) else None
 
     @staticmethod
@@ -39,13 +41,13 @@ class CategoryOut(Schema):
         return obj.needs_approval()
 
     @staticmethod
-    def resolve_effective_team(obj: Category, context):
+    def resolve_effective_team(obj: Category, context: dict[str, Any] | None) -> Team | None:
         if not context_is_it_staff(context):
             return None
         return obj.effective_team() or default_team(context)
 
     @staticmethod
-    def resolve_path(obj) -> list[str]:
+    def resolve_path(obj: Category) -> list[str]:
         return [c.name for c in reversed(obj.ancestors())] + [obj.name]
 
 

@@ -1,10 +1,12 @@
+from decimal import Decimal
+
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
 from apps.procurement.models import PurchaseOrder, PurchaseOrderLine
 
 
-class PurchaseOrderLineInline(admin.TabularInline):
+class PurchaseOrderLineInline(admin.TabularInline[PurchaseOrderLine, PurchaseOrder]):
     model = PurchaseOrderLine
     extra = 0
     fields = [
@@ -20,7 +22,7 @@ class PurchaseOrderLineInline(admin.TabularInline):
 
 
 @admin.register(PurchaseOrder)
-class PurchaseOrderAdmin(admin.ModelAdmin):
+class PurchaseOrderAdmin(admin.ModelAdmin[PurchaseOrder]):
     list_display = [
         "number",
         "supplier",
@@ -39,5 +41,5 @@ class PurchaseOrderAdmin(admin.ModelAdmin):
     inlines = [PurchaseOrderLineInline]
 
     @admin.display(description=_("total"))
-    def order_total(self, obj: PurchaseOrder):
+    def order_total(self, obj: PurchaseOrder) -> Decimal:
         return obj.total

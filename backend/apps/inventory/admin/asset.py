@@ -1,10 +1,11 @@
 from django.contrib import admin
+from django.http import HttpRequest
 from django.utils.translation import gettext_lazy as _
 
 from apps.inventory.models import Asset, AssetEvent
 
 
-class AssetEventInline(admin.TabularInline):
+class AssetEventInline(admin.TabularInline[AssetEvent, Asset]):
     model = AssetEvent
     fk_name = "asset"
     extra = 0
@@ -13,7 +14,7 @@ class AssetEventInline(admin.TabularInline):
     ordering = ["-occurred_at"]
 
 
-class ComponentInline(admin.TabularInline):
+class ComponentInline(admin.TabularInline[Asset, Asset]):
     model = Asset
     fk_name = "parent"
     extra = 0
@@ -24,12 +25,12 @@ class ComponentInline(admin.TabularInline):
     verbose_name = _("attached device")
     verbose_name_plural = _("attached devices")
 
-    def has_add_permission(self, request, obj=None) -> bool:
+    def has_add_permission(self, request: HttpRequest, obj: Asset | None = None) -> bool:
         return False
 
 
 @admin.register(Asset)
-class AssetAdmin(admin.ModelAdmin):
+class AssetAdmin(admin.ModelAdmin[Asset]):
     list_display = [
         "inventory_number",
         "model",

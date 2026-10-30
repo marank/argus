@@ -1,10 +1,11 @@
 from django.contrib import admin
+from django.http import HttpRequest
 
 from apps.inventory.models import ConsumableMovement
 
 
 @admin.register(ConsumableMovement)
-class ConsumableMovementAdmin(admin.ModelAdmin):
+class ConsumableMovementAdmin(admin.ModelAdmin[ConsumableMovement]):
     """Read-only journal; movements are booked through the app."""
 
     list_display = ["created_at", "consumable", "delta", "reason", "performed_by", "recipient", "note"]
@@ -18,8 +19,8 @@ class ConsumableMovementAdmin(admin.ModelAdmin):
     ]
     date_hierarchy = "created_at"
 
-    def has_add_permission(self, request) -> bool:
+    def has_add_permission(self, request: HttpRequest) -> bool:
         return False
 
-    def has_change_permission(self, request, obj=None) -> bool:
+    def has_change_permission(self, request: HttpRequest, obj: ConsumableMovement | None = None) -> bool:
         return False

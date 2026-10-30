@@ -1,5 +1,7 @@
 """Site-wide notification switches per kind and channel (administrators only)."""
 
+from typing import TypedDict
+
 from ninja import Router, Schema
 
 from apps.core.api.security import AuthedRequest, superuser_auth
@@ -21,7 +23,13 @@ class NotificationSettingsIn(Schema):
     app: dict[str, bool] = {}
 
 
-def _out(settings: MailSettings) -> dict:
+class Switches(TypedDict):
+    mail_ready: bool
+    mail: dict[str, bool]
+    app: dict[str, bool]
+
+
+def _out(settings: MailSettings) -> Switches:
     return {
         "mail_ready": mail_ready(settings),
         "mail": site_events(settings.events),
@@ -34,12 +42,12 @@ def _known(switches: dict[str, bool]) -> dict[str, bool]:
 
 
 @router.get("", response=NotificationSettingsOut)
-def get_notification_settings(request: AuthedRequest):
+def get_notification_settings(request: AuthedRequest) -> Switches:
     return _out(MailSettings.load())
 
 
 @router.put("", response=NotificationSettingsOut)
-def update_notification_settings(request: AuthedRequest, payload: NotificationSettingsIn):
+def update_notification_settings(request: AuthedRequest, payload: NotificationSettingsIn) -> Switches:
     settings = MailSettings.load()
     settings.events = {**settings.events, **_known(payload.mail)}
     settings.app_events = {**settings.app_events, **_known(payload.app)}

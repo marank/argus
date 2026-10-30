@@ -22,6 +22,8 @@ class User(AbstractUser):
     """Employee account. ``is_staff`` marks members of the IT department."""
 
     objects: ClassVar[CaseInsensitiveUserManager] = CaseInsensitiveUserManager()
+    # Cache of apps.accounts.permissions.effective_permissions, per user object.
+    _argus_permissions: dict[str, str] | None = None
 
     class Language(models.TextChoices):
         ENGLISH = "en", _("English")

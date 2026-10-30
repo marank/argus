@@ -13,6 +13,7 @@ Apps declare which model changes are worth a signal with ``track`` (see their
 
 import json
 from collections.abc import Callable, Iterable
+from typing import Any, TypedDict
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -23,11 +24,20 @@ from django.db.models.signals import post_delete, post_save
 CHANNEL = "argus_live"
 
 
-def publish(topic: str, id=None, *, users: Iterable = (), staff: bool = True) -> None:
+class Event(TypedDict):
+    """The payload of a signal."""
+
+    topic: str
+    id: str | None
+    users: list[str]  # ids
+    staff: bool
+
+
+def publish(topic: str, id: object = None, *, users: Iterable[object] = (), staff: bool = True) -> None:
     """Signal a change of ``topic`` (``id``: the changed object) to IT staff and/or ``users`` (ids)."""
     if not settings.LIVE_EVENTS:
         return
-    payload = {
+    payload: Event = {
         "topic": topic,
         "id": str(id) if id else None,
         # Sorted, so the same change twice in one transaction yields the same payload.
@@ -38,17 +48,17 @@ def publish(topic: str, id=None, *, users: Iterable = (), staff: bool = True) ->
         cursor.execute("SELECT pg_notify(%s, %s)", [CHANNEL, json.dumps(payload, separators=(",", ":"))])
 
 
-def visible_to(event: dict, user_id: str, is_staff: bool) -> bool:
+def visible_to(event: Event, user_id: str, is_staff: bool) -> bool:
     return (event["staff"] and is_staff) or user_id in event["users"]
 
 
-Signal = tuple[str, object, Iterable]
+Signal = tuple[str, object, Iterable[object]]
 
 
 def track[M: Model](model: type[M], signal: Callable[[M], Signal | None]) -> None:
     """Publish ``signal(instance)`` (topic, id, users) when an instance of ``model`` is saved or deleted."""
 
-    def changed(sender, instance, **kwargs):
+    def changed(sender: type[M], instance: M, **kwargs: Any) -> None:
         if not settings.LIVE_EVENTS:
             return
         try:

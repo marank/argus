@@ -9,7 +9,7 @@ from apps.inventory.models import AssetIssue, License
 
 
 def issue_reported(issue: AssetIssue) -> None:
-    def render(user):
+    def render(user: object) -> tuple[str, str]:
         subject = _("Problem reported: %(device)s") % {"device": issue.asset.inventory_number}
         body = _("%(name)s reports for %(device)s (%(model)s): %(kind)s") % {
             "name": issue.reported_by.display_name if issue.reported_by else "—",
@@ -23,7 +23,11 @@ def issue_reported(issue: AssetIssue) -> None:
 
 
 def issue_assigned(issue: AssetIssue) -> None:
-    def render(user):
+    assignee = issue.assignee
+    if assignee is None:
+        return
+
+    def render(user: object) -> tuple[str, str]:
         subject = _("Assigned to you: problem report for %(device)s") % {
             "device": issue.asset.inventory_number
         }
@@ -34,7 +38,7 @@ def issue_assigned(issue: AssetIssue) -> None:
         }
         return subject, f"{body}\n\n{issue.description}"
 
-    notify("assigned_to_me", [issue.assignee], render, path=_it_path(issue))
+    notify("assigned_to_me", [assignee], render, path=_it_path(issue))
 
 
 def _it_path(issue: AssetIssue) -> str:
@@ -49,7 +53,7 @@ def issue_resolved(issue: AssetIssue, message: str) -> None:
     if not issue.reported_by:
         return
 
-    def render(user):
+    def render(user: object) -> tuple[str, str]:
         subject = _("Your problem report for %(device)s was resolved") % {
             "device": issue.asset.inventory_number
         }
@@ -68,7 +72,7 @@ def issue_message(issue: AssetIssue, message: str) -> None:
     if not issue.reported_by:
         return
 
-    def render(user):
+    def render(user: object) -> tuple[str, str]:
         subject = _("Message on your problem report for %(device)s") % {
             "device": issue.asset.inventory_number
         }
@@ -82,7 +86,7 @@ def issue_answered(issue: AssetIssue, message: str, *, resolved: bool = False) -
     """The reporter wrote to IT or marked the problem resolved themselves."""
     name = issue.reported_by.display_name if issue.reported_by else "—"
 
-    def render(user):
+    def render(user: object) -> tuple[str, str]:
         values = {"name": name, "device": issue.asset.inventory_number}
         if resolved:
             subject = _("Resolved by the reporter: %(device)s") % values
@@ -100,7 +104,7 @@ def license_expiring(license: License) -> None:
     valid_until = license.valid_until
     assert valid_until is not None  # only licenses that end are reminded of
 
-    def render(user):
+    def render(user: object) -> tuple[str, str]:
         subject = _("License ends on %(date)s: %(name)s") % {
             "date": formats.date_format(valid_until, "SHORT_DATE_FORMAT"),
             "name": license.model.full_name,

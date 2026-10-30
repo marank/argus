@@ -10,9 +10,10 @@ from datetime import timedelta
 from django.conf import settings
 from django.db import transaction
 from django.db.models import F
+from django.http import HttpRequest
 from django.utils import timezone
 
-from apps.accounts.models import SignInThrottle
+from apps.accounts.models import SignInThrottle, User
 
 WINDOW = timedelta(minutes=15)
 PASSWORD_LIMIT = 10
@@ -27,19 +28,20 @@ def password_key(username: str) -> str:
     return f"password:{username.strip().lower()[:150]}"
 
 
-def code_key(user) -> str:
+def code_key(user: User) -> str:
     return f"code:{user.pk}"
 
 
-def address_key(request) -> str:
+def address_key(request: HttpRequest) -> str:
     return f"address:{client_address(request)}"
 
 
-def client_address(request) -> str:
+def client_address(request: HttpRequest) -> str:
     """The client's IP address; behind nginx from X-Real-IP, which nginx always sets."""
-    if settings.BEHIND_PROXY and request.META.get("HTTP_X_REAL_IP"):
-        return request.META["HTTP_X_REAL_IP"]
-    return request.META.get("REMOTE_ADDR", "")
+    real_ip = request.META.get("HTTP_X_REAL_IP")
+    if settings.BEHIND_PROXY and real_ip:
+        return str(real_ip)
+    return str(request.META.get("REMOTE_ADDR", ""))
 
 
 def attempt(key: str, limit: int) -> bool:

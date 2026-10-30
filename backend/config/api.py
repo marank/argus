@@ -4,7 +4,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import connection
 from django.db.models import ProtectedError
-from django.http import Http404
+from django.http import Http404, HttpRequest, HttpResponse
 from django.utils.translation import gettext as _
 from ninja import NinjaAPI, Status
 
@@ -61,7 +61,7 @@ api.add_router("/procurement", procurement_router)
 
 
 @api.get("/health", auth=None, response={200: dict, 503: dict}, tags=["health"])
-def health(request):
+def health(request: HttpRequest) -> Status[dict[str, str]]:
     """Liveness/readiness for container health checks: the app answers and the DB is reachable."""
     try:
         connection.ensure_connection()
@@ -71,12 +71,12 @@ def health(request):
 
 
 @api.exception_handler(BusinessError)
-def business_error(request, exc: BusinessError):
+def business_error(request: HttpRequest, exc: BusinessError) -> HttpResponse:
     return api.create_response(request, {"detail": exc.message}, status=409)
 
 
 @api.exception_handler(ValidationError)
-def validation_error(request, exc: ValidationError):
+def validation_error(request: HttpRequest, exc: ValidationError) -> HttpResponse:
     if hasattr(exc, "error_dict"):
         errors = {field: [str(m) for m in messages] for field, messages in exc.message_dict.items()}
     else:
@@ -86,12 +86,12 @@ def validation_error(request, exc: ValidationError):
 
 
 @api.exception_handler(Http404)
-def not_found(request, exc):
+def not_found(request: HttpRequest, exc: Http404) -> HttpResponse:
     return api.create_response(request, {"detail": _("Not found.")}, status=404)
 
 
 @api.exception_handler(ProtectedError)
-def protected_error(request, exc: ProtectedError):
+def protected_error(request: HttpRequest, exc: ProtectedError) -> HttpResponse:
     return api.create_response(
         request, {"detail": _("This record is still in use and cannot be deleted.")}, status=409
     )

@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from typing import Any
 
 from ninja import Schema
 
@@ -13,5 +14,6 @@ class CalendarEntryOut(Schema):
     status: str
     overdue: bool
     due: date | None
-    link: dict
+    # Untyped values keep the published schema a free-form object.
+    link: dict[str, Any]
     details: list[str]

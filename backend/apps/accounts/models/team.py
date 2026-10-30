@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -41,7 +43,7 @@ class Team(TimeStampedModel):
     def __str__(self) -> str:
         return self.name
 
-    def save(self, *args, **kwargs):
+    def save(self, *args: Any, **kwargs: Any) -> None:
         # Only one default team: choosing a new one takes the mark from the old one.
         # (No unique constraint: form validation would refuse the switch before this runs.)
         if self.is_default:

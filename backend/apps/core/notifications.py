@@ -13,13 +13,21 @@ stored right away and announced to the recipient's open tabs (``apps.core.live``
 import email.policy
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
+from email.message import EmailMessage
 from pathlib import Path
+from typing import TYPE_CHECKING, TypedDict
 
 from django.conf import settings as django_settings
 from django.core.mail import EmailMultiAlternatives
+from django.core.mail.backends.base import BaseEmailBackend
+from django.db.models import QuerySet
 from django.template.loader import render_to_string
 from django.utils import translation
 from django.utils.module_loading import import_string
+
+if TYPE_CHECKING:
+    from apps.accounts.models import User
+    from apps.core.models import MailSettings
 
 
 @dataclass(frozen=True)
@@ -53,12 +61,12 @@ EVENT_KEYS = {event.key for event in EVENTS}
 AUDIENCE = {event.key: event.audience for event in EVENTS}
 
 
-def site_events(stored: dict) -> dict[str, bool]:
+def site_events(stored: dict[str, object]) -> dict[str, bool]:
     """Notification kinds switched on site-wide (all on by default)."""
     return {event.key: bool(stored.get(event.key, True)) for event in EVENTS}
 
 
-def receivable(user) -> set[str]:
+def receivable(user: User) -> set[str]:
     """Kinds ``user`` can get, and so switch off: their own, plus IT and approver ones by role."""
     audiences = {"employee"}
     if user.is_it_staff:
@@ -68,15 +76,15 @@ def receivable(user) -> set[str]:
     return {event.key for event in EVENTS if event.audience in audiences}
 
 
-def user_wants(user, event: str) -> bool:
+def user_wants(user: User, event: str) -> bool:
     return bool((user.notification_settings or {}).get(event, True))
 
 
-def user_wants_app(user, event: str) -> bool:
+def user_wants_app(user: User, event: str) -> bool:
     return bool((user.app_notification_settings or {}).get(event, True))
 
 
-def it_staff():
+def it_staff() -> QuerySet[User]:
     from apps.accounts.models import User
 
     return User.objects.filter(is_active=True, is_terminal=False).filter(is_staff=True)
@@ -85,15 +93,16 @@ def it_staff():
 SMTP_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
 
-def connection(settings):
+def connection(settings: MailSettings) -> BaseEmailBackend:
     """SMTP backend built from the mail settings in the database.
 
     Tests swap in Django's in-memory backend via ARGUS_EMAIL_BACKEND.
     """
     path = getattr(django_settings, "ARGUS_EMAIL_BACKEND", SMTP_BACKEND)
+    backend: type[BaseEmailBackend] = import_string(path)
     if path != SMTP_BACKEND:
-        return import_string(path)()
-    return import_string(path)(
+        return backend()
+    return backend(
         host=settings.host,
         port=settings.port,
         username=settings.username or None,
@@ -104,11 +113,11 @@ def connection(settings):
     )
 
 
-def sender(settings) -> str:
+def sender(settings: MailSettings) -> str:
     return f"{settings.from_name} <{settings.from_email}>" if settings.from_name else settings.from_email
 
 
-def link(settings, path: str) -> str:
+def link(settings: MailSettings, path: str) -> str:
     return f"{settings.app_url.rstrip('/')}{path}" if settings.app_url else ""
 
 
@@ -119,7 +128,7 @@ LOGO = Path(__file__).parent / "templates" / "core" / "mail" / "logo.png"
 class Mail(EmailMultiAlternatives):
     """Plain text plus the HTML part, which carries the logo as an inline image."""
 
-    def message(self, *, policy=email.policy.default):
+    def message(self, *, policy: email.policy.Policy | None = email.policy.default) -> EmailMessage:
         msg = super().message(policy=policy)
         html = msg.get_body(("html",))
         if html is not None:
@@ -127,12 +136,21 @@ class Mail(EmailMultiAlternatives):
         return msg
 
 
-def blocks(body: str, code: str = "") -> list[dict]:
+class Block(TypedDict, total=False):
+    """A part of the mail body: a paragraph, a (labelled) list or a code."""
+
+    text: str
+    label: str
+    lines: list[str]
+    code: str
+
+
+def blocks(body: str, code: str = "") -> list[Block]:
     """The text body as paragraphs and lists ("- " lines, optionally after a "Label:" line).
 
     ``code`` follows the paragraph that names it, or ends the body.
     """
-    result = []
+    result: list[Block] = []
     for part in body.strip().split("\n\n"):
         lines = part.splitlines()
         label = lines[0] if len(lines) > 1 and not lines[0].startswith("- ") else ""
@@ -150,7 +168,14 @@ def blocks(body: str, code: str = "") -> list[dict]:
 
 
 def send_mail(
-    settings, to: str, subject: str, body: str, *, url: str = "", code: str = "", manage_url: str = ""
+    settings: MailSettings,
+    to: str,
+    subject: str,
+    body: str,
+    *,
+    url: str = "",
+    code: str = "",
+    manage_url: str = "",
 ) -> None:
     """Sends ``body`` as text and in the HTML layout, in the active language.
 
@@ -175,16 +200,16 @@ def send_mail(
         backend.send_messages([message])
 
 
-Render = Callable[[object], tuple[str, str]]
+Render = Callable[["User"], tuple[str, str]]
 
 
-def mail_ready(settings) -> bool:
+def mail_ready(settings: MailSettings) -> bool:
     return bool(settings.enabled and settings.host and settings.from_email)
 
 
 def notify(
     event: str,
-    recipients: Iterable,
+    recipients: Iterable[User],
     render: Render,
     *,
     key: str = "",

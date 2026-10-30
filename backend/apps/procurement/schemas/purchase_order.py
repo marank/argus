@@ -7,7 +7,7 @@ from ninja import Field, Schema
 from apps.accounts.schemas import UserRefOut
 from apps.core.schemas import RefOut
 from apps.masterdata.schemas.refs import AssetModelRefOut, LocationRefOut
-from apps.procurement.models import PurchaseOrder
+from apps.procurement.models import PurchaseOrder, PurchaseOrderLine
 
 
 class AssetRequestRefOut(Schema):
@@ -48,7 +48,7 @@ class PurchaseOrderListOut(Schema):
     created_at: datetime
 
     @staticmethod
-    def resolve_line_count(obj) -> int:
+    def resolve_line_count(obj: PurchaseOrder) -> int:
         return len(obj.lines.all())
 
 
@@ -59,7 +59,7 @@ class PurchaseOrderOut(PurchaseOrderListOut):
     lines: list[PurchaseOrderLineOut]
 
     @staticmethod
-    def resolve_lines(obj):
+    def resolve_lines(obj: PurchaseOrder) -> list[PurchaseOrderLine]:
         return list(obj.lines.all())
 
 

@@ -3,6 +3,7 @@
 from uuid import UUID
 
 from django.db import transaction
+from django.db.models import QuerySet
 from django.http import Http404
 from ninja import Router
 from ninja.pagination import paginate
@@ -26,7 +27,7 @@ router = Router(tags=["approvals"])
 
 @router.get("", response=list[AssetRequestListOut])
 @paginate(Pagination)
-def list_approvals(request: AuthedRequest, q: str | None = None):
+def list_approvals(request: AuthedRequest, q: str | None = None) -> QuerySet[AssetRequest]:
     """Requests waiting for a decision, the oldest first; once decided they leave the list."""
     queryset = (
         approvable_asset_requests(request.user)
@@ -53,13 +54,13 @@ def _decidable(request: AuthedRequest, pk: UUID) -> AssetRequest:
 
 @router.post("/{uuid:pk}/approve", response=AssetRequestOut)
 @transaction.atomic
-def approve(request: AuthedRequest, pk: UUID, payload: ApproveIn):
+def approve(request: AuthedRequest, pk: UUID, payload: ApproveIn) -> AssetRequest:
     workflow.approve(_decidable(request, pk), request.user, payload.comment)
     return get_asset_request(request, pk, as_approver=True)
 
 
 @router.post("/{uuid:pk}/decline", response=AssetRequestOut)
 @transaction.atomic
-def decline(request: AuthedRequest, pk: UUID, payload: DeclineIn):
+def decline(request: AuthedRequest, pk: UUID, payload: DeclineIn) -> AssetRequest:
     workflow.decline(_decidable(request, pk), request.user, payload.comment)
     return get_asset_request(request, pk, as_approver=True)

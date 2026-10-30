@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from django.db.models import Case, IntegerField, Value, When
+from django.db.models import Case, IntegerField, QuerySet, Value, When
 from ninja import FilterLookup, FilterSchema
 
 from apps.core.api.crud import CrudConfig, build_crud_router
@@ -15,7 +15,7 @@ class CategoryFilter(FilterSchema):
     kind: str | None = None
 
 
-def category_queryset():
+def category_queryset() -> QuerySet[Category]:
     # `tree_position`: parents before their subcategories; the default order of every list.
     positions = Category.tree_positions()
     return (

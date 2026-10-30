@@ -1,23 +1,32 @@
+from typing import TYPE_CHECKING, Any, TypedDict
+from uuid import UUID
+
 from django.db import transaction
+from django.db.models import QuerySet
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
+from apps.accounts.models import User
 from apps.core.exceptions import BusinessError
+from apps.core.models import NumberSequence
 from apps.inventory.models import Asset, AssetEvent, ConsumableMovement
 from apps.inventory.services.consumables import move_consumable
 from apps.inventory.services.events import log_event
 from apps.masterdata.models import AssetModel
 
+if TYPE_CHECKING:
+    from apps.requests.models import AssetRequestAllocation
+
 Kind = AssetEvent.Kind
 
 
-def _apply(asset: Asset, data: dict) -> None:
+def _apply(asset: Asset, data: dict[str, Any]) -> None:
     for name, value in data.items():
         field = asset._meta.get_field(name)
         setattr(asset, f"{name}_id" if field.is_relation else name, value)
 
 
-def _set_consumables(asset: Asset, model_ids: list | None) -> None:
+def _set_consumables(asset: Asset, model_ids: list[UUID] | None) -> None:
     """Assign consumables to the device; ``None`` leaves the assignment unchanged."""
     if model_ids is None:
         return
@@ -28,7 +37,7 @@ def _set_consumables(asset: Asset, model_ids: list | None) -> None:
 
 
 @transaction.atomic
-def create_asset(data: dict, user) -> Asset:
+def create_asset(data: dict[str, Any], user: User) -> Asset:
     data = dict(data)
     consumables = data.pop("consumables", None)
     asset = Asset()
@@ -45,7 +54,7 @@ def create_asset(data: dict, user) -> Asset:
     return asset
 
 
-def _open_allocations(asset: Asset):
+def _open_allocations(asset: Asset) -> QuerySet[AssetRequestAllocation]:
     from apps.requests.models import AssetRequestAllocation
 
     return AssetRequestAllocation.objects.filter(asset=asset, returned_at__isnull=True).select_related(
@@ -53,7 +62,7 @@ def _open_allocations(asset: Asset):
     )
 
 
-def _sync_asset_request(asset: Asset, user) -> None:
+def _sync_asset_request(asset: Asset, user: User) -> None:
     """Keep requests in step when a device is taken back or reassigned on the device page.
 
     A lent device counts as returned on its request (which completes once everything is
@@ -79,7 +88,7 @@ def _guard_reserved_status(asset: Asset, status: str) -> None:
 
 
 @transaction.atomic
-def update_asset(asset: Asset, data: dict, user) -> Asset:
+def update_asset(asset: Asset, data: dict[str, Any], user: User) -> Asset:
     data = dict(data)
     if "status" in data:
         _guard_reserved_status(asset, data["status"])
@@ -115,7 +124,7 @@ def update_asset(asset: Asset, data: dict, user) -> Asset:
 
 
 @transaction.atomic
-def bulk_create_assets(common: dict, serial_numbers: list[str], user) -> list[Asset]:
+def bulk_create_assets(common: dict[str, Any], serial_numbers: list[str], user: User) -> list[Asset]:
     """Create one asset per scanned serial number with otherwise identical data."""
     serials = [s.strip() for s in serial_numbers if s.strip()]
     if len(set(serials)) != len(serials):
@@ -123,7 +132,7 @@ def bulk_create_assets(common: dict, serial_numbers: list[str], user) -> list[As
     return [create_asset({**common, "serial_number": serial}, user) for serial in serials]
 
 
-def series_sequence(model: AssetModel):
+def series_sequence(model: AssetModel) -> NumberSequence:
     """The number sequence a series of ``model`` draws from; series need one of their own."""
     sequence = model.effective_number_sequence()
     if sequence is None:
@@ -134,7 +143,13 @@ def series_sequence(model: AssetModel):
     return sequence
 
 
-def preview_series(model: AssetModel, count: int) -> dict:
+class SeriesPreview(TypedDict):
+    sequence: str
+    first: str
+    last: str
+
+
+def preview_series(model: AssetModel, count: int) -> SeriesPreview:
     """The first and last inventory number a series of ``count`` devices would get."""
     sequence = series_sequence(model)
     start = 1 if sequence.period_key != sequence.current_period_key() else sequence.next_value
@@ -146,14 +161,21 @@ def preview_series(model: AssetModel, count: int) -> dict:
 
 
 @transaction.atomic
-def create_series(common: dict, count: int, user) -> list[Asset]:
+def create_series(common: dict[str, Any], count: int, user: User) -> list[Asset]:
     """Create ``count`` identical devices numbered in a row from the category's sequence."""
     series_sequence(AssetModel.objects.select_related("category", "manufacturer").get(pk=common["model"]))
     return [create_asset(common, user) for _ in range(count)]
 
 
 @transaction.atomic
-def record_event(asset: Asset, data: dict, user, consume: dict | None = None) -> AssetEvent:
+class Consumption(TypedDict):
+    consumable_id: UUID
+    quantity: int
+
+
+def record_event(
+    asset: Asset, data: dict[str, Any], user: User, consume: Consumption | None = None
+) -> AssetEvent:
     """Record a manual event, optionally booking the used consumable out."""
     if data["kind"] not in AssetEvent.MANUAL_KINDS:
         raise BusinessError(_("This kind of event is recorded automatically."))

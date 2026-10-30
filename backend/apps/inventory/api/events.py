@@ -2,6 +2,7 @@ from datetime import date
 from typing import Annotated
 from uuid import UUID
 
+from django.db.models import QuerySet
 from django.shortcuts import get_object_or_404
 from ninja import FilterLookup, FilterSchema, Query, Router, Status
 from ninja.pagination import paginate
@@ -24,7 +25,7 @@ class EventFilter(FilterSchema):
     until: Annotated[date | None, FilterLookup("occurred_at__date__lte")] = None
 
 
-def event_queryset():
+def event_queryset() -> QuerySet[AssetEvent]:
     return AssetEvent.objects.select_related(
         "performed_by", "related_user", "asset_request", "asset__model__manufacturer"
     )
@@ -32,7 +33,9 @@ def event_queryset():
 
 @router.get("/events", response=list[AssetEventWithAssetOut])
 @paginate(Pagination)
-def list_events(request: AuthedRequest, filters: Query[EventFilter], q: str | None = None):
+def list_events(
+    request: AuthedRequest, filters: Query[EventFilter], q: str | None = None
+) -> QuerySet[AssetEvent]:
     """Life cycle log across all devices, e.g. every battery replacement in 2026."""
     queryset = filters.filter(event_queryset())
     return search(
@@ -41,21 +44,26 @@ def list_events(request: AuthedRequest, filters: Query[EventFilter], q: str | No
 
 
 @router.get("/assets/{uuid:pk}/events", response=list[AssetEventOut])
-def list_asset_events(request: AuthedRequest, pk: UUID):
+def list_asset_events(request: AuthedRequest, pk: UUID) -> list[AssetEvent]:
     return list(event_queryset().filter(asset_id=pk))
 
 
 @router.post("/assets/{uuid:pk}/events", response={201: AssetEventOut})
-def create_asset_event(request: AuthedRequest, pk: UUID, payload: AssetEventIn):
+def create_asset_event(request: AuthedRequest, pk: UUID, payload: AssetEventIn) -> Status[AssetEvent]:
     asset = get_object_or_404(Asset, pk=pk)
     data = payload.dict(exclude={"consume"})
-    event = asset_service.record_event(
-        asset, data, request.user, payload.consume.dict() if payload.consume else None
+    consume = (
+        asset_service.Consumption(
+            consumable_id=payload.consume.consumable_id, quantity=payload.consume.quantity
+        )
+        if payload.consume
+        else None
     )
+    event = asset_service.record_event(asset, data, request.user, consume)
     return Status(201, event_queryset().get(pk=event.pk))
 
 
 @router.delete("/events/{uuid:pk}", response={204: None})
-def delete_event(request: AuthedRequest, pk: UUID):
+def delete_event(request: AuthedRequest, pk: UUID) -> Status[None]:
     get_object_or_404(AssetEvent, pk=pk, kind__in=AssetEvent.MANUAL_KINDS).delete()
     return Status(204, None)

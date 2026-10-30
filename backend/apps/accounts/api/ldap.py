@@ -1,5 +1,7 @@
 """LDAP login settings and user sync (administrators only)."""
 
+from typing import Any, TypedDict
+
 from django.utils.translation import gettext as _
 from ninja import Router
 from ninja.errors import HttpError
@@ -21,7 +23,7 @@ from apps.core.api.security import AuthedRequest, superuser_auth
 router = Router(tags=["settings"], auth=superuser_auth)
 
 
-def _out(config: ldap.LdapConfig) -> dict:
+def _out(config: ldap.LdapConfig) -> dict[str, Any]:
     values = {field: getattr(config, field) for field in ldap.CONFIG_FIELDS if field != "bind_password"}
     return {
         **values,
@@ -35,7 +37,7 @@ def _out(config: ldap.LdapConfig) -> dict:
 TARGET_FIELDS = ("server_uri", "bind_dn", "start_tls", "verify_cert", "ca_cert_file")
 
 
-def _changes(payload: LdapSettingsIn) -> dict:
+def _changes(payload: LdapSettingsIn) -> dict[str, Any]:
     data = payload.dict(include=set(ldap.CONFIG_FIELDS))
     if data.get("bind_password") is None:
         data.pop("bind_password", None)
@@ -49,12 +51,12 @@ def _changes(payload: LdapSettingsIn) -> dict:
 
 
 @router.get("", response=LdapSettingsOut)
-def get_settings(request: AuthedRequest):
+def get_settings(request: AuthedRequest) -> dict[str, Any]:
     return _out(ldap.load_config())
 
 
 @router.put("", response=LdapSettingsOut)
-def update_settings(request: AuthedRequest, payload: LdapSettingsIn):
+def update_settings(request: AuthedRequest, payload: LdapSettingsIn) -> dict[str, Any]:
     stored = LdapSettings.load()
     locked = ldap.env_overrides().keys()
     # Fields set by the environment are left untouched in the database.
@@ -67,7 +69,7 @@ def update_settings(request: AuthedRequest, payload: LdapSettingsIn):
 
 
 @router.post("/test", response=LdapTestOut)
-def test_settings(request: AuthedRequest, payload: LdapTestIn):
+def test_settings(request: AuthedRequest, payload: LdapTestIn) -> ldap.ConnectionTest:
     """Try the (possibly unsaved) configuration: service bind and optional user lookup."""
     config = ldap.load_config(**_changes(payload))
     try:
@@ -84,7 +86,28 @@ def _sync_config() -> ldap.LdapConfig:
     return config
 
 
-def _item_out(item: ldap.SyncItem) -> dict:
+class ChangeOut(TypedDict):
+    old: str
+    new: str
+
+
+class SyncItemOut(TypedDict):
+    dn: str
+    username: str
+    action: str
+    reason: str
+    user_id: str | None
+    values: dict[str, str]
+    changes: dict[str, ChangeOut]
+
+
+class SyncPreviewOut(TypedDict):
+    items: list[SyncItemOut]
+    truncated: bool
+    limit: int
+
+
+def _item_out(item: ldap.SyncItem) -> SyncItemOut:
     return {
         "dn": item.entry.dn,
         "username": item.entry.username,
@@ -97,7 +120,7 @@ def _item_out(item: ldap.SyncItem) -> dict:
 
 
 @router.post("/sync/preview", response=LdapSyncPreviewOut)
-def sync_preview(request: AuthedRequest, payload: LdapSyncQueryIn):
+def sync_preview(request: AuthedRequest, payload: LdapSyncQueryIn) -> SyncPreviewOut:
     """Which users a filter would create or update; nothing is changed."""
     try:
         result = ldap.preview_sync(_sync_config(), payload.filter, payload.search_base)
@@ -111,7 +134,7 @@ def sync_preview(request: AuthedRequest, payload: LdapSyncQueryIn):
 
 
 @router.post("/sync/apply", response=LdapSyncResultOut)
-def sync_apply(request: AuthedRequest, payload: LdapSyncApplyIn):
+def sync_apply(request: AuthedRequest, payload: LdapSyncApplyIn) -> dict[str, int]:
     """Create or update the users of the chosen preview entries."""
     try:
         return ldap.apply_sync(_sync_config(), payload.filter, payload.search_base, payload.dns)

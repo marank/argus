@@ -10,9 +10,11 @@ Demo accounts (development only):
 """
 
 import random
+from argparse import ArgumentParser
 from datetime import timedelta
+from typing import Any, Protocol, TypedDict
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand, CommandError, OutputWrapper
 from django.db import transaction
 from django.utils import timezone
 
@@ -33,8 +35,9 @@ from apps.inventory.services import issues as issue_service
 from apps.inventory.services import licenses as license_service
 from apps.inventory.services.consumables import move_consumable
 from apps.masterdata.models import AssetModel, Category, Location, Manufacturer, Supplier
+from apps.procurement.models import PurchaseOrder
 from apps.procurement.services import orders as order_service
-from apps.requests.models import Handover
+from apps.requests.models import AssetRequest, Handover
 from apps.requests.services import workflow
 
 DEMO_PASSWORD = "argus-demo"
@@ -95,20 +98,46 @@ MODELS = [
 ]
 
 
+class MakeUser(Protocol):
+    def __call__(
+        self,
+        username: str,
+        first: str,
+        last: str,
+        department: Department,
+        staff: bool = False,
+        superuser: bool = False,
+    ) -> User: ...
+
+
+class DemoBase(TypedDict):
+    """What ``seed_base`` created and ``seed_extra`` builds on."""
+
+    admin: User
+    it: User
+    categories: dict[str, Category]
+    models: dict[str, AssetModel]
+    storage: Location
+    warehouse: Location
+    hq: Location
+    supplier: Supplier
+    make_user: MakeUser
+
+
 class Command(BaseCommand):
     help = "Create demo data for local development."
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: ArgumentParser) -> None:
         parser.add_argument("--force", action="store_true", help="Seed even if data exists.")
 
     @transaction.atomic
-    def handle(self, *args, force: bool = False, **options):
+    def handle(self, *args: Any, force: bool = False, **options: Any) -> None:
         if Asset.objects.exists() and not force:
             raise CommandError("The database already contains assets. Use --force to seed anyway.")
         seed_extra(self.seed_base(), self.stdout)
         self.stdout.write(self.style.SUCCESS(f"Demo data created. Password: {DEMO_PASSWORD}"))
 
-    def seed_base(self) -> dict:
+    def seed_base(self) -> DemoBase:
         """The core set: demo accounts, catalog, devices and a few requests.
 
         The tests start from this part only, so they stay fast and their
@@ -364,7 +393,15 @@ class Command(BaseCommand):
             "make_user": self._user,
         }
 
-    def _user(self, username, first, last, department, staff=False, superuser=False) -> User:
+    def _user(
+        self,
+        username: str,
+        first: str,
+        last: str,
+        department: Department,
+        staff: bool = False,
+        superuser: bool = False,
+    ) -> User:
         user, created = User.objects.get_or_create(
             username=username,
             defaults={
@@ -459,7 +496,7 @@ EXTRA_DEVICE_COUNTS = {
 }
 
 
-def seed_extra(base: dict, stdout) -> None:
+def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:
     """Many more people, devices in all states with history, requests in every step,
     purchase orders, consumable movements, licenses and problem reports."""
     rng = random.Random(42)
@@ -539,7 +576,7 @@ def seed_extra(base: dict, stdout) -> None:
             kind=kind,
             item_name=singular,
             number_sequence=sequence,
-            parent=categories.get(parent),
+            parent=categories.get(parent) if parent else None,
             allow_any_model=kind == "hardware" and code != "laptop-accessories",
             sort_order=start + index * 10,
         )
@@ -746,8 +783,16 @@ def seed_extra(base: dict, stdout) -> None:
         license_service.assign_license(m365, it, user_id=user.pk)
 
     # --- Requests in every step ------------------------------------------------
-    def submit(user, title, items, duration="temporary", start=0, days=3, notes=""):
-        data = {
+    def submit(
+        user: User,
+        title: str,
+        items: list[dict[str, Any]],
+        duration: str = "temporary",
+        start: int = 0,
+        days: int = 3,
+        notes: str = "",
+    ) -> AssetRequest:
+        data: dict[str, Any] = {
             "title": title,
             "duration": duration,
             "start_date": today + timedelta(days=start),
@@ -757,17 +802,19 @@ def seed_extra(base: dict, stdout) -> None:
             data["end_date"] = today + timedelta(days=start + days - 1)
         return workflow.submit(user, data, items, created_by=user, allow_past_start=start < 0)
 
-    def confirm(asset_request, comment=""):
+    def confirm(asset_request: AssetRequest, comment: str = "") -> AssetRequest:
         return workflow.confirm(asset_request, it, {}, comment)
 
-    def mark_ready(asset_request, pickup_days=1, location=None):
+    def mark_ready(
+        asset_request: AssetRequest, pickup_days: int = 1, location: Location | None = None
+    ) -> AssetRequest:
         pickup = now.replace(hour=10, minute=0, second=0, microsecond=0) + timedelta(days=pickup_days)
         workflow.auto_allocate(asset_request, it)
         return workflow.mark_ready(
             asset_request, it, pickup_at=pickup, pickup_location_id=location.pk if location else None
         )
 
-    def hand_out(asset_request):
+    def hand_out(asset_request: AssetRequest) -> AssetRequest:
         confirm(asset_request)
         mark_ready(asset_request, pickup_days=0)
         return workflow.hand_out(asset_request, it, method=Handover.Method.DIRECT)
@@ -904,7 +951,7 @@ def seed_extra(base: dict, stdout) -> None:
     )
 
     # --- Procurement -----------------------------------------------------------
-    def order(supplier_, lines, notes=""):
+    def order(supplier_: Supplier, lines: list[tuple[str, int]], notes: str = "") -> PurchaseOrder:
         return order_service.create_order(
             {"supplier": supplier_.pk, "delivery_location": goods_in.pk, "notes": notes},
             [{"asset_model": models[name].pk, "quantity": quantity} for name, quantity in lines],
@@ -917,6 +964,7 @@ def seed_extra(base: dict, stdout) -> None:
     partial = order(supplier, [("ThinkPad Universal USB-C Dock", 6)])
     order_service.mark_ordered(partial, today - timedelta(days=12), today - timedelta(days=2), "BE-77120")
     line = partial.lines.first()
+    assert line is not None  # the order was created with one line
     order_service.receive(
         partial,
         [{"line": line.pk, "quantity": 3, "serial_numbers": ["LE0990001", "LE0990002", "LE0990003"]}],
@@ -924,11 +972,13 @@ def seed_extra(base: dict, stdout) -> None:
     )
     done = order(brueckner, [("TN-2420 toner", 5)])
     order_service.mark_ordered(done, today - timedelta(days=40), today - timedelta(days=35), "AB-540033")
-    order_service.receive(done, [{"line": done.lines.first().pk, "quantity": 5, "location": storage.pk}], it)
+    done_line = done.lines.first()
+    assert done_line is not None  # the order was created with one line
+    order_service.receive(done, [{"line": done_line.pk, "quantity": 5, "location": storage.pk}], it)
     order_service.cancel(order(supplier, [("iPad 10.9 (10th gen)", 4)], notes="Project postponed."))
 
     # --- Problem reports -------------------------------------------------------
-    def report(user, kind, description):
+    def report(user: User, kind: str, description: str) -> AssetIssue:
         asset = Asset.objects.filter(assigned_to=user).first()
         assert asset is not None  # everyone reporting here got devices above
         return issue_service.report_issue(asset, user, kind, description)

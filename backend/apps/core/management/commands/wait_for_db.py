@@ -1,6 +1,8 @@
 """Block until the database accepts connections (used by the container entrypoint)."""
 
 import time
+from argparse import ArgumentParser
+from typing import Any
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connection
@@ -10,10 +12,10 @@ from django.db.utils import OperationalError
 class Command(BaseCommand):
     help = "Wait until the default database is reachable."
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: ArgumentParser) -> None:
         parser.add_argument("--timeout", type=int, default=60, help="Seconds before giving up.")
 
-    def handle(self, *args, timeout: int, **options):
+    def handle(self, *args: Any, timeout: int, **options: Any) -> None:
         deadline = time.monotonic() + timeout
         while True:
             try:

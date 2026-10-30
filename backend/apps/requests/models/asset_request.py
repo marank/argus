@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from django.conf import settings
 from django.db import models
@@ -8,6 +8,8 @@ from django.utils.translation import gettext_lazy as _
 from apps.core.models import TimeStampedModel
 
 if TYPE_CHECKING:
+    from django.db.models import QuerySet
+
     from apps.accounts.models import User
 
 
@@ -213,7 +215,7 @@ class AssetRequest(TimeStampedModel):
     def __str__(self) -> str:
         return f"{self.number} – {self.title}"
 
-    def save(self, *args, **kwargs):
+    def save(self, *args: Any, **kwargs: Any) -> None:
         if not self.number:
             from apps.core.services.numbering import next_number
 
@@ -222,7 +224,7 @@ class AssetRequest(TimeStampedModel):
             )
         super().save(*args, **kwargs)
 
-    def approvers(self):
+    def approvers(self) -> QuerySet[User]:
         """Who may approve for the requester's department, or for the nearest one above it
         that has approvers (none without a department)."""
         from apps.accounts.models import User
@@ -233,7 +235,7 @@ class AssetRequest(TimeStampedModel):
             return User.objects.none()
         return User.objects.filter(approving_departments=source, is_active=True)
 
-    def may_approve(self, user) -> bool:
+    def may_approve(self, user: User) -> bool:
         return self.approvers().filter(pk=user.pk).exists()
 
     @property

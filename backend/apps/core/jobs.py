@@ -7,12 +7,15 @@ SQLite (development, tests) there is no queue: the job runs in-process right aft
 the commit, and a failure is only logged.
 """
 
+from typing import Any
+
 from django.conf import settings
 from django.db import transaction
 from procrastinate.exceptions import AlreadyEnqueued
+from procrastinate.tasks import Task
 
 
-def defer(task, *, queueing_lock: str | None = None, **kwargs) -> None:
+def defer[R, **A](task: Task[..., R, A], *, queueing_lock: str | None = None, **kwargs: Any) -> None:
     """Run ``task(**kwargs)`` in the background.
 
     With ``queueing_lock`` the job is skipped while one with the same lock still

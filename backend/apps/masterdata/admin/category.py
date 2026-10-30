@@ -4,7 +4,7 @@ from apps.masterdata.models import Category
 
 
 @admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
+class CategoryAdmin(admin.ModelAdmin[Category]):
     list_display = [
         "name",
         "code",

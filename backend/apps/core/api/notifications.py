@@ -3,6 +3,7 @@
 from datetime import datetime
 from uuid import UUID
 
+from django.db.models import QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from ninja import Router, Schema
@@ -37,18 +38,18 @@ def _changed(request: AuthedRequest) -> None:
 
 @router.get("", response=list[NotificationOut])
 @paginate(Pagination)
-def list_notifications(request: AuthedRequest, unread: bool = False):
+def list_notifications(request: AuthedRequest, unread: bool = False) -> QuerySet[Notification]:
     queryset = Notification.objects.filter(recipient=request.user)
     return queryset.filter(read_at__isnull=True) if unread else queryset
 
 
 @router.get("/unread", response=UnreadOut)
-def unread_count(request: AuthedRequest):
+def unread_count(request: AuthedRequest) -> dict[str, int]:
     return {"unread": Notification.objects.filter(recipient=request.user, read_at__isnull=True).count()}
 
 
 @router.post("/{uuid:pk}/read", response=NotificationOut)
-def mark_read(request: AuthedRequest, pk: UUID):
+def mark_read(request: AuthedRequest, pk: UUID) -> Notification:
     notification = get_object_or_404(Notification, pk=pk, recipient=request.user)
     if notification.read_at is None:
         notification.read_at = timezone.now()
@@ -58,7 +59,7 @@ def mark_read(request: AuthedRequest, pk: UUID):
 
 
 @router.post("/read-all", response=UnreadOut)
-def mark_all_read(request: AuthedRequest):
+def mark_all_read(request: AuthedRequest) -> dict[str, int]:
     Notification.objects.filter(recipient=request.user, read_at__isnull=True).update(
         read_at=timezone.now(), updated_at=timezone.now()
     )

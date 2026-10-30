@@ -1,13 +1,14 @@
 from datetime import date, timedelta
+from typing import Any
 
 from apps.masterdata.models import Category
 
 
 def _request_laptops(
     employee_client, it_client, start: date, days: int, quantity: int, pickup: date | None = None
-) -> dict:
+) -> dict[str, Any]:
     laptops = Category.objects.get(code="laptops")
-    asset_request = employee_client.post(
+    asset_request: dict[str, Any] = employee_client.post(
         "/api/requests",
         {
             "title": "Workshop",
@@ -28,11 +29,12 @@ def _request_laptops(
     return asset_request
 
 
-def _laptops(client, start: date, end: date) -> dict:
+def _laptops(client, start: date, end: date) -> dict[str, int]:
     counts = client.get(
         "/api/portal/availability", {"start": start.isoformat(), "end": end.isoformat()}
     ).json()
-    return counts["categories"][str(Category.objects.get(code="laptops").pk)]
+    laptops: dict[str, int] = counts["categories"][str(Category.objects.get(code="laptops").pk)]
+    return laptops
 
 
 def test_confirmed_requests_reserve_their_period_only(employee_client, it_client):

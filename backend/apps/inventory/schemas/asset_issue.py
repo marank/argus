@@ -1,11 +1,13 @@
 from datetime import date, datetime
+from typing import Any
 from uuid import UUID
 
 from ninja import Field, Schema
 
+from apps.accounts.models import Team, User
 from apps.accounts.schemas import TeamRefOut, UserRefOut
 from apps.core.api.security import context_is_it_staff
-from apps.inventory.models import AssetIssue, AssetIssueEntry
+from apps.inventory.models import Asset, AssetIssue, AssetIssueEntry
 from apps.masterdata.schemas.refs import AssetModelRefOut, LocationRefOut
 
 
@@ -108,7 +110,7 @@ class IssueReporterOut(Schema):
     department: str | None = Field(None, alias="department.name")
 
 
-def _shows_holder(asset, context) -> bool:
+def _shows_holder(asset: Asset, context: dict[str, Any] | None) -> bool:
     """IT sees who has a device; the reporter only themselves (not who got it since)."""
     if context_is_it_staff(context):
         return True
@@ -134,11 +136,11 @@ class IssueDeviceDetailOut(Schema):
     warranty_until: date | None
 
     @staticmethod
-    def resolve_assigned_to(obj, context):
+    def resolve_assigned_to(obj: Asset, context: dict[str, Any] | None) -> User | None:
         return obj.assigned_to if _shows_holder(obj, context) else None
 
     @staticmethod
-    def resolve_assigned_since(obj, context):
+    def resolve_assigned_since(obj: Asset, context: dict[str, Any] | None) -> datetime | None:
         return obj.assigned_since if _shows_holder(obj, context) else None
 
 
@@ -174,9 +176,9 @@ class AssetIssueDetailOut(Schema):
     still_assigned: bool
 
     @staticmethod
-    def resolve_assigned_team(obj, context):
+    def resolve_assigned_team(obj: AssetIssue, context: dict[str, Any] | None) -> Team | None:
         return obj.assigned_team if context_is_it_staff(context) else None
 
     @staticmethod
-    def resolve_assignee(obj, context):
+    def resolve_assignee(obj: AssetIssue, context: dict[str, Any] | None) -> User | None:
         return obj.assignee if context_is_it_staff(context) else None

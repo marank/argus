@@ -1,6 +1,6 @@
 """Live update signals for devices, licenses, consumables and problem reports (see ``apps.core.live``)."""
 
-from apps.core.live import track
+from apps.core.live import Signal, track
 
 
 def connect() -> None:
@@ -15,10 +15,10 @@ def connect() -> None:
         LicenseAssignment,
     )
 
-    def asset(a):
+    def asset(a: Asset) -> Signal:
         return "asset", a.pk, [a.assigned_to_id]
 
-    def issue(i):
+    def issue(i: AssetIssue) -> Signal:
         return "issue", i.pk, [i.reported_by_id]
 
     track(Asset, asset)

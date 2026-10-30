@@ -6,7 +6,7 @@ from ninja import Field, Schema
 
 from apps.accounts.schemas import UserRefOut
 from apps.core.schemas import RefOut
-from apps.inventory.models import License
+from apps.inventory.models import License, LicenseAssignment
 from apps.masterdata.schemas.refs import AssetModelRefOut, CategoryRefOut
 
 
@@ -52,7 +52,7 @@ class LicenseDetailOut(LicenseOut):
     assignments: list[LicenseAssignmentOut]
 
     @staticmethod
-    def resolve_assignments(obj: License):
+    def resolve_assignments(obj: License) -> list[LicenseAssignment]:
         return list(
             obj.assignments.select_related(
                 "user", "asset__model__manufacturer", "asset__assigned_to", "assigned_by"

@@ -19,7 +19,8 @@ import logging
 import os
 import ssl
 from dataclasses import dataclass, fields
-from typing import Any
+from typing import Any, TypedDict
+from uuid import UUID
 
 from django.db import transaction
 from django.db.models import Field
@@ -180,7 +181,7 @@ def _service_connection(config: LdapConfig) -> Connection:
         raise LdapError(_("LDAP server not reachable: %(error)s") % {"error": exc}) from exc
 
 
-def _first_value(attributes: dict, name: str) -> str:
+def _first_value(attributes: dict[str, Any], name: str) -> str:
     if not name:
         return ""
     value = attributes.get(name)
@@ -204,7 +205,11 @@ def _attributes(config: LdapConfig) -> list[str]:
     ]
 
 
-def _search(connection: Connection, base: str, search_filter: str, **kwargs: Any) -> list[dict]:
+# An entry of an ldap3 search response (dn, attributes, ...), as ldap3 returns it.
+Entry = dict[str, Any]
+
+
+def _search(connection: Connection, base: str, search_filter: str, **kwargs: Any) -> list[Entry]:
     try:
         ok = connection.search(base, search_filter, SUBTREE, **kwargs)
     except LDAPInvalidFilterError as exc:
@@ -217,7 +222,7 @@ def _search(connection: Connection, base: str, search_filter: str, **kwargs: Any
     return [e for e in connection.response or [] if e.get("type") == "searchResEntry"]
 
 
-def _directory_user(config: LdapConfig, entry: dict, username: str = "") -> DirectoryUser:
+def _directory_user(config: LdapConfig, entry: Entry, username: str = "") -> DirectoryUser:
     attrs = entry.get("attributes", {})
     return DirectoryUser(
         dn=entry["dn"],
@@ -259,7 +264,7 @@ def search_users(
     if not search_filter.startswith("("):
         search_filter = f"({search_filter})"
     base = search_base.strip() or config.user_search_base
-    entries: list[dict] = []
+    entries: list[Entry] = []
     cookie = None
     while len(entries) <= SYNC_LIMIT:
         entries += _search(
@@ -381,7 +386,12 @@ def authenticate(username: str, password: str) -> User | None:
     return user
 
 
-def test_connection(config: LdapConfig, username: str = "") -> dict:
+class ConnectionTest(TypedDict):
+    server: str
+    user: dict[str, str] | None  # dn, username and the mapped fields
+
+
+def test_connection(config: LdapConfig, username: str = "") -> ConnectionTest:
     """Bind with the service account and optionally look up a user (no password check)."""
     if not config.server_uri:
         raise LdapError(_("No LDAP server configured."))
@@ -421,7 +431,7 @@ def plan_sync(entries: list[DirectoryUser]) -> list[SyncItem]:
         u.lower_name: u
         for u in User.objects.annotate(lower_name=Lower("username")).filter(lower_name__in=names)
     }
-    seen: set = set()
+    seen: set[UUID | str] = set()
     items = []
     for entry in entries:
         user = by_dn.get(entry.dn.lower()) or by_name.get(entry.username)
@@ -446,7 +456,12 @@ def plan_sync(entries: list[DirectoryUser]) -> list[SyncItem]:
     return items
 
 
-def preview_sync(config: LdapConfig, search_filter: str, search_base: str = "") -> dict:
+class SyncPreview(TypedDict):
+    items: list[SyncItem]
+    truncated: bool
+
+
+def preview_sync(config: LdapConfig, search_filter: str, search_base: str = "") -> SyncPreview:
     """Run the filter and tell, per entry, whether a sync would create or update a user."""
     connection = _service_connection(config)
     try:
@@ -456,7 +471,7 @@ def preview_sync(config: LdapConfig, search_filter: str, search_base: str = "") 
     return {"items": plan_sync(entries), "truncated": truncated}
 
 
-def apply_sync(config: LdapConfig, search_filter: str, search_base: str, dns: list[str]) -> dict:
+def apply_sync(config: LdapConfig, search_filter: str, search_base: str, dns: list[str]) -> dict[str, int]:
     """Create or update the users of the chosen entries.
 
     The directory is searched again, so the values never come from the client.

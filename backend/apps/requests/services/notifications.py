@@ -1,5 +1,8 @@
 """Email notifications about requests (texts rendered in the recipient's language)."""
 
+from datetime import date
+from typing import TYPE_CHECKING
+
 from django.utils import formats, timezone
 from django.utils.translation import gettext as _
 
@@ -7,12 +10,15 @@ from apps.accounts.services.assignment import responsible_staff
 from apps.core.notifications import notify
 from apps.requests.models import AssetRequest
 
+if TYPE_CHECKING:
+    from apps.accounts.models import User
+
 
 def _items(asset_request: AssetRequest) -> str:
     return "\n".join(f"- {item.quantity_target} × {item.label}" for item in asset_request.items.all())
 
 
-def _date(value) -> str:
+def _date(value: date | None) -> str:
     return formats.date_format(value, "SHORT_DATE_FORMAT") if value else "—"
 
 
@@ -25,7 +31,7 @@ def _pickup(asset_request: AssetRequest) -> str:
 
 
 def request_submitted(asset_request: AssetRequest) -> None:
-    def render(user):
+    def render(user: object) -> tuple[str, str]:
         subject = _("New request %(number)s from %(name)s") % {
             "number": asset_request.number,
             "name": asset_request.requester.display_name,
@@ -45,7 +51,7 @@ def request_submitted(asset_request: AssetRequest) -> None:
 
 
 def approval_requested(asset_request: AssetRequest) -> None:
-    def render(user):
+    def render(user: object) -> tuple[str, str]:
         subject = _("Approval needed: request %(number)s from %(name)s") % {
             "number": asset_request.number,
             "name": asset_request.requester.display_name,
@@ -68,7 +74,7 @@ def approval_declined(asset_request: AssetRequest) -> None:
     approver = asset_request.approver
     assert approver is not None  # workflow.decline records who declined first
 
-    def render(user):
+    def render(user: object) -> tuple[str, str]:
         subject = _("Your request %(number)s was declined") % {"number": asset_request.number}
         body = _("%(name)s did not approve your request “%(title)s”.") % {
             "name": approver.display_name,
@@ -82,7 +88,10 @@ def approval_declined(asset_request: AssetRequest) -> None:
 
 
 def request_assigned(asset_request: AssetRequest) -> None:
-    def render(user):
+    assignee = asset_request.assignee
+    assert assignee is not None  # workflow.assign only notifies when someone became the assignee
+
+    def render(user: object) -> tuple[str, str]:
         subject = _("Assigned to you: request %(number)s") % {"number": asset_request.number}
         body = _("You are now responsible for “%(title)s” from %(name)s.") % {
             "title": asset_request.title,
@@ -90,13 +99,13 @@ def request_assigned(asset_request: AssetRequest) -> None:
         }
         return subject, f"{body}\n\n{_items(asset_request)}"
 
-    notify("assigned_to_me", [asset_request.assignee], render, path=f"/requests/{asset_request.pk}")
+    notify("assigned_to_me", [assignee], render, path=f"/requests/{asset_request.pk}")
 
 
 def request_decided(asset_request: AssetRequest) -> None:
     confirmed = asset_request.status == AssetRequest.Status.CONFIRMED
 
-    def render(user):
+    def render(user: object) -> tuple[str, str]:
         if confirmed:
             subject = _("Your request %(number)s was confirmed") % {"number": asset_request.number}
             body = _("IT confirmed your request “%(title)s” and is preparing it.") % {
@@ -118,7 +127,7 @@ def request_decided(asset_request: AssetRequest) -> None:
 
 
 def request_ready(asset_request: AssetRequest) -> None:
-    def render(user):
+    def render(user: object) -> tuple[str, str]:
         subject = _("Ready for pickup: %(number)s") % {"number": asset_request.number}
         body = _("Everything for “%(title)s” is ready.") % {"title": asset_request.title}
         pickup = _pickup(asset_request)
@@ -128,7 +137,7 @@ def request_ready(asset_request: AssetRequest) -> None:
 
 
 def return_reminder(asset_request: AssetRequest) -> None:
-    def render(user):
+    def render(user: object) -> tuple[str, str]:
         subject = _("Return due on %(date)s: %(number)s") % {
             "date": _date(asset_request.end_date),
             "number": asset_request.number,
@@ -149,7 +158,7 @@ def return_reminder(asset_request: AssetRequest) -> None:
 
 
 def return_overdue(asset_request: AssetRequest) -> None:
-    def render(user):
+    def render(user: object) -> tuple[str, str]:
         subject = _("Return overdue: %(number)s") % {"number": asset_request.number}
         body = _("The devices for “%(title)s” were due back on %(date)s. Please return them to IT.") % {
             "title": asset_request.title,
@@ -166,10 +175,10 @@ def return_overdue(asset_request: AssetRequest) -> None:
     )
 
 
-def return_requested(asset_request: AssetRequest, sender) -> None:
+def return_requested(asset_request: AssetRequest, sender: User) -> None:
     """A reminder IT sends on purpose, e.g. for an overdue return."""
 
-    def render(user):
+    def render(user: object) -> tuple[str, str]:
         overdue = asset_request.is_overdue
         subject = (_("Return overdue: %(number)s") if overdue else _("Reminder: return of %(number)s")) % {
             "number": asset_request.number
@@ -198,7 +207,7 @@ def _devices(labels: list[str]) -> str:
 def request_rescheduled(asset_request: AssetRequest) -> None:
     """IT changed how, when or where the devices reach the employee after the ready message."""
 
-    def render(user):
+    def render(user: object) -> tuple[str, str]:
         subject = _("Handover changed: %(number)s") % {"number": asset_request.number}
         body = _("IT changed the handover for “%(title)s”.") % {"title": asset_request.title}
         how = asset_request.get_handover_mode_display()
@@ -209,8 +218,8 @@ def request_rescheduled(asset_request: AssetRequest) -> None:
     )
 
 
-def request_extended(asset_request: AssetRequest, previous) -> None:
-    def render(user):
+def request_extended(asset_request: AssetRequest, previous: date | None) -> None:
+    def render(user: object) -> tuple[str, str]:
         subject = _("Loan extended: %(number)s") % {"number": asset_request.number}
         body = _("You may keep the devices for “%(title)s” until %(date)s (before: %(previous)s).") % {
             "title": asset_request.title,
@@ -222,12 +231,12 @@ def request_extended(asset_request: AssetRequest, previous) -> None:
     notify("request_extended", [asset_request.requester], render, path=f"/portal/requests/{asset_request.pk}")
 
 
-def request_cancelled(asset_request: AssetRequest, by) -> None:
+def request_cancelled(asset_request: AssetRequest, by: User | None) -> None:
     """IT withdrew a request; the employee cancelling their own needs no mail."""
     if by is not None and by.pk == asset_request.requester_id:
         return
 
-    def render(user):
+    def render(user: object) -> tuple[str, str]:
         subject = _("Your request %(number)s was cancelled") % {"number": asset_request.number}
         body = _("IT cancelled your request “%(title)s”.") % {"title": asset_request.title}
         return subject, f"{body}\n\n{_items(asset_request)}"
@@ -240,7 +249,7 @@ def request_cancelled(asset_request: AssetRequest, by) -> None:
 def request_handed_out(asset_request: AssetRequest, devices: list[str], received_by: str) -> None:
     """A record of what the employee received, e.g. to keep for their own files."""
 
-    def render(user):
+    def render(user: object) -> tuple[str, str]:
         subject = _("Handed out: %(number)s") % {"number": asset_request.number}
         when = formats.date_format(timezone.localtime(asset_request.handed_out_at), "SHORT_DATETIME_FORMAT")
         body = _("These devices for “%(title)s” were handed out on %(when)s:") % {
@@ -262,7 +271,7 @@ def request_returned(
 ) -> None:
     """A record of what IT took back, and what is still out."""
 
-    def render(user):
+    def render(user: object) -> tuple[str, str]:
         subject = _("Taken back: %(number)s") % {"number": asset_request.number}
         body = _("IT took back these devices for “%(title)s” on %(date)s:") % {
             "title": asset_request.title,

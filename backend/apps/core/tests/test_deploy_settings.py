@@ -17,7 +17,7 @@ BACKEND = Path(__file__).resolve().parents[3]
 STRONG_KEY = "x" * 20 + "a-long-random-looking-test-key"
 
 
-def load_settings(show="DEBUG", **env) -> subprocess.CompletedProcess:
+def load_settings(show="DEBUG", **env) -> subprocess.CompletedProcess[str]:
     """Imports the settings in a fresh interpreter with only ``env`` set and prints ``show``."""
     clean = {k: v for k, v in os.environ.items() if k not in {"SECRET_KEY", "DEBUG", "APP_URLS"}}
     return subprocess.run(

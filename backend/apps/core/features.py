@@ -33,7 +33,7 @@ FLAGS: tuple[Flag, ...] = (
 FLAG_KEYS = {flag.key for flag in FLAGS}
 
 
-def effective_flags(stored: dict) -> dict[str, bool]:
+def effective_flags(stored: dict[str, object]) -> dict[str, bool]:
     """Stored switches with defaults, features off while a required module is off."""
     values = {flag.key: bool(stored.get(flag.key, True)) for flag in FLAGS}
     for flag in FLAGS:
@@ -53,7 +53,7 @@ def is_enabled(key: str) -> bool:
 
 
 # API paths that belong to a module or feature; disabled ones answer 404.
-GUARDED_PATHS: tuple[tuple[re.Pattern, str], ...] = tuple(
+GUARDED_PATHS: tuple[tuple[re.Pattern[str], str], ...] = tuple(
     (re.compile(pattern), key)
     for pattern, key in (
         (r"^/api/inventory/consumables", "consumables"),

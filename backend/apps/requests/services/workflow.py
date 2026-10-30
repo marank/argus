@@ -2,7 +2,7 @@
 
 from datetime import date, datetime, time
 from enum import Enum
-from typing import Final, Literal
+from typing import Any, Final, Literal
 from uuid import UUID
 
 from django.db import transaction
@@ -10,7 +10,7 @@ from django.db.models import Q
 from django.utils import formats, timezone
 from django.utils.translation import gettext as _
 
-from apps.accounts.models import User
+from apps.accounts.models import Team, User
 from apps.accounts.services import assignment
 from apps.core.exceptions import BusinessError
 from apps.core.features import is_enabled
@@ -94,10 +94,10 @@ def _require_requestable(line: AssetRequestItem) -> None:
 
 @transaction.atomic
 def submit(
-    requester,
-    data: dict,
-    items: list[dict],
-    created_by,
+    requester: User,
+    data: dict[str, Any],
+    items: list[dict[str, Any]],
+    created_by: User | None,
     *,
     allow_past_start: bool = False,
     from_catalog: bool = False,
@@ -154,7 +154,7 @@ def submit(
     return asset_request
 
 
-def _needs_approval(asset_request: AssetRequest, created_by) -> bool:
+def _needs_approval(asset_request: AssetRequest, created_by: User | None) -> bool:
     """Whether the request must wait for the department before IT gets it.
 
     Not for exempt employees, not for requests IT records on someone's behalf and
@@ -170,7 +170,7 @@ def _needs_approval(asset_request: AssetRequest, created_by) -> bool:
     return asset_request.approvers().exists()
 
 
-def _record_created(asset_request: AssetRequest, kind: str, user) -> None:
+def _record_created(asset_request: AssetRequest, kind: str, user: User | None) -> None:
     on_behalf = user is not None and user.pk != asset_request.requester_id
     record(
         asset_request,
@@ -181,7 +181,7 @@ def _record_created(asset_request: AssetRequest, kind: str, user) -> None:
     )
 
 
-def _record_approval(asset_request: AssetRequest, user, decision: str, comment: str = "") -> None:
+def _record_approval(asset_request: AssetRequest, user: User, decision: str, comment: str = "") -> None:
     record(
         asset_request,
         Kind.APPROVED if decision == Approval.APPROVED else Kind.DECLINED,
@@ -199,7 +199,7 @@ def _record_approval(asset_request: AssetRequest, user, decision: str, comment: 
         asset_request.completed_at = asset_request.approval_decided_at
 
 
-def _item_team(item: AssetRequestItem):
+def _item_team(item: AssetRequestItem) -> Team | None:
     """The team a request line routes to: its model's, else its category's."""
     if item.asset_model:
         return item.asset_model.effective_team()
@@ -207,7 +207,7 @@ def _item_team(item: AssetRequestItem):
 
 
 @transaction.atomic
-def cancel(asset_request: AssetRequest, user) -> AssetRequest:
+def cancel(asset_request: AssetRequest, user: User) -> AssetRequest:
     _require_status(asset_request, *AssetRequest.CANCELLABLE_STATUSES)
     _release_all(asset_request)
     asset_request.status = Status.CANCELLED
@@ -221,14 +221,14 @@ def cancel(asset_request: AssetRequest, user) -> AssetRequest:
 # --- Department approval -----------------------------------------------------
 
 
-def _require_approver(asset_request: AssetRequest, user) -> None:
+def _require_approver(asset_request: AssetRequest, user: User) -> None:
     _require_status(asset_request, Status.PENDING_APPROVAL)
     if not asset_request.may_approve(user):
         raise BusinessError(_("Only an approver of the requester's department can decide on this request."))
 
 
 @transaction.atomic
-def approve(asset_request: AssetRequest, user, comment: str = "") -> AssetRequest:
+def approve(asset_request: AssetRequest, user: User, comment: str = "") -> AssetRequest:
     """The department agrees; from now on the request is IT's."""
     _require_approver(asset_request, user)
     _record_approval(asset_request, user, Approval.APPROVED, comment)
@@ -238,7 +238,7 @@ def approve(asset_request: AssetRequest, user, comment: str = "") -> AssetReques
 
 
 @transaction.atomic
-def decline(asset_request: AssetRequest, user, comment: str) -> AssetRequest:
+def decline(asset_request: AssetRequest, user: User, comment: str) -> AssetRequest:
     """The department refuses; IT never sees the request as work."""
     _require_approver(asset_request, user)
     _record_approval(asset_request, user, Approval.REJECTED, comment)
@@ -253,7 +253,7 @@ def decline(asset_request: AssetRequest, user, comment: str) -> AssetRequest:
 @transaction.atomic
 def confirm(
     asset_request: AssetRequest,
-    user,
+    user: User,
     quantities: dict[UUID, int],
     comment: str = "",
 ) -> AssetRequest:
@@ -291,7 +291,7 @@ def confirm(
 
 
 @transaction.atomic
-def reject(asset_request: AssetRequest, user, comment: str) -> AssetRequest:
+def reject(asset_request: AssetRequest, user: User, comment: str) -> AssetRequest:
     _require_status(asset_request, Status.SUBMITTED, Status.CONFIRMED)
     _release_all(asset_request)
     asset_request.status = Status.REJECTED
@@ -307,7 +307,7 @@ def reject(asset_request: AssetRequest, user, comment: str) -> AssetRequest:
 @transaction.atomic
 def reschedule(
     asset_request: AssetRequest,
-    user,
+    user: User,
     pickup_at: datetime | None,
     pickup_location_id: UUID | None,
     handover_mode: str | None = None,
@@ -330,7 +330,7 @@ def reschedule(
     return asset_request
 
 
-def _record_schedule(asset_request: AssetRequest, kind: str, user, **extra) -> None:
+def _record_schedule(asset_request: AssetRequest, kind: str, user: User, **extra: object) -> None:
     """A step that sets how and when the devices reach the employee."""
     record(
         asset_request,
@@ -344,7 +344,7 @@ def _record_schedule(asset_request: AssetRequest, kind: str, user, **extra) -> N
 
 
 @transaction.atomic
-def extend(asset_request: AssetRequest, user, end_date: date) -> AssetRequest:
+def extend(asset_request: AssetRequest, user: User, end_date: date) -> AssetRequest:
     """Move the return date of lent devices, e.g. instead of chasing an overdue return.
 
     IT decides here, so the maximum loan period for requests does not apply. Reminders
@@ -374,7 +374,9 @@ def extend(asset_request: AssetRequest, user, end_date: date) -> AssetRequest:
 
 
 @transaction.atomic
-def assign(asset_request: AssetRequest, team_id, assignee_id, user) -> AssetRequest:
+def assign(
+    asset_request: AssetRequest, team_id: UUID | None, assignee_id: UUID | None, user: User
+) -> AssetRequest:
     """Hand the request to a team and/or person; recorded in the history when it changed."""
     before = (asset_request.assigned_team_id, asset_request.assignee_id)
     notify = assignment.assign(asset_request, team_id, assignee_id, user)
@@ -392,7 +394,7 @@ def assign(asset_request: AssetRequest, team_id, assignee_id, user) -> AssetRequ
 
 
 @transaction.atomic
-def remind(asset_request: AssetRequest, user) -> AssetRequest:
+def remind(asset_request: AssetRequest, user: User) -> AssetRequest:
     """Email the employee to bring the lent devices back."""
     from apps.core.models import MailSettings
     from apps.core.notifications import mail_ready
@@ -416,7 +418,7 @@ def remind(asset_request: AssetRequest, user) -> AssetRequest:
 
 
 @transaction.atomic
-def resolve_item(item: AssetRequestItem, asset_model, user) -> AssetRequestItem:
+def resolve_item(item: AssetRequestItem, asset_model: AssetModel, user: User) -> AssetRequestItem:
     """Map a free-text line (or change an unallocated line) to a catalog model."""
     _require_status(item.asset_request, Status.SUBMITTED, Status.CONFIRMED)
     if item.allocations.exists():
@@ -437,7 +439,7 @@ def _require_resolved(item: AssetRequestItem) -> None:
         )
 
 
-def _matches(item: AssetRequestItem, model) -> bool:
+def _matches(item: AssetRequestItem, model: AssetModel) -> bool:
     _require_resolved(item)
     if model.is_software != item.is_software:
         return False
@@ -460,7 +462,7 @@ def _lock_item(item: AssetRequestItem) -> AssetRequestItem:
 
 
 @transaction.atomic
-def allocate_asset(item: AssetRequestItem, asset: Asset, user) -> AssetRequestAllocation:
+def allocate_asset(item: AssetRequestItem, asset: Asset, user: User) -> AssetRequestAllocation:
     item = _lock_item(item)
     asset_request = item.asset_request
     _require_status(asset_request, Status.CONFIRMED)
@@ -488,7 +490,7 @@ def allocate_asset(item: AssetRequestItem, asset: Asset, user) -> AssetRequestAl
 
 @transaction.atomic
 def allocate_consumable(
-    item: AssetRequestItem, consumable: Consumable, quantity: int, user
+    item: AssetRequestItem, consumable: Consumable, quantity: int, user: User
 ) -> AssetRequestAllocation:
     item = _lock_item(item)
     _require_status(item.asset_request, Status.CONFIRMED)
@@ -510,7 +512,7 @@ def allocate_consumable(
 
 @transaction.atomic
 def allocate_license(
-    item: AssetRequestItem, license: License, user, asset: Asset | None = None
+    item: AssetRequestItem, license: License, user: User, asset: Asset | None = None
 ) -> AssetRequestAllocation:
     """Give the requester a seat of ``license`` (or one of their devices, for device licenses)."""
     item = _lock_item(item)
@@ -543,7 +545,7 @@ def allocate_license(
 
 
 @transaction.atomic
-def auto_allocate(asset_request: AssetRequest, user, item_id=None) -> int:
+def auto_allocate(asset_request: AssetRequest, user: User, item_id: UUID | None = None) -> int:
     """Fill every open item (or just the given one) from the pool; returns the units allocated."""
     _require_status(asset_request, Status.CONFIRMED)
     items = asset_request.items.select_related("asset_model", "category")
@@ -578,7 +580,7 @@ def auto_allocate(asset_request: AssetRequest, user, item_id=None) -> int:
 
 
 @transaction.atomic
-def remove_allocation(allocation: AssetRequestAllocation, user) -> None:
+def remove_allocation(allocation: AssetRequestAllocation, user: User) -> None:
     asset_request = allocation.item.asset_request
     _require_status(asset_request, Status.CONFIRMED, Status.READY)
     # Not noted: marking it ready again lists what changed.
@@ -590,7 +592,7 @@ def remove_allocation(allocation: AssetRequestAllocation, user) -> None:
         record(asset_request, Kind.REOPENED, user)
 
 
-def _release(allocation: AssetRequestAllocation, user) -> None:
+def _release(allocation: AssetRequestAllocation, user: User | None) -> None:
     """Give back what was set aside; the device was never handed out, so its history stays as it is."""
     if allocation.license_id:
         if allocation.license_assignment:
@@ -605,7 +607,7 @@ def _release(allocation: AssetRequestAllocation, user) -> None:
         release_consumable(allocation.consumable, allocation.quantity)
 
 
-def _release_all(asset_request: AssetRequest, user=None) -> None:
+def _release_all(asset_request: AssetRequest, user: User | None = None) -> None:
     for allocation in AssetRequestAllocation.objects.filter(
         item__asset_request=asset_request, handed_out_at__isnull=True
     ).select_related("asset", "consumable", "license_assignment", "item__asset_request"):
@@ -623,7 +625,7 @@ def _has_physical(asset_request: AssetRequest) -> bool:
 @transaction.atomic
 def mark_ready(
     asset_request: AssetRequest,
-    user,
+    user: User,
     handover_mode: str | None = None,
     skip_device_check: bool = False,
     *,
@@ -665,7 +667,7 @@ def mark_ready(
     return asset_request
 
 
-def _ready_items(asset_request: AssetRequest) -> dict:
+def _ready_items(asset_request: AssetRequest) -> dict[str, list[str]]:
     """What a ready step notes about the allocation.
 
     Allocating while preparing is not noted step by step (scanning, taking out, scanning
@@ -683,7 +685,7 @@ def _ready_items(asset_request: AssetRequest) -> dict:
     if before is None:
         return {"items": current, "allocated": current}
     remaining = list(before)
-    added = []
+    added: list[str] = []
     for label in current:
         if label in remaining:
             remaining.remove(label)
@@ -693,7 +695,7 @@ def _ready_items(asset_request: AssetRequest) -> dict:
 
 
 @transaction.atomic
-def reopen(asset_request: AssetRequest, user) -> AssetRequest:
+def reopen(asset_request: AssetRequest, user: User) -> AssetRequest:
     """Back from ready to preparing, e.g. to change devices; allocations stay."""
     _require_status(asset_request, Status.READY)
     asset_request.status = Status.CONFIRMED
@@ -722,7 +724,7 @@ def _validate_handover(method: str, received_by_name: str, signature: str) -> No
 @transaction.atomic
 def hand_out(
     asset_request: AssetRequest,
-    user,
+    user: User,
     *,
     method: str = Handover.Method.DIRECT,
     received_by_id: UUID | None = None,
@@ -852,9 +854,9 @@ def hand_out(
 
 @transaction.atomic
 def prepare_direct(
-    requester,
-    user,
-    data: dict,
+    requester: User,
+    user: User,
+    data: dict[str, Any],
     *,
     assets: list[UUID],
     consumables: dict[UUID, int] | None = None,
@@ -924,8 +926,8 @@ def prepare_direct(
 @transaction.atomic
 def quick_assign(
     asset: Asset,
-    requester,
-    user,
+    requester: User,
+    user: User,
     *,
     duration: str,
     start_date: date | None = None,
@@ -1023,7 +1025,7 @@ def quick_assign(
 @transaction.atomic
 def return_devices(
     asset_request: AssetRequest,
-    user,
+    user: User,
     allocation_ids: list[UUID] | None = None,
     *,
     notes: str = "",
@@ -1116,7 +1118,7 @@ def return_devices(
     return asset_request
 
 
-def release_from_elsewhere(allocation: AssetRequestAllocation, user) -> None:
+def release_from_elsewhere(allocation: AssetRequestAllocation, user: User) -> None:
     """A device or seat was taken back outside the request (device or license page).
 
     Allocations still being prepared must be removed on the request first; lent

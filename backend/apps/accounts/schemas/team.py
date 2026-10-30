@@ -1,14 +1,15 @@
+from typing import Any
 from uuid import UUID
 
 from ninja import Schema
 
-from apps.accounts.models import Team
+from apps.accounts.models import Team, User
 from apps.core.schemas import per_response
 
 from .user import UserRefOut
 
 
-def default_team(context) -> Team | None:
+def default_team(context: dict[str, Any] | None) -> Team | None:
     """For schema resolvers: the team that gets what no model or category assigns."""
     return per_response(context, "default_team", lambda: Team.objects.filter(is_default=True).first())
 
@@ -26,7 +27,7 @@ class TeamOut(TeamRefOut):
     members: list[UserRefOut]
 
     @staticmethod
-    def resolve_members(obj) -> list:
+    def resolve_members(obj: Team) -> list[User]:
         return list(obj.members.all())
 
 

@@ -1,10 +1,12 @@
+from typing import Any
+
 from apps.inventory.models import Asset
 from apps.masterdata.models import AssetModel
 
 JSON = "application/json"
 
 
-def asset_payload(detail: dict, **changes) -> dict:
+def asset_payload(detail: dict[str, Any], **changes) -> dict[str, Any]:
     """The asset form as the frontend sends it, built from the detail response."""
     payload = {
         "model": detail["model"]["id"],

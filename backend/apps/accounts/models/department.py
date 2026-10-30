@@ -83,7 +83,7 @@ class Department(TimeStampedModel):
     def descendant_ids(self) -> set[UUID]:
         """IDs of this department and all departments below it."""
         # One query for the whole (small) tree instead of one per level.
-        children: dict = {}
+        children: dict[UUID, list[UUID]] = {}
         for pk, parent_id in Department.objects.filter(parent__isnull=False).values_list("pk", "parent_id"):
             children.setdefault(parent_id, []).append(pk)
         ids, frontier = {self.pk}, [self.pk]
@@ -97,7 +97,7 @@ class Department(TimeStampedModel):
         """Position of every department in the tree read top-down: each department, then
         the ones below it; siblings by sort order and name."""
         rows = list(cls.objects.values_list("pk", "parent_id", "sort_order", "name"))
-        children: dict = {}
+        children: dict[UUID | None, list[tuple[int, str, UUID]]] = {}
         for pk, parent_id, sort_order, name in rows:
             children.setdefault(parent_id, []).append((sort_order, name.lower(), pk))
         positions: dict[UUID, int] = {}

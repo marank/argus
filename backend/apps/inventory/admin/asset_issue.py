@@ -1,22 +1,23 @@
 from django.contrib import admin
+from django.http import HttpRequest
 
 from apps.inventory.models import AssetIssue, AssetIssueEntry
 
 
-class AssetIssueEntryInline(admin.TabularInline):
+class AssetIssueEntryInline(admin.TabularInline[AssetIssueEntry, AssetIssue]):
     model = AssetIssueEntry
     extra = 0
     fields = ("created_at", "kind", "author", "text", "status")
     readonly_fields = fields
     can_delete = False
 
-    def has_add_permission(self, request, obj=None) -> bool:
+    def has_add_permission(self, request: HttpRequest, obj: AssetIssue | None = None) -> bool:
         # Written in the app, which also notifies the other side.
         return False
 
 
 @admin.register(AssetIssue)
-class AssetIssueAdmin(admin.ModelAdmin):
+class AssetIssueAdmin(admin.ModelAdmin[AssetIssue]):
     list_display = [
         "created_at",
         "asset",

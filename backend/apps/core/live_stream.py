@@ -11,16 +11,16 @@ import asyncio
 import json
 import logging
 from collections import Counter
-from typing import Any
+from collections.abc import AsyncIterator
 
 import psycopg
 from django.conf import settings
 from django.core.handlers.asgi import ASGIRequest
 from django.db import connections
-from django.http import HttpResponse, StreamingHttpResponse
+from django.http import HttpRequest, HttpResponse, StreamingHttpResponse
 
 from apps.core.api.security import is_it_staff
-from apps.core.live import CHANNEL, visible_to
+from apps.core.live import CHANNEL, Event, visible_to
 
 logger = logging.getLogger(__name__)
 
@@ -32,30 +32,31 @@ RECONNECT_SECONDS = 5
 # Open streams per user (one per browser tab); beyond that a tab refreshes as without
 # live updates, instead of one user holding any number of connections.
 MAX_STREAMS_PER_USER = 20
-RELOAD_ALL = {"topic": "*", "id": None}
+# Recognised by identity; ``users`` and ``staff`` are never read.
+RELOAD_ALL: Event = {"topic": "*", "id": None, "users": [], "staff": True}
 
 
 class Hub:
     """The LISTEN connection of this process and the streams it feeds."""
 
-    def __init__(self):
-        self.queues: set[asyncio.Queue[dict[str, Any]]] = set()
+    def __init__(self) -> None:
+        self.queues: set[asyncio.Queue[Event]] = set()
         self.streams_per_user: Counter[str] = Counter()
-        self.listener: asyncio.Task | None = None
+        self.listener: asyncio.Task[None] | None = None
         # Set while LISTEN is active, i.e. signals reach the streams.
         self.listening = asyncio.Event()
 
-    def subscribe(self) -> asyncio.Queue[dict[str, Any]]:
-        queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue(maxsize=100)
+    def subscribe(self) -> asyncio.Queue[Event]:
+        queue: asyncio.Queue[Event] = asyncio.Queue(maxsize=100)
         self.queues.add(queue)
         if self.listener is None or self.listener.done():
             self.listener = asyncio.create_task(self.listen())
         return queue
 
-    def unsubscribe(self, queue: asyncio.Queue[dict[str, Any]]) -> None:
+    def unsubscribe(self, queue: asyncio.Queue[Event]) -> None:
         self.queues.discard(queue)
 
-    def broadcast(self, event: dict) -> None:
+    def broadcast(self, event: Event) -> None:
         for queue in list(self.queues):
             try:
                 queue.put_nowait(event)
@@ -89,7 +90,7 @@ class Hub:
 hub = Hub()
 
 
-async def stream(user_id: str, staff: bool):
+async def stream(user_id: str, staff: bool) -> AsyncIterator[str]:
     queue = hub.subscribe()
     hub.streams_per_user[user_id] += 1
     loop = asyncio.get_running_loop()
@@ -113,7 +114,7 @@ async def stream(user_id: str, staff: bool):
             del hub.streams_per_user[user_id]
 
 
-async def events(request):
+async def events(request: HttpRequest) -> HttpResponse | StreamingHttpResponse:
     # Without PostgreSQL there are no signals; under WSGI an endless stream would block a worker.
     # 204 tells the browser's EventSource to stop trying.
     if not settings.LIVE_EVENTS or not isinstance(request, ASGIRequest):

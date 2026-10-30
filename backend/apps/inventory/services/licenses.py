@@ -1,8 +1,10 @@
+from typing import Any
 from uuid import UUID
 
 from django.db import transaction
 from django.utils.translation import gettext as _
 
+from apps.accounts.models import User
 from apps.core.api.crud import apply_input
 from apps.core.exceptions import BusinessError
 from apps.inventory.models import Asset, License, LicenseAssignment
@@ -11,7 +13,7 @@ AssignTo = License.AssignTo
 
 
 @transaction.atomic
-def save_license(license: License, data: dict) -> License:
+def save_license(license: License, data: dict[str, Any]) -> License:
     """Create or update a license; seats and assignment type must fit the assignments."""
     if license.pk:
         used = license.assignments.count()
@@ -27,7 +29,7 @@ def save_license(license: License, data: dict) -> License:
 
 @transaction.atomic
 def assign_license(
-    license: License, user, *, user_id: UUID | None = None, asset_id: UUID | None = None, note: str = ""
+    license: License, user: User, *, user_id: UUID | None = None, asset_id: UUID | None = None, note: str = ""
 ) -> LicenseAssignment:
     license = License.objects.select_for_update().get(pk=license.pk)
     if license.assign_to == AssignTo.USER and not user_id:
@@ -48,7 +50,7 @@ def assign_license(
 
 
 @transaction.atomic
-def unassign_license(assignment: LicenseAssignment, user) -> None:
+def unassign_license(assignment: LicenseAssignment, user: User) -> None:
     """Remove a seat; a seat handed out with a request counts as returned there."""
     from apps.requests.models import AssetRequestAllocation
     from apps.requests.services import workflow

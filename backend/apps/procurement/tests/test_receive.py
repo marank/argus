@@ -1,16 +1,17 @@
 """Booking deliveries: open quantities and lines that are not on the order."""
 
 import uuid
+from typing import Any
 
 from apps.masterdata.models import AssetModel, Location
 
 JSON = "application/json"
 
 
-def ordered(client, quantity=2) -> dict:
+def ordered(client, quantity=2) -> dict[str, Any]:
     model = AssetModel.objects.filter(tracking=AssetModel.Tracking.BULK).first()
     assert model is not None
-    order = client.post(
+    order: dict[str, Any] = client.post(
         "/api/procurement/orders",
         {"lines": [{"asset_model": str(model.pk), "quantity": quantity}]},
         content_type=JSON,

@@ -1,6 +1,7 @@
 """Lookups by scanned code and query counts of the employee's pages."""
 
 from datetime import date, timedelta
+from typing import Any
 
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
@@ -12,7 +13,7 @@ from apps.inventory.services.issues import report_issue
 JSON = "application/json"
 
 
-def confirmed_request(employee_client, it_client, model) -> dict:
+def confirmed_request(employee_client, it_client, model) -> dict[str, Any]:
     start = date.today() + timedelta(days=2)
     asset_request = employee_client.post(
         "/api/requests",
@@ -28,7 +29,8 @@ def confirmed_request(employee_client, it_client, model) -> dict:
         f"/api/requests/{asset_request['id']}/confirm", {"items": []}, content_type=JSON
     )
     assert response.status_code == 200, response.content
-    return response.json()
+    body: dict[str, Any] = response.json()
+    return body
 
 
 def test_colliding_serial_numbers_are_not_guessed(employee_client, it_client):

@@ -93,10 +93,11 @@ class AssetRequestItem(UUIDModel):
 
     @property
     def quantity_allocated(self) -> int:
-        cached = getattr(self, "_quantity_allocated", None)
+        cached: int | None = getattr(self, "_quantity_allocated", None)
         if cached is not None:
             return cached
-        return self.allocations.aggregate(total=Sum("quantity"))["total"] or 0
+        total: int | None = self.allocations.aggregate(total=Sum("quantity"))["total"]
+        return total or 0
 
     @property
     def is_software(self) -> bool:

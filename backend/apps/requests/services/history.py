@@ -1,11 +1,18 @@
 """The history of a request, written by the workflow as each step happens."""
 
+from typing import TYPE_CHECKING
+
 from apps.requests.models import AssetRequest, AssetRequestAllocation, AssetRequestEvent
+
+if TYPE_CHECKING:
+    from apps.accounts.models import User
 
 Kind = AssetRequestEvent.Kind
 
 
-def record(asset_request: AssetRequest, kind: str, user=None, **data) -> AssetRequestEvent:
+def record(
+    asset_request: AssetRequest, kind: str, user: User | None = None, **data: object
+) -> AssetRequestEvent:
     """Note a step; ``data`` holds plain values (texts, dates as ISO strings)."""
     return AssetRequestEvent.objects.create(
         asset_request=asset_request,

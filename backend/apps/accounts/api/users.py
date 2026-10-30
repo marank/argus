@@ -1,5 +1,5 @@
 import logging
-from typing import Annotated
+from typing import Annotated, Any
 from uuid import UUID
 
 from django.shortcuts import get_object_or_404
@@ -31,7 +31,7 @@ def protect_administrators(request: AuthedRequest, user: User) -> None:
         raise HttpError(409, _("You cannot delete your own account."))
 
 
-def changes_members(data: dict, user: User | None, relation: str) -> bool:
+def changes_members(data: dict[str, Any], user: User | None, relation: str) -> bool:
     """Whether the input sets other teams or roles than the user has (None = unchanged)."""
     wanted = data.get(relation)
     if wanted is None:
@@ -40,7 +40,7 @@ def changes_members(data: dict, user: User | None, relation: str) -> bool:
     return set(wanted) != current
 
 
-def check_user_input(request: AuthedRequest, data: dict, user: User | None) -> None:
+def check_user_input(request: AuthedRequest, data: dict[str, Any], user: User | None) -> None:
     """Rights beyond editing users, and no lockout.
 
     Only administrators appoint administrators and hand out roles (otherwise anyone
@@ -73,7 +73,7 @@ def new_user() -> User:
     return user
 
 
-def prepare_user(data: dict) -> dict:
+def prepare_user(data: dict[str, Any]) -> dict[str, Any]:
     # Fields left out (None) stay as they are.
     for name in ("is_superuser", "teams", "roles"):
         if data.get(name) is None:
@@ -114,7 +114,7 @@ router = build_crud_router(
 
 
 @router.post("/{uuid:pk}/two-factor/reset", response=UserOut, auth=permission_auth("users", WRITE))
-def reset_two_factor(request: AuthedRequest, pk: UUID):
+def reset_two_factor(request: AuthedRequest, pk: UUID) -> User:
     """For users who lost their phone and backup codes: they sign in with the password alone again."""
     user = get_object_or_404(User.objects.select_related("department", "terminal_location__parent"), pk=pk)
     if user.pk == request.user.pk:

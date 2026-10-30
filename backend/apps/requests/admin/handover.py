@@ -1,11 +1,12 @@
 from django.contrib import admin
+from django.http import HttpRequest
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from apps.requests.models import Handover
 
 
-def signature_image(obj: Handover):
+def signature_image(obj: Handover) -> str:
     if not obj.signature:
         return "—"
     return format_html(
@@ -15,7 +16,7 @@ def signature_image(obj: Handover):
 
 
 @admin.register(Handover)
-class HandoverAdmin(admin.ModelAdmin):
+class HandoverAdmin(admin.ModelAdmin[Handover]):
     """Handover records are evidence: viewable, not editable."""
 
     list_display = ["asset_request", "method", "received_by_name", "handed_out_by", "handed_out_at"]
@@ -37,12 +38,12 @@ class HandoverAdmin(admin.ModelAdmin):
         "signature_preview",
     ]
 
-    def has_add_permission(self, request) -> bool:
+    def has_add_permission(self, request: HttpRequest) -> bool:
         return False
 
-    def has_change_permission(self, request, obj=None) -> bool:
+    def has_change_permission(self, request: HttpRequest, obj: Handover | None = None) -> bool:
         return False
 
     @admin.display(description=_("signature"))
-    def signature_preview(self, obj: Handover):
+    def signature_preview(self, obj: Handover) -> str:
         return signature_image(obj)

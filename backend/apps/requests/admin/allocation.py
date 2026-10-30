@@ -4,7 +4,7 @@ from apps.requests.models import AssetRequestAllocation
 
 
 @admin.register(AssetRequestAllocation)
-class AssetRequestAllocationAdmin(admin.ModelAdmin):
+class AssetRequestAllocationAdmin(admin.ModelAdmin[AssetRequestAllocation]):
     list_display = [
         "item",
         "asset",

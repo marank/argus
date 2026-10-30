@@ -1,8 +1,10 @@
 from datetime import timedelta
+from typing import TypedDict
 
 from django.db.models import Count, F
 from django.utils import timezone
 
+from apps.accounts.models import User
 from apps.accounts.services.assignment import assigned_q
 from apps.core.models import SiteSettings
 from apps.inventory.models import Asset, AssetEvent, AssetIssue, Consumable, License
@@ -10,7 +12,53 @@ from apps.procurement.models import PurchaseOrder
 from apps.requests.models import AssetRequest
 
 
-def it_overview(user) -> dict:
+class ITOverview(TypedDict):
+    asset_status: dict[str, int]
+    requests_submitted: int
+    requests_to_prepare: int
+    requests_ready: int
+    requests_overdue: int
+    orders_to_place: int
+    orders_in_transit: int
+    low_consumables: int
+    open_issues: int
+    requests_mine: int
+    requests_my_teams: int
+    requests_unassigned: int
+    issues_mine: int
+    warranty_expiring: int
+    licenses_expiring: int
+    recent_events: list[AssetEvent]
+
+
+class ITOverviewPart(TypedDict, total=False):
+    """Some of the figures of ``ITOverview``."""
+
+    asset_status: dict[str, int]
+    requests_submitted: int
+    requests_to_prepare: int
+    requests_ready: int
+    requests_overdue: int
+    orders_to_place: int
+    orders_in_transit: int
+    low_consumables: int
+    open_issues: int
+    requests_mine: int
+    requests_my_teams: int
+    requests_unassigned: int
+    issues_mine: int
+    warranty_expiring: int
+    licenses_expiring: int
+    recent_events: list[AssetEvent]
+
+
+class EmployeeOverview(TypedDict):
+    open_requests: int
+    ready_for_pickup: list[AssetRequest]
+    assigned_assets: int
+
+
+def it_overview(user: User) -> ITOverview:
     today = timezone.localdate()
     rules = SiteSettings.load()
     asset_requests = AssetRequest.objects.all()
@@ -51,7 +99,7 @@ def it_overview(user) -> dict:
     }
 
 
-def employee_overview(user) -> dict:
+def employee_overview(user: User) -> EmployeeOverview:
     mine = AssetRequest.objects.filter(requester=user)
     return {
         "open_requests": mine.filter(status__in=AssetRequest.OPEN_STATUSES).count(),

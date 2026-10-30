@@ -1,10 +1,13 @@
 from decimal import Decimal
+from typing import Any
 from uuid import UUID
 
 from ninja import Field, Schema
 
+from apps.accounts.models import Team
 from apps.accounts.schemas import TeamRefOut, default_team
 from apps.core.api.security import context_is_it_staff
+from apps.core.models import NumberSequence
 from apps.core.schemas import RefOut, per_response
 from apps.core.services.numbering import get_sequence
 from apps.masterdata.models import AssetModel
@@ -40,17 +43,19 @@ class AssetModelOut(Schema):
     effective_team: TeamRefOut | None = None
 
     @staticmethod
-    def resolve_team(obj, context):
+    def resolve_team(obj: AssetModel, context: dict[str, Any] | None) -> Team | None:
         return obj.team if context_is_it_staff(context) else None
 
     @staticmethod
-    def resolve_effective_team(obj: AssetModel, context):
+    def resolve_effective_team(obj: AssetModel, context: dict[str, Any] | None) -> Team | None:
         if not context_is_it_staff(context):
             return None
         return obj.effective_team() or default_team(context)
 
     @staticmethod
-    def resolve_effective_number_sequence(obj: AssetModel, context):
+    def resolve_effective_number_sequence(
+        obj: AssetModel, context: dict[str, Any] | None
+    ) -> NumberSequence | None:
         if obj.tracking != AssetModel.Tracking.SERIALIZED:
             return None
         return obj.effective_number_sequence() or per_response(
@@ -58,7 +63,7 @@ class AssetModelOut(Schema):
         )
 
     @staticmethod
-    def resolve_compatible_with(obj: AssetModel):
+    def resolve_compatible_with(obj: AssetModel) -> list[AssetModel]:
         return list(obj.compatible_with.select_related("manufacturer"))
 
 

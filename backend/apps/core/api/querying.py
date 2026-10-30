@@ -1,4 +1,4 @@
-from django.db.models import Q, QuerySet
+from django.db.models import Model, Q, QuerySet
 
 # Every word adds a condition per field; without a cap a pasted text builds a query
 # too large for the database. Words beyond these limits are ignored.
@@ -11,7 +11,9 @@ def search_words(term: str | None) -> list[str]:
     return (term or "")[:MAX_SEARCH_LENGTH].split()[:MAX_SEARCH_WORDS]
 
 
-def search(queryset: QuerySet, term: str | None, fields: tuple[str, ...]) -> QuerySet:
+def search[M: Model, R](
+    queryset: QuerySet[M, R], term: str | None, fields: tuple[str, ...]
+) -> QuerySet[M, R]:
     """Case-insensitive OR search over ``fields``; every word must match."""
     if not term or not fields:
         return queryset
@@ -23,7 +25,9 @@ def search(queryset: QuerySet, term: str | None, fields: tuple[str, ...]) -> Que
     return queryset.distinct()
 
 
-def order(queryset: QuerySet, ordering: str | None, allowed: tuple[str, ...]) -> QuerySet:
+def order[M: Model, R](
+    queryset: QuerySet[M, R], ordering: str | None, allowed: tuple[str, ...]
+) -> QuerySet[M, R]:
     """Apply a comma separated ordering, ignoring fields not in ``allowed``."""
     if not ordering:
         return queryset

@@ -9,9 +9,14 @@ import os
 from pathlib import Path
 from urllib.parse import urlsplit
 
+import django_stubs_ext
 from django.utils.translation import gettext_lazy as _
 
 from .env import env_bool, env_list
+
+# Makes Django's generic classes subscriptable at runtime (``admin.ModelAdmin[Asset]``),
+# as the type checker requires their type arguments.
+django_stubs_ext.monkeypatch()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 

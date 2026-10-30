@@ -3,7 +3,7 @@
 from uuid import UUID
 
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from django.shortcuts import get_object_or_404
 from ninja import Router
 
@@ -25,7 +25,7 @@ from .queries import asset_request_queryset, get_for_update
 router = Router(tags=["pickup terminal"], auth=terminal_auth)
 
 
-def pickups(user):
+def pickups(user: User) -> QuerySet[AssetRequest]:
     """Prepared pickups; a terminal with a site only lists pickups at that site."""
     queryset = asset_request_queryset().filter(
         status=AssetRequest.Status.READY, handover_mode=AssetRequest.HandoverMode.PICKUP
@@ -37,7 +37,7 @@ def pickups(user):
 
 
 @router.get("/pickups", response=list[TerminalPickupOut])
-def list_pickups(request: AuthedRequest, q: str | None = None):
+def list_pickups(request: AuthedRequest, q: str | None = None) -> list[AssetRequest]:
     """Prepared pickups, next pickup first."""
     queryset = search(
         pickups(request.user),
@@ -48,13 +48,13 @@ def list_pickups(request: AuthedRequest, q: str | None = None):
 
 
 @router.get("/pickups/{uuid:pk}", response=TerminalPickupDetailOut)
-def get_pickup(request: AuthedRequest, pk: UUID):
+def get_pickup(request: AuthedRequest, pk: UUID) -> AssetRequest:
     return get_object_or_404(pickups(request.user), pk=pk)
 
 
 @router.post("/pickups/{uuid:pk}/sign", response=TerminalPickupDetailOut)
 @transaction.atomic
-def sign(request: AuthedRequest, pk: UUID, payload: TerminalSignIn):
+def sign(request: AuthedRequest, pk: UUID, payload: TerminalSignIn) -> AssetRequest:
     """Complete the hand-out with the collecting person's signature."""
     asset_request = get_object_or_404(pickups(request.user), pk=pk)
     workflow.hand_out(
@@ -72,13 +72,13 @@ def sign(request: AuthedRequest, pk: UUID, payload: TerminalSignIn):
 
 
 @router.get("/staff", response=list[TerminalStaffOut])
-def staff(request: AuthedRequest):
+def staff(request: AuthedRequest) -> list[User]:
     """IT staff members, to name who hands out when it is not the one who prepared the pickup."""
     return list(User.objects.filter(is_active=True, is_staff=True, is_terminal=False))
 
 
 @router.get("/people", response=list[TerminalPersonOut])
-def people(request: AuthedRequest, q: str = ""):
+def people(request: AuthedRequest, q: str = "") -> list[User]:
     """Minimal employee lookup to record who collects the devices.
 
     Every word must match the first or last name, the username or the employee

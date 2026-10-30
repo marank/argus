@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from django.db.models import Prefetch
+from django.db.models import Prefetch, QuerySet
 from django.shortcuts import get_object_or_404
 from ninja import FilterLookup, FilterSchema, Query, Router, Status
 from ninja.pagination import paginate
@@ -28,7 +28,7 @@ class OrderFilter(FilterSchema):
     asset_request: Annotated[UUID | None, FilterLookup("lines__asset_request_item__asset_request_id")] = None
 
 
-def order_queryset():
+def order_queryset() -> QuerySet[PurchaseOrder]:
     lines = PurchaseOrderLine.objects.select_related(
         "asset_model__manufacturer",
         "asset_request_item__asset_request__requester",
@@ -47,7 +47,7 @@ def list_orders(
     filters: Query[OrderFilter],
     q: str | None = None,
     ordering: str | None = None,
-):
+) -> QuerySet[PurchaseOrder]:
     queryset = search(
         filters.filter(order_queryset()).distinct(),
         q,
@@ -63,12 +63,12 @@ def list_orders(
 
 
 @router.get("/{uuid:pk}", response=PurchaseOrderOut)
-def get_order(request: AuthedRequest, pk: UUID):
+def get_order(request: AuthedRequest, pk: UUID) -> PurchaseOrder:
     return get_object_or_404(order_queryset(), pk=pk)
 
 
 @router.post("", response={201: PurchaseOrderOut})
-def create_order(request: AuthedRequest, payload: PurchaseOrderIn):
+def create_order(request: AuthedRequest, payload: PurchaseOrderIn) -> Status[PurchaseOrder]:
     data = payload.dict(exclude={"lines"})
     lines = [line.dict() for line in payload.lines or []]
     purchase_order = order_service.create_order(data, lines, request.user)
@@ -76,7 +76,7 @@ def create_order(request: AuthedRequest, payload: PurchaseOrderIn):
 
 
 @router.put("/{uuid:pk}", response=PurchaseOrderOut)
-def update_order(request: AuthedRequest, pk: UUID, payload: PurchaseOrderIn):
+def update_order(request: AuthedRequest, pk: UUID, payload: PurchaseOrderIn) -> PurchaseOrder:
     purchase_order = get_object_or_404(PurchaseOrder, pk=pk)
     lines = [line.dict() for line in payload.lines] if payload.lines is not None else None
     order_service.update_order(purchase_order, payload.dict(exclude={"lines"}), lines)
@@ -84,7 +84,7 @@ def update_order(request: AuthedRequest, pk: UUID, payload: PurchaseOrderIn):
 
 
 @router.post("/{uuid:pk}/ordered", response=PurchaseOrderOut)
-def mark_ordered(request: AuthedRequest, pk: UUID, payload: MarkOrderedIn):
+def mark_ordered(request: AuthedRequest, pk: UUID, payload: MarkOrderedIn) -> PurchaseOrder:
     order_service.mark_ordered(
         get_object_or_404(PurchaseOrder, pk=pk),
         payload.order_date,
@@ -95,19 +95,19 @@ def mark_ordered(request: AuthedRequest, pk: UUID, payload: MarkOrderedIn):
 
 
 @router.post("/{uuid:pk}/receive", response=PurchaseOrderOut)
-def receive(request: AuthedRequest, pk: UUID, payload: ReceiveIn):
+def receive(request: AuthedRequest, pk: UUID, payload: ReceiveIn) -> PurchaseOrder:
     receipts = [receipt.dict() for receipt in payload.receipts]
     order_service.receive(get_object_or_404(PurchaseOrder, pk=pk), receipts, request.user)
     return get_order(request, pk)
 
 
 @router.post("/{uuid:pk}/cancel", response=PurchaseOrderOut)
-def cancel(request: AuthedRequest, pk: UUID):
+def cancel(request: AuthedRequest, pk: UUID) -> PurchaseOrder:
     order_service.cancel(get_object_or_404(PurchaseOrder, pk=pk))
     return get_order(request, pk)
 
 
 @router.delete("/{uuid:pk}", response={204: None})
-def delete_order(request: AuthedRequest, pk: UUID):
+def delete_order(request: AuthedRequest, pk: UUID) -> Status[None]:
     get_object_or_404(PurchaseOrder, pk=pk, status=PurchaseOrder.Status.DRAFT).delete()
     return Status(204, None)

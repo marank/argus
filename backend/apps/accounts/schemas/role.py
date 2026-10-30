@@ -2,6 +2,8 @@ from uuid import UUID
 
 from ninja import Schema
 
+from apps.accounts.models import Role, User
+
 from .user import UserRefOut
 
 
@@ -14,7 +16,7 @@ class RoleOut(Schema):
     members: list[UserRefOut]
 
     @staticmethod
-    def resolve_members(obj) -> list:
+    def resolve_members(obj: Role) -> list[User]:
         return list(obj.members.all())
 
 

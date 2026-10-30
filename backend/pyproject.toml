@@ -12,6 +12,7 @@ dependencies = [
     "psycopg[binary]>=3.3.6",
     "segno>=1.6",
     "uvicorn>=0.54.0",
+    "django-stubs-ext>=6.1.2",
 ]
 
 [dependency-groups]
@@ -68,16 +69,18 @@ DEP002 = ["gunicorn", "uvicorn"]
 [tool.mypy]
 plugins = ["mypy_django_plugin.main"]
 exclude = ["/migrations/"]
-# Not (yet) strict: unannotated functions are allowed, but their bodies are checked.
-check_untyped_defs = true
-strict_equality = true
-extra_checks = true
-warn_unused_ignores = true
-warn_redundant_casts = true
+strict = true
 
 [[tool.mypy.overrides]]
 module = ["*.migrations.*"]
 ignore_errors = true
+
+[[tool.mypy.overrides]]
+# Tests: still type-checked, but test functions and fixtures need no annotations.
+module = ["apps.*.tests.*", "conftest"]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_untyped_calls = false
 
 [[tool.mypy.overrides]]
 # No type information published for ldap3.

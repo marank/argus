@@ -4,7 +4,7 @@ from apps.procurement.models import PurchaseOrderLine
 
 
 @admin.register(PurchaseOrderLine)
-class PurchaseOrderLineAdmin(admin.ModelAdmin):
+class PurchaseOrderLineAdmin(admin.ModelAdmin[PurchaseOrderLine]):
     list_display = ["order", "label", "quantity", "quantity_received", "unit_price", "asset_request_item"]
     list_filter = ["order__status"]
     search_fields = ["order__number", "description", "asset_model__name"]

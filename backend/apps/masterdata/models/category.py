@@ -8,6 +8,8 @@ from django.utils.translation import gettext_lazy as _
 from apps.core.models import TimeStampedModel
 
 if TYPE_CHECKING:
+    from apps.accounts.models import Team
+
     from .asset_model import AssetModel
 
 
@@ -138,7 +140,7 @@ class Category(TimeStampedModel):
     def descendant_ids(self) -> set[UUID]:
         """IDs of this category and all categories below it."""
         # One query for the whole (small) tree instead of one per level.
-        children: dict = {}
+        children: dict[UUID, list[UUID]] = {}
         for pk, parent_id in Category.objects.filter(parent__isnull=False).values_list("pk", "parent_id"):
             children.setdefault(parent_id, []).append(pk)
         ids, frontier = {self.pk}, [self.pk]
@@ -152,7 +154,7 @@ class Category(TimeStampedModel):
         """Position of every category in the tree read top-down: each category, then the
         ones below it; siblings by sort order and name."""
         rows = list(cls.objects.values_list("pk", "parent_id", "sort_order", "name"))
-        children: dict = {}
+        children: dict[UUID | None, list[tuple[int, str, UUID]]] = {}
         for pk, parent_id, sort_order, name in rows:
             children.setdefault(parent_id, []).append((sort_order, name.lower(), pk))
         positions: dict[UUID, int] = {}
@@ -172,13 +174,15 @@ class Category(TimeStampedModel):
         """Whether this category or one above it requires the department's approval."""
         return any(node.requires_approval for node in [self, *self.ancestors()])
 
-    def effective_team(self):
+    def effective_team(self) -> Team | None:
         """The responsible team, inherited from the nearest parent that names one."""
         for node in [self, *self.ancestors()]:
             if node.team_id:
                 return node.team
         return None
 
-    # Set by the portal catalog (apps/requests/api/portal.py), not a column. Declared
+    # Set by the portal catalog (apps/requests/api/portal.py), not columns. Declared
     # last: above the fields, "models" would shadow django.db.models in this class body.
     models: list[AssetModel]
+    available: int | None
+    reserved: int | None

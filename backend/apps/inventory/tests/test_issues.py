@@ -111,7 +111,8 @@ def report(client) -> str:
         {"kind": "defect", "description": "Fan is loud"},
         content_type=JSON,
     )
-    return response.json()["id"]
+    issue_id: str = response.json()["id"]
+    return issue_id
 
 
 def test_both_sides_write_messages_at_any_time(employee_client, it_client):

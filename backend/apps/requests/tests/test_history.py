@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from typing import Any
 
 from django.utils import timezone
 
@@ -10,7 +11,7 @@ from apps.requests.models import AssetRequest
 JSON = "application/json"
 
 
-def kinds(body: dict) -> list[str]:
+def kinds(body: dict[str, Any]) -> list[str]:
     return [event["kind"] for event in body["events"]]
 
 
@@ -37,7 +38,8 @@ def run_cycle(employee_client, it_client) -> str:
     new_end = (start + timedelta(days=9)).isoformat()
     it_client.post(f"{url}/extend", {"end_date": new_end}, content_type=JSON)
     it_client.post(f"{url}/return", {}, content_type=JSON)
-    return created["id"]
+    pk: str = created["id"]
+    return pk
 
 
 def test_every_step_is_recorded(employee_client, it_client):

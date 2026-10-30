@@ -1,11 +1,14 @@
 """Data of the optional dashboard widgets; each is fetched only while it is on the dashboard."""
 
-from datetime import timedelta
+from datetime import date, timedelta
+from typing import Literal, TypedDict
+from uuid import UUID
 
-from django.db.models import Count, DateField, F
+from django.db.models import Count, DateField, F, QuerySet
 from django.db.models.functions import TruncWeek
 from django.utils import timezone
 
+from apps.accounts.models import User
 from apps.accounts.services.assignment import assigned_q
 from apps.core.models import SiteSettings
 from apps.core.notifications import it_staff
@@ -16,11 +19,44 @@ from apps.requests.models import AssetRequest
 LIST_LIMIT = 10
 
 
-def open_issues():
+class MyTasks(TypedDict):
+    requests: list[AssetRequest]
+    requests_total: int
+    issues: list[AssetIssue]
+    issues_total: int
+
+
+class TeamMemberLoad(TypedDict):
+    user: User
+    requests: int
+    issues: int
+
+
+class TeamLoad(TypedDict):
+    people: list[TeamMemberLoad]
+    unassigned_requests: int
+    unassigned_issues: int
+
+
+class TrendWeek(TypedDict):
+    week_start: date
+    created: int
+    completed: int
+
+
+class Expiring(TypedDict):
+    kind: Literal["license", "warranty"]
+    id: UUID
+    label: str
+    detail: str
+    ends_on: date
+
+
+def open_issues() -> QuerySet[AssetIssue]:
     return AssetIssue.objects.exclude(status=AssetIssue.Status.RESOLVED)
 
 
-def my_tasks(user) -> dict:
+def my_tasks(user: User) -> MyTasks:
     """Open requests and problem reports assigned to the user personally, oldest first."""
     requests = (
         AssetRequest.objects.filter(status__in=AssetRequest.OPEN_STATUSES)
@@ -55,7 +91,7 @@ def overdue_returns() -> list[AssetRequest]:
     )
 
 
-def team_load() -> dict:
+def team_load() -> TeamLoad:
     """Open requests and problem reports per IT member, and those nobody has taken yet."""
     open_requests = AssetRequest.objects.filter(status__in=AssetRequest.OPEN_STATUSES)
     requests = dict(
@@ -64,7 +100,7 @@ def team_load() -> dict:
     issues = dict(
         open_issues().exclude(assignee=None).values_list("assignee").annotate(n=Count("id")).order_by()
     )
-    people = [
+    people: list[TeamMemberLoad] = [
         {"user": person, "requests": requests.get(person.pk, 0), "issues": issues.get(person.pk, 0)}
         for person in it_staff()
     ]
@@ -76,12 +112,12 @@ def team_load() -> dict:
     }
 
 
-def request_trend(weeks: int = 12) -> list[dict]:
+def request_trend(weeks: int = 12) -> list[TrendWeek]:
     """New and completed requests per calendar week (Monday), the current week last."""
     today = timezone.localdate()
     first = today - timedelta(days=today.weekday() + 7 * (weeks - 1))
 
-    def per_week(field: str) -> dict:
+    def per_week(field: str) -> dict[date, int]:
         return dict(
             AssetRequest.objects.filter(**{f"{field}__date__gte": first})
             .annotate(week=TruncWeek(field, output_field=DateField()))
@@ -123,7 +159,7 @@ def due_returns(days: int) -> list[AssetRequest]:
     )
 
 
-def expiring() -> list[dict]:
+def expiring() -> list[Expiring]:
     """Licenses and warranties ending within the warning periods of the site rules, the soonest first."""
     today = timezone.localdate()
     rules = SiteSettings.load()
@@ -137,19 +173,23 @@ def expiring() -> list[dict]:
         .exclude(status=Asset.Status.RETIRED)
         .select_related("model__manufacturer")
     )
-    rows = [
-        {"kind": "license", "id": lic.pk, "label": str(lic), "detail": "", "ends_on": lic.valid_until}
-        for lic in licenses
-    ] + [
-        {
-            "kind": "warranty",
-            "id": asset.pk,
-            "label": asset.inventory_number,
-            "detail": asset.model.full_name,
-            "ends_on": asset.warranty_until,
-        }
-        for asset in assets
-    ]
+    rows: list[Expiring] = []
+    for lic in licenses:
+        assert lic.valid_until is not None  # the filter excludes NULL
+        rows.append(
+            {"kind": "license", "id": lic.pk, "label": str(lic), "detail": "", "ends_on": lic.valid_until}
+        )
+    for asset in assets:
+        assert asset.warranty_until is not None  # the filter excludes NULL
+        rows.append(
+            {
+                "kind": "warranty",
+                "id": asset.pk,
+                "label": asset.inventory_number,
+                "detail": asset.model.full_name,
+                "ends_on": asset.warranty_until,
+            }
+        )
     return sorted(rows, key=lambda row: (row["ends_on"], row["label"]))[:20]
 
 

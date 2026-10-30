@@ -1,14 +1,16 @@
 """Endpoints for the employee self-service portal."""
 
 from datetime import date, timedelta
+from typing import TypedDict
 from uuid import UUID
 
-from django.db.models import Prefetch, Q
+from django.db.models import Prefetch, Q, QuerySet
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from ninja import Router, Status
 
+from apps.accounts.models import User
 from apps.accounts.permissions import can
 from apps.core.api.security import AuthedRequest, permission_auth
 from apps.core.features import is_enabled
@@ -45,6 +47,44 @@ from apps.requests.schemas.catalog import (
 router = Router(tags=["portal"])
 
 
+class Availability(TypedDict):
+    """Serialized as ``AvailabilityOut``."""
+
+    models: dict[str, dict[str, int]]
+    categories: dict[str, dict[str, int]]
+
+
+class DeviceConsumables(TypedDict):
+    """Serialized as ``MyConsumablesOut``."""
+
+    asset: Asset
+    consumables: list[AssetModel]
+
+
+class OwnAsset(TypedDict):
+    """Serialized as ``MyAssetOut``."""
+
+    id: UUID
+    inventory_number: str
+    serial_number: str
+    model: AssetModel
+    category: str
+    category_icon: str
+    assigned_since: str | None
+    asset_request_number: str | None
+    return_due: str | None
+    issues: list[AssetIssue]
+
+
+class MenuCounts(TypedDict):
+    """Serialized as ``MenuCountsOut``."""
+
+    requests: int
+    approvals: int
+    issues: int
+    issues_updated: bool
+
+
 def _period(start: date | None, end: date | None, permanent: bool) -> tuple[date, date | None]:
     """The requested period; without dates the default loan period from today."""
     start = start or timezone.localdate()
@@ -53,7 +93,7 @@ def _period(start: date | None, end: date | None, permanent: bool) -> tuple[date
     return start, end or start + timedelta(days=SiteSettings.load().default_loan_days - 1)
 
 
-def _set_counts(target, counts: Counts | None) -> None:
+def _set_counts(target: AssetModel | Category, counts: Counts | None) -> None:
     target.available = counts.available if counts else None
     target.reserved = counts.reserved if counts else None
 
@@ -61,7 +101,7 @@ def _set_counts(target, counts: Counts | None) -> None:
 @router.get("/catalog", response=list[CatalogCategoryOut])
 def catalog(
     request: AuthedRequest, start: date | None = None, end: date | None = None, permanent: bool = False
-):
+) -> list[Category]:
     """Requestable categories with their models.
 
     Availability for the period is only included for IT staff who handle requests; employees request
@@ -77,12 +117,12 @@ def catalog(
         # Software can be switched off as a request option in the site settings.
         categories = categories.exclude(kind=Category.Kind.SOFTWARE)
         models = models.exclude(tracking=AssetModel.Tracking.LICENSE)
-    models_by_category: dict[UUID, list] = {}
+    models_by_category: dict[UUID, list[AssetModel]] = {}
     for model in models.select_related("manufacturer"):
         _set_counts(model, model_counts.get(model.pk, Counts()) if show_availability else None)
         models_by_category.setdefault(model.category_id, []).append(model)
 
-    result = []
+    result: list[Category] = []
     for category in categories:
         _set_counts(category, category_counts.get(category.pk, Counts()) if show_availability else None)
         category.models = models_by_category.get(category.pk, [])
@@ -91,7 +131,9 @@ def catalog(
 
 
 @router.get("/availability", response=AvailabilityOut, auth=permission_auth("requests"))
-def availability(request: AuthedRequest, start: date, end: date | None = None, permanent: bool = False):
+def availability(
+    request: AuthedRequest, start: date, end: date | None = None, permanent: bool = False
+) -> Availability:
     """Counts of all models and categories for a period; the request form refreshes with it."""
     model_counts, category_counts = period_availability(*_period(start, end, permanent))
     return {
@@ -101,7 +143,7 @@ def availability(request: AuthedRequest, start: date, end: date | None = None, p
 
 
 @router.get("/my-consumables", response=list[MyConsumablesOut])
-def my_consumables(request: AuthedRequest):
+def my_consumables(request: AuthedRequest) -> list[DeviceConsumables]:
     """Requestable consumables that fit the employee's devices, grouped by device.
 
     A consumable fits when it is assigned to the device itself or marked as
@@ -132,7 +174,7 @@ def my_consumables(request: AuthedRequest):
             is_active=True,
         ).select_related("manufacturer")
     }
-    result = []
+    result: list[DeviceConsumables] = []
     for asset in assets:
         ids = own.get(asset.pk, set()) | compatible.get(asset.model_id, set())
         consumables = sorted(
@@ -143,7 +185,7 @@ def my_consumables(request: AuthedRequest):
     return result
 
 
-def _own_assets(user, assets, issues) -> list[dict]:
+def _own_assets(user: User, assets: QuerySet[Asset], issues: QuerySet[AssetIssue]) -> list[OwnAsset]:
     """Devices of the employee with their open request and the given reports."""
     assets = assets.filter(assigned_to=user).select_related("model__manufacturer", "model__category")
     assets = assets.prefetch_related(
@@ -155,7 +197,7 @@ def _own_assets(user, assets, issues) -> list[dict]:
             asset__in=assets, returned_at__isnull=True
         ).select_related("item__asset_request")
     }
-    result = []
+    result: list[OwnAsset] = []
     for asset in assets:
         asset_request = allocations.get(asset.pk)
         result.append(
@@ -178,7 +220,7 @@ def _own_assets(user, assets, issues) -> list[dict]:
 
 
 @router.get("/my-assets", response=list[MyAssetOut])
-def my_assets(request: AuthedRequest):
+def my_assets(request: AuthedRequest) -> list[OwnAsset]:
     """Devices currently handed out to the logged-in employee."""
     # Open reports, plus resolved ones of the last 14 days so the answer stays visible.
     recent = timezone.now() - timedelta(days=14)
@@ -187,7 +229,7 @@ def my_assets(request: AuthedRequest):
 
 
 @router.get("/my-assets/{uuid:pk}", response=MyAssetOut)
-def my_asset(request: AuthedRequest, pk: UUID):
+def my_asset(request: AuthedRequest, pk: UUID) -> OwnAsset:
     """One of the employee's devices with all its problem reports."""
     devices = _own_assets(request.user, Asset.objects.filter(pk=pk), AssetIssue.objects.all())
     if not devices:
@@ -196,14 +238,14 @@ def my_asset(request: AuthedRequest, pk: UUID):
 
 
 @router.post("/my-assets/{uuid:pk}/issues", response={201: OwnIssueOut})
-def report(request: AuthedRequest, pk: UUID, payload: AssetIssueIn):
+def report(request: AuthedRequest, pk: UUID, payload: AssetIssueIn) -> Status[AssetIssue]:
     """Report a problem with one of the employee's own devices; IT sees it under problem reports."""
     asset = get_object_or_404(Asset, pk=pk, assigned_to=request.user)
     return Status(201, report_issue(asset, request.user, payload.kind, payload.description))
 
 
 @router.get("/my-issues", response=list[OwnIssueWithDeviceOut])
-def my_issues(request: AuthedRequest):
+def my_issues(request: AuthedRequest) -> QuerySet[AssetIssue]:
     """All problems the employee has reported, newest first."""
     issues = with_messages(
         AssetIssue.objects.filter(reported_by=request.user).select_related(
@@ -215,12 +257,12 @@ def my_issues(request: AuthedRequest):
     return issues
 
 
-def _own_issues(request: AuthedRequest):
+def _own_issues(request: AuthedRequest) -> QuerySet[AssetIssue]:
     return AssetIssue.objects.filter(reported_by=request.user)
 
 
 @router.get("/my-issues/{uuid:pk}", response=AssetIssueDetailOut)
-def my_issue(request: AuthedRequest, pk: UUID):
+def my_issue(request: AuthedRequest, pk: UUID) -> AssetIssue:
     """One of the employee's reports with its conversation; opening it marks IT's updates seen."""
     issue = issue_detail(_own_issues(request), pk)
     mark_seen(request.user, issue)
@@ -228,13 +270,13 @@ def my_issue(request: AuthedRequest, pk: UUID):
 
 
 @router.post("/my-issues/{uuid:pk}/messages", response=AssetIssueDetailOut)
-def my_issue_message(request: AuthedRequest, pk: UUID, payload: IssueMessageIn):
+def my_issue_message(request: AuthedRequest, pk: UUID, payload: IssueMessageIn) -> AssetIssue:
     post_message(get_object_or_404(_own_issues(request), pk=pk), request.user, payload.text, by_it=False)
     return issue_detail(_own_issues(request), pk)
 
 
 @router.post("/my-issues/{uuid:pk}/resolve", response=AssetIssueDetailOut)
-def my_issue_resolve(request: AuthedRequest, pk: UUID, payload: IssueMessageIn):
+def my_issue_resolve(request: AuthedRequest, pk: UUID, payload: IssueMessageIn) -> AssetIssue:
     """The employee marks the problem resolved, optionally saying how."""
     issue = get_object_or_404(_own_issues(request), pk=pk)
     update_issue(issue, request.user, AssetIssue.Status.RESOLVED, payload.text, by_it=False)
@@ -242,7 +284,7 @@ def my_issue_resolve(request: AuthedRequest, pk: UUID, payload: IssueMessageIn):
 
 
 @router.get("/menu-counts", response=MenuCountsOut)
-def menu_counts(request: AuthedRequest):
+def menu_counts(request: AuthedRequest) -> MenuCounts:
     """Open requests, approvals and problem reports of the user, for the badges in the menu.
 
     Approvals always wait for the user; reports only when IT changed one since the user last opened it.
@@ -260,7 +302,7 @@ def menu_counts(request: AuthedRequest):
 
 
 @router.get("/my-licenses", response=list[OwnLicenseOut])
-def my_licenses(request: AuthedRequest):
+def my_licenses(request: AuthedRequest) -> list[LicenseAssignment]:
     """Software the employee uses: seats assigned to them or to one of their devices."""
     return list(
         LicenseAssignment.objects.filter(Q(user=request.user) | Q(asset__assigned_to=request.user))

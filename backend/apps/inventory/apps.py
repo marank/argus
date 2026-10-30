@@ -7,7 +7,7 @@ class InventoryConfig(AppConfig):
     label = "inventory"
     verbose_name = _("Inventory")
 
-    def ready(self):
+    def ready(self) -> None:
         from . import live
 
         live.connect()
