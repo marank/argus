@@ -56,6 +56,14 @@ def test_upcoming_follows_the_chosen_period(it_client):
     assert it_client.get("/api/dashboard/widgets/upcoming?days=40").status_code == 422
 
 
+def test_upcoming_includes_requests_not_confirmed_yet(it_client):
+    count = AssetRequest.objects.get(title="Inventory count in the warehouse")
+    assert count.status == AssetRequestStatus.SUBMITTED
+    rows = it_client.get("/api/dashboard/widgets/upcoming?days=7").json()
+    row = next(r for r in rows if r["id"] == str(count.pk))
+    assert row["status"] == "submitted"
+
+
 def test_due_returns_list_lent_devices_due_soon_but_not_overdue(it_client):
     workshop = AssetRequest.objects.get(title="Training workshop")
     lent = AssetRequest.objects.filter(pk=workshop.pk)

@@ -1,8 +1,8 @@
 """Calendar feed for IT: lending periods, pickups, returns, deliveries, warranty and license ends.
 
-Permanent hand-outs (work equipment) are left out entirely: they have no end and
-would only clutter the calendar. Their pickup appointment is still shown while
-the request is being prepared, because that is a date IT has to keep.
+Permanent hand-outs (work equipment) are not shown as a period: they have no end
+and would only clutter the calendar. Their hand-out day is still shown while the
+request is open, because that is a date IT has to keep.
 """
 
 from collections import defaultdict
@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 
 from django.db.models import Count, Q
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 
 from apps.inventory.models import Asset, AssetStatus, License
@@ -78,10 +79,15 @@ def calendar_entries(
             )
 
     if "pickup" in kinds:
-        pickups = asset_requests.filter(
-            status__in=(AssetRequestStatus.CONFIRMED, AssetRequestStatus.READY),
-            pickup_at__date__gte=start,
-            pickup_at__date__lte=end,
+        # The appointment IT made, or until there is one the day the employee asked
+        # for. Requests not confirmed yet count too: their day is as real for planning.
+        pickups = (
+            asset_requests.filter(status__in=AssetRequest.AWAITING_HANDOUT_STATUSES)
+            .annotate(planned_day=Coalesce("requested_pickup_date", "start_date"))
+            .filter(
+                Q(pickup_at__date__range=(start, end))
+                | Q(pickup_at__isnull=True, planned_day__range=(start, end))
+            )
         )
         for r in pickups:
             entries.append(
@@ -89,8 +95,8 @@ def calendar_entries(
                     id=f"pickup-{r.pk}",
                     kind="pickup",
                     title=_requester(r),
-                    start=timezone.localtime(r.pickup_at),
-                    all_day=False,
+                    start=timezone.localtime(r.pickup_at) if r.pickup_at else r.planned_day,
+                    all_day=r.pickup_at is None,
                     status=r.status,
                     link={"name": "request", "id": str(r.pk)},
                     details=[r.number, r.title],

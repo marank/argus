@@ -134,10 +134,10 @@ def request_trend(weeks: int = 12) -> list[TrendWeek]:
 
 
 def upcoming(days: int) -> list[AssetRequest]:
-    """Confirmed and prepared requests to hand out within `days` days, the earliest first."""
+    """Requests to hand out within `days` days, unconfirmed ones included, the earliest first."""
     return list(
         AssetRequest.objects.filter(
-            status__in=(AssetRequestStatus.CONFIRMED, AssetRequestStatus.READY),
+            status__in=AssetRequest.AWAITING_HANDOUT_STATUSES,
             start_date__lte=timezone.localdate() + timedelta(days=days),
         )
         .select_related("requester")

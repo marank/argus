@@ -30,6 +30,21 @@ def test_calendar_shows_loans_and_pickups(it_client):
     assert loan["link"] == {"name": "request", "id": str(workshop.pk)}
 
 
+def test_unconfirmed_requests_are_shown_as_pickups_on_their_day(it_client):
+    """Without an appointment the planned day counts, confirmed or not."""
+    headset = AssetRequest.objects.get(title="New headset")
+    assert headset.status == AssetRequestStatus.SUBMITTED and headset.pickup_at is None
+    entry = next(e for e in fetch(it_client, kinds=["pickup"]) if e["id"] == f"pickup-{headset.pk}")
+    assert entry["start"] == headset.start_date.isoformat()
+    assert entry["all_day"] is True
+    assert entry["status"] == "submitted"
+
+    wished = headset.start_date + timedelta(days=3)
+    AssetRequest.objects.filter(pk=headset.pk).update(requested_pickup_date=wished)
+    entry = next(e for e in fetch(it_client, kinds=["pickup"]) if e["id"] == f"pickup-{headset.pk}")
+    assert entry["start"] == wished.isoformat()
+
+
 def test_permanent_requests_are_not_shown_as_loans(it_client):
     entries = fetch(it_client)
     permanent = AssetRequest.objects.filter(duration=AssetRequest.Duration.PERMANENT)

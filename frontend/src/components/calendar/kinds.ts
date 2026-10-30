@@ -31,12 +31,13 @@ export function entryColor(entry: Pick<Schemas['CalendarEntryOut'], 'kind' | 'ov
 
 /**
  * Not settled yet: a request IT has not confirmed, or a pickup whose devices are
- * not prepared. Drawn as outline only; everything confirmed is filled.
+ * not prepared. Drawn as outline only; everything ready is filled.
  */
 export function isTentative(entry: Pick<Schemas['CalendarEntryOut'], 'kind' | 'status'>): boolean {
   return (
     (entry.kind === 'loan' && ['pending_approval', 'submitted'].includes(entry.status)) ||
-    (entry.kind === 'pickup' && entry.status === 'confirmed')
+    (entry.kind === 'pickup' &&
+      ['pending_approval', 'submitted', 'confirmed'].includes(entry.status))
   )
 }
 

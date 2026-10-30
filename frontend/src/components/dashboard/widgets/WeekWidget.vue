@@ -8,6 +8,7 @@ import {
   entryColor,
   entryLabel,
   entryRoute,
+  isTentative,
   KIND_ICONS,
   kindColor,
 } from '@/components/calendar/kinds'
@@ -110,6 +111,7 @@ const byDay = computed(() =>
           :key="entry.id"
           :to="entryRoute(entry) ?? undefined"
           class="entry"
+          :class="{ tentative: isTentative(entry) }"
           :style="{ '--tone': entryColor(entry) }"
         >
           <component :is="KIND_ICONS[entry.kind]" :size="13" />
@@ -177,6 +179,12 @@ const byDay = computed(() =>
 }
 a.entry:hover {
   background: color-mix(in srgb, var(--tone) 20%, transparent);
+}
+/* Not confirmed or not prepared yet: outline only, as in the calendar. */
+.entry.tentative {
+  border: 1px dashed var(--tone);
+  border-left-width: 3px;
+  background: transparent;
 }
 /* Not enough room for seven columns: the days one below the other, empty ones left out. */
 @container (max-width: 760px) {

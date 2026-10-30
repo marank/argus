@@ -81,6 +81,8 @@ class AssetRequest(TimeStampedModel):
         AssetRequestStatus.CONFIRMED,
         AssetRequestStatus.READY,
     )
+    # The hand-out is still ahead: a date IT plans for, confirmed or not.
+    AWAITING_HANDOUT_STATUSES = CANCELLABLE_STATUSES
     # Devices handed out permanently can still be taken back later.
     RETURNABLE_STATUSES = (AssetRequestStatus.HANDED_OUT, AssetRequestStatus.COMPLETED)
 
