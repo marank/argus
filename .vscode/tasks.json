@@ -96,6 +96,15 @@
       "problemMatcher": []
     },
 
+    {
+      "label": "API: update types",
+      "detail": "After API changes: export openapi.json from Django, generate frontend/src/api/schema.d.ts; commit both",
+      "type": "shell",
+      "command": "uv run python manage.py export_openapi ../frontend/openapi.json && cd ../frontend && pnpm api:types",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "problemMatcher": []
+    },
+
     // --- Quality -------------------------------------------------------------
     {
       "label": "Check: all",

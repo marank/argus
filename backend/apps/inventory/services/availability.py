@@ -10,7 +10,7 @@ from uuid import UUID
 from django.db.models import Count, F, Q, QuerySet, Sum
 from django.utils import timezone
 
-from apps.inventory.models import Asset, Consumable, License
+from apps.inventory.models import Asset, AssetStatus, Consumable, License
 
 
 def _model_filter(category_id: UUID | None, model_id: UUID | None) -> dict[str, UUID]:
@@ -25,7 +25,7 @@ def _model_filter(category_id: UUID | None, model_id: UUID | None) -> dict[str, 
 def pool_assets(category_id: UUID | None = None, model_id: UUID | None = None) -> QuerySet[Asset]:
     """Serialized assets in stock that may be lent out."""
     return Asset.objects.filter(
-        status=Asset.Status.IN_STOCK, is_loanable=True, **_model_filter(category_id, model_id)
+        status=AssetStatus.IN_STOCK, is_loanable=True, **_model_filter(category_id, model_id)
     )
 
 
@@ -93,20 +93,20 @@ def period_availability(start: date, end: date | None) -> tuple[dict[UUID, Count
     show their free seats.
     """
     from apps.masterdata.models import AssetModel
-    from apps.requests.models import AssetRequest, AssetRequestAllocation, AssetRequestItem
+    from apps.requests.models import AssetRequestAllocation, AssetRequestItem, AssetRequestStatus
 
     stock: dict[UUID, int] = defaultdict(int)
     reserved: dict[UUID, int] = defaultdict(int)
     any_reserved: dict[UUID, int] = defaultdict(int)
 
-    held = Asset.objects.filter(is_loanable=True, status__in=[Asset.Status.IN_STOCK, Asset.Status.RESERVED])
+    held = Asset.objects.filter(is_loanable=True, status__in=[AssetStatus.IN_STOCK, AssetStatus.RESERVED])
     for row in held.values("model_id").annotate(n=Count("pk")):
         stock[row["model_id"]] += row["n"]
     for row in Consumable.objects.values("model_id").annotate(n=Sum("quantity"), r=Sum("reserved_quantity")):
         stock[row["model_id"]] += row["n"] or 0
         reserved[row["model_id"]] += row["r"] or 0
 
-    overlapping = Q(asset_request__status__in=[AssetRequest.Status.CONFIRMED, AssetRequest.Status.READY]) & (
+    overlapping = Q(asset_request__status__in=[AssetRequestStatus.CONFIRMED, AssetRequestStatus.READY]) & (
         Q(asset_request__end_date__isnull=True) | Q(asset_request__end_date__gte=start)
     )
     if end is not None:

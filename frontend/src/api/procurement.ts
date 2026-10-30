@@ -1,5 +1,5 @@
+import type { Schemas } from '@/api/types'
 import type { Id, ListParams, Page } from '@/types/common'
-import type { Needs, Order, OrderInput, OrderListItem } from '@/types/procurement'
 
 import { http } from './client'
 
@@ -13,20 +13,21 @@ export interface ReceiptInput {
 }
 
 export const ordersApi = {
-  list: (params: ListParams = {}) => http.get<Page<OrderListItem>>(base, params),
-  get: (id: Id) => http.get<Order>(`${base}/${id}`),
-  create: (data: OrderInput) => http.post<Order>(base, data),
-  update: (id: Id, data: OrderInput) => http.put<Order>(`${base}/${id}`, data),
+  list: (params: ListParams = {}) => http.get<Page<Schemas['PurchaseOrderListOut']>>(base, params),
+  get: (id: Id) => http.get<Schemas['PurchaseOrderOut']>(`${base}/${id}`),
+  create: (data: Schemas['PurchaseOrderIn']) => http.post<Schemas['PurchaseOrderOut']>(base, data),
+  update: (id: Id, data: Schemas['PurchaseOrderIn']) =>
+    http.put<Schemas['PurchaseOrderOut']>(`${base}/${id}`, data),
   remove: (id: Id) => http.remove(`${base}/${id}`),
   markOrdered: (
     id: Id,
     data: { order_date: string | null; expected_date: string | null; supplier_reference: string },
-  ) => http.post<Order>(`${base}/${id}/ordered`, data),
+  ) => http.post<Schemas['PurchaseOrderOut']>(`${base}/${id}/ordered`, data),
   receive: (id: Id, receipts: ReceiptInput[]) =>
-    http.post<Order>(`${base}/${id}/receive`, { receipts }),
-  cancel: (id: Id) => http.post<Order>(`${base}/${id}/cancel`),
+    http.post<Schemas['PurchaseOrderOut']>(`${base}/${id}/receive`, { receipts }),
+  cancel: (id: Id) => http.post<Schemas['PurchaseOrderOut']>(`${base}/${id}/cancel`),
 }
 
 export const needsApi = {
-  list: () => http.get<Needs>('/procurement/needs'),
+  list: () => http.get<Schemas['NeedsOut']>('/procurement/needs'),
 }

@@ -1,3 +1,4 @@
+import type { Schemas } from '@/api/types'
 import { NTag } from 'naive-ui'
 import { h } from 'vue'
 
@@ -6,9 +7,8 @@ import { mono } from '@/components/crud/cells'
 import NumberSequencePreview from '@/components/masterdata/NumberSequencePreview.vue'
 import { defineResource } from '@/components/crud/types'
 import { i18n } from '@/i18n'
-import type { NumberSequence } from '@/types/masterdata'
 
-export default defineResource<NumberSequence>({
+export default defineResource<Schemas['NumberSequenceOut']>({
   key: 'numberSequences',
   permission: 'number_sequences',
   api: numberSequencesApi,
@@ -64,7 +64,7 @@ export default defineResource<NumberSequence>({
           label: 'common.code',
           type: 'mono',
           help: 'masterdata.fields.sequenceCodeHelp',
-          locked: (s: NumberSequence) => s.is_system,
+          locked: (s: Schemas['NumberSequenceOut']) => s.is_system,
         },
       ],
     },

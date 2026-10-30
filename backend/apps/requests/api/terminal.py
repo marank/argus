@@ -10,7 +10,7 @@ from ninja import Router
 from apps.accounts.models import User
 from apps.core.api.querying import search, search_words
 from apps.core.api.security import AuthedRequest, terminal_auth
-from apps.requests.models import AssetRequest
+from apps.requests.models import AssetRequest, AssetRequestStatus
 from apps.requests.schemas.terminal import (
     TerminalPersonOut,
     TerminalPickupDetailOut,
@@ -28,7 +28,7 @@ router = Router(tags=["pickup terminal"], auth=terminal_auth)
 def pickups(user: User) -> QuerySet[AssetRequest]:
     """Prepared pickups; a terminal with a site only lists pickups at that site."""
     queryset = asset_request_queryset().filter(
-        status=AssetRequest.Status.READY, handover_mode=AssetRequest.HandoverMode.PICKUP
+        status=AssetRequestStatus.READY, handover_mode=AssetRequest.HandoverMode.PICKUP
     )
     site = getattr(user, "terminal_location", None) if getattr(user, "is_terminal", False) else None
     if site is not None:

@@ -11,14 +11,14 @@ from django.utils.translation import gettext as _
 
 from apps.accounts.models import User
 from apps.core.exceptions import BusinessError
-from apps.inventory.models import Asset, ConsumableMovement
+from apps.inventory.models import AssetStatus, ConsumableMovement
 from apps.inventory.services import assets as asset_service
 from apps.inventory.services.consumables import get_consumable, move_consumable
-from apps.procurement.models import PurchaseOrder, PurchaseOrderLine
-from apps.requests.models import AssetRequest
+from apps.procurement.models import PurchaseOrder, PurchaseOrderLine, PurchaseOrderStatus
+from apps.requests.models import AssetRequestStatus
 from apps.requests.services import workflow
 
-Status = PurchaseOrder.Status
+Status = PurchaseOrderStatus
 
 
 def _require_status(order: PurchaseOrder, *allowed: str) -> None:
@@ -146,7 +146,7 @@ def receive(order: PurchaseOrder, receipts: list[dict[str, Any]], user: User) ->
             )
 
         item = line.asset_request_item
-        if item is not None and item.asset_request.status != AssetRequest.Status.CONFIRMED:
+        if item is not None and item.asset_request.status != AssetRequestStatus.CONFIRMED:
             item = None  # only confirmed requests get the delivered units
 
         if model.is_bulk:
@@ -174,7 +174,7 @@ def receive(order: PurchaseOrder, receipts: list[dict[str, Any]], user: User) ->
                     {
                         "model": model.pk,
                         "serial_number": serial,
-                        "status": Asset.Status.IN_STOCK,
+                        "status": AssetStatus.IN_STOCK,
                         "location": location_id,
                         "supplier": order.supplier_id,
                         "purchase_order_line": line.pk,

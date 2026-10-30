@@ -1,10 +1,10 @@
 from datetime import date, timedelta
 
 from apps.accounts.models import User
-from apps.inventory.models import Asset
+from apps.inventory.models import Asset, AssetStatus
 from apps.inventory.services.assets import create_asset
 from apps.masterdata.models import AssetModel, Category, Manufacturer
-from apps.requests.models import AssetRequest
+from apps.requests.models import AssetRequest, AssetRequestStatus
 
 JSON = "application/json"
 
@@ -54,7 +54,7 @@ def test_any_model_never_picks_accessories(employee_client, it_client):
     dock = AssetModel.objects.create(
         name="Dock", designation="Dock", manufacturer=manufacturer, category=accessories
     )
-    create_asset({"model": dock.pk, "status": Asset.Status.IN_STOCK}, User.objects.get(username="it"))
+    create_asset({"model": dock.pk, "status": AssetStatus.IN_STOCK}, User.objects.get(username="it"))
     rid = prepare(employee_client, it_client, [{"category": str(laptops.pk), "quantity": 1}])
     assert [asset.model.category_id for asset in allocated_assets(rid)] == [laptops.pk]
 
@@ -116,9 +116,9 @@ def test_taking_back_on_the_device_page_returns_it_on_the_request(employee_clien
     response = it_client.post(f"/api/inventory/assets/{asset.pk}/assign", {"user": None}, content_type=JSON)
     assert response.status_code == 200, response.content
     asset_request = AssetRequest.objects.get(pk=rid)
-    assert asset_request.status == AssetRequest.Status.COMPLETED
+    assert asset_request.status == AssetRequestStatus.COMPLETED
     asset.refresh_from_db()
-    assert asset.status == Asset.Status.IN_STOCK and asset.assigned_to is None
+    assert asset.status == AssetStatus.IN_STOCK and asset.assigned_to is None
 
 
 def test_device_set_aside_for_a_request_cannot_be_assigned_elsewhere(employee_client, it_client):
@@ -133,4 +133,4 @@ def test_device_set_aside_for_a_request_cannot_be_assigned_elsewhere(employee_cl
     )
     assert response.status_code == 409
     asset.refresh_from_db()
-    assert asset.status == Asset.Status.RESERVED
+    assert asset.status == AssetStatus.RESERVED

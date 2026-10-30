@@ -25,7 +25,7 @@ from django.utils import timezone, translation
 from django.utils.crypto import constant_time_compare, salted_hmac
 from django.utils.translation import gettext as _
 
-from apps.accounts.models import BackupCode, TwoFactor, User
+from apps.accounts.models import BackupCode, TwoFactor, TwoFactorMethod, User
 from apps.core.models import MailSettings
 from apps.core.notifications import mail_ready, send_mail
 
@@ -247,12 +247,12 @@ def start_login(session: SessionBase, user: User, two_factor: TwoFactor) -> Logi
         "attempts": 0,
     }
     sent = False
-    if two_factor.method == TwoFactor.Method.EMAIL:
+    if two_factor.method == TwoFactorMethod.EMAIL:
         sent = issue_email_code(state, user)
     session[PENDING_LOGIN] = state
     return {
         "two_factor": two_factor.method,
-        "email_hint": email_hint(user.email) if two_factor.method == TwoFactor.Method.EMAIL else "",
+        "email_hint": email_hint(user.email) if two_factor.method == TwoFactorMethod.EMAIL else "",
         "code_sent": sent,
     }
 
@@ -273,7 +273,7 @@ def check_login_code(user: User, state: LoginState, code: str) -> bool:
     """The app or email code of the pending login, or one of the user's backup codes."""
     two_factor = user.two_factor
     digits = normalize(code)
-    if two_factor.method == TwoFactor.Method.TOTP and len(digits) == TOTP_DIGITS:
+    if two_factor.method == TwoFactorMethod.TOTP and len(digits) == TOTP_DIGITS:
         step = match_totp(two_factor.totp_secret, digits, two_factor.totp_last_step)
         if step is not None:
             # Atomic: two requests with the same code cannot both pass.
@@ -283,7 +283,7 @@ def check_login_code(user: User, state: LoginState, code: str) -> bool:
                 )
             )
         return False
-    if two_factor.method == TwoFactor.Method.EMAIL and len(digits) == TOTP_DIGITS:
+    if two_factor.method == TwoFactorMethod.EMAIL and len(digits) == TOTP_DIGITS:
         return match_email_code(state, digits)
     return use_backup_code(user, code)
 
@@ -294,7 +294,7 @@ def check_login_code(user: User, state: LoginState, code: str) -> bool:
 def start_setup(session: SessionBase, user: User, method: str) -> SetupResult:
     state: SetupState = {"method": method, "expires": time.time() + PENDING_TTL, "attempts": 0}
     result: SetupResult
-    if method == TwoFactor.Method.TOTP:
+    if method == TwoFactorMethod.TOTP:
         state["secret"] = secret = new_totp_secret()
         uri = provisioning_uri(secret, user)
         result = {"method": method, "secret": secret, "uri": uri, "qr_svg": qr_svg(uri)}
@@ -320,7 +320,7 @@ def pending_setup(session: SessionBase) -> SetupState | None:
 def finish_setup(user: User, state: SetupState, code: str) -> list[str] | None:
     """Switches the method on when ``code`` fits; returns fresh backup codes."""
     digits = normalize(code)
-    if state["method"] == TwoFactor.Method.TOTP:
+    if state["method"] == TwoFactorMethod.TOTP:
         step = match_totp(state["secret"], digits)
         if step is None:
             return None

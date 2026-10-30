@@ -3,25 +3,27 @@ import { Trash2 } from '@lucide/vue'
 import { NButton, NTimeline, NTimelineItem } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
 
+import type { Schemas } from '@/api/types'
 import { useFormat } from '@/composables/useFormat'
-import { MANUAL_EVENT_KINDS, type AssetEvent, type AssetEventKind } from '@/types/inventory'
+import { MANUAL_EVENT_KINDS } from '@/types/inventory'
 
-defineProps<{ events: AssetEvent[] }>()
-const emit = defineEmits<{ remove: [event: AssetEvent] }>()
+defineProps<{ events: Schemas['AssetEventOut'][] }>()
+const emit = defineEmits<{ remove: [event: Schemas['AssetEventOut']] }>()
 const { t } = useI18n()
 const { dateTime, enumLabel, money } = useFormat()
 
-const TYPES: Partial<Record<AssetEventKind, 'success' | 'info' | 'warning' | 'error' | 'default'>> =
-  {
-    created: 'success',
-    assigned: 'info',
-    returned: 'default',
-    reserved: 'info',
-    battery_replaced: 'warning',
-    component_replaced: 'warning',
-    repair: 'error',
-    maintenance: 'warning',
-  }
+const TYPES: Partial<
+  Record<Schemas['AssetEventKind'], 'success' | 'info' | 'warning' | 'error' | 'default'>
+> = {
+  created: 'success',
+  assigned: 'info',
+  returned: 'default',
+  reserved: 'info',
+  battery_replaced: 'warning',
+  component_replaced: 'warning',
+  repair: 'error',
+  maintenance: 'warning',
+}
 </script>
 
 <template>

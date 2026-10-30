@@ -1,12 +1,12 @@
 from datetime import date, datetime
-from typing import Any
+from typing import Literal
 
 from ninja import Schema
 
 
 class CalendarEntryOut(Schema):
     id: str
-    kind: str
+    kind: Literal["loan", "pickup", "return", "delivery", "warranty", "license"]
     title: str
     start: datetime | date
     end: date | None
@@ -14,6 +14,6 @@ class CalendarEntryOut(Schema):
     status: str
     overdue: bool
     due: date | None
-    # Untyped values keep the published schema a free-form object.
-    link: dict[str, Any]
+    # Route name plus ``id``, or ``warranty_until`` for the devices whose warranty ends.
+    link: dict[str, str]
     details: list[str]

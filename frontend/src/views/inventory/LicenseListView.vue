@@ -7,6 +7,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { licensesApi } from '@/api/inventory'
 import { categoriesApi } from '@/api/masterdata'
+import type { Schemas } from '@/api/types'
 import CheckField from '@/components/common/CheckField.vue'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
@@ -16,7 +17,6 @@ import { toIsoDate, useFormat } from '@/composables/useFormat'
 import { useGroupedRows, withGroupHeaders } from '@/composables/useGroupedRows'
 import { useList } from '@/composables/useList'
 import type { Id } from '@/types/common'
-import type { License } from '@/types/inventory'
 import { categoryIcon } from '@/utils/icons'
 import { useFeaturesStore } from '@/stores/features'
 import { useAuthStore } from '@/stores/auth'
@@ -58,7 +58,7 @@ const assignToOptions = computed(() =>
   (['user', 'device'] as const).map((v) => ({ value: v, label: enumLabel('licenseAssignTo', v) })),
 )
 
-function validity(l: License) {
+function validity(l: Schemas['LicenseOut']) {
   if (!l.valid_until) return h('span', { class: 'muted' }, t('inventory.licenses.perpetual'))
   const soon = !l.is_expired && l.valid_until < (soonDate() ?? '')
   return h('span', { class: 'validity' }, [
@@ -76,7 +76,7 @@ function validity(l: License) {
 }
 
 const columns = computed(() =>
-  withGroupHeaders<License>([
+  withGroupHeaders<Schemas['LicenseOut']>([
     {
       key: 'model__name',
       title: t('inventory.licenses.software'),
@@ -115,10 +115,10 @@ const columns = computed(() =>
       ellipsis: { tooltip: true },
       render: (l) => l.supplier?.name ?? '—',
     },
-  ] as DataTableColumns<License>),
+  ] as DataTableColumns<Schemas['LicenseOut']>),
 )
 
-const grouping = useGroupedRows<License>({
+const grouping = useGroupedRows<Schemas['LicenseOut']>({
   rows: () => list.rows.value,
   key: (l) => l.category.id,
   label: (l) => [h(categoryIcon(l.category.icon), { size: 14 }), l.category.name],
@@ -173,8 +173,8 @@ function open(id: Id) {
         :data="grouping.rows.value"
         :loading="list.loading.value"
         :pagination="list.pagination.value"
-        :row-key="(row: License) => row.id"
-        :row-props="(row: License) => grouping.rowProps(row, (l) => open(l.id))"
+        :row-key="(row: Schemas['LicenseOut']) => row.id"
+        :row-props="(row: Schemas['LicenseOut']) => grouping.rowProps(row, (l) => open(l.id))"
         :row-class-name="grouping.rowClass"
         :scroll-x="960"
         @update:sorter="list.onSort"

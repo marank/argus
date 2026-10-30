@@ -24,7 +24,7 @@ class AssetModelOut(Schema):
     category: CategoryRefOut
     part_number: str
     ean: str
-    tracking: str
+    tracking: AssetModel.Tracking
     description: str
     specifications: str
     default_supplier: RefOut | None

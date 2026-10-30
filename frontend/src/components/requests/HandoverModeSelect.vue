@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { HandHelping, PenLine, Truck } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
-
-import type { HandoverMode } from '@/types/requests'
+import type { Schemas } from '@/api/types'
 
 /** Large options: pickup with signature at the terminal, simple pickup, or delivery by IT. */
-const model = defineModel<HandoverMode>({ required: true })
+const model = defineModel<Schemas['HandoverMode']>({ required: true })
 const { t } = useI18n()
 
 const options = [

@@ -5,17 +5,20 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { RouteLocationRaw } from 'vue-router'
 
+import type { Schemas } from '@/api/types'
 import DetailGrid, { type DetailEntry } from '@/components/common/DetailGrid.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { useFormat } from '@/composables/useFormat'
-import type { AssetIssueDetail, IssueSide } from '@/types/inventory'
 import { categoryIcon } from '@/utils/icons'
 
 /**
  * The device the report is about. IT also sees where it is, when it was bought
  * and the hostname; the reporter what helps them describe it.
  */
-const props = defineProps<{ issue: AssetIssueDetail; viewer: IssueSide }>()
+const props = defineProps<{
+  issue: Schemas['AssetIssueDetailOut']
+  viewer: Schemas['IssueEntryOut']['side']
+}>()
 const { t } = useI18n()
 const { date } = useFormat()
 

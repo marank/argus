@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Schemas } from '@/api/types'
 import { ClipboardList, PackageCheck, PackagePlus, UserRound } from '@lucide/vue'
 import { NButton, NCard } from 'naive-ui'
 import { onMounted, ref } from 'vue'
@@ -8,11 +9,10 @@ import { dashboardApi } from '@/api/dashboard'
 import StatCard from '@/components/common/StatCard.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useLive } from '@/composables/useLive'
-import type { EmployeeOverview } from '@/types/dashboard'
 
 const { t } = useI18n()
 const { weekday } = useFormat()
-const data = ref<EmployeeOverview | null>(null)
+const data = ref<Schemas['EmployeeOverviewOut'] | null>(null)
 
 const load = async () => (data.value = await dashboardApi.me())
 onMounted(load)

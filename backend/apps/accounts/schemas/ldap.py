@@ -1,3 +1,5 @@
+from typing import Literal
+
 from ninja import Field, Schema
 
 
@@ -60,7 +62,7 @@ class LdapSyncChange(Schema):
 class LdapSyncItemOut(Schema):
     dn: str
     username: str
-    action: str = Field(description="create, update, unchanged or skipped")
+    action: Literal["create", "update", "unchanged", "skipped"]
     reason: str = Field(description="Why skipped: no_username, duplicate or superuser")
     user_id: str | None
     values: dict[str, str]

@@ -1,10 +1,4 @@
-import type {
-  CurrentUser,
-  TwoFactorChallenge,
-  TwoFactorMethod,
-  TwoFactorSetup,
-  TwoFactorStatus,
-} from '@/types/accounts'
+import type { Schemas } from '@/api/types'
 
 import { ensureCsrfCookie, http } from './client'
 
@@ -12,36 +6,40 @@ export const authApi = {
   /** Signs in, or answers with the second step when the user switched it on. */
   async login(username: string, password: string) {
     await ensureCsrfCookie()
-    return http.post<CurrentUser | TwoFactorChallenge>('/auth/login', { username, password })
+    return http.post<Schemas['CurrentUserOut'] | Schemas['TwoFactorChallengeOut']>('/auth/login', {
+      username,
+      password,
+    })
   },
-  verifyLogin: (code: string) => http.post<CurrentUser>('/auth/login/verify', { code }),
-  resendLoginCode: () => http.post<TwoFactorChallenge>('/auth/login/resend'),
+  verifyLogin: (code: string) =>
+    http.post<Schemas['CurrentUserOut']>('/auth/login/verify', { code }),
+  resendLoginCode: () => http.post<Schemas['TwoFactorChallengeOut']>('/auth/login/resend'),
   logout: () => http.post<void>('/auth/logout'),
-  me: () => http.get<CurrentUser>('/auth/me'),
+  me: () => http.get<Schemas['CurrentUserOut']>('/auth/me'),
   /** Whether the server and its database answer; the login page asks before signing in. */
   health: () => http.get<{ status: string }>('/health'),
   updatePreferences: (
     data: Partial<
       Pick<
-        CurrentUser,
+        Schemas['CurrentUserOut'],
         'language' | 'notification_settings' | 'app_notification_settings' | 'dashboard_settings'
       >
     >,
-  ) => http.patch<CurrentUser>('/auth/me', data),
+  ) => http.patch<Schemas['CurrentUserOut']>('/auth/me', data),
 }
 
 export const isChallenge = (
-  result: CurrentUser | TwoFactorChallenge,
-): result is TwoFactorChallenge => !('id' in result)
+  result: Schemas['CurrentUserOut'] | Schemas['TwoFactorChallengeOut'],
+): result is Schemas['TwoFactorChallengeOut'] => !('id' in result)
 
 type BackupCodes = { backup_codes: string[] }
 
 /** The user's own two-factor sign-in. */
 export const twoFactorApi = {
-  status: () => http.get<TwoFactorStatus>('/auth/two-factor'),
-  setup: (method: TwoFactorMethod, password: string) =>
-    http.post<TwoFactorSetup>('/auth/two-factor/setup', { method, password }),
-  resendSetupCode: () => http.post<TwoFactorSetup>('/auth/two-factor/setup/resend'),
+  status: () => http.get<Schemas['TwoFactorStatusOut']>('/auth/two-factor'),
+  setup: (method: Schemas['TwoFactorMethod'], password: string) =>
+    http.post<Schemas['TwoFactorSetupOut']>('/auth/two-factor/setup', { method, password }),
+  resendSetupCode: () => http.post<Schemas['TwoFactorSetupOut']>('/auth/two-factor/setup/resend'),
   confirm: (code: string) => http.post<BackupCodes>('/auth/two-factor/setup/confirm', { code }),
   renewBackupCodes: (password: string) =>
     http.post<BackupCodes>('/auth/two-factor/backup-codes', { password }),

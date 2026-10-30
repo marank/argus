@@ -28,9 +28,10 @@ import {
 } from '@/components/calendar/kinds'
 import { useAssigned } from '@/composables/useAssigned'
 import { toIsoDate, useFormat } from '@/composables/useFormat'
+import type { Schemas } from '@/api/types'
 import { useTheme } from '@/theme/useTheme'
 import type { FeatureKey } from '@/types/settings'
-import { CALENDAR_KINDS, type CalendarEntry, type CalendarKind } from '@/types/calendar'
+import { CALENDAR_KINDS } from '@/types/calendar'
 import { useFeaturesStore } from '@/stores/features'
 
 /**
@@ -38,6 +39,8 @@ import { useFeaturesStore } from '@/stores/features'
  * expected deliveries and warranty ends. Permanent hand-outs are not shown.
  */
 type ViewName = 'dayGridMonth' | 'timeGridWeek' | 'listMonth'
+type CalendarEntry = Schemas['CalendarEntryOut']
+type CalendarKind = CalendarEntry['kind']
 
 const { t, locale } = useI18n()
 const features = useFeaturesStore()

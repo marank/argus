@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Schemas } from '@/api/types'
 import { PlugZap, RotateCcw, Save, FolderSync } from '@lucide/vue'
 import {
   NAlert,
@@ -20,22 +21,17 @@ import { ldapSettingsApi } from '@/api/settings'
 import SettingRow from '@/components/settings/SettingRow.vue'
 import SettingsGroup from '@/components/settings/SettingsGroup.vue'
 import { useAction } from '@/composables/useAction'
-import type {
-  LdapField,
-  LdapSettings,
-  LdapSettingsFields,
-  LdapSettingsInput,
-  LdapTestResult,
-} from '@/types/settings'
 
-type AttrField = Extract<keyof LdapSettingsFields, `attr_${string}`>
+type AttrField = Extract<keyof Schemas['LdapSettingsIn'], `attr_${string}`>
 
 const { t } = useI18n()
 const router = useRouter()
 const { busy: saving, run } = useAction()
 const { busy: testing, run: runTest } = useAction()
 
-const FIELD_KEYS: (keyof LdapSettingsFields)[] = [
+/** The settings themselves, as sent and received; the bind password goes separately. */
+type FieldKey = Exclude<keyof Schemas['LdapSettingsIn'], 'bind_password'>
+const FIELD_KEYS: FieldKey[] = [
   'enabled',
   'server_uri',
   'start_tls',
@@ -66,22 +62,22 @@ const MAPPING: { key: AttrField; label: string; result: string; required?: boole
   { key: 'attr_username', label: 'attrUsername', result: 'username', required: true },
 ]
 
-const loaded = ref<LdapSettings | null>(null)
-const form = reactive({} as LdapSettingsFields)
+const loaded = ref<Schemas['LdapSettingsOut'] | null>(null)
+const form = reactive({} as Schemas['LdapSettingsIn'])
 const bindPassword = ref('')
 const clearPassword = ref(false)
 const showAdvanced = ref(false)
 const testUsername = ref('')
-const testResult = ref<LdapTestResult | null>(null)
+const testResult = ref<Schemas['LdapTestOut'] | null>(null)
 
-const lockedBy = (field: LdapField) =>
+const lockedBy = (field: keyof Schemas['LdapSettingsIn']) =>
   loaded.value?.locked.includes(field)
     ? t('settings.ldap.envLocked', { name: loaded.value.env_names[field] })
     : undefined
 const passwordSet = computed(() => loaded.value?.bind_password_set ?? false)
-const isLocked = (field: LdapField) => lockedBy(field) !== undefined
+const isLocked = (field: keyof Schemas['LdapSettingsIn']) => lockedBy(field) !== undefined
 
-function apply(settings: LdapSettings) {
+function apply(settings: Schemas['LdapSettingsOut']) {
   loaded.value = settings
   for (const key of FIELD_KEYS) Object.assign(form, { [key]: settings[key] })
   bindPassword.value = ''
@@ -118,7 +114,7 @@ const missingRequired = computed(
     (!form.server_uri || !form.user_search_base || !form.user_filter || !form.attr_username),
 )
 
-function payload(): LdapSettingsInput {
+function payload(): Schemas['LdapSettingsIn'] {
   return { ...form, bind_password: clearPassword.value ? '' : bindPassword.value || null }
 }
 

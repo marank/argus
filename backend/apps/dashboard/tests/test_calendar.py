@@ -2,7 +2,7 @@ from datetime import date, timedelta
 
 from django.utils import timezone
 
-from apps.requests.models import AssetRequest
+from apps.requests.models import AssetRequest, AssetRequestStatus
 
 
 def fetch(client, **params):
@@ -40,7 +40,7 @@ def test_permanent_requests_are_not_shown_as_loans(it_client):
 def test_overdue_returns_appear_today(it_client):
     workshop = AssetRequest.objects.get(title="Training workshop")
     AssetRequest.objects.filter(pk=workshop.pk).update(
-        status=AssetRequest.Status.HANDED_OUT,
+        status=AssetRequestStatus.HANDED_OUT,
         start_date=date.today() - timedelta(days=9),
         end_date=date.today() - timedelta(days=2),
     )

@@ -1,3 +1,4 @@
+import type { Schemas } from '@/api/types'
 import { MapPin } from '@lucide/vue'
 import { h } from 'vue'
 
@@ -5,12 +6,11 @@ import { locationsApi } from '@/api/masterdata'
 import { bool, mono } from '@/components/crud/cells'
 import { defineResource } from '@/components/crud/types'
 import { i18n } from '@/i18n'
-import type { Location } from '@/types/masterdata'
 
 const KINDS = ['site', 'building', 'room', 'storage']
-const siteOf = (l: Location) => l.full_name.split(' / ')[0] ?? l.name
+const siteOf = (l: Schemas['LocationOut']) => l.full_name.split(' / ')[0] ?? l.name
 
-export default defineResource<Location>({
+export default defineResource<Schemas['LocationOut']>({
   key: 'locations',
   permission: 'locations',
   // Sections per site (the top-level location).
@@ -66,8 +66,9 @@ export default defineResource<Location>({
           label: 'masterdata.fields.parent',
           type: 'entity',
           fetcher: locationsApi.list,
-          display: (l: Location) => l.full_name,
-          initial: (l: Location) => (l.parent ? { ...l.parent, full_name: l.parent.name } : null),
+          display: (l: Schemas['LocationOut']) => l.full_name,
+          initial: (l: Schemas['LocationOut']) =>
+            l.parent ? { ...l.parent, full_name: l.parent.name } : null,
         },
         {
           key: 'is_pickup_point',

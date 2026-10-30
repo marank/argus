@@ -15,23 +15,32 @@ from apps.accounts.services import assignment
 from apps.core.exceptions import BusinessError
 from apps.core.features import is_enabled
 from apps.core.models import SiteSettings
-from apps.inventory.models import Asset, AssetEvent, Consumable, ConsumableMovement, License
+from apps.inventory.models import (
+    Asset,
+    AssetEventKind,
+    AssetStatus,
+    Consumable,
+    ConsumableMovement,
+    License,
+)
 from apps.inventory.services.availability import pool_assets, pool_consumables, pool_licenses
 from apps.inventory.services.consumables import move_consumable, release_consumable, reserve_consumable
 from apps.inventory.services.events import log_event
 from apps.inventory.services.licenses import assign_license
-from apps.masterdata.models import AssetModel, Category
+from apps.masterdata.models import AssetModel, CategoryKind
 from apps.requests.models import (
     AssetRequest,
     AssetRequestAllocation,
+    AssetRequestEventKind,
     AssetRequestItem,
+    AssetRequestStatus,
     DeviceReturn,
     Handover,
+    HandoverMethod,
 )
 from apps.requests.services import notifications
-from apps.requests.services.history import Kind, allocation_label, record
+from apps.requests.services.history import allocation_label, record
 
-Status = AssetRequest.Status
 Approval = AssetRequest.Approval
 
 
@@ -86,7 +95,7 @@ def _require_requestable(line: AssetRequestItem) -> None:
         and not (software_off and model.tracking == AssetModel.Tracking.LICENSE)
     )
     categories_offered = all(
-        c.is_requestable and not (software_off and c.kind == Category.Kind.SOFTWARE) for c in categories
+        c.is_requestable and not (software_off and c.kind == CategoryKind.SOFTWARE) for c in categories
     )
     if not (model_offered and categories_offered):
         raise BusinessError(_("“%(item)s” cannot be requested.") % {"item": line.label})
@@ -118,7 +127,7 @@ def submit(
     asset_request = AssetRequest.objects.create(
         requester=requester, created_by=created_by, **{**data, "end_date": end_date}
     )
-    _record_created(asset_request, Kind.CREATED, created_by)
+    _record_created(asset_request, AssetRequestEventKind.CREATED, created_by)
     for position, item in enumerate(items):
         line = AssetRequestItem(
             asset_request=asset_request,
@@ -144,10 +153,10 @@ def submit(
             # An approver's own request is approved by asking for it.
             _record_approval(asset_request, requester, Approval.APPROVED)
         else:
-            asset_request.status = Status.PENDING_APPROVAL
+            asset_request.status = AssetRequestStatus.PENDING_APPROVAL
             asset_request.approval = Approval.PENDING
     asset_request.save()
-    if asset_request.status == Status.PENDING_APPROVAL:
+    if asset_request.status == AssetRequestStatus.PENDING_APPROVAL:
         notifications.approval_requested(asset_request)
     else:
         notifications.request_submitted(asset_request)
@@ -184,7 +193,7 @@ def _record_created(asset_request: AssetRequest, kind: str, user: User | None) -
 def _record_approval(asset_request: AssetRequest, user: User, decision: str, comment: str = "") -> None:
     record(
         asset_request,
-        Kind.APPROVED if decision == Approval.APPROVED else Kind.DECLINED,
+        AssetRequestEventKind.APPROVED if decision == Approval.APPROVED else AssetRequestEventKind.DECLINED,
         user,
         comment=comment,
     )
@@ -193,9 +202,9 @@ def _record_approval(asset_request: AssetRequest, user: User, decision: str, com
     asset_request.approval_decided_at = timezone.now()
     asset_request.approval_comment = comment
     if decision == Approval.APPROVED:
-        asset_request.status = Status.SUBMITTED
+        asset_request.status = AssetRequestStatus.SUBMITTED
     else:
-        asset_request.status = Status.REJECTED
+        asset_request.status = AssetRequestStatus.REJECTED
         asset_request.completed_at = asset_request.approval_decided_at
 
 
@@ -210,10 +219,10 @@ def _item_team(item: AssetRequestItem) -> Team | None:
 def cancel(asset_request: AssetRequest, user: User) -> AssetRequest:
     _require_status(asset_request, *AssetRequest.CANCELLABLE_STATUSES)
     _release_all(asset_request)
-    asset_request.status = Status.CANCELLED
+    asset_request.status = AssetRequestStatus.CANCELLED
     asset_request.completed_at = timezone.now()
     asset_request.save()
-    record(asset_request, Kind.CANCELLED, user)
+    record(asset_request, AssetRequestEventKind.CANCELLED, user)
     notifications.request_cancelled(asset_request, user)
     return asset_request
 
@@ -222,7 +231,7 @@ def cancel(asset_request: AssetRequest, user: User) -> AssetRequest:
 
 
 def _require_approver(asset_request: AssetRequest, user: User) -> None:
-    _require_status(asset_request, Status.PENDING_APPROVAL)
+    _require_status(asset_request, AssetRequestStatus.PENDING_APPROVAL)
     if not asset_request.may_approve(user):
         raise BusinessError(_("Only an approver of the requester's department can decide on this request."))
 
@@ -261,9 +270,9 @@ def confirm(
 
     How and when the devices reach them is planned later, when marking it ready.
     """
-    _require_status(asset_request, Status.SUBMITTED, Status.CONFIRMED)
+    _require_status(asset_request, AssetRequestStatus.SUBMITTED, AssetRequestStatus.CONFIRMED)
     # Editing a confirmed request again does not notify a second time.
-    first_decision = asset_request.status == Status.SUBMITTED
+    first_decision = asset_request.status == AssetRequestStatus.SUBMITTED
     for item in asset_request.items.all():
         confirmed = quantities.get(item.pk, item.quantity_requested)
         if confirmed > item.quantity_requested:
@@ -279,27 +288,27 @@ def confirm(
     if not any(item.quantity_confirmed for item in asset_request.items.all()):
         raise BusinessError(_("Confirm at least one device or reject the request."))
 
-    asset_request.status = Status.CONFIRMED
+    asset_request.status = AssetRequestStatus.CONFIRMED
     asset_request.it_comment = comment
     asset_request.handled_by = user
     asset_request.confirmed_at = asset_request.confirmed_at or timezone.now()
     asset_request.save()
     if first_decision:
-        record(asset_request, Kind.CONFIRMED, user, comment=comment)
+        record(asset_request, AssetRequestEventKind.CONFIRMED, user, comment=comment)
         notifications.request_decided(asset_request)
     return asset_request
 
 
 @transaction.atomic
 def reject(asset_request: AssetRequest, user: User, comment: str) -> AssetRequest:
-    _require_status(asset_request, Status.SUBMITTED, Status.CONFIRMED)
+    _require_status(asset_request, AssetRequestStatus.SUBMITTED, AssetRequestStatus.CONFIRMED)
     _release_all(asset_request)
-    asset_request.status = Status.REJECTED
+    asset_request.status = AssetRequestStatus.REJECTED
     asset_request.it_comment = comment
     asset_request.handled_by = user
     asset_request.completed_at = timezone.now()
     asset_request.save()
-    record(asset_request, Kind.REJECTED, user, comment=comment)
+    record(asset_request, AssetRequestEventKind.REJECTED, user, comment=comment)
     notifications.request_decided(asset_request)
     return asset_request
 
@@ -314,7 +323,7 @@ def reschedule(
     notify: bool = True,
 ) -> AssetRequest:
     """Change how, when or where; once the employee was told it is ready, ``notify`` tells them again."""
-    _require_status(asset_request, Status.CONFIRMED, Status.READY)
+    _require_status(asset_request, AssetRequestStatus.CONFIRMED, AssetRequestStatus.READY)
     asset_request.pickup_at = pickup_at
     asset_request.pickup_location_id = pickup_location_id
     if handover_mode:
@@ -323,8 +332,13 @@ def reschedule(
     asset_request.save()
     asset_request.refresh_from_db(fields=["pickup_location"])
     # The employee hears of the handover once it is ready; before that there is nothing to correct.
-    ready = asset_request.status == Status.READY
-    _record_schedule(asset_request, Kind.RESCHEDULED, user, notified=False if ready and not notify else None)
+    ready = asset_request.status == AssetRequestStatus.READY
+    _record_schedule(
+        asset_request,
+        AssetRequestEventKind.RESCHEDULED,
+        user,
+        notified=False if ready and not notify else None,
+    )
     if ready and notify:
         notifications.request_rescheduled(asset_request)
     return asset_request
@@ -350,7 +364,7 @@ def extend(asset_request: AssetRequest, user: User, end_date: date) -> AssetRequ
     IT decides here, so the maximum loan period for requests does not apply. Reminders
     follow the new date (they are keyed by it).
     """
-    _require_status(asset_request, Status.HANDED_OUT)
+    _require_status(asset_request, AssetRequestStatus.HANDED_OUT)
     if asset_request.duration != AssetRequest.Duration.TEMPORARY:
         raise BusinessError(_("Only temporary requests have a return date."))
     if end_date < timezone.localdate():
@@ -361,7 +375,7 @@ def extend(asset_request: AssetRequest, user: User, end_date: date) -> AssetRequ
     previous = asset_request.end_date
     record(
         asset_request,
-        Kind.EXTENDED,
+        AssetRequestEventKind.EXTENDED,
         user,
         previous=previous.isoformat(),
         end_date=end_date.isoformat(),
@@ -383,7 +397,7 @@ def assign(
     if (asset_request.assigned_team_id, asset_request.assignee_id) != before:
         record(
             asset_request,
-            Kind.ASSIGNED,
+            AssetRequestEventKind.ASSIGNED,
             user,
             team=asset_request.assigned_team.name if asset_request.assigned_team else None,
             assignee=asset_request.assignee.display_name if asset_request.assignee else None,
@@ -399,7 +413,7 @@ def remind(asset_request: AssetRequest, user: User) -> AssetRequest:
     from apps.core.models import MailSettings
     from apps.core.notifications import mail_ready
 
-    _require_status(asset_request, Status.HANDED_OUT)
+    _require_status(asset_request, AssetRequestStatus.HANDED_OUT)
     if asset_request.duration != AssetRequest.Duration.TEMPORARY:
         raise BusinessError(_("Only temporary requests have a return date."))
     if not mail_ready(MailSettings.load()):
@@ -413,14 +427,14 @@ def remind(asset_request: AssetRequest, user: User) -> AssetRequest:
     asset_request.reminded_at = timezone.now()
     asset_request.reminded_by = user
     asset_request.save(update_fields=["reminded_at", "reminded_by", "updated_at"])
-    record(asset_request, Kind.REMINDED, user)
+    record(asset_request, AssetRequestEventKind.REMINDED, user)
     return asset_request
 
 
 @transaction.atomic
 def resolve_item(item: AssetRequestItem, asset_model: AssetModel, user: User) -> AssetRequestItem:
     """Map a free-text line (or change an unallocated line) to a catalog model."""
-    _require_status(item.asset_request, Status.SUBMITTED, Status.CONFIRMED)
+    _require_status(item.asset_request, AssetRequestStatus.SUBMITTED, AssetRequestStatus.CONFIRMED)
     if item.allocations.exists():
         raise BusinessError(_("Remove allocated devices before changing the model."))
     item.asset_model = asset_model
@@ -465,13 +479,13 @@ def _lock_item(item: AssetRequestItem) -> AssetRequestItem:
 def allocate_asset(item: AssetRequestItem, asset: Asset, user: User) -> AssetRequestAllocation:
     item = _lock_item(item)
     asset_request = item.asset_request
-    _require_status(asset_request, Status.CONFIRMED)
+    _require_status(asset_request, AssetRequestStatus.CONFIRMED)
     asset = Asset.objects.select_for_update().get(pk=asset.pk)
     if not _matches(item, asset.model):
         raise BusinessError(
             _("%(asset)s does not match “%(item)s”.") % {"asset": asset.inventory_number, "item": item.label}
         )
-    if asset.status != Asset.Status.IN_STOCK:
+    if asset.status != AssetStatus.IN_STOCK:
         raise BusinessError(
             _("%(asset)s is not in stock (%(status)s).")
             % {"asset": asset.inventory_number, "status": asset.get_status_display()}
@@ -483,7 +497,7 @@ def allocate_asset(item: AssetRequestItem, asset: Asset, user: User) -> AssetReq
 
     # Set aside only: the device's history starts with the hand-out, the request's lists
     # the devices once it is ready.
-    asset.status = Asset.Status.RESERVED
+    asset.status = AssetStatus.RESERVED
     asset.save(update_fields=["status", "updated_at"])
     return AssetRequestAllocation.objects.create(item=item, asset=asset, allocated_by=user)
 
@@ -493,7 +507,7 @@ def allocate_consumable(
     item: AssetRequestItem, consumable: Consumable, quantity: int, user: User
 ) -> AssetRequestAllocation:
     item = _lock_item(item)
-    _require_status(item.asset_request, Status.CONFIRMED)
+    _require_status(item.asset_request, AssetRequestStatus.CONFIRMED)
     if not _matches(item, consumable.model):
         raise BusinessError(
             _("%(model)s does not match “%(item)s”.") % {"model": consumable.model, "item": item.label}
@@ -517,7 +531,7 @@ def allocate_license(
     """Give the requester a seat of ``license`` (or one of their devices, for device licenses)."""
     item = _lock_item(item)
     asset_request = item.asset_request
-    _require_status(asset_request, Status.CONFIRMED)
+    _require_status(asset_request, AssetRequestStatus.CONFIRMED)
     if not _matches(item, license.model):
         raise BusinessError(
             _("%(model)s does not match “%(item)s”.") % {"model": license.model, "item": item.label}
@@ -547,7 +561,7 @@ def allocate_license(
 @transaction.atomic
 def auto_allocate(asset_request: AssetRequest, user: User, item_id: UUID | None = None) -> int:
     """Fill every open item (or just the given one) from the pool; returns the units allocated."""
-    _require_status(asset_request, Status.CONFIRMED)
+    _require_status(asset_request, AssetRequestStatus.CONFIRMED)
     items = asset_request.items.select_related("asset_model", "category")
     if item_id:
         items = items.filter(pk=item_id)
@@ -582,14 +596,14 @@ def auto_allocate(asset_request: AssetRequest, user: User, item_id: UUID | None 
 @transaction.atomic
 def remove_allocation(allocation: AssetRequestAllocation, user: User) -> None:
     asset_request = allocation.item.asset_request
-    _require_status(asset_request, Status.CONFIRMED, Status.READY)
+    _require_status(asset_request, AssetRequestStatus.CONFIRMED, AssetRequestStatus.READY)
     # Not noted: marking it ready again lists what changed.
     _release(allocation, user)
     allocation.delete()
-    if asset_request.status == Status.READY:
-        asset_request.status = Status.CONFIRMED
+    if asset_request.status == AssetRequestStatus.READY:
+        asset_request.status = AssetRequestStatus.CONFIRMED
         asset_request.save(update_fields=["status", "updated_at"])
-        record(asset_request, Kind.REOPENED, user)
+        record(asset_request, AssetRequestEventKind.REOPENED, user)
 
 
 def _release(allocation: AssetRequestAllocation, user: User | None) -> None:
@@ -599,8 +613,8 @@ def _release(allocation: AssetRequestAllocation, user: User | None) -> None:
             allocation.license_assignment.delete()
     elif allocation.asset:
         asset = allocation.asset
-        if asset.status == Asset.Status.RESERVED:
-            asset.status = Asset.Status.IN_STOCK
+        if asset.status == AssetStatus.RESERVED:
+            asset.status = AssetStatus.IN_STOCK
             asset.save(update_fields=["status", "updated_at"])
     else:
         assert allocation.consumable is not None  # clean(): exactly one of asset, consumable, license
@@ -640,7 +654,7 @@ def mark_ready(
     e.g. for a direct hand-out it does right away. Without anything to collect (only
     software), the request is handed out right away.
     """
-    _require_status(asset_request, Status.CONFIRMED)
+    _require_status(asset_request, AssetRequestStatus.CONFIRMED)
     missing = [item.label for item in asset_request.items.all() if item.quantity_missing]
     if missing:
         raise BusinessError(_("Devices are still missing for: %(items)s") % {"items": ", ".join(missing)})
@@ -651,14 +665,18 @@ def mark_ready(
     if pickup_location_id is not KEEP:
         asset_request.pickup_location_id = pickup_location_id
     asset_request.skip_device_check = skip_device_check
-    asset_request.status = Status.READY
+    asset_request.status = AssetRequestStatus.READY
     asset_request.handled_by = user
     asset_request.prepared_by = user
     asset_request.save()
     asset_request.refresh_from_db(fields=["pickup_location"])
     # Only a skipped message is worth noting; sending it is the normal case.
     _record_schedule(
-        asset_request, Kind.READY, user, notified=None if notify else False, **_ready_items(asset_request)
+        asset_request,
+        AssetRequestEventKind.READY,
+        user,
+        notified=None if notify else False,
+        **_ready_items(asset_request),
     )
     if notify:
         notifications.request_ready(asset_request)
@@ -680,7 +698,7 @@ def _ready_items(asset_request: AssetRequest) -> dict[str, list[str]]:
         .select_related("asset", "consumable", "license")
         .order_by("item__position", "allocated_at")
     ]
-    earlier = asset_request.events.filter(kind=Kind.READY).order_by("-at").first()
+    earlier = asset_request.events.filter(kind=AssetRequestEventKind.READY).order_by("-at").first()
     before = (earlier.data.get("allocated") or earlier.data.get("items")) if earlier else None
     if before is None:
         return {"items": current, "allocated": current}
@@ -697,11 +715,11 @@ def _ready_items(asset_request: AssetRequest) -> dict[str, list[str]]:
 @transaction.atomic
 def reopen(asset_request: AssetRequest, user: User) -> AssetRequest:
     """Back from ready to preparing, e.g. to change devices; allocations stay."""
-    _require_status(asset_request, Status.READY)
-    asset_request.status = Status.CONFIRMED
+    _require_status(asset_request, AssetRequestStatus.READY)
+    asset_request.status = AssetRequestStatus.CONFIRMED
     asset_request.handled_by = user
     asset_request.save(update_fields=["status", "handled_by", "updated_at"])
-    record(asset_request, Kind.REOPENED, user)
+    record(asset_request, AssetRequestEventKind.REOPENED, user)
     return asset_request
 
 
@@ -712,7 +730,7 @@ MAX_SIGNATURE_LENGTH = 600_000
 
 
 def _validate_handover(method: str, received_by_name: str, signature: str) -> None:
-    if method == Handover.Method.SIGNATURE:
+    if method == HandoverMethod.SIGNATURE:
         if not signature.startswith(SIGNATURE_PREFIX) or len(signature) > MAX_SIGNATURE_LENGTH:
             raise BusinessError(_("Please sign in the signature field."))
         if not received_by_name.strip():
@@ -726,7 +744,7 @@ def hand_out(
     asset_request: AssetRequest,
     user: User,
     *,
-    method: str = Handover.Method.DIRECT,
+    method: str = HandoverMethod.DIRECT,
     received_by_id: UUID | None = None,
     received_by_name: str = "",
     signature: str = "",
@@ -743,10 +761,10 @@ def hand_out(
     ``handed_out_by_id`` as responsible, at the terminal by default whoever
     prepared the pickup.
     """
-    _require_status(asset_request, Status.READY)
+    _require_status(asset_request, AssetRequestStatus.READY)
     if Handover.objects.filter(asset_request=asset_request).exists():
         raise BusinessError(_("This request has already been handed out."))
-    if method == Handover.Method.SIGNATURE:
+    if method == HandoverMethod.SIGNATURE:
         if handed_out_by_id:
             # Chosen at the terminal: must be someone from IT who can still be named.
             if not User.objects.filter(
@@ -787,13 +805,13 @@ def hand_out(
             pass  # the seat was assigned when it was allocated
         elif allocation.asset:
             asset = allocation.asset
-            asset.status = Asset.Status.IN_USE
+            asset.status = AssetStatus.IN_USE
             asset.assigned_to = requester
             asset.assigned_since = now
             asset.save(update_fields=["status", "assigned_to", "assigned_since", "updated_at"])
             log_event(
                 asset,
-                AssetEvent.Kind.ASSIGNED,
+                AssetEventKind.ASSIGNED,
                 user,
                 related_user=requester,
                 asset_request=asset_request,
@@ -829,7 +847,7 @@ def hand_out(
 
     record(
         asset_request,
-        Kind.HANDED_OUT,
+        AssetRequestEventKind.HANDED_OUT,
         User.objects.filter(pk=handed_out_by_id).first() if handed_out_by_id else user,
         method=method,
         received_by=received_by_name.strip(),
@@ -837,14 +855,14 @@ def hand_out(
         items=[allocation_label(a) for a in allocations],
     )
     asset_request.handed_out_at = now
-    if method != Handover.Method.SIGNATURE:
+    if method != HandoverMethod.SIGNATURE:
         asset_request.handled_by = user
     lent = any(allocation.is_returnable for allocation in allocations)
     if asset_request.duration == AssetRequest.Duration.PERMANENT or not lent:
-        asset_request.status = Status.COMPLETED
+        asset_request.status = AssetRequestStatus.COMPLETED
         asset_request.completed_at = now
     else:
-        asset_request.status = Status.HANDED_OUT
+        asset_request.status = AssetRequestStatus.HANDED_OUT
     asset_request.save()
     notifications.request_handed_out(
         asset_request, [allocation_label(a) for a in allocations], received_by_name.strip()
@@ -882,12 +900,12 @@ def prepare_direct(
         requester=requester,
         created_by=user,
         **{**data, "end_date": end_date},
-        status=Status.CONFIRMED,
+        status=AssetRequestStatus.CONFIRMED,
         handled_by=user,
         assignee=user,
         confirmed_at=timezone.now(),
     )
-    _record_created(asset_request, Kind.DIRECT, user)
+    _record_created(asset_request, AssetRequestEventKind.DIRECT, user)
 
     # One line per model, in the order the devices were picked.
     devices = Asset.objects.select_related("model__category").in_bulk(assets)
@@ -948,7 +966,7 @@ def quick_assign(
     if end_date is not None and end_date < today:
         raise BusinessError(_("The return date must not be in the past."))
     asset = Asset.objects.select_for_update().select_related("model__category").get(pk=asset.pk)
-    if asset.status != Asset.Status.IN_STOCK:
+    if asset.status != AssetStatus.IN_STOCK:
         raise BusinessError(
             _("%(asset)s is not in stock (%(status)s).")
             % {"asset": asset.inventory_number, "status": asset.get_status_display()}
@@ -965,14 +983,14 @@ def quick_assign(
         start_date=start_date,
         end_date=end_date,
         handover_mode=AssetRequest.HandoverMode.COLLECT,
-        status=Status.HANDED_OUT if lent else Status.COMPLETED,
+        status=AssetRequestStatus.HANDED_OUT if lent else AssetRequestStatus.COMPLETED,
         handled_by=user,
         assignee=user,
         confirmed_at=now,
         handed_out_at=now,
         completed_at=None if lent else now,
     )
-    _record_created(asset_request, Kind.QUICK, user)
+    _record_created(asset_request, AssetRequestEventKind.QUICK, user)
     item = AssetRequestItem.objects.create(
         asset_request=asset_request,
         category=asset.model.category,
@@ -983,7 +1001,7 @@ def quick_assign(
     AssetRequestAllocation.objects.create(item=item, asset=asset, allocated_by=user, handed_out_at=now)
     Handover.objects.create(
         asset_request=asset_request,
-        method=Handover.Method.DIRECT,
+        method=HandoverMethod.DIRECT,
         received_by=requester,
         received_by_name=requester.display_name,
         handed_out_by=user,
@@ -991,9 +1009,9 @@ def quick_assign(
     )
     record(
         asset_request,
-        Kind.HANDED_OUT,
+        AssetRequestEventKind.HANDED_OUT,
         user,
-        method=Handover.Method.DIRECT,
+        method=HandoverMethod.DIRECT,
         received_by=requester.display_name,
         items=[asset.inventory_number],
     )
@@ -1001,13 +1019,13 @@ def quick_assign(
 
     # Begun earlier: the device has been with the employee since that day.
     since = now if start_date == today else timezone.make_aware(datetime.combine(start_date, time.min))
-    asset.status = Asset.Status.IN_USE
+    asset.status = AssetStatus.IN_USE
     asset.assigned_to = requester
     asset.assigned_since = since
     asset.save(update_fields=["status", "assigned_to", "assigned_since", "updated_at"])
     log_event(
         asset,
-        AssetEvent.Kind.ASSIGNED,
+        AssetEventKind.ASSIGNED,
         user,
         related_user=requester,
         asset_request=asset_request,
@@ -1048,13 +1066,13 @@ def return_devices(
     returnable = open_allocations.filter(Q(asset__isnull=False) | Q(license__isnull=False))
     selected = list(returnable.filter(pk__in=allocation_ids) if allocation_ids else returnable.all())
     if not selected:
-        if asset_request.status == Status.HANDED_OUT and not returnable.exists():
+        if asset_request.status == AssetRequestStatus.HANDED_OUT and not returnable.exists():
             # Only consumables were handed out: nothing comes back, the request is done.
             open_allocations.update(returned_at=now)
-            asset_request.status = Status.COMPLETED
+            asset_request.status = AssetRequestStatus.COMPLETED
             asset_request.completed_at = now
             asset_request.save()
-            record(asset_request, Kind.COMPLETED, user)
+            record(asset_request, AssetRequestEventKind.COMPLETED, user)
             return asset_request
         raise BusinessError(_("Nothing is left to take back."))
 
@@ -1066,13 +1084,13 @@ def return_devices(
         if allocation.asset:
             asset = allocation.asset
             broken = allocation.pk in damaged
-            asset.status = Asset.Status.IN_REPAIR if broken else Asset.Status.IN_STOCK
+            asset.status = AssetStatus.IN_REPAIR if broken else AssetStatus.IN_STOCK
             asset.assigned_to = None
             asset.assigned_since = None
             asset.save(update_fields=["status", "assigned_to", "assigned_since", "updated_at"])
             log_event(
                 asset,
-                AssetEvent.Kind.RETURNED,
+                AssetEventKind.RETURNED,
                 user,
                 related_user=asset_request.requester,
                 asset_request=asset_request,
@@ -1081,7 +1099,7 @@ def return_devices(
             if broken:
                 log_event(
                     asset,
-                    AssetEvent.Kind.STATUS_CHANGED,
+                    AssetEventKind.STATUS_CHANGED,
                     user,
                     description=_("Returned damaged from %(number)s") % {"number": asset_request.number},
                 )
@@ -1104,15 +1122,22 @@ def return_devices(
 
     taken = [allocation_label(a) for a in selected]
     damaged_labels = [allocation_label(a) for a in selected if a.returned_damaged]
-    record(asset_request, Kind.RETURNED, user, items=taken, damaged=damaged_labels, notes=notes.strip())
+    record(
+        asset_request,
+        AssetRequestEventKind.RETURNED,
+        user,
+        items=taken,
+        damaged=damaged_labels,
+        notes=notes.strip(),
+    )
     notifications.request_returned(
         asset_request, taken, damaged_labels, [allocation_label(a) for a in returnable]
     )
-    if asset_request.status == Status.HANDED_OUT and not returnable.exists():
+    if asset_request.status == AssetRequestStatus.HANDED_OUT and not returnable.exists():
         open_allocations.update(returned_at=now)
-        asset_request.status = Status.COMPLETED
+        asset_request.status = AssetRequestStatus.COMPLETED
         asset_request.completed_at = now
-        record(asset_request, Kind.COMPLETED, user)
+        record(asset_request, AssetRequestEventKind.COMPLETED, user)
     asset_request.handled_by = user
     asset_request.save()
     return asset_request
@@ -1126,7 +1151,7 @@ def release_from_elsewhere(allocation: AssetRequestAllocation, user: User) -> No
     """
     asset_request = allocation.item.asset_request
     if allocation.handed_out_at is None:
-        if asset_request.status in (Status.CONFIRMED, Status.READY):
+        if asset_request.status in (AssetRequestStatus.CONFIRMED, AssetRequestStatus.READY):
             raise BusinessError(
                 _("This is set aside for %(number)s. Remove it there first.")
                 % {"number": asset_request.number}

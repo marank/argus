@@ -6,20 +6,20 @@ import { useI18n } from 'vue-i18n'
 
 import { usersApi } from '@/api/accounts'
 import { requestsApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import { useAction } from '@/composables/useAction'
-import type { AssetRequest } from '@/types/requests'
 import { allocationCode, allocationModel } from '@/utils/requests'
 
 /** Hand-out documented by IT without signature: collected at the desk or delivered. */
-const props = defineProps<{ assetRequest: AssetRequest }>()
+const props = defineProps<{ assetRequest: Schemas['AssetRequestOut'] }>()
 const show = defineModel<boolean>('show', { required: true })
-const emit = defineEmits<{ saved: [assetRequest: AssetRequest] }>()
+const emit = defineEmits<{ saved: [assetRequest: Schemas['AssetRequestOut']] }>()
 const { t } = useI18n()
 const { busy, run } = useAction()
 
 const form = reactive({
-  method: 'direct' as 'direct' | 'delivered',
+  method: 'direct' as Schemas['HandOutIn']['method'],
   received_by: null as Id | null,
   location: '',
   notes: '',

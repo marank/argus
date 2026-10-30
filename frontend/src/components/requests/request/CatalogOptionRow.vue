@@ -2,15 +2,14 @@
 import { Check, Plus } from '@lucide/vue'
 import { NButton } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
-
-import type { AvailabilityCounts } from '@/types/requests'
+import type { Schemas } from '@/api/types'
 
 /** A single requestable option with an add button and the quantity already in the request. */
 defineProps<{
   label: string
   hint?: string
   /** Availability in the request period (IT only). */
-  counts: AvailabilityCounts | null
+  counts: Schemas['CountsOut'] | null
   inCart: number
   primary?: boolean
 }>()

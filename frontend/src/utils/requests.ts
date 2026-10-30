@@ -1,5 +1,5 @@
+import type { Schemas } from '@/api/types'
 import { i18n } from '@/i18n'
-import type { Allocation, AssetRequest, AssetRequestItem } from '@/types/requests'
 
 /** "Laptop · any model": the singular item name, falling back to the category name. */
 export function anyModelLabel(category: { name: string; item_name?: string }): string {
@@ -8,7 +8,7 @@ export function anyModelLabel(category: { name: string; item_name?: string }): s
 
 /** "Laptop · any model" for category requests, otherwise the model name. */
 export function itemLabel(
-  item: Pick<AssetRequestItem, 'label' | 'category' | 'asset_model' | 'description'>,
+  item: Pick<Schemas['AssetRequestItemOut'], 'label' | 'category' | 'asset_model' | 'description'>,
 ): string {
   // Model lines and free text ("Laptops: 64 GB RAM") already carry a readable label.
   if (item.asset_model || !item.category || item.description) return item.label
@@ -17,7 +17,7 @@ export function itemLabel(
 
 /** Model name of what was allocated: device, consumable or license seat. */
 export function allocationModel(
-  allocation: Pick<Allocation, 'asset' | 'consumable' | 'license'>,
+  allocation: Pick<Schemas['AllocationOut'], 'asset' | 'consumable' | 'license'>,
 ): string {
   return (
     allocation.asset?.model.full_name ??
@@ -29,7 +29,7 @@ export function allocationModel(
 
 /** Short code of an allocation: inventory number, quantity or the device a seat is on. */
 export function allocationCode(
-  allocation: Pick<Allocation, 'asset' | 'license' | 'quantity'>,
+  allocation: Pick<Schemas['AllocationOut'], 'asset' | 'license' | 'quantity'>,
 ): string {
   if (allocation.asset) return allocation.asset.inventory_number
   if (allocation.license) return allocation.license.device?.inventory_number ?? ''
@@ -37,7 +37,7 @@ export function allocationCode(
 }
 
 /** Devices and license seats come back; consumables are used up. */
-export function isReturnable(allocation: Allocation): boolean {
+export function isReturnable(allocation: Schemas['AllocationOut']): boolean {
   return Boolean(allocation.asset || allocation.license)
 }
 
@@ -46,7 +46,9 @@ export function isReturnable(allocation: Allocation): boolean {
  * it ready (or changing the handover after that). Before that the handover mode is only
  * the default. Older requests got date and place when they were confirmed.
  */
-export function handoverPlanned(assetRequest: Pick<AssetRequest, 'events' | 'pickup_at'>): boolean {
+export function handoverPlanned(
+  assetRequest: Pick<Schemas['AssetRequestOut'], 'events' | 'pickup_at'>,
+): boolean {
   return (
     !!assetRequest.pickup_at ||
     assetRequest.events.some((event) => ['rescheduled', 'ready'].includes(event.kind))

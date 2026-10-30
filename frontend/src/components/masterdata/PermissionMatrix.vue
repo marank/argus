@@ -4,7 +4,8 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { rolesApi } from '@/api/accounts'
-import type { PermissionKey, PermissionLevel, PermissionResource } from '@/types/accounts'
+import type { Schemas } from '@/api/types'
+import type { PermissionLevel } from '@/types/accounts'
 
 /**
  * The rights of a role in the edit drawer: per area none, read or write.
@@ -13,7 +14,7 @@ import type { PermissionKey, PermissionLevel, PermissionResource } from '@/types
 const props = defineProps<{ form: Record<string, unknown>; readonly?: boolean }>()
 const { t } = useI18n()
 
-const resources = ref<PermissionResource[] | null>(null)
+const resources = ref<Schemas['ResourceOut'][] | null>(null)
 onMounted(async () => (resources.value = await rolesApi.resources()))
 
 const GROUPS = ['masterdata', 'operations'] as const
@@ -24,12 +25,12 @@ const groups = computed(() =>
   })),
 )
 
-type Permissions = Partial<Record<PermissionKey, PermissionLevel>>
+type Permissions = Partial<Record<string, PermissionLevel>>
 const permissions = () => (props.form.permissions ?? {}) as Permissions
 
-const levelOf = (key: PermissionKey) => permissions()[key] ?? 'none'
+const levelOf = (key: string) => permissions()[key] ?? 'none'
 
-function setLevel(key: PermissionKey, level: PermissionLevel | 'none') {
+function setLevel(key: string, level: PermissionLevel | 'none') {
   const next = { ...permissions() }
   if (level === 'none') delete next[key]
   else next[key] = level

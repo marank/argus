@@ -16,6 +16,7 @@ import { useI18n } from 'vue-i18n'
 import { usersApi } from '@/api/accounts'
 import { assetsApi } from '@/api/inventory'
 import { assetModelsApi, locationsApi, suppliersApi } from '@/api/masterdata'
+import type { Schemas } from '@/api/types'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import FieldLabel from '@/components/common/FieldLabel.vue'
 import FormSection from '@/components/common/FormSection.vue'
@@ -26,23 +27,22 @@ import { useFieldErrors } from '@/composables/useFieldErrors'
 import { fromIsoDate, toIsoDate, useFormat } from '@/composables/useFormat'
 import { useFeaturesStore } from '@/stores/features'
 import { modelLabel } from '@/utils/models'
-import {
-  ASSET_CONDITIONS,
-  ASSET_STATUSES,
-  type AssetDetail,
-  type AssetInput,
-} from '@/types/inventory'
+import type { Id } from '@/types/common'
+import { ASSET_CONDITIONS, ASSET_STATUSES } from '@/types/inventory'
 
-const props = defineProps<{ asset?: AssetDetail | null }>()
+const props = defineProps<{ asset?: Schemas['AssetDetailOut'] | null }>()
 const show = defineModel<boolean>('show', { required: true })
-const emit = defineEmits<{ saved: [asset: AssetDetail] }>()
+const emit = defineEmits<{ saved: [asset: Schemas['AssetDetailOut']] }>()
 
 const { t } = useI18n()
 const features = useFeaturesStore()
 const { enumLabel } = useFormat()
 const { busy, run } = useAction()
 
-function empty(): AssetInput {
+/** The model stays empty until one is picked; saving waits for it. */
+type Form = Omit<Schemas['AssetIn'], 'model'> & { model: Id | null }
+
+function empty(): Form {
   return {
     model: null,
     inventory_number: '',
@@ -65,7 +65,7 @@ function empty(): AssetInput {
   }
 }
 
-const form = reactive<AssetInput>(empty())
+const form = reactive<Form>(empty())
 const fieldErrors = useFieldErrors(form)
 
 watch(show, (visible) => {
@@ -121,9 +121,10 @@ const price = computed({
 async function save() {
   const saved = await run(
     () =>
-      (props.asset ? assetsApi.update(props.asset.id, form) : assetsApi.create(form)).catch(
-        fieldErrors.capture,
-      ),
+      (props.asset
+        ? assetsApi.update(props.asset.id, { ...form, model: form.model! })
+        : assetsApi.create({ ...form, model: form.model! })
+      ).catch(fieldErrors.capture),
     t('common.saved'),
   )
   if (saved) {

@@ -7,6 +7,7 @@ from django.test import Client
 
 from apps.accounts.models import Department, User
 from apps.core.models import MailSettings
+from apps.inventory.models import AssetIssueStatus
 from apps.masterdata.models import Category
 from apps.requests.models import AssetRequest
 
@@ -266,7 +267,7 @@ def test_menu_counts_show_open_requests_approvals_and_reports(
     assert counts(employee_client)["issues_updated"] is before["issues_updated"]
 
     # IT takes it into work: news for the employee until they look at their reports.
-    update_issue(issue, User.objects.get(username="it"), AssetIssue.Status.IN_PROGRESS, by_it=True)
+    update_issue(issue, User.objects.get(username="it"), AssetIssueStatus.IN_PROGRESS, by_it=True)
     assert counts(employee_client)["issues_updated"] is True
     assert employee_client.get("/api/portal/my-issues").json()[0]["unseen_update"] is True
     # Opening the report marks it seen.
@@ -274,7 +275,7 @@ def test_menu_counts_show_open_requests_approvals_and_reports(
     assert counts(employee_client)["issues_updated"] is False
 
     # Resolved: no longer counted as open, but still news.
-    update_issue(issue, User.objects.get(username="it"), AssetIssue.Status.RESOLVED, "New cable", by_it=True)
+    update_issue(issue, User.objects.get(username="it"), AssetIssueStatus.RESOLVED, "New cable", by_it=True)
     after = counts(employee_client)
     assert after["issues"] == before["issues"] and after["issues_updated"] is True
 

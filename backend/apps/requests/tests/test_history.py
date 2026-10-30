@@ -4,7 +4,7 @@ from typing import Any
 from django.utils import timezone
 
 from apps.accounts.models import User
-from apps.inventory.models import Asset
+from apps.inventory.models import Asset, AssetStatus
 from apps.masterdata.models import Category
 from apps.requests.models import AssetRequest
 
@@ -87,7 +87,7 @@ def _confirmed_laptops(employee_client, it_client, quantity=1):
     url = f"/api/requests/{created['id']}"
     it_client.post(f"{url}/confirm", {}, content_type=JSON)
     item = AssetRequest.objects.get(pk=created["id"]).items.get()
-    laptops = Asset.objects.filter(model__category=item.category, status=Asset.Status.IN_STOCK)
+    laptops = Asset.objects.filter(model__category=item.category, status=AssetStatus.IN_STOCK)
     return url, item, list(laptops.order_by("inventory_number")[:2])
 
 
@@ -132,7 +132,7 @@ def test_ready_again_lists_what_changed(employee_client, it_client):
     assert again["data"]["removed"] == [first.inventory_number]
     assert "items" not in again["data"]
     first.refresh_from_db()
-    assert first.status == Asset.Status.IN_STOCK
+    assert first.status == AssetStatus.IN_STOCK
     # Set aside and given back without being handed out: nothing for the device's history.
     assert first.events.count() == device_history
 

@@ -2,12 +2,15 @@
 import { NCard } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
 
+import type { Schemas } from '@/api/types'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { useFormat } from '@/composables/useFormat'
-import type { AssetIssueDetail } from '@/types/inventory'
 
 /** Earlier and parallel reports on the same device (only shown when there are any). */
-defineProps<{ issues: AssetIssueDetail['other_issues']; route: 'issue' | 'portal-issue' }>()
+defineProps<{
+  issues: Schemas['AssetIssueDetailOut']['other_issues']
+  route: 'issue' | 'portal-issue'
+}>()
 const { t } = useI18n()
 const { date, enumLabel } = useFormat()
 </script>

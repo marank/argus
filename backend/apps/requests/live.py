@@ -9,6 +9,7 @@ def connect() -> None:
         AssetRequestAllocation,
         AssetRequestEvent,
         AssetRequestItem,
+        AssetRequestStatus,
         DeviceReturn,
         Handover,
     )
@@ -16,7 +17,7 @@ def connect() -> None:
     def asset_request(r: AssetRequest) -> Signal:
         # The requester, whoever decided the approval and, while it waits, everyone who may approve.
         users = [r.requester_id, r.approver_id]
-        if r.status == AssetRequest.Status.PENDING_APPROVAL:
+        if r.status == AssetRequestStatus.PENDING_APPROVAL:
             users += r.approvers().values_list("pk", flat=True)
         return "request", r.pk, users
 

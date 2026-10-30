@@ -7,13 +7,13 @@ from apps.accounts.models import Team
 from apps.accounts.schemas import TeamRefOut, default_team
 from apps.core.api.security import context_is_it_staff
 from apps.core.schemas import RefOut
-from apps.masterdata.models import Category
+from apps.masterdata.models import Category, CategoryKind
 
 
 class CategoryOut(Schema):
     id: UUID
     name: str
-    kind: str
+    kind: CategoryKind
     item_name: str
     code: str
     parent: RefOut | None
@@ -53,7 +53,7 @@ class CategoryOut(Schema):
 
 class CategoryIn(Schema):
     name: str
-    kind: Category.Kind = Category.Kind.HARDWARE
+    kind: CategoryKind = CategoryKind.HARDWARE
     item_name: str = ""
     code: str = ""
     parent: UUID | None = None

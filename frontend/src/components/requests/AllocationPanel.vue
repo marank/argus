@@ -6,34 +6,29 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { requestsApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import ScanCombobox from '@/components/common/ScanCombobox.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { useAction } from '@/composables/useAction'
-import type {
-  AvailabilityCounts,
-  Candidates,
-  AssetRequest,
-  AssetRequestItem,
-} from '@/types/requests'
 import { itemLabel } from '@/utils/requests'
 
 import ResolveFreeText from './ResolveFreeText.vue'
 
 /** One request item: its allocated devices plus tools to allocate more. */
 const props = defineProps<{
-  assetRequest: AssetRequest
-  item: AssetRequestItem
+  assetRequest: Schemas['AssetRequestOut']
+  item: Schemas['AssetRequestItemOut']
   editable: boolean
   /** Pool counts for the request's period, shown before IT confirms. */
-  availability?: AvailabilityCounts | null
+  availability?: Schemas['CountsOut'] | null
 }>()
-const emit = defineEmits<{ updated: [assetRequest: AssetRequest] }>()
+const emit = defineEmits<{ updated: [assetRequest: Schemas['AssetRequestOut']] }>()
 const { t } = useI18n()
 const { busy, run } = useAction()
 const message = useMessage()
 
 const code = ref('')
-const candidates = ref<Candidates | null>(null)
+const candidates = ref<Schemas['CandidatesOut'] | null>(null)
 const consumableQuantity = ref(1)
 const licenseId = ref<Id | null>(null)
 const deviceId = ref<Id | null>(null)
@@ -103,15 +98,9 @@ const pickable = computed(
 )
 watch(pickable, (open) => open && loadCandidates(), { immediate: true })
 
-async function allocate(data: {
-  asset?: Id
-  consumable?: Id
-  license?: Id
-  quantity?: number
-  code?: string
-}) {
+async function allocate(data: Partial<Omit<Schemas['AllocateIn'], 'item'>>) {
   const updated = await run(() =>
-    requestsApi.allocate(props.assetRequest.id, { item: props.item.id, ...data }),
+    requestsApi.allocate(props.assetRequest.id, { item: props.item.id, quantity: 1, ...data }),
   )
   if (updated) {
     code.value = ''

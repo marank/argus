@@ -8,6 +8,7 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import { approvalsApi, requestsApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import ApprovalCard from '@/components/requests/detail/ApprovalCard.vue'
@@ -16,7 +17,6 @@ import RequestedItems from '@/components/requests/detail/RequestedItems.vue'
 import RequestHistory from '@/components/requests/detail/RequestHistory.vue'
 import { useAction } from '@/composables/useAction'
 import { useFormat } from '@/composables/useFormat'
-import type { AssetRequest } from '@/types/requests'
 
 /**
  * A request as its department's approver sees it: what is asked for, by whom, and
@@ -28,7 +28,7 @@ const router = useRouter()
 const { enumLabel } = useFormat()
 const { busy, run } = useAction()
 
-const assetRequest = ref<AssetRequest | null>(null)
+const assetRequest = ref<Schemas['AssetRequestOut'] | null>(null)
 const load = async () => (assetRequest.value = await requestsApi.get(props.id))
 onMounted(load)
 

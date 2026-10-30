@@ -2,12 +2,12 @@
 import { NCard } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
 
-import type { AssetRequest } from '@/types/requests'
+import type { Schemas } from '@/api/types'
 import { categoryIcon } from '@/utils/icons'
 import { itemLabel } from '@/utils/requests'
 
 /** What was asked for, large and plain: for deciding on a request at a glance. */
-defineProps<{ assetRequest: AssetRequest }>()
+defineProps<{ assetRequest: Schemas['AssetRequestOut'] }>()
 const { t } = useI18n()
 </script>
 

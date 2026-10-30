@@ -12,9 +12,9 @@ from apps.accounts.models import User
 from apps.accounts.services.assignment import assigned_q
 from apps.core.models import SiteSettings
 from apps.core.notifications import it_staff
-from apps.inventory.models import Asset, AssetIssue, Consumable, License
-from apps.procurement.models import PurchaseOrder
-from apps.requests.models import AssetRequest
+from apps.inventory.models import Asset, AssetIssue, AssetIssueStatus, AssetStatus, Consumable, License
+from apps.procurement.models import PurchaseOrder, PurchaseOrderStatus
+from apps.requests.models import AssetRequest, AssetRequestStatus
 
 LIST_LIMIT = 10
 
@@ -53,7 +53,7 @@ class Expiring(TypedDict):
 
 
 def open_issues() -> QuerySet[AssetIssue]:
-    return AssetIssue.objects.exclude(status=AssetIssue.Status.RESOLVED)
+    return AssetIssue.objects.exclude(status=AssetIssueStatus.RESOLVED)
 
 
 def my_tasks(user: User) -> MyTasks:
@@ -82,7 +82,7 @@ def overdue_returns() -> list[AssetRequest]:
     """Lent devices whose return date has passed, the longest overdue first."""
     return list(
         AssetRequest.objects.filter(
-            status=AssetRequest.Status.HANDED_OUT,
+            status=AssetRequestStatus.HANDED_OUT,
             duration=AssetRequest.Duration.TEMPORARY,
             end_date__lt=timezone.localdate(),
         )
@@ -137,7 +137,7 @@ def upcoming(days: int) -> list[AssetRequest]:
     """Confirmed and prepared requests to hand out within `days` days, the earliest first."""
     return list(
         AssetRequest.objects.filter(
-            status__in=(AssetRequest.Status.CONFIRMED, AssetRequest.Status.READY),
+            status__in=(AssetRequestStatus.CONFIRMED, AssetRequestStatus.READY),
             start_date__lte=timezone.localdate() + timedelta(days=days),
         )
         .select_related("requester")
@@ -150,7 +150,7 @@ def due_returns(days: int) -> list[AssetRequest]:
     today = timezone.localdate()
     return list(
         AssetRequest.objects.filter(
-            status=AssetRequest.Status.HANDED_OUT,
+            status=AssetRequestStatus.HANDED_OUT,
             duration=AssetRequest.Duration.TEMPORARY,
             end_date__range=(today, today + timedelta(days=days)),
         )
@@ -170,7 +170,7 @@ def expiring() -> list[Expiring]:
         Asset.objects.filter(
             warranty_until__range=(today, today + timedelta(days=rules.warranty_warning_days))
         )
-        .exclude(status=Asset.Status.RETIRED)
+        .exclude(status=AssetStatus.RETIRED)
         .select_related("model__manufacturer")
     )
     rows: list[Expiring] = []
@@ -206,7 +206,7 @@ def open_orders() -> list[PurchaseOrder]:
     """Placed orders not fully received, the earliest expected delivery first (undated last)."""
     return list(
         PurchaseOrder.objects.filter(
-            status__in=(PurchaseOrder.Status.ORDERED, PurchaseOrder.Status.PARTIALLY_RECEIVED)
+            status__in=(PurchaseOrderStatus.ORDERED, PurchaseOrderStatus.PARTIALLY_RECEIVED)
         )
         .select_related("supplier")
         .order_by(F("expected_date").asc(nulls_last=True), "number")[:20]
@@ -216,7 +216,7 @@ def open_orders() -> list[PurchaseOrder]:
 def waiting_requests() -> list[AssetRequest]:
     """Submitted requests waiting for IT to confirm them, the longest waiting first."""
     return list(
-        AssetRequest.objects.filter(status=AssetRequest.Status.SUBMITTED)
+        AssetRequest.objects.filter(status=AssetRequestStatus.SUBMITTED)
         .select_related("requester", "assignee")
         .order_by("created_at")[:20]
     )

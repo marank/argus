@@ -15,6 +15,7 @@ import { useRoute } from 'vue-router'
 
 import { consumablesApi } from '@/api/inventory'
 import { categoriesApi, locationsApi } from '@/api/masterdata'
+import type { Schemas } from '@/api/types'
 import CheckField from '@/components/common/CheckField.vue'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
@@ -23,7 +24,6 @@ import ConsumableModal from '@/components/inventory/ConsumableModal.vue'
 import ConsumableMoveModal from '@/components/inventory/ConsumableMoveModal.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useList } from '@/composables/useList'
-import type { Consumable, ConsumableMovement } from '@/types/inventory'
 import { useAuthStore } from '@/stores/auth'
 
 const { t } = useI18n()
@@ -48,37 +48,37 @@ const belowOnly = computed({
   set: (value: boolean) => (list.filters.below_minimum = value ? true : null),
 })
 
-const selected = ref<Consumable | null>(null)
+const selected = ref<Schemas['ConsumableOut'] | null>(null)
 const moveDirection = ref<'in' | 'out' | 'adjust'>('in')
 const showMove = ref(false)
 const showItem = ref(false)
 const showMovements = ref(false)
-const movements = ref<ConsumableMovement[]>([])
+const movements = ref<Schemas['ConsumableMovementOut'][]>([])
 
-function openMove(item: Consumable, direction: 'in' | 'out' | 'adjust') {
+function openMove(item: Schemas['ConsumableOut'], direction: 'in' | 'out' | 'adjust') {
   selected.value = item
   moveDirection.value = direction
   showMove.value = true
 }
 
-function openItem(item: Consumable | null) {
+function openItem(item: Schemas['ConsumableOut'] | null) {
   selected.value = item
   showItem.value = true
 }
 
-async function openMovements(item: Consumable) {
+async function openMovements(item: Schemas['ConsumableOut']) {
   selected.value = item
   movements.value = await consumablesApi.movements(item.id)
   showMovements.value = true
 }
 
-function onRowAction(item: Consumable, key: string) {
+function onRowAction(item: Schemas['ConsumableOut'], key: string) {
   if (key === 'in' || key === 'out' || key === 'adjust') openMove(item, key)
   else if (key === 'movements') openMovements(item)
   else if (key === 'edit') openItem(item)
 }
 
-const columns = computed<DataTableColumns<Consumable>>(() => [
+const columns = computed<DataTableColumns<Schemas['ConsumableOut']>>(() => [
   {
     key: 'model__name',
     title: t('inventory.consumables.item'),
@@ -161,7 +161,7 @@ const columns = computed<DataTableColumns<Consumable>>(() => [
   },
 ])
 
-const movementColumns = computed<DataTableColumns<ConsumableMovement>>(() => [
+const movementColumns = computed<DataTableColumns<Schemas['ConsumableMovementOut']>>(() => [
   {
     key: 'created_at',
     title: t('inventory.event.occurredAt'),
@@ -237,7 +237,7 @@ const movementColumns = computed<DataTableColumns<ConsumableMovement>>(() => [
         :data="list.rows.value"
         :loading="list.loading.value"
         :pagination="list.pagination.value"
-        :row-key="(s: Consumable) => s.id"
+        :row-key="(s: Schemas['ConsumableOut']) => s.id"
         :scroll-x="1100"
         @update:sorter="list.onSort"
       />

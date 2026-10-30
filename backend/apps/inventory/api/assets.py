@@ -14,13 +14,13 @@ from apps.core.api.security import AuthedRequest, permission_auth
 from apps.core.exceptions import BusinessError
 from apps.inventory.models import Asset
 from apps.inventory.schemas.asset import (
+    AssetAssignIn,
     AssetBulkIn,
     AssetDetailOut,
     AssetIn,
     AssetOut,
     AssetSeriesIn,
     AssetSeriesPreviewOut,
-    AssignIn,
 )
 from apps.inventory.services import assets as asset_service
 from apps.masterdata.models import AssetModel, Category
@@ -139,7 +139,7 @@ def update_asset(request: AuthedRequest, pk: UUID, payload: AssetIn) -> Asset:
 
 
 @router.post("/{uuid:pk}/assign", response=AssetDetailOut)
-def assign_asset(request: AuthedRequest, pk: UUID, payload: AssignIn) -> Asset:
+def assign_asset(request: AuthedRequest, pk: UUID, payload: AssetAssignIn) -> Asset:
     """Hand a device to an employee directly, or take it back with ``user: null``."""
     asset = get_object_or_404(Asset, pk=pk)
     asset_service.update_asset(asset, {"assigned_to": payload.user}, request.user)

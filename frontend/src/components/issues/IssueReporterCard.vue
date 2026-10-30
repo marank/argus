@@ -4,11 +4,13 @@ import { NCard } from 'naive-ui'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import type { Schemas } from '@/api/types'
 import DetailGrid, { type DetailEntry } from '@/components/common/DetailGrid.vue'
-import type { AssetIssueDetail } from '@/types/inventory'
 
 /** For IT: how to reach the reporter beyond a message, e.g. to arrange a swap. */
-const props = defineProps<{ reporter: NonNullable<AssetIssueDetail['reported_by']> }>()
+const props = defineProps<{
+  reporter: NonNullable<Schemas['AssetIssueDetailOut']['reported_by']>
+}>()
 const { t } = useI18n()
 
 const entries = computed<DetailEntry[]>(() => [

@@ -18,16 +18,11 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import { terminalApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import SignaturePad from '@/components/terminal/SignaturePad.vue'
 import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
 import { useFormat } from '@/composables/useFormat'
-import type {
-  TerminalAllocation,
-  TerminalPerson,
-  TerminalPickupDetail,
-  TerminalStaff,
-} from '@/types/requests'
 import { categoryIcon } from '@/utils/icons'
 import { allocationCode, allocationModel } from '@/utils/requests'
 
@@ -44,7 +39,7 @@ const confirmDialog = useConfirm()
 
 type Step = 'devices' | 'person' | 'sign' | 'done'
 
-const assetRequest = ref<TerminalPickupDetail | null>(null)
+const assetRequest = ref<Schemas['TerminalPickupDetailOut'] | null>(null)
 const step = ref<Step>('devices')
 const notes = reactive<Record<Id, string>>({})
 const openNote = ref<Id | null>(null)
@@ -59,16 +54,16 @@ async function toggleNote(id: Id) {
 
 const collector = ref<'requester' | 'other'>('requester')
 const personQuery = ref('')
-const people = ref<TerminalPerson[]>([])
+const people = ref<Schemas['TerminalPersonOut'][]>([])
 /** Picked from the search; without a pick the typed name is recorded as is. */
-const person = ref<TerminalPerson | null>(null)
+const person = ref<Schemas['TerminalPersonOut'] | null>(null)
 
 const pad = ref<InstanceType<typeof SignaturePad> | null>(null)
 const signed = ref(false)
 
 /** IT member named on the record: who prepared the pickup, unless changed here. */
 const handedOutBy = ref<Id | null>(null)
-const staff = ref<TerminalStaff[]>([])
+const staff = ref<Schemas['TerminalStaffOut'][]>([])
 const changingStaff = ref(false)
 const staffOptions = computed(() =>
   staff.value.map((s) => ({ value: s.id, label: s.display_name })),
@@ -116,7 +111,7 @@ watch(personQuery, (q) => {
   searchPeople(q)
 })
 
-function pick(p: TerminalPerson) {
+function pick(p: Schemas['TerminalPersonOut']) {
   person.value = p
   personQuery.value = p.display_name
   people.value = []
@@ -128,7 +123,7 @@ const dropdownOpen = ref(false)
 watch(personQuery, () => (dropdownOpen.value = true))
 onClickOutside(personBox, () => (dropdownOpen.value = false))
 
-function deviceLabel(allocation: TerminalAllocation) {
+function deviceLabel(allocation: Schemas['TerminalAllocationOut']) {
   return allocationModel(allocation)
 }
 

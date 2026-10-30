@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Schemas } from '@/api/types'
 import { Bell, CheckCheck, Settings } from '@lucide/vue'
 import { NBadge, NButton, NPopover, NScrollbar, NSpin } from 'naive-ui'
 import { useDocumentVisibility } from '@vueuse/core'
@@ -11,7 +12,6 @@ import { useFormat } from '@/composables/useFormat'
 import { useLive } from '@/composables/useLive'
 import { useLiveStore } from '@/stores/live'
 import { useNotificationsStore } from '@/stores/notifications'
-import type { AppNotification } from '@/types/notifications'
 
 /** The bell in the top bar: unread count, the latest notifications, a click opens the page. */
 const { t } = useI18n()
@@ -21,7 +21,7 @@ const { relativeDay } = useFormat()
 
 const open = ref(false)
 const loading = ref(false)
-const items = ref<AppNotification[]>([])
+const items = ref<Schemas['NotificationOut'][]>([])
 
 async function load() {
   loading.value = true
@@ -54,7 +54,7 @@ function toggle(show: boolean) {
   }
 }
 
-async function choose(item: AppNotification) {
+async function choose(item: Schemas['NotificationOut']) {
   open.value = false
   if (!item.read_at) {
     item.read_at = new Date().toISOString()

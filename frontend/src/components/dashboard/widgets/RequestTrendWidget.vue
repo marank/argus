@@ -7,7 +7,8 @@ import { useI18n } from 'vue-i18n'
 import { dashboardApi } from '@/api/dashboard'
 import { useFormat } from '@/composables/useFormat'
 import { useLive } from '@/composables/useLive'
-import type { TrendWeek, WidgetProps } from '@/types/dashboard'
+import type { Schemas } from '@/api/types'
+import type { WidgetProps } from '@/types/dashboard'
 
 import { isBoolean, useOption } from './options'
 
@@ -16,7 +17,7 @@ const emit = defineEmits<{ 'update:options': [options: Record<string, unknown>] 
 
 const { t } = useI18n()
 const { date } = useFormat()
-const weeks = ref<TrendWeek[] | null>(null)
+const weeks = ref<Schemas['TrendWeekOut'][] | null>(null)
 const asTable = useOption(
   () => props.options,
   (options) => emit('update:options', options),
@@ -59,9 +60,9 @@ function weekNumber(monday: string) {
   return Math.ceil(((day.getTime() - yearStart) / 86_400_000 + 1) / 7)
 }
 
-const weekLabel = (w: TrendWeek) =>
+const weekLabel = (w: Schemas['TrendWeekOut']) =>
   t('dashboard.widgets.requestTrend.week', { n: weekNumber(w.week_start) })
-const describe = (w: TrendWeek) =>
+const describe = (w: Schemas['TrendWeekOut']) =>
   `${weekLabel(w)} (${date(w.week_start)}): ${SERIES.map((s) => `${t(s.label)} ${w[s.key]}`).join(', ')}`
 </script>
 

@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.utils import timezone
 
 from apps.accounts.models import User
-from apps.inventory.models import Asset, Consumable
+from apps.inventory.models import Asset, AssetStatus, Consumable
 from apps.requests.models import AssetRequest
 
 URL = "/api/requests/direct"
@@ -11,7 +11,7 @@ JSON = "application/json"
 
 
 def in_stock(count: int = 1) -> list[Asset]:
-    assets = list(Asset.objects.filter(status=Asset.Status.IN_STOCK).order_by("inventory_number")[:count])
+    assets = list(Asset.objects.filter(status=AssetStatus.IN_STOCK).order_by("inventory_number")[:count])
     assert len(assets) == count
     return assets
 
@@ -53,7 +53,7 @@ def test_confirms_and_allocates_specific_devices(it_client):
     assert all(item["quantity_missing"] == 0 for item in body["items"])
 
     first.refresh_from_db()
-    assert first.status == Asset.Status.RESERVED
+    assert first.status == AssetStatus.RESERVED
     consumable.refresh_from_db()
     assert consumable.reserved_quantity == 2
 
@@ -78,7 +78,7 @@ def test_then_runs_like_any_request(it_client):
     returned = it_client.post(f"{url}/return", {}, content_type=JSON)
     assert returned.json()["status"] == "completed"
     asset.refresh_from_db()
-    assert asset.status == Asset.Status.IN_STOCK
+    assert asset.status == AssetStatus.IN_STOCK
 
 
 def test_requester_defaults_to_current_user(it_client):
@@ -89,7 +89,7 @@ def test_requester_defaults_to_current_user(it_client):
 
 def test_device_in_use_is_refused_and_nothing_is_kept(it_client):
     (asset,) = in_stock()
-    asset.status = Asset.Status.IN_USE
+    asset.status = AssetStatus.IN_USE
     asset.save()
     count = AssetRequest.objects.count()
     response = post(it_client, assets=[str(asset.pk)])

@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
 from ninja import Field, Schema
@@ -7,7 +7,14 @@ from ninja import Field, Schema
 from apps.accounts.models import Team, User
 from apps.accounts.schemas import TeamRefOut, UserRefOut
 from apps.core.api.security import context_is_it_staff
-from apps.inventory.models import Asset, AssetIssue, AssetIssueEntry
+from apps.inventory.models import (
+    Asset,
+    AssetIssue,
+    AssetIssueEntryKind,
+    AssetIssueKind,
+    AssetIssueStatus,
+    AssetStatus,
+)
 from apps.masterdata.schemas.refs import AssetModelRefOut, LocationRefOut
 
 
@@ -21,9 +28,9 @@ class IssueAssetOut(Schema):
 class AssetIssueOut(Schema):
     id: UUID
     asset: IssueAssetOut
-    kind: str
+    kind: AssetIssueKind
     description: str
-    status: str
+    status: AssetIssueStatus
     reported_by: UserRefOut | None
     handled_by: UserRefOut | None
     assigned_team: TeamRefOut | None
@@ -36,9 +43,9 @@ class OwnIssueOut(Schema):
     """What the employee sees of their own report."""
 
     id: UUID
-    kind: str
+    kind: AssetIssueKind
     description: str
-    status: str
+    status: AssetIssueStatus
     created_at: datetime
     # IT wrote or changed the status since the employee last looked.
     unseen_update: bool
@@ -50,7 +57,7 @@ class OwnIssueOut(Schema):
         messages = getattr(obj, "messages", None)
         if messages is not None:
             return messages[-1].text if messages else None
-        entry = obj.entries.filter(kind=AssetIssueEntry.Kind.MESSAGE).order_by("created_at").last()
+        entry = obj.entries.filter(kind=AssetIssueEntryKind.MESSAGE).order_by("created_at").last()
         return entry.text if entry else None
 
 
@@ -70,17 +77,17 @@ class OwnIssueWithDeviceOut(OwnIssueOut):
 
 
 class AssetIssueIn(Schema):
-    kind: AssetIssue.Kind = AssetIssue.Kind.DEFECT
+    kind: AssetIssueKind = AssetIssueKind.DEFECT
     description: str = Field(..., max_length=2000)
 
 
-class AssignIn(Schema):
+class IssueAssignIn(Schema):
     team: UUID | None = None
     assignee: UUID | None = None
 
 
 class AssetIssueUpdateIn(Schema):
-    status: AssetIssue.Status
+    status: AssetIssueStatus
     # Sent along with the change, e.g. what was done.
     message: str = Field("", max_length=4000)
 
@@ -92,12 +99,13 @@ class IssueMessageIn(Schema):
 
 class IssueEntryOut(Schema):
     id: UUID
-    kind: str
+    kind: AssetIssueEntryKind
     author: UserRefOut | None
-    # "reporter" or "it": which side it came from.
-    side: str
+    # Which side it came from.
+    side: Literal["reporter", "it"]
     text: str
-    status: str
+    # The new status of a status change, empty for a message.
+    status: AssetIssueStatus | Literal[""]
     created_at: datetime
 
 
@@ -125,7 +133,7 @@ class IssueDeviceDetailOut(Schema):
     inventory_number: str
     serial_number: str
     hostname: str
-    status: str
+    status: AssetStatus
     model: AssetModelRefOut
     category: str = Field(..., alias="model.category.name")
     category_icon: str = Field(..., alias="model.category.icon")
@@ -148,9 +156,9 @@ class IssueSummaryOut(Schema):
     """Another report on the same device."""
 
     id: UUID
-    kind: str
+    kind: AssetIssueKind
     description: str
-    status: str
+    status: AssetIssueStatus
     created_at: datetime
 
 
@@ -158,9 +166,9 @@ class AssetIssueDetailOut(Schema):
     """A report with its conversation, for its detail page (IT and reporter)."""
 
     id: UUID
-    kind: str
+    kind: AssetIssueKind
     description: str
-    status: str
+    status: AssetIssueStatus
     created_at: datetime
     resolved_at: datetime | None
     reported_by: IssueReporterOut | None

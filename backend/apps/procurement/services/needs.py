@@ -9,7 +9,7 @@ from django.db.models.functions import Coalesce
 from apps.inventory.models import Consumable
 from apps.inventory.services.availability import available_count
 from apps.procurement.models import PurchaseOrder, PurchaseOrderLine
-from apps.requests.models import AssetRequest, AssetRequestItem
+from apps.requests.models import AssetRequest, AssetRequestItem, AssetRequestStatus
 
 
 def _on_order_by_item() -> dict[UUID, int]:
@@ -60,7 +60,7 @@ class Needs(TypedDict):
 def asset_request_needs() -> list[AssetRequestNeed]:
     on_order = _on_order_by_item()
     items = AssetRequestItem.objects.filter(
-        asset_request__status__in=(AssetRequest.Status.SUBMITTED, AssetRequest.Status.CONFIRMED)
+        asset_request__status__in=(AssetRequestStatus.SUBMITTED, AssetRequestStatus.CONFIRMED)
     ).select_related(
         "asset_request__requester",
         "asset_model__manufacturer",

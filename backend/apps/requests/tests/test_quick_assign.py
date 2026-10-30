@@ -3,15 +3,15 @@ from datetime import timedelta
 from django.utils import timezone
 
 from apps.accounts.models import User
-from apps.inventory.models import Asset, AssetEvent
-from apps.requests.models import AssetRequest
+from apps.inventory.models import Asset, AssetEventKind, AssetStatus
+from apps.requests.models import AssetRequest, AssetRequestStatus
 
 URL = "/api/requests/quick"
 JSON = "application/json"
 
 
 def in_stock() -> Asset:
-    asset = Asset.objects.filter(status=Asset.Status.IN_STOCK).order_by("inventory_number").first()
+    asset = Asset.objects.filter(status=AssetStatus.IN_STOCK).order_by("inventory_number").first()
     assert asset is not None
     return asset
 
@@ -39,13 +39,13 @@ def test_temporary_assignment_is_handed_out_with_its_return_date(it_client):
     assert body["events"][1]["data"]["items"] == [asset.inventory_number]
 
     asset.refresh_from_db()
-    assert asset.status == Asset.Status.IN_USE
+    assert asset.status == AssetStatus.IN_USE
     assert asset.assigned_to == employee()
     # Straight from stock to the employee: no request step in between.
     kinds = list(asset.events.order_by("created_at").values_list("kind", flat=True))
-    assert kinds[-1] == AssetEvent.Kind.ASSIGNED
-    assert AssetEvent.Kind.RESERVED not in kinds
-    assigned = asset.events.get(kind=AssetEvent.Kind.ASSIGNED, asset_request_id=body["id"])
+    assert kinds[-1] == AssetEventKind.ASSIGNED
+    assert AssetEventKind.RESERVED not in kinds
+    assigned = asset.events.get(kind=AssetEventKind.ASSIGNED, asset_request_id=body["id"])
     assert assigned.related_user == employee()
 
 
@@ -65,7 +65,7 @@ def test_earlier_start_dates_the_assignment_back(it_client):
     assert body["start_date"] == start.isoformat()
     asset.refresh_from_db()
     assert timezone.localtime(asset.assigned_since).date() == start
-    event = asset.events.get(kind=AssetEvent.Kind.ASSIGNED, asset_request_id=body["id"])
+    event = asset.events.get(kind=AssetEventKind.ASSIGNED, asset_request_id=body["id"])
     assert timezone.localtime(event.occurred_at).date() == start
 
 
@@ -92,10 +92,10 @@ def test_taking_back_on_the_device_page_completes_it(it_client):
     body = post(it_client, asset, end_date=str(timezone.localdate() + timedelta(days=2))).json()
     response = it_client.post(f"/api/inventory/assets/{asset.pk}/assign", {"user": None}, content_type=JSON)
     assert response.status_code == 200, response.content
-    assert AssetRequest.objects.get(pk=body["id"]).status == AssetRequest.Status.COMPLETED
+    assert AssetRequest.objects.get(pk=body["id"]).status == AssetRequestStatus.COMPLETED
     asset.refresh_from_db()
-    assert asset.status == Asset.Status.IN_STOCK
-    assert asset.events.filter(kind=AssetEvent.Kind.RETURNED, asset_request_id=body["id"]).count() == 1
+    assert asset.status == AssetStatus.IN_STOCK
+    assert asset.events.filter(kind=AssetEventKind.RETURNED, asset_request_id=body["id"]).count() == 1
 
 
 def test_employees_cannot(employee_client):

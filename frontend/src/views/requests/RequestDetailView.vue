@@ -29,6 +29,7 @@ import { computed, h, onMounted, ref, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { portalApi, requestsApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import CreateOrderModal, { type DraftLine } from '@/components/procurement/CreateOrderModal.vue'
@@ -50,12 +51,6 @@ import RequestHistory from '@/components/requests/detail/RequestHistory.vue'
 import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
 import { useFormat } from '@/composables/useFormat'
-import type {
-  AvailabilityCounts,
-  PeriodAvailability,
-  AssetRequest,
-  AssetRequestItem,
-} from '@/types/requests'
 import { handoverPlanned, isReturnable } from '@/utils/requests'
 import { useAuthStore } from '@/stores/auth'
 
@@ -67,7 +62,7 @@ const confirm = useConfirm()
 const { busy, run } = useAction()
 const { date, dateTime } = useFormat()
 
-const assetRequest = ref<AssetRequest | null>(null)
+const assetRequest = ref<Schemas['AssetRequestOut'] | null>(null)
 const confirmMode = ref<'confirm' | 'schedule'>('confirm')
 const showConfirm = ref(false)
 const showReject = ref(false)
@@ -78,7 +73,7 @@ const showHandOut = ref(false)
 const showReturn = ref(false)
 const showExtend = ref(false)
 
-const availability = ref<PeriodAvailability | null>(null)
+const availability = ref<Schemas['AvailabilityOut'] | null>(null)
 
 async function load() {
   assetRequest.value = await requestsApi.get(props.id)
@@ -99,7 +94,7 @@ useLive(['request'], load, {
 })
 
 /** Before confirming: what the pool holds in the request's period, from the pickup day on. */
-async function loadAvailability(r: AssetRequest) {
+async function loadAvailability(r: Schemas['AssetRequestOut']) {
   const pickup = r.requested_pickup_date
   const start = pickup && pickup < r.start_date ? pickup : r.start_date
   availability.value = await portalApi.availability(
@@ -109,7 +104,7 @@ async function loadAvailability(r: AssetRequest) {
   )
 }
 
-function itemAvailability(item: AssetRequestItem): AvailabilityCounts | null {
+function itemAvailability(item: Schemas['AssetRequestItemOut']): Schemas['CountsOut'] | null {
   if (status.value !== 'submitted' || !availability.value || item.is_free_text) return null
   if (item.asset_model) return availability.value.models[item.asset_model.id] ?? null
   if (item.category) return availability.value.categories[item.category.id] ?? null
@@ -138,6 +133,7 @@ async function markReady() {
           skip_device_check: false,
           pickup_at: assetRequest.value!.pickup_at,
           pickup_location: assetRequest.value!.pickup_location?.id ?? null,
+          notify: true,
         }),
       t('common.saved'),
     )
@@ -165,7 +161,7 @@ const orderLines = computed<DraftLine[]>(() =>
     })),
 )
 
-async function act(action: () => Promise<AssetRequest>, success?: string) {
+async function act(action: () => Promise<Schemas['AssetRequestOut']>, success?: string) {
   const updated = await run(action, success)
   if (updated) assetRequest.value = updated
 }

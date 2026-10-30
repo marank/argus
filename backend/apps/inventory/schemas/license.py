@@ -20,7 +20,7 @@ class LicenseOut(Schema):
     seats: int
     # Annotated by ``license_queryset``.
     seats_used: int = Field(..., alias="used_seats")
-    assign_to: str
+    assign_to: License.AssignTo
     valid_from: date | None
     valid_until: date | None
     is_expired: bool

@@ -7,8 +7,6 @@ from apps.requests.models import AssetRequest, AssetRequestAllocation, AssetRequ
 if TYPE_CHECKING:
     from apps.accounts.models import User
 
-Kind = AssetRequestEvent.Kind
-
 
 def record(
     asset_request: AssetRequest, kind: str, user: User | None = None, **data: object

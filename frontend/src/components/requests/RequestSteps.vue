@@ -2,10 +2,9 @@
 import { NStep, NSteps } from 'naive-ui'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import type { Schemas } from '@/api/types'
 
-import type { AssetRequest } from '@/types/requests'
-
-const props = defineProps<{ assetRequest: AssetRequest }>()
+const props = defineProps<{ assetRequest: Schemas['AssetRequestOut'] }>()
 const { t } = useI18n()
 
 /** Requests that needed the department's approval show it as their first step. */

@@ -1,3 +1,4 @@
+import type { Schemas } from '@/api/types'
 import { h } from 'vue'
 
 import { teamsApi } from '@/api/accounts'
@@ -12,14 +13,12 @@ import { bool, mono, ownOrInherited } from '@/components/crud/cells'
 import { defineResource } from '@/components/crud/types'
 import { numberSequenceHints } from '@/components/masterdata/numberSequenceHints'
 import { i18n } from '@/i18n'
-import type { TeamRef } from '@/types/accounts'
-import type { AssetModel, Category } from '@/types/masterdata'
 import { categoryIcon } from '@/utils/icons'
 import { modelLabel } from '@/utils/models'
 
 const { n, t } = i18n.global
 
-export default defineResource<AssetModel>({
+export default defineResource<Schemas['AssetModelOut']>({
   key: 'models',
   permission: 'models',
   // Sections per category, hardware before software.
@@ -105,7 +104,7 @@ export default defineResource<AssetModel>({
       label: 'masterdata.fields.category',
       type: 'entity',
       fetcher: categoriesApi.list,
-      display: (c: Category) => c.path.join(' / '),
+      display: (c: Schemas['CategoryOut']) => c.path.join(' / '),
     },
     {
       key: 'manufacturer',
@@ -142,7 +141,7 @@ export default defineResource<AssetModel>({
           required: true,
           fetcher: manufacturersApi.list,
           display: (m: { name: string }) => m.name,
-          initial: (m: AssetModel) => m.manufacturer,
+          initial: (m: Schemas['AssetModelOut']) => m.manufacturer,
         },
         {
           key: 'category',
@@ -150,8 +149,8 @@ export default defineResource<AssetModel>({
           type: 'entity',
           required: true,
           fetcher: categoriesApi.list,
-          display: (c: Category) => c.path.join(' / '),
-          initial: (m: AssetModel) => ({ ...m.category, path: [m.category.name] }),
+          display: (c: Schemas['CategoryOut']) => c.path.join(' / '),
+          initial: (m: Schemas['AssetModelOut']) => ({ ...m.category, path: [m.category.name] }),
         },
         {
           key: 'tracking',
@@ -185,7 +184,7 @@ export default defineResource<AssetModel>({
           fetcher: numberSequencesApi.list,
           display: (s: { name: string; preview?: string }) =>
             s.preview ? `${s.name} · ${s.preview}` : s.name,
-          initial: (m: AssetModel) => m.number_sequence,
+          initial: (m: Schemas['AssetModelOut']) => m.number_sequence,
         },
       ],
       extra: numberSequenceHints('category'),
@@ -200,7 +199,7 @@ export default defineResource<AssetModel>({
           span: 2,
           fetcher: suppliersApi.list,
           display: (s: { name: string }) => s.name,
-          initial: (m: AssetModel) => m.default_supplier,
+          initial: (m: Schemas['AssetModelOut']) => m.default_supplier,
         },
         {
           key: 'list_price',
@@ -227,8 +226,8 @@ export default defineResource<AssetModel>({
           span: 2,
           help: 'masterdata.fields.modelTeamHelp',
           fetcher: teamsApi.list,
-          display: (t: TeamRef) => t.name,
-          initial: (m: AssetModel) => m.team,
+          display: (t: Schemas['TeamRefOut']) => t.name,
+          initial: (m: Schemas['AssetModelOut']) => m.team,
         },
       ],
     },
@@ -249,7 +248,7 @@ export default defineResource<AssetModel>({
           help: 'masterdata.fields.compatibleWithHelp',
           fetcher: assetModelsApi.list,
           display: modelLabel,
-          initial: (m: AssetModel) => m.compatible_with,
+          initial: (m: Schemas['AssetModelOut']) => m.compatible_with,
         },
         { key: 'description', label: 'common.description', type: 'textarea' },
         { key: 'specifications', label: 'masterdata.fields.specifications', type: 'textarea' },

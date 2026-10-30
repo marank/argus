@@ -1,7 +1,7 @@
 from typing import Any
 from uuid import UUID
 
-from ninja import ModelSchema, Schema
+from ninja import Schema
 
 from apps.accounts.models import Department, User
 from apps.core.schemas import RefOut, per_response
@@ -9,17 +9,19 @@ from apps.core.schemas import RefOut, per_response
 from .user import UserRefOut
 
 
-class DepartmentOut(ModelSchema):
+class DepartmentOut(Schema):
+    id: UUID
+    name: str
+    icon: Department.Icon
+    code: str
+    cost_center: str
+    sort_order: int
     member_count: int = 0
     parent: RefOut | None = None
     path: list[str] = []
     approvers: list[UserRefOut] = []
     # The approvers that decide: the own or, without any, those of the nearest department above.
     effective_approvers: list[UserRefOut] = []
-
-    class Meta:
-        model = Department
-        fields = ["id", "name", "icon", "code", "cost_center", "sort_order"]
 
     @staticmethod
     def resolve_member_count(obj: Department) -> int:

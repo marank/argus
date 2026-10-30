@@ -6,13 +6,13 @@ import { onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { terminalApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import { useFormat } from '@/composables/useFormat'
-import type { TerminalPickup } from '@/types/requests'
 
 const { t } = useI18n()
 const { weekday } = useFormat()
 
-const pickups = ref<TerminalPickup[] | null>(null)
+const pickups = ref<Schemas['TerminalPickupOut'][] | null>(null)
 const search = ref('')
 
 async function load() {

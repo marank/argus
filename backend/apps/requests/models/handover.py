@@ -5,6 +5,12 @@ from django.utils.translation import gettext_lazy as _
 from apps.core.models import UUIDModel
 
 
+class HandoverMethod(models.TextChoices):
+    SIGNATURE = "signature", _("Signed at pickup terminal")
+    DELIVERED = "delivered", _("Delivered by IT")
+    DIRECT = "direct", _("Handed out by IT")
+
+
 class Handover(UUIDModel):
     """Record of how the devices of a request reached the employee.
 
@@ -13,18 +19,13 @@ class Handover(UUIDModel):
     hand-outs are documented by the IT staff member without a signature.
     """
 
-    class Method(models.TextChoices):
-        SIGNATURE = "signature", _("Signed at pickup terminal")
-        DELIVERED = "delivered", _("Delivered by IT")
-        DIRECT = "direct", _("Handed out by IT")
-
     asset_request = models.OneToOneField(
         "requests.AssetRequest",
         verbose_name=_("request"),
         on_delete=models.CASCADE,
         related_name="handover",
     )
-    method = models.CharField(_("method"), max_length=10, choices=Method.choices)
+    method = models.CharField(_("method"), max_length=10, choices=HandoverMethod.choices)
     received_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_("received by"),

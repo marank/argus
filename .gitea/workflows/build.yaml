@@ -96,6 +96,13 @@ jobs:
       - name: Check for missing migrations
         run: uv run python manage.py makemigrations --check --dry-run
 
+      # The frontend's generated types come from this file (pnpm api:types).
+      - name: OpenAPI schema up to date
+        run: |
+          uv run python manage.py export_openapi /tmp/openapi.json
+          cmp /tmp/openapi.json ../frontend/openapi.json \
+            || { echo "API changed: run the VS Code task 'API: update types' and commit both files" >&2; exit 1; }
+
       - name: Django system checks
         run: uv run python manage.py check
 
@@ -134,6 +141,13 @@ jobs:
         run: |
           corepack enable
           pnpm install --frozen-lockfile
+
+      - name: API types up to date
+        run: |
+          cp src/api/schema.d.ts /tmp/schema.d.ts
+          pnpm api:types
+          cmp src/api/schema.d.ts /tmp/schema.d.ts \
+            || { echo "src/api/schema.d.ts does not match openapi.json: run pnpm api:types" >&2; exit 1; }
 
       - name: Lint
         run: |

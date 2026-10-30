@@ -16,6 +16,7 @@ import { useI18n } from 'vue-i18n'
 
 import { assetsApi } from '@/api/inventory'
 import { assetModelsApi, locationsApi, suppliersApi } from '@/api/masterdata'
+import type { Schemas } from '@/api/types'
 import DateField from '@/components/common/DateField.vue'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import FieldLabel from '@/components/common/FieldLabel.vue'
@@ -24,8 +25,8 @@ import ToggleRow from '@/components/common/ToggleRow.vue'
 import { useAction } from '@/composables/useAction'
 import { useFieldErrors } from '@/composables/useFieldErrors'
 import { fromIsoDate, toIsoDate, useFormat } from '@/composables/useFormat'
-import { ASSET_CONDITIONS, type AssetSeriesInput, type AssetSeriesPreview } from '@/types/inventory'
-import type { AssetModel } from '@/types/masterdata'
+import type { Id } from '@/types/common'
+import { ASSET_CONDITIONS } from '@/types/inventory'
 import { modelLabel } from '@/utils/models'
 
 /** Create many identical devices at once; the number sequence of the model or its category numbers them. */
@@ -38,7 +39,13 @@ const message = useMessage()
 
 const MAX_COUNT = 500
 
-function empty(): AssetSeriesInput {
+/** Model and count stay empty until filled in; submitting waits for both. */
+type Form = Omit<Schemas['AssetSeriesIn'], 'model' | 'count'> & {
+  model: Id | null
+  count: number | null
+}
+
+function empty(): Form {
   return {
     model: null,
     count: 10,
@@ -53,10 +60,10 @@ function empty(): AssetSeriesInput {
   }
 }
 
-const form = reactive<AssetSeriesInput>(empty())
+const form = reactive<Form>(empty())
 const fieldErrors = useFieldErrors(form)
-const model = ref<AssetModel | null>(null)
-const preview = ref<AssetSeriesPreview | null>(null)
+const model = ref<Schemas['AssetModelOut'] | null>(null)
+const preview = ref<Schemas['AssetSeriesPreviewOut'] | null>(null)
 const previewError = ref('')
 
 watch(show, (visible) => {
@@ -67,7 +74,7 @@ watch(show, (visible) => {
 })
 
 /** The model's purchase defaults; whatever was filled in by hand stays. */
-function onModel(selected: AssetModel | null) {
+function onModel(selected: Schemas['AssetModelOut'] | null) {
   model.value = selected
   if (!selected) return
   form.supplier ??= selected.default_supplier?.id ?? null
@@ -117,7 +124,11 @@ const price = computed({
 const canSubmit = computed(() => Boolean(form.model && form.count && preview.value))
 
 async function submit() {
-  const created = await run(() => assetsApi.createSeries(form).catch(fieldErrors.capture))
+  const created = await run(() =>
+    assetsApi
+      .createSeries({ ...form, model: form.model!, count: form.count! })
+      .catch(fieldErrors.capture),
+  )
   if (created) {
     show.value = false
     emit('created')

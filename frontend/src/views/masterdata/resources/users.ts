@@ -1,3 +1,4 @@
+import type { Schemas } from '@/api/types'
 import { Building2 } from '@lucide/vue'
 import { NTag } from 'naive-ui'
 import { h } from 'vue'
@@ -10,12 +11,9 @@ import { defineResource } from '@/components/crud/types'
 import { i18n } from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useFeaturesStore } from '@/stores/features'
-import type { User } from '@/types/accounts'
-import type { Ref } from '@/types/common'
-import type { Location } from '@/types/masterdata'
 
 /** Administrator, IT staff, terminal, LDAP and 2FA as small tags in one column. */
-function accountFlags(u: User) {
+function accountFlags(u: Schemas['UserOut']) {
   const t = i18n.global.t
   const flags = [
     u.is_superuser && t('masterdata.fields.administratorShort'),
@@ -32,7 +30,7 @@ function accountFlags(u: User) {
   )
 }
 
-export default defineResource<User>({
+export default defineResource<Schemas['UserOut']>({
   key: 'users',
   permission: 'users',
   // Sections per department.
@@ -116,7 +114,7 @@ export default defineResource<User>({
           type: 'entity',
           fetcher: departmentsApi.list,
           display: (d: { name: string; path?: string[] }) => d.path?.join(' / ') ?? d.name,
-          initial: (u: User) => u.department,
+          initial: (u: Schemas['UserOut']) => u.department,
         },
         { key: 'job_title', label: 'masterdata.fields.jobTitle', type: 'text' },
         { key: 'employee_number', label: 'masterdata.fields.employeeNumber', type: 'mono' },
@@ -155,8 +153,8 @@ export default defineResource<User>({
           multiple: true,
           span: 1,
           fetcher: teamsApi.list,
-          display: (t: Ref) => t.name,
-          initial: (u: User) => u.teams,
+          display: (t: Schemas['RefOut']) => t.name,
+          initial: (u: Schemas['UserOut']) => u.teams,
           help: () =>
             useFeaturesStore().ldapEnabled ? 'masterdata.fields.userTeamsLdapHelp' : undefined,
           visible: (form) => !!form.is_staff && useAuthStore().can('teams', 'write'),
@@ -168,8 +166,8 @@ export default defineResource<User>({
           multiple: true,
           span: 1,
           fetcher: rolesApi.list,
-          display: (r: Ref) => r.name,
-          initial: (u: User) => u.roles,
+          display: (r: Schemas['RefOut']) => r.name,
+          initial: (u: Schemas['UserOut']) => u.roles,
           help: 'masterdata.fields.userRolesHelp',
           // Administrators have every right anyway.
           visible: (form) => !!form.is_staff && !form.is_superuser && useAuthStore().isSuperuser,
@@ -205,8 +203,8 @@ export default defineResource<User>({
           type: 'entity',
           span: 2,
           fetcher: locationsApi.list,
-          display: (l: Location) => l.full_name,
-          initial: (u: User) => u.terminal_location,
+          display: (l: Schemas['LocationOut']) => l.full_name,
+          initial: (u: Schemas['UserOut']) => u.terminal_location,
           help: 'masterdata.fields.terminalLocationHelp',
           visible: (form) => !!form.is_terminal,
         },

@@ -13,6 +13,11 @@ if TYPE_CHECKING:
     from .asset_model import AssetModel
 
 
+class CategoryKind(models.TextChoices):
+    HARDWARE = "hardware", _("Hardware")
+    SOFTWARE = "software", _("Software")
+
+
 class Category(TimeStampedModel):
     """Category such as *Laptops*, *MDE accessories* or *Office software*.
 
@@ -21,12 +26,10 @@ class Category(TimeStampedModel):
     model does not matter ("I need a headset").
     """
 
-    class Kind(models.TextChoices):
-        HARDWARE = "hardware", _("Hardware")
-        SOFTWARE = "software", _("Software")
-
     name = models.CharField(_("name"), max_length=100)
-    kind = models.CharField(_("type"), max_length=10, choices=Kind.choices, default=Kind.HARDWARE)
+    kind = models.CharField(
+        _("type"), max_length=10, choices=CategoryKind.choices, default=CategoryKind.HARDWARE
+    )
     item_name = models.CharField(
         _("singular name"),
         max_length=100,
@@ -108,7 +111,7 @@ class Category(TimeStampedModel):
 
     @property
     def is_software(self) -> bool:
-        return self.kind == self.Kind.SOFTWARE
+        return self.kind == CategoryKind.SOFTWARE
 
     def clean(self) -> None:
         # The UUID is set on creation, so ``self.pk`` does not tell a new category apart.

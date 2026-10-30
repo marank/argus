@@ -2,13 +2,15 @@ from typing import Literal
 
 from ninja import Schema
 
+from apps.accounts.models import TwoFactorMethod
+
 Method = Literal["email", "totp"]
 
 
 class TwoFactorChallengeOut(Schema):
     """Answer of the login when a second step is needed (HTTP 202)."""
 
-    two_factor: Method
+    two_factor: TwoFactorMethod
     # Email method: where the code went (``m***@example.com``) and whether it went out.
     email_hint: str = ""
     code_sent: bool = False
@@ -23,7 +25,7 @@ class PasswordIn(Schema):
 
 
 class TwoFactorStatusOut(Schema):
-    method: Method | None
+    method: TwoFactorMethod | None
     backup_codes_left: int
     # Codes by email can reach the user (address set, mail sending configured).
     email_available: bool
@@ -36,7 +38,7 @@ class TwoFactorSetupIn(Schema):
 
 
 class TwoFactorSetupOut(Schema):
-    method: Method
+    method: TwoFactorMethod
     # Authenticator app: the secret to type in, the otpauth link and it as QR code (SVG data URI).
     secret: str = ""
     uri: str = ""

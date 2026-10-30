@@ -1,3 +1,4 @@
+import type { Schemas } from '@/api/types'
 import { useMessage } from 'naive-ui'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -5,7 +6,6 @@ import { useI18n } from 'vue-i18n'
 import { ApiError } from '@/api/client'
 import { requestsApi } from '@/api/requests'
 import { useConfirm } from '@/composables/useConfirm'
-import type { OverdueReturn } from '@/types/dashboard'
 
 /**
  * Emails an employee to return their devices, after asking (as on the
@@ -17,7 +17,7 @@ export function useRemind(reload: () => Promise<unknown>) {
   const confirm = useConfirm()
   const sending = ref<string | null>(null)
 
-  async function remind(row: Pick<OverdueReturn, 'id' | 'requester'>) {
+  async function remind(row: Pick<Schemas['OverdueReturnOut'], 'id' | 'requester'>) {
     const name = row.requester.display_name
     if (!(await confirm(t('requests.actions.confirmRemind', { name })))) return
     sending.value = row.id

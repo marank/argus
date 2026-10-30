@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { ScanLine } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
-
-import type { AssetRequestListItem } from '@/types/requests'
+import type { Schemas } from '@/api/types'
 
 /** Marks a direct hand-out next to the status; a request needs no mark. */
-defineProps<{ origin: AssetRequestListItem['origin'] }>()
+defineProps<{ origin: Schemas['AssetRequestListOut']['origin'] }>()
 const { t } = useI18n()
 </script>
 

@@ -8,7 +8,8 @@ import { dashboardApi } from '@/api/dashboard'
 import ExtendModal from '@/components/requests/ExtendModal.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useLive } from '@/composables/useLive'
-import type { DueReturn, WidgetProps } from '@/types/dashboard'
+import type { Schemas } from '@/api/types'
+import type { WidgetProps } from '@/types/dashboard'
 
 import { useDateMode } from './dateMode'
 import DateModeToggle from './DateModeToggle.vue'
@@ -29,15 +30,15 @@ const save = (options: Record<string, unknown>) => emit('update:options', option
 const { mode, setMode, when, other } = useDateMode(stored, save)
 const days = useOption<(typeof PERIODS)[number]>(stored, save, 'days', 3, oneOf(PERIODS))
 
-const rows = ref<DueReturn[] | null>(null)
+const rows = ref<Schemas['DueReturnOut'][] | null>(null)
 const load = async () => (rows.value = await dashboardApi.dueReturns(days.value))
 watch(days, load, { immediate: true })
 useLive(['request'], load)
 const { remind, sending } = useRemind(load)
 
-const extending = ref<DueReturn | null>(null)
+const extending = ref<Schemas['DueReturnOut'] | null>(null)
 const showExtend = ref(false)
-function extend(row: DueReturn) {
+function extend(row: Schemas['DueReturnOut']) {
   extending.value = row
   showExtend.value = true
 }

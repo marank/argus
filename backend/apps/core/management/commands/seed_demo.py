@@ -24,8 +24,11 @@ from apps.core.models import NumberSequence
 from apps.core.services.numbering import get_sequence
 from apps.inventory.models import (
     Asset,
-    AssetEvent,
+    AssetEventKind,
     AssetIssue,
+    AssetIssueKind,
+    AssetIssueStatus,
+    AssetStatus,
     Consumable,
     ConsumableMovement,
     License,
@@ -34,10 +37,18 @@ from apps.inventory.services import assets as asset_service
 from apps.inventory.services import issues as issue_service
 from apps.inventory.services import licenses as license_service
 from apps.inventory.services.consumables import move_consumable
-from apps.masterdata.models import AssetModel, Category, Location, Manufacturer, Supplier
+from apps.masterdata.models import (
+    AssetModel,
+    Category,
+    CategoryKind,
+    Location,
+    LocationKind,
+    Manufacturer,
+    Supplier,
+)
 from apps.procurement.models import PurchaseOrder
 from apps.procurement.services import orders as order_service
-from apps.requests.models import AssetRequest, Handover
+from apps.requests.models import AssetRequest, HandoverMethod
 from apps.requests.services import workflow
 
 DEMO_PASSWORD = "argus-demo"
@@ -169,19 +180,19 @@ class Command(BaseCommand):
         )
         full_access.members.add(it)
 
-        hq = Location.objects.create(name="Headquarters", code="HQ", kind=Location.Kind.SITE)
+        hq = Location.objects.create(name="Headquarters", code="HQ", kind=LocationKind.SITE)
         storage = Location.objects.create(
-            name="IT storage", code="HQ-IT-01", kind=Location.Kind.STORAGE, parent=hq
+            name="IT storage", code="HQ-IT-01", kind=LocationKind.STORAGE, parent=hq
         )
         Location.objects.create(
             name="IT service desk",
             code="HQ-IT-00",
-            kind=Location.Kind.ROOM,
+            kind=LocationKind.ROOM,
             parent=hq,
             is_pickup_point=True,
         )
         warehouse = Location.objects.create(
-            name="Warehouse", code="WH", kind=Location.Kind.BUILDING, parent=hq
+            name="Warehouse", code="WH", kind=LocationKind.BUILDING, parent=hq
         )
 
         supplier = Supplier.objects.create(
@@ -202,7 +213,7 @@ class Command(BaseCommand):
                 )
             categories[code] = Category.objects.create(
                 allow_any_model=code not in ("mde-accessories", "consumables", *SOFTWARE_CATEGORIES),
-                kind=Category.Kind.SOFTWARE if code in SOFTWARE_CATEGORIES else Category.Kind.HARDWARE,
+                kind=CategoryKind.SOFTWARE if code in SOFTWARE_CATEGORIES else CategoryKind.HARDWARE,
                 code=code,
                 name=name,
                 item_name=ITEM_NAMES.get(code, ""),
@@ -308,7 +319,7 @@ class Command(BaseCommand):
             asset_service.record_event(
                 mde,
                 {
-                    "kind": AssetEvent.Kind.BATTERY_REPLACED,
+                    "kind": AssetEventKind.BATTERY_REPLACED,
                     "description": "Battery no longer held a full shift.",
                     "component": "Battery 4680 mAh",
                     "occurred_at": timezone.now() - timedelta(days=12),
@@ -544,16 +555,16 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:
     )
     support_role.members.add(by_name["jkoch"])
 
-    munich = Location.objects.create(name="Branch Munich", code="MUC", kind=Location.Kind.SITE)
+    munich = Location.objects.create(name="Branch Munich", code="MUC", kind=LocationKind.SITE)
     munich_storage = Location.objects.create(
-        name="IT cabinet", code="MUC-IT", kind=Location.Kind.STORAGE, parent=munich
+        name="IT cabinet", code="MUC-IT", kind=LocationKind.STORAGE, parent=munich
     )
     munich_desk = Location.objects.create(
-        name="Reception", code="MUC-00", kind=Location.Kind.ROOM, parent=munich, is_pickup_point=True
+        name="Reception", code="MUC-00", kind=LocationKind.ROOM, parent=munich, is_pickup_point=True
     )
-    Location.objects.create(name="Meeting room Atlas", code="HQ-2-11", kind=Location.Kind.ROOM, parent=hq)
+    Location.objects.create(name="Meeting room Atlas", code="HQ-2-11", kind=LocationKind.ROOM, parent=hq)
     goods_in = Location.objects.create(
-        name="Goods receipt", code="WH-GR", kind=Location.Kind.ROOM, parent=warehouse
+        name="Goods receipt", code="WH-GR", kind=LocationKind.ROOM, parent=warehouse
     )
 
     brueckner = Supplier.objects.create(
@@ -664,11 +675,11 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:
 
     # Devices in other states.
     in_repair = devices["Latitude 5450"][8]
-    asset_service.update_asset(in_repair, {"status": Asset.Status.IN_REPAIR}, it)
+    asset_service.update_asset(in_repair, {"status": AssetStatus.IN_REPAIR}, it)
     asset_service.record_event(
         in_repair,
         {
-            "kind": AssetEvent.Kind.REPAIR,
+            "kind": AssetEventKind.REPAIR,
             "description": "Sent to Dell for a keyboard replacement.",
             "cost": "89.00",
         },
@@ -676,11 +687,11 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:
     )
     asset_service.update_asset(
         devices["iPad 10.9 (10th gen)"][5],
-        {"status": Asset.Status.LOST, "notes": "Lost on a business trip, reported to the police."},
+        {"status": AssetStatus.LOST, "notes": "Lost on a business trip, reported to the police."},
         it,
     )
     asset_service.update_asset(
-        devices["P2425H"][21], {"status": Asset.Status.RETIRED, "condition": Asset.Condition.DEFECTIVE}, it
+        devices["P2425H"][21], {"status": AssetStatus.RETIRED, "condition": Asset.Condition.DEFECTIVE}, it
     )
     asset_service.update_asset(
         devices["ThinkPad Universal USB-C Dock"][11],
@@ -690,11 +701,11 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:
 
     # Service history spread over the last year.
     history = [
-        (AssetEvent.Kind.BATTERY_REPLACED, "Battery replaced after swelling.", "Battery 57 Wh", "120.00"),
-        (AssetEvent.Kind.INSPECTION, "Annual electrical safety inspection (DGUV V3) passed.", "", None),
-        (AssetEvent.Kind.MAINTENANCE, "Firmware and BIOS updated.", "", None),
-        (AssetEvent.Kind.COMPONENT_REPLACED, "Display replaced after a crack.", "Display panel", "245.00"),
-        (AssetEvent.Kind.NOTE, "User reports occasional Wi-Fi drops; drivers updated.", "", None),
+        (AssetEventKind.BATTERY_REPLACED, "Battery replaced after swelling.", "Battery 57 Wh", "120.00"),
+        (AssetEventKind.INSPECTION, "Annual electrical safety inspection (DGUV V3) passed.", "", None),
+        (AssetEventKind.MAINTENANCE, "Firmware and BIOS updated.", "", None),
+        (AssetEventKind.COMPONENT_REPLACED, "Display replaced after a crack.", "Display panel", "245.00"),
+        (AssetEventKind.NOTE, "User reports occasional Wi-Fi drops; drivers updated.", "", None),
     ]
     for asset in rng.sample(laptops + devices["P2425H"][:14], 12):
         kind, description, component, cost = rng.choice(history)
@@ -817,7 +828,7 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:
     def hand_out(asset_request: AssetRequest) -> AssetRequest:
         confirm(asset_request)
         mark_ready(asset_request, pickup_days=0)
-        return workflow.hand_out(asset_request, it, method=Handover.Method.DIRECT)
+        return workflow.hand_out(asset_request, it, method=HandoverMethod.DIRECT)
 
     tablets, monitors = categories["tablets"], categories["monitors"]
     submit(
@@ -983,13 +994,11 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:
         assert asset is not None  # everyone reporting here got devices above
         return issue_service.report_issue(asset, user, kind, description)
 
-    report(by_name["dhoffmann"], AssetIssue.Kind.DEFECT, "Battery is empty after two hours.")
-    flicker = report(
-        by_name["jwagner"], AssetIssue.Kind.DAMAGE, "Monitor flickers when the cable is touched."
-    )
+    report(by_name["dhoffmann"], AssetIssueKind.DEFECT, "Battery is empty after two hours.")
+    flicker = report(by_name["jwagner"], AssetIssueKind.DAMAGE, "Monitor flickers when the cable is touched.")
     flicker.assignee = it
     flicker.save(update_fields=["assignee"])
-    issue_service.update_issue(flicker, it, AssetIssue.Status.IN_PROGRESS, by_it=True)
+    issue_service.update_issue(flicker, it, AssetIssueStatus.IN_PROGRESS, by_it=True)
     issue_service.post_message(
         flicker, it, "Does it also flicker with the spare cable from the IT desk?", by_it=True
     )
@@ -997,9 +1006,9 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:
         flicker, by_name["jwagner"], "Yes, with that cable too, but less often.", by_it=False
     )
     issue_service.update_issue(
-        report(by_name["lkrueger"], AssetIssue.Kind.OTHER, "Laptop is very slow since the last update."),
+        report(by_name["lkrueger"], AssetIssueKind.OTHER, "Laptop is very slow since the last update."),
         it,
-        AssetIssue.Status.RESOLVED,
+        AssetIssueStatus.RESOLVED,
         "Disk was full; temporary files removed and storage doubled.",
         by_it=True,
     )

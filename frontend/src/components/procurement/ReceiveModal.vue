@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Schemas } from '@/api/types'
 import type { Id } from '@/types/common'
 import { NButton, NForm, NFormItem, NInput, NInputNumber, NModal } from 'naive-ui'
 import { ref, watch } from 'vue'
@@ -9,17 +10,16 @@ import { ordersApi, type ReceiptInput } from '@/api/procurement'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import FieldLabel from '@/components/common/FieldLabel.vue'
 import { useAction } from '@/composables/useAction'
-import type { Order, OrderLine } from '@/types/procurement'
 
 interface ReceiptDraft {
-  line: OrderLine
+  line: Schemas['PurchaseOrderLineOut']
   quantity: number
   serials: string
 }
 
-const props = defineProps<{ order: Order }>()
+const props = defineProps<{ order: Schemas['PurchaseOrderOut'] }>()
 const show = defineModel<boolean>('show', { required: true })
-const emit = defineEmits<{ saved: [order: Order] }>()
+const emit = defineEmits<{ saved: [order: Schemas['PurchaseOrderOut']] }>()
 const { t } = useI18n()
 const { busy, run } = useAction()
 

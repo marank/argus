@@ -4,9 +4,9 @@ import { NInput } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import type { Schemas } from '@/api/types'
 import EmptyState from '@/components/common/EmptyState.vue'
 import type { Id } from '@/types/common'
-import type { CatalogCategory, CatalogModel } from '@/types/requests'
 import { categoryIcon } from '@/utils/icons'
 import { anyModelLabel } from '@/utils/requests'
 
@@ -23,13 +23,13 @@ import { offersAnyModel, optionKey, optionCounts, type CatalogOption } from './t
  * the groups on the left then browse what is in stock.
  */
 const props = defineProps<{
-  catalog: CatalogCategory[]
+  catalog: Schemas['CatalogCategoryOut'][]
   cartCounts: Record<string, number>
   direct?: boolean
 }>()
 const emit = defineEmits<{
-  add: [category: CatalogCategory, model?: CatalogModel]
-  addFreeText: [text: string, category?: CatalogCategory]
+  add: [category: Schemas['CatalogCategoryOut'], model?: Schemas['CatalogModelOut']]
+  addFreeText: [text: string, category?: Schemas['CatalogCategoryOut']]
 }>()
 const { t } = useI18n()
 
@@ -39,7 +39,7 @@ const topLevel = computed(() => {
   return props.catalog.filter((c) => !c.parent_id || !ids.has(c.parent_id))
 })
 /** All subcategories below a group, each followed by its own, at any depth. */
-function descendantsOf(id: Id): CatalogCategory[] {
+function descendantsOf(id: Id): Schemas['CatalogCategoryOut'][] {
   return props.catalog
     .filter((c) => c.parent_id === id)
     .flatMap((child) => [child, ...descendantsOf(child.id)])

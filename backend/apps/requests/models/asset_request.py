@@ -13,6 +13,17 @@ if TYPE_CHECKING:
     from apps.accounts.models import User
 
 
+class AssetRequestStatus(models.TextChoices):
+    PENDING_APPROVAL = "pending_approval", _("Awaiting approval")
+    SUBMITTED = "submitted", _("Submitted")
+    CONFIRMED = "confirmed", _("Confirmed")
+    READY = "ready", _("Ready for pickup")
+    HANDED_OUT = "handed_out", _("Handed out")
+    COMPLETED = "completed", _("Completed")
+    REJECTED = "rejected", _("Rejected")
+    CANCELLED = "cancelled", _("Cancelled")
+
+
 class AssetRequest(TimeStampedModel):
     """An employee's request for devices, either for a period or permanently.
 
@@ -31,16 +42,6 @@ class AssetRequest(TimeStampedModel):
     Direct hand-outs (``origin``) are recorded by IT for devices handed out on the
     spot: they skip straight to handed out.
     """
-
-    class Status(models.TextChoices):
-        PENDING_APPROVAL = "pending_approval", _("Awaiting approval")
-        SUBMITTED = "submitted", _("Submitted")
-        CONFIRMED = "confirmed", _("Confirmed")
-        READY = "ready", _("Ready for pickup")
-        HANDED_OUT = "handed_out", _("Handed out")
-        COMPLETED = "completed", _("Completed")
-        REJECTED = "rejected", _("Rejected")
-        CANCELLED = "cancelled", _("Cancelled")
 
     class Duration(models.TextChoices):
         TEMPORARY = "temporary", _("Temporary")
@@ -68,15 +69,20 @@ class AssetRequest(TimeStampedModel):
         QUICK = "quick", _("Quick assignment")
 
     OPEN_STATUSES = (
-        Status.PENDING_APPROVAL,
-        Status.SUBMITTED,
-        Status.CONFIRMED,
-        Status.READY,
-        Status.HANDED_OUT,
+        AssetRequestStatus.PENDING_APPROVAL,
+        AssetRequestStatus.SUBMITTED,
+        AssetRequestStatus.CONFIRMED,
+        AssetRequestStatus.READY,
+        AssetRequestStatus.HANDED_OUT,
     )
-    CANCELLABLE_STATUSES = (Status.PENDING_APPROVAL, Status.SUBMITTED, Status.CONFIRMED, Status.READY)
+    CANCELLABLE_STATUSES = (
+        AssetRequestStatus.PENDING_APPROVAL,
+        AssetRequestStatus.SUBMITTED,
+        AssetRequestStatus.CONFIRMED,
+        AssetRequestStatus.READY,
+    )
     # Devices handed out permanently can still be taken back later.
-    RETURNABLE_STATUSES = (Status.HANDED_OUT, Status.COMPLETED)
+    RETURNABLE_STATUSES = (AssetRequestStatus.HANDED_OUT, AssetRequestStatus.COMPLETED)
 
     number = models.CharField(_("number"), max_length=30, unique=True, blank=True)
     requester = models.ForeignKey(
@@ -103,7 +109,11 @@ class AssetRequest(TimeStampedModel):
     end_date = models.DateField(_("needed until"), null=True, blank=True)
     origin = models.CharField(_("origin"), max_length=10, choices=Origin.choices, default=Origin.REQUEST)
     status = models.CharField(
-        _("status"), max_length=20, choices=Status.choices, default=Status.SUBMITTED, db_index=True
+        _("status"),
+        max_length=20,
+        choices=AssetRequestStatus.choices,
+        default=AssetRequestStatus.SUBMITTED,
+        db_index=True,
     )
     approval = models.CharField(
         _("approval"), max_length=10, choices=Approval.choices, default=Approval.NOT_REQUIRED, blank=True
@@ -241,7 +251,7 @@ class AssetRequest(TimeStampedModel):
     @property
     def is_overdue(self) -> bool:
         return (
-            self.status == self.Status.HANDED_OUT
+            self.status == AssetRequestStatus.HANDED_OUT
             and self.end_date is not None
             and self.end_date < timezone.localdate()
         )

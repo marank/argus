@@ -12,6 +12,8 @@ repos:
         exclude: ^(\.vscode/|frontend/tsconfig.*\.json$)  # JSON with comments
       - id: check-merge-conflict
       - id: check-added-large-files
+        # Generated from the API (pnpm api:types), large by nature.
+        exclude: ^frontend/(openapi\.json|src/api/schema\.d\.ts)$
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.17.3

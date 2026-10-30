@@ -1,19 +1,19 @@
+import type { Schemas } from '@/api/types'
 import { rolesApi, usersApi } from '@/api/accounts'
 import { text } from '@/components/crud/cells'
 import { defineResource } from '@/components/crud/types'
 import PermissionMatrix from '@/components/masterdata/PermissionMatrix.vue'
 import { i18n } from '@/i18n'
-import type { Role, UserRef } from '@/types/accounts'
 
 /** Count of areas per level, e.g. "3 write · 5 read". */
-function summary(role: Role): string {
+function summary(role: Schemas['RoleOut']): string {
   const levels = Object.values(role.permissions)
   const write = levels.filter((l) => l === 'write').length
   const read = levels.filter((l) => l === 'read').length
   return i18n.global.t('masterdata.roles.summary', { write, read })
 }
 
-export default defineResource<Role>({
+export default defineResource<Schemas['RoleOut']>({
   key: 'roles',
   // Who may change what is decided by administrators only.
   superuser: true,
@@ -42,8 +42,8 @@ export default defineResource<Role>({
           multiple: true,
           fetcher: usersApi.list,
           params: { is_staff: true, is_active: true },
-          display: (u: UserRef) => u.display_name,
-          initial: (r: Role) => r.members,
+          display: (u: Schemas['UserRefOut']) => u.display_name,
+          initial: (r: Schemas['RoleOut']) => r.members,
           help: 'masterdata.roles.membersHelp',
         },
       ],

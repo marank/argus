@@ -6,7 +6,7 @@ import { useI18n } from 'vue-i18n'
 import SettingRow from '@/components/settings/SettingRow.vue'
 import SettingsGroup from '@/components/settings/SettingsGroup.vue'
 import { useFeaturesStore } from '@/stores/features'
-import type { FlagKey, SiteSettings } from '@/types/settings'
+import type { Schemas } from '@/api/types'
 
 /**
  * One block per module: its own switch, then the features that belong to it.
@@ -19,7 +19,7 @@ const features = useFeaturesStore()
 
 onMounted(() => features.load())
 
-type Definition = SiteSettings['definitions'][number]
+type Definition = Schemas['SiteSettingsOut']['definitions'][number]
 
 const settings = computed(() => features.settings)
 const groups = computed(() => {
@@ -35,10 +35,10 @@ const groups = computed(() => {
   }
 })
 
-const isStored = (key: FlagKey) => settings.value?.stored[key] ?? true
+const isStored = (key: string) => settings.value?.stored[key] ?? true
 
 /** Other modules a feature needs (besides the one it is listed under) that are off. */
-function otherMissing(feature: Definition, parent?: FlagKey): string[] {
+function otherMissing(feature: Definition, parent?: string): string[] {
   return feature.requires
     .filter((key) => key !== parent && !isStored(key))
     .map((key) => t(`settings.flags.${key}`))
@@ -46,7 +46,7 @@ function otherMissing(feature: Definition, parent?: FlagKey): string[] {
 
 const featureDisabled = (feature: Definition) => feature.requires.some((key) => !isStored(key))
 
-async function toggle(key: FlagKey, value: boolean) {
+async function toggle(key: string, value: boolean) {
   try {
     await features.update({ [key]: value })
     message.success(

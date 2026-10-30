@@ -7,7 +7,7 @@ from ninja import Field, Schema
 from apps.accounts.schemas import UserRefOut
 from apps.core.schemas import RefOut
 from apps.masterdata.schemas.refs import AssetModelRefOut, LocationRefOut
-from apps.procurement.models import PurchaseOrder, PurchaseOrderLine
+from apps.procurement.models import PurchaseOrder, PurchaseOrderLine, PurchaseOrderStatus
 
 
 class AssetRequestRefOut(Schema):
@@ -39,7 +39,7 @@ class PurchaseOrderListOut(Schema):
     id: UUID
     number: str
     supplier: RefOut | None
-    status: str
+    status: PurchaseOrderStatus
     order_date: date | None
     expected_date: date | None
     supplier_reference: str

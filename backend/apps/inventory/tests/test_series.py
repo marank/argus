@@ -1,4 +1,4 @@
-from apps.inventory.models import Asset, AssetEvent
+from apps.inventory.models import Asset, AssetEvent, AssetEventKind
 from apps.masterdata.models import AssetModel, Category, Location
 
 JSON = "application/json"
@@ -23,7 +23,7 @@ def test_series_numbers_devices_in_a_row(it_client):
     created = Asset.objects.filter(inventory_number__in=numbers)
     assert created.count() == 120
     assert set(created.values_list("location", "serial_number", "status")) == {(warehouse.pk, "", "in_stock")}
-    assert AssetEvent.objects.filter(asset__in=created, kind=AssetEvent.Kind.CREATED).count() == 120
+    assert AssetEvent.objects.filter(asset__in=created, kind=AssetEventKind.CREATED).count() == 120
 
     # The next series continues where this one ended.
     preview = it_client.get(f"/api/inventory/assets/series/preview?model={sx58.pk}&count=5").json()

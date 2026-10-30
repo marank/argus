@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createI18n } from 'vue-i18n'
 
 import OverdueReturnsWidget from '@/components/dashboard/widgets/OverdueReturnsWidget.vue'
-import type { ITOverview, OverdueReturn } from '@/types/dashboard'
+import type { Schemas } from '@/api/types'
 
 const confirm = vi.fn<(content: string) => Promise<boolean>>()
 const remind = vi.fn<(id: string) => Promise<unknown>>()
@@ -19,7 +19,7 @@ vi.mock('naive-ui', async (importOriginal) => ({
   useMessage: () => ({ success: vi.fn<() => void>(), error: vi.fn<() => void>() }),
 }))
 
-const row: OverdueReturn = {
+const row: Schemas['OverdueReturnOut'] = {
   id: 'r1',
   number: 'RES-2026-00011',
   title: 'Inventory scanners',
@@ -33,7 +33,7 @@ const row: OverdueReturn = {
 async function mountWidget() {
   const i18n = createI18n({ legacy: false, locale: 'en', missingWarn: false, fallbackWarn: false })
   const wrapper = mount(OverdueReturnsWidget, {
-    props: { data: {} as ITOverview, options: {} },
+    props: { data: {} as Schemas['ITOverviewOut'], options: {} },
     global: {
       plugins: [i18n, createPinia()],
       stubs: { RouterLink: { template: '<a><slot /></a>' } },

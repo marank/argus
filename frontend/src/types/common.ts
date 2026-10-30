@@ -6,11 +6,6 @@ export interface Page<T> {
   count: number
 }
 
-export interface Ref {
-  id: Id
-  name: string
-}
-
 export interface ListParams {
   page?: number
   page_size?: number

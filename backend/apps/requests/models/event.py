@@ -6,6 +6,28 @@ from django.utils.translation import gettext_lazy as _
 from apps.core.models import UUIDModel
 
 
+class AssetRequestEventKind(models.TextChoices):
+    CREATED = "created", _("Requested")
+    DIRECT = "direct", _("Direct hand-out recorded")
+    QUICK = "quick", _("Quick assignment recorded")
+    APPROVED = "approved", _("Approved")
+    DECLINED = "declined", _("Not approved")
+    CONFIRMED = "confirmed", _("Confirmed")
+    REJECTED = "rejected", _("Rejected")
+    CANCELLED = "cancelled", _("Cancelled")
+    ASSIGNED = "assigned", _("Assignment changed")
+    ALLOCATED = "allocated", _("Allocated")
+    RELEASED = "released", _("Allocation removed")
+    READY = "ready", _("Ready for pickup")
+    REOPENED = "reopened", _("Back in preparation")
+    RESCHEDULED = "rescheduled", _("Handover changed")
+    HANDED_OUT = "handed_out", _("Handed out")
+    RETURNED = "returned", _("Taken back")
+    EXTENDED = "extended", _("Loan extended")
+    REMINDED = "reminded", _("Reminded to return")
+    COMPLETED = "completed", _("Completed")
+
+
 class AssetRequestEvent(UUIDModel):
     """One step in the history of a request: who did what, when.
 
@@ -14,48 +36,31 @@ class AssetRequestEvent(UUIDModel):
     so the history stays readable when allocations or devices change later.
     """
 
-    class Kind(models.TextChoices):
-        CREATED = "created", _("Requested")
-        DIRECT = "direct", _("Direct hand-out recorded")
-        QUICK = "quick", _("Quick assignment recorded")
-        APPROVED = "approved", _("Approved")
-        DECLINED = "declined", _("Not approved")
-        CONFIRMED = "confirmed", _("Confirmed")
-        REJECTED = "rejected", _("Rejected")
-        CANCELLED = "cancelled", _("Cancelled")
-        ASSIGNED = "assigned", _("Assignment changed")
-        ALLOCATED = "allocated", _("Allocated")
-        RELEASED = "released", _("Allocation removed")
-        READY = "ready", _("Ready for pickup")
-        REOPENED = "reopened", _("Back in preparation")
-        RESCHEDULED = "rescheduled", _("Handover changed")
-        HANDED_OUT = "handed_out", _("Handed out")
-        RETURNED = "returned", _("Taken back")
-        EXTENDED = "extended", _("Loan extended")
-        REMINDED = "reminded", _("Reminded to return")
-        COMPLETED = "completed", _("Completed")
-
     # Steps the employee sees in the portal; the rest is IT's internal work.
     EMPLOYEE_KINDS = (
-        Kind.CREATED,
-        Kind.DIRECT,
-        Kind.QUICK,
-        Kind.APPROVED,
-        Kind.DECLINED,
-        Kind.CONFIRMED,
-        Kind.REJECTED,
-        Kind.CANCELLED,
-        Kind.READY,
-        Kind.RESCHEDULED,
-        Kind.HANDED_OUT,
-        Kind.RETURNED,
-        Kind.EXTENDED,
-        Kind.REMINDED,
-        Kind.COMPLETED,
+        AssetRequestEventKind.CREATED,
+        AssetRequestEventKind.DIRECT,
+        AssetRequestEventKind.QUICK,
+        AssetRequestEventKind.APPROVED,
+        AssetRequestEventKind.DECLINED,
+        AssetRequestEventKind.CONFIRMED,
+        AssetRequestEventKind.REJECTED,
+        AssetRequestEventKind.CANCELLED,
+        AssetRequestEventKind.READY,
+        AssetRequestEventKind.RESCHEDULED,
+        AssetRequestEventKind.HANDED_OUT,
+        AssetRequestEventKind.RETURNED,
+        AssetRequestEventKind.EXTENDED,
+        AssetRequestEventKind.REMINDED,
+        AssetRequestEventKind.COMPLETED,
     )
 
     # What a department approver sees: the request and the decision, not what IT does after.
-    APPROVER_KINDS = (Kind.CREATED, Kind.APPROVED, Kind.DECLINED)
+    APPROVER_KINDS = (
+        AssetRequestEventKind.CREATED,
+        AssetRequestEventKind.APPROVED,
+        AssetRequestEventKind.DECLINED,
+    )
 
     asset_request = models.ForeignKey(
         "requests.AssetRequest",
@@ -63,7 +68,7 @@ class AssetRequestEvent(UUIDModel):
         on_delete=models.CASCADE,
         related_name="events",
     )
-    kind = models.CharField(_("kind"), max_length=20, choices=Kind.choices)
+    kind = models.CharField(_("kind"), max_length=20, choices=AssetRequestEventKind.choices)
     at = models.DateTimeField(_("at"), default=timezone.now, db_index=True)
     actor = models.ForeignKey(
         settings.AUTH_USER_MODEL,

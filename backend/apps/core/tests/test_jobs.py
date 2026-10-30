@@ -11,7 +11,7 @@ from apps.accounts.models import User
 from apps.core import tasks
 from apps.core.models import MailSettings, NotificationLog
 from apps.core.services.reminders import send_due_reminders
-from apps.requests.models import AssetRequest
+from apps.requests.models import AssetRequest, AssetRequestStatus
 from apps.requests.services import notifications as asset_request_notifications
 
 postgres_only = pytest.mark.skipif(
@@ -61,7 +61,7 @@ def overdue_asset_request() -> AssetRequest:
         duration=AssetRequest.Duration.TEMPORARY,
         start_date=today - timedelta(days=10),
         end_date=today - timedelta(days=2),
-        status=AssetRequest.Status.HANDED_OUT,
+        status=AssetRequestStatus.HANDED_OUT,
     )
 
 

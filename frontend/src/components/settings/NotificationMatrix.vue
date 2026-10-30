@@ -2,7 +2,7 @@
 import { NSwitch } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
 
-import type { NotificationAudience, NotificationChannel, NotificationKey } from '@/types/settings'
+import type { NotificationAudience, NotificationChannel } from '@/types/settings'
 
 import SettingRow from './SettingRow.vue'
 import SettingsGroup from './SettingsGroup.vue'
@@ -15,7 +15,7 @@ export interface ChannelState {
 export interface NotificationGroup {
   audience: NotificationAudience
   description: string
-  events: NotificationKey[]
+  events: string[]
 }
 
 /**
@@ -24,10 +24,10 @@ export interface NotificationGroup {
  */
 defineProps<{
   groups: NotificationGroup[]
-  state: (key: NotificationKey, channel: NotificationChannel) => ChannelState
+  state: (key: string, channel: NotificationChannel) => ChannelState
 }>()
 const emit = defineEmits<{
-  toggle: [key: NotificationKey, channel: NotificationChannel, value: boolean]
+  toggle: [key: string, channel: NotificationChannel, value: boolean]
 }>()
 const { t } = useI18n()
 

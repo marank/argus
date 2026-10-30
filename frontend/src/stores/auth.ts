@@ -4,15 +4,11 @@ import { computed, ref } from 'vue'
 import { authApi, isChallenge } from '@/api/auth'
 import { ApiError } from '@/api/client'
 import { setLocale } from '@/i18n'
-import type {
-  CurrentUser,
-  PermissionKey,
-  PermissionLevel,
-  TwoFactorChallenge,
-} from '@/types/accounts'
+import type { Schemas } from '@/api/types'
+import type { PermissionKey, PermissionLevel } from '@/types/accounts'
 
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref<CurrentUser | null>(null)
+  const user = ref<Schemas['CurrentUserOut'] | null>(null)
   const checked = ref(false)
 
   const isAuthenticated = computed(() => user.value !== null)
@@ -27,7 +23,7 @@ export const useAuthStore = defineStore('auth', () => {
     return level === 'read' ? !!granted : granted === 'write'
   }
 
-  function apply(current: CurrentUser | null) {
+  function apply(current: Schemas['CurrentUserOut'] | null) {
     user.value = current
     if (current) setLocale(current.language)
   }
@@ -45,7 +41,10 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /** Returns the challenge when the second sign-in step is due, else null. */
-  async function login(username: string, password: string): Promise<TwoFactorChallenge | null> {
+  async function login(
+    username: string,
+    password: string,
+  ): Promise<Schemas['TwoFactorChallengeOut'] | null> {
     const result = await authApi.login(username, password)
     if (isChallenge(result)) return result
     apply(result)
@@ -62,12 +61,15 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function changeNotifications(
-    settings: Pick<CurrentUser, 'notification_settings' | 'app_notification_settings'>,
+    settings: Pick<
+      Schemas['CurrentUserOut'],
+      'notification_settings' | 'app_notification_settings'
+    >,
   ) {
     if (user.value) user.value = await authApi.updatePreferences(settings)
   }
 
-  async function changeDashboard(settings: CurrentUser['dashboard_settings']) {
+  async function changeDashboard(settings: Schemas['CurrentUserOut']['dashboard_settings']) {
     if (user.value) user.value = await authApi.updatePreferences({ dashboard_settings: settings })
   }
 

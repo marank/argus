@@ -8,7 +8,7 @@ from django.utils.translation import gettext as _
 
 from apps.accounts.services.assignment import responsible_staff
 from apps.core.notifications import notify
-from apps.requests.models import AssetRequest
+from apps.requests.models import AssetRequest, AssetRequestStatus
 
 if TYPE_CHECKING:
     from apps.accounts.models import User
@@ -103,7 +103,7 @@ def request_assigned(asset_request: AssetRequest) -> None:
 
 
 def request_decided(asset_request: AssetRequest) -> None:
-    confirmed = asset_request.status == AssetRequest.Status.CONFIRMED
+    confirmed = asset_request.status == AssetRequestStatus.CONFIRMED
 
     def render(user: object) -> tuple[str, str]:
         if confirmed:

@@ -9,7 +9,7 @@ from apps.accounts.models import Department, User
 from apps.core.exceptions import BusinessError
 from apps.inventory.services.availability import pool_assets
 from apps.masterdata.models import Category
-from apps.requests.models import AssetRequest, Handover
+from apps.requests.models import AssetRequest, AssetRequestStatus, Handover
 from apps.requests.services import workflow
 
 from .test_handover import SIGNATURE, ready_pickup
@@ -98,7 +98,7 @@ def test_signing_twice_is_a_conflict_not_an_error(terminal_client, it_client):
     assert response.status_code == 409
     # Even a stale instance (as a concurrent request would have had) gets a clean refusal.
     stale = AssetRequest.objects.get(pk=asset_request.pk)
-    stale.status = AssetRequest.Status.READY
+    stale.status = AssetRequestStatus.READY
     with pytest.raises(BusinessError, match="already been handed out"):
         workflow.hand_out(stale, User.objects.get(username="it"))
     assert Handover.objects.filter(asset_request=asset_request).count() == 1
@@ -125,7 +125,7 @@ def test_approving_someone_elses_request_reveals_nothing(employee_client):
     rid = submit(sales_client, laptops()).json()["id"]
     Department.objects.get(name="Sales").approvers.add(User.objects.get(username="admin"))
     # Also once IT moved it on: the status must not show through.
-    AssetRequest.objects.filter(pk=rid).update(status=AssetRequest.Status.READY)
+    AssetRequest.objects.filter(pk=rid).update(status=AssetRequestStatus.READY)
 
     for action in ("approve", "decline"):
         response = employee_client.post(

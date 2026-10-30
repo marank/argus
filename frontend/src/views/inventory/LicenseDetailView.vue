@@ -7,6 +7,7 @@ import { RouterLink, useRouter } from 'vue-router'
 
 import { usersApi } from '@/api/accounts'
 import { assetsApi, licensesApi } from '@/api/inventory'
+import type { Schemas } from '@/api/types'
 import DetailGrid, { type DetailEntry } from '@/components/common/DetailGrid.vue'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
@@ -17,7 +18,6 @@ import { useConfirm } from '@/composables/useConfirm'
 import { useFormat } from '@/composables/useFormat'
 import { useLive } from '@/composables/useLive'
 import type { Id } from '@/types/common'
-import type { LicenseAssignment, LicenseDetail } from '@/types/inventory'
 import { categoryIcon } from '@/utils/icons'
 import { useAuthStore } from '@/stores/auth'
 
@@ -30,7 +30,7 @@ const confirm = useConfirm()
 const { date, money, enumLabel } = useFormat()
 const { busy, run } = useAction()
 
-const license = ref<LicenseDetail | null>(null)
+const license = ref<Schemas['LicenseDetailOut'] | null>(null)
 const showForm = ref(false)
 const target = ref<Id | null>(null)
 const note = ref('')
@@ -63,7 +63,7 @@ const details = computed<DetailEntry[]>(() => {
   ]
 })
 
-function assigneeName(a: LicenseAssignment): string {
+function assigneeName(a: Schemas['LicenseAssignmentOut']): string {
   return a.user?.display_name ?? `${a.asset?.inventory_number} · ${a.asset?.model.full_name}`
 }
 
@@ -80,7 +80,7 @@ async function assign() {
   }
 }
 
-async function unassign(a: LicenseAssignment) {
+async function unassign(a: Schemas['LicenseAssignmentOut']) {
   if (!(await confirm(t('inventory.licenses.confirmUnassign', { name: assigneeName(a) })))) return
   const updated = await run(() => licensesApi.unassign(license.value!.id, a.id))
   if (updated) license.value = updated

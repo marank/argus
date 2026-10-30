@@ -4,15 +4,15 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { requestsApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import DateField from '@/components/common/DateField.vue'
 import { useAction } from '@/composables/useAction'
 import { fromIsoDate, toIsoDate, useFormat } from '@/composables/useFormat'
-import type { AssetRequest } from '@/types/requests'
 
 /** Move the return date of handed-out devices. */
-const props = defineProps<{ assetRequest: Pick<AssetRequest, 'id' | 'end_date'> }>()
+const props = defineProps<{ assetRequest: Pick<Schemas['AssetRequestOut'], 'id' | 'end_date'> }>()
 const show = defineModel<boolean>('show', { required: true })
-const emit = defineEmits<{ saved: [assetRequest: AssetRequest] }>()
+const emit = defineEmits<{ saved: [assetRequest: Schemas['AssetRequestOut']] }>()
 const { t } = useI18n()
 const { weekday } = useFormat()
 const { busy, run } = useAction()

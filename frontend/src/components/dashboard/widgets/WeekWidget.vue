@@ -13,7 +13,7 @@ import {
 } from '@/components/calendar/kinds'
 import { toIsoDate, useFormat } from '@/composables/useFormat'
 import { useLive } from '@/composables/useLive'
-import type { CalendarEntry, CalendarKind } from '@/types/calendar'
+import type { Schemas } from '@/api/types'
 import type { WidgetProps } from '@/types/dashboard'
 
 import { isBoolean, someOf, useOption } from './options'
@@ -23,15 +23,27 @@ const props = defineProps<WidgetProps>()
 const emit = defineEmits<{ 'update:options': [options: Record<string, unknown>] }>()
 
 /** Lending periods span days and would fill every column; the dates that need action stay. */
-const KINDS: CalendarKind[] = ['pickup', 'return', 'delivery', 'warranty', 'license']
+const KINDS: Schemas['CalendarEntryOut']['kind'][] = [
+  'pickup',
+  'return',
+  'delivery',
+  'warranty',
+  'license',
+]
 
 const { t } = useI18n()
 const { weekday } = useFormat()
 const stored = () => props.options
 const save = (options: Record<string, unknown>) => emit('update:options', options)
-const kinds = useOption<CalendarKind[]>(stored, save, 'kinds', KINDS, someOf(KINDS))
+const kinds = useOption<Schemas['CalendarEntryOut']['kind'][]>(
+  stored,
+  save,
+  'kinds',
+  KINDS,
+  someOf(KINDS),
+)
 const hideEmpty = useOption(stored, save, 'hide_empty', false, isBoolean)
-const entries = ref<CalendarEntry[] | null>(null)
+const entries = ref<Schemas['CalendarEntryOut'][] | null>(null)
 
 const days = Array.from({ length: 7 }, (_, i) => {
   const day = new Date()

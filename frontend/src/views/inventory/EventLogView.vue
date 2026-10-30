@@ -6,18 +6,18 @@ import { RouterLink } from 'vue-router'
 
 import { eventsApi } from '@/api/inventory'
 import { assetModelsApi } from '@/api/masterdata'
+import type { Schemas } from '@/api/types'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import DateField from '@/components/common/DateField.vue'
 import { toIsoDate, useFormat } from '@/composables/useFormat'
 import { useList } from '@/composables/useList'
-import type { AssetEventKind, AssetEventWithAsset } from '@/types/inventory'
 import { modelLabel } from '@/utils/models'
 
 const { t } = useI18n()
 const { dateTime, enumLabel, money } = useFormat()
 
-const ALL_KINDS: AssetEventKind[] = [
+const ALL_KINDS: Schemas['AssetEventKind'][] = [
   'battery_replaced',
   'component_replaced',
   'repair',
@@ -52,7 +52,7 @@ const kindOptions = computed(() =>
   ALL_KINDS.map((k) => ({ value: k, label: enumLabel('eventKind', k) })),
 )
 
-const columns = computed<DataTableColumns<AssetEventWithAsset>>(() => [
+const columns = computed<DataTableColumns<Schemas['AssetEventWithAssetOut']>>(() => [
   {
     key: 'occurred_at',
     title: t('inventory.event.occurredAt'),
@@ -144,7 +144,7 @@ const columns = computed<DataTableColumns<AssetEventWithAsset>>(() => [
         :data="list.rows.value"
         :loading="list.loading.value"
         :pagination="list.pagination.value"
-        :row-key="(e: AssetEventWithAsset) => e.id"
+        :row-key="(e: Schemas['AssetEventWithAssetOut']) => e.id"
         :scroll-x="1100"
       />
     </div>

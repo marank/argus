@@ -6,7 +6,8 @@ import { useI18n } from 'vue-i18n'
 import { dashboardApi } from '@/api/dashboard'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { useLive } from '@/composables/useLive'
-import type { UpcomingHandout, WidgetProps } from '@/types/dashboard'
+import type { Schemas } from '@/api/types'
+import type { WidgetProps } from '@/types/dashboard'
 
 import { useDateMode } from './dateMode'
 import DateModeToggle from './DateModeToggle.vue'
@@ -22,7 +23,7 @@ const save = (options: Record<string, unknown>) => emit('update:options', option
 const { mode, setMode, when, other } = useDateMode(stored, save)
 const days = useOption<Period>(stored, save, 'days', 7, oneOf(PERIODS))
 
-const rows = ref<UpcomingHandout[] | null>(null)
+const rows = ref<Schemas['UpcomingOut'][] | null>(null)
 const load = async () => (rows.value = await dashboardApi.upcoming(days.value))
 watch(days, load, { immediate: true })
 useLive(['request'], load)

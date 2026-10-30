@@ -6,12 +6,12 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { requestsApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import EmptyState from '@/components/common/EmptyState.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useLive } from '@/composables/useLive'
-import type { AssetRequestListItem } from '@/types/requests'
 
 /**
  * The employee's requests: running ones as cards with progress and what happens
@@ -21,7 +21,7 @@ const { t } = useI18n()
 const { date, weekday, enumLabel } = useFormat()
 const sortBy = useStorage<'status' | 'date'>('argus.my-requests-sort', 'status')
 
-const requests = ref<AssetRequestListItem[] | null>(null)
+const requests = ref<Schemas['AssetRequestListOut'][] | null>(null)
 async function load() {
   const page = await requestsApi.list({ mine: true, page_size: 100, ordering: '-created_at' })
   requests.value = page.items
@@ -47,14 +47,15 @@ const rows = computed(() => {
   })).filter((row) => row.items.length)
 })
 
-const stepIndex = (r: AssetRequestListItem) => STEPS.indexOf(r.status as (typeof STEPS)[number])
+const stepIndex = (r: Schemas['AssetRequestListOut']) =>
+  STEPS.indexOf(r.status as (typeof STEPS)[number])
 
-function period(r: AssetRequestListItem): string {
+function period(r: Schemas['AssetRequestListOut']): string {
   return `${date(r.start_date)} → ${r.end_date ? date(r.end_date) : t('common.permanent')}`
 }
 
 /** One sentence on where the request stands and what the employee can expect. */
-function nextStep(r: AssetRequestListItem): string {
+function nextStep(r: Schemas['AssetRequestListOut']): string {
   switch (r.status) {
     case 'pending_approval':
       return t('requests.mine.next.pending_approval')

@@ -4,9 +4,9 @@ import { NButton, NCard } from 'naive-ui'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import type { Schemas } from '@/api/types'
 import DetailGrid, { type DetailEntry } from '@/components/common/DetailGrid.vue'
 import { useFormat } from '@/composables/useFormat'
-import type { AssetRequest } from '@/types/requests'
 import { allocationCode, allocationModel } from '@/utils/requests'
 
 /**
@@ -14,7 +14,11 @@ import { allocationCode, allocationModel } from '@/utils/requests'
  * return date and the last reminder on top (IT's view).
  */
 const props = withDefaults(
-  defineProps<{ assetRequest: AssetRequest; withDue?: boolean; printable?: boolean }>(),
+  defineProps<{
+    assetRequest: Schemas['AssetRequestOut']
+    withDue?: boolean
+    printable?: boolean
+  }>(),
   { printable: true },
 )
 const { t } = useI18n()

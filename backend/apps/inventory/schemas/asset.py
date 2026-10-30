@@ -7,11 +7,12 @@ from ninja import Field, Schema
 
 from apps.accounts.schemas import UserRefOut
 from apps.core.schemas import RefOut
-from apps.inventory.models import Asset, AssetIssue, LicenseAssignment
+from apps.inventory.models import Asset, AssetIssue, AssetStatus, LicenseAssignment
 from apps.inventory.schemas.asset_issue import OwnIssueOut
 from apps.inventory.schemas.license import AssetLicenseOut
 from apps.masterdata.models import AssetModel
 from apps.masterdata.schemas.refs import AssetModelRefOut, CategoryRefOut, LocationRefOut
+from apps.requests.models import AssetRequestStatus
 
 if TYPE_CHECKING:
     from apps.requests.models import AssetRequest
@@ -27,8 +28,8 @@ class AssetOut(Schema):
     imei: str
     mac_address: str
     hostname: str
-    status: str
-    condition: str
+    status: AssetStatus
+    condition: Asset.Condition
     is_loanable: bool
     location: LocationRefOut | None
     assigned_to: UserRefOut | None
@@ -92,7 +93,7 @@ class AssetDetailOut(AssetOut):
 class ActiveAssetRequestOut(Schema):
     id: UUID
     number: str
-    status: str
+    status: AssetRequestStatus
     requester: UserRefOut
 
 
@@ -103,7 +104,7 @@ class AssetIn(Schema):
     imei: str = ""
     mac_address: str = ""
     hostname: str = ""
-    status: Asset.Status = Asset.Status.IN_STOCK
+    status: AssetStatus = AssetStatus.IN_STOCK
     condition: Asset.Condition = Asset.Condition.NEW
     is_loanable: bool = True
     location: UUID | None = None
@@ -149,7 +150,7 @@ class AssetSeriesPreviewOut(Schema):
     last: str
 
 
-class AssignIn(Schema):
+class AssetAssignIn(Schema):
     user: UUID | None
 
 

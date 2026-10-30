@@ -1,24 +1,21 @@
-from ninja import Field, ModelSchema, Schema
+from uuid import UUID
+
+from ninja import Field, Schema
 
 from apps.core.models import NumberSequence
 
 
-class NumberSequenceOut(ModelSchema):
+class NumberSequenceOut(Schema):
+    id: UUID
+    code: str
+    name: str
+    prefix: str
+    pattern: str
+    padding: int
+    next_value: int
+    reset_period: NumberSequence.ResetPeriod
+    is_system: bool
     preview: str
-
-    class Meta:
-        model = NumberSequence
-        fields = [
-            "id",
-            "code",
-            "name",
-            "prefix",
-            "pattern",
-            "padding",
-            "next_value",
-            "reset_period",
-            "is_system",
-        ]
 
     @staticmethod
     def resolve_preview(obj: NumberSequence) -> str:

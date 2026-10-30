@@ -2,7 +2,7 @@ import pytest
 
 from apps.accounts.models import User
 from apps.core import live
-from apps.inventory.models import Asset, AssetIssue
+from apps.inventory.models import Asset, AssetIssueKind
 from apps.inventory.services.issues import report_issue
 
 from .test_notifications import submit
@@ -33,7 +33,7 @@ def test_a_problem_report_signals_its_reporter(demo, signals):
     employee = User.objects.get(username="employee")
     asset = Asset.objects.first()
     assert asset is not None
-    issue = report_issue(asset, employee, AssetIssue.Kind.DEFECT, "Display flickers")
+    issue = report_issue(asset, employee, AssetIssueKind.DEFECT, "Display flickers")
     assert ("issue", str(issue.pk), {str(employee.pk)}) in signals
 
 

@@ -10,7 +10,7 @@ from django.test import AsyncClient, AsyncRequestFactory
 from apps.accounts.models import User
 from apps.core import live_stream
 from apps.core.live import CHANNEL
-from apps.inventory.models import Asset, AssetIssue
+from apps.inventory.models import Asset, AssetIssue, AssetIssueKind
 from apps.inventory.services.issues import report_issue
 
 postgres_only = pytest.mark.skipif(
@@ -21,7 +21,7 @@ postgres_only = pytest.mark.skipif(
 def report(user: User) -> AssetIssue:
     asset = Asset.objects.first()
     assert asset is not None
-    return report_issue(asset, user, AssetIssue.Kind.DEFECT, "Display flickers")
+    return report_issue(asset, user, AssetIssueKind.DEFECT, "Display flickers")
 
 
 def test_the_stream_is_unavailable_outside_the_asgi_process(employee_client):

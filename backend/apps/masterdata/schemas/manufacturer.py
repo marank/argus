@@ -1,12 +1,16 @@
-from ninja import ModelSchema, Schema
+from uuid import UUID
 
-from apps.masterdata.models import Manufacturer
+from ninja import Schema
 
 
-class ManufacturerOut(ModelSchema):
-    class Meta:
-        model = Manufacturer
-        fields = ["id", "name", "website", "support_url", "support_phone", "notes", "is_active"]
+class ManufacturerOut(Schema):
+    id: UUID
+    name: str
+    website: str
+    support_url: str
+    support_phone: str
+    notes: str
+    is_active: bool
 
 
 class ManufacturerIn(Schema):

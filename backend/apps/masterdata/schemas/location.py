@@ -3,6 +3,7 @@ from uuid import UUID
 from ninja import Schema
 
 from apps.core.schemas import RefOut
+from apps.masterdata.models import LocationKind
 
 
 class LocationOut(Schema):
@@ -10,7 +11,7 @@ class LocationOut(Schema):
     name: str
     full_name: str
     code: str
-    kind: str
+    kind: LocationKind
     parent: RefOut | None
     description: str
     is_pickup_point: bool

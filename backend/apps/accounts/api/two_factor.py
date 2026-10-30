@@ -7,7 +7,7 @@ from django.utils.translation import gettext as _
 from ninja import Router, Status
 from ninja.errors import HttpError
 
-from apps.accounts.models import TwoFactor, User
+from apps.accounts.models import TwoFactorMethod, User
 from apps.accounts.schemas import (
     BackupCodesOut,
     CodeIn,
@@ -60,7 +60,7 @@ def get_status(request: AuthedRequest) -> TwoFactorStatus:
 def start_setup(request: AuthedRequest, payload: TwoFactorSetupIn) -> two_factor.SetupResult:
     """First step of switching a method on: the QR code, or a code sent by email."""
     confirm_password(request, payload.password)
-    if payload.method == TwoFactor.Method.EMAIL.value and not two_factor.email_available(request.user):
+    if payload.method == TwoFactorMethod.EMAIL.value and not two_factor.email_available(request.user):
         raise HttpError(
             409, _("Codes by email require an email address on file and configured email delivery.")
         )
@@ -70,7 +70,7 @@ def start_setup(request: AuthedRequest, payload: TwoFactorSetupIn) -> two_factor
 @router.post("/setup/resend", response=TwoFactorSetupOut)
 def resend_setup_code(request: AuthedRequest) -> two_factor.SetupResult:
     state = two_factor.pending_setup(request.session)
-    if state is None or state["method"] != TwoFactor.Method.EMAIL:
+    if state is None or state["method"] != TwoFactorMethod.EMAIL:
         raise HttpError(409, _("The setup has expired. Please start again."))
     if not two_factor.can_resend(state):
         raise HttpError(429, _("Please wait a moment before requesting another code."))

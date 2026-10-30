@@ -4,23 +4,23 @@ import { reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { portalApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import FieldLabel from '@/components/common/FieldLabel.vue'
 import { useAction } from '@/composables/useAction'
 import { useFormat } from '@/composables/useFormat'
-import { ISSUE_KINDS, type IssueKind, type OwnIssue } from '@/types/inventory'
-import type { MyAsset } from '@/types/requests'
+import { ISSUE_KINDS } from '@/types/inventory'
 import { categoryIcon } from '@/utils/icons'
 
 /** An employee reports a problem with one of their devices to IT. */
-const props = defineProps<{ asset: MyAsset | null }>()
+const props = defineProps<{ asset: Schemas['MyAssetOut'] | null }>()
 const show = defineModel<boolean>('show', { required: true })
-const emit = defineEmits<{ reported: [issue: OwnIssue] }>()
+const emit = defineEmits<{ reported: [issue: Schemas['OwnIssueOut']] }>()
 
 const { t } = useI18n()
 const { enumLabel } = useFormat()
 const { busy, run } = useAction()
 
-const form = reactive({ kind: 'defect' as IssueKind, description: '' })
+const form = reactive({ kind: 'defect' as Schemas['AssetIssueKind'], description: '' })
 watch(show, (visible) => visible && Object.assign(form, { kind: 'defect', description: '' }))
 
 async function send() {

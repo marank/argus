@@ -5,7 +5,7 @@ import pytest
 
 from apps.accounts.models import User
 from apps.core.models import SiteSettings
-from apps.masterdata.models import AssetModel, Category
+from apps.masterdata.models import AssetModel, Category, CategoryKind
 
 JSON = "application/json"
 
@@ -23,7 +23,7 @@ def request(client, item: dict[str, Any]):
 
 
 def hardware_model() -> AssetModel:
-    model = AssetModel.objects.filter(category__kind=Category.Kind.HARDWARE).first()
+    model = AssetModel.objects.filter(category__kind=CategoryKind.HARDWARE).first()
     assert model is not None
     return model
 
@@ -49,7 +49,7 @@ def test_employees_cannot_request_from_hidden_categories(employee_client):
 
 def test_software_needs_the_software_feature(employee_client):
     software = AssetModel.objects.filter(
-        category__kind=Category.Kind.SOFTWARE, is_requestable=True, is_active=True
+        category__kind=CategoryKind.SOFTWARE, is_requestable=True, is_active=True
     ).first()
     assert software is not None
     assert request(employee_client, {"asset_model": str(software.pk)}).status_code == 201

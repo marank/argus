@@ -2,13 +2,15 @@ from uuid import UUID
 
 from ninja import Schema
 
+from apps.masterdata.models import AssetModel, CategoryKind
+
 
 class AssetModelRefOut(Schema):
     id: UUID
     name: str
     designation: str
     full_name: str
-    tracking: str
+    tracking: AssetModel.Tracking
 
 
 class LocationRefOut(Schema):
@@ -20,7 +22,7 @@ class LocationRefOut(Schema):
 class CategoryRefOut(Schema):
     id: UUID
     name: str
-    kind: str
+    kind: CategoryKind
     item_name: str
     code: str
     icon: str

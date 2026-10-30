@@ -9,7 +9,7 @@ from ninja.pagination import paginate
 from apps.core.api.pagination import Pagination
 from apps.core.api.querying import order, search
 from apps.core.api.security import AuthedRequest, permission_auth
-from apps.procurement.models import PurchaseOrder, PurchaseOrderLine
+from apps.procurement.models import PurchaseOrder, PurchaseOrderLine, PurchaseOrderStatus
 from apps.procurement.schemas.purchase_order import (
     MarkOrderedIn,
     PurchaseOrderIn,
@@ -109,5 +109,5 @@ def cancel(request: AuthedRequest, pk: UUID) -> PurchaseOrder:
 
 @router.delete("/{uuid:pk}", response={204: None})
 def delete_order(request: AuthedRequest, pk: UUID) -> Status[None]:
-    get_object_or_404(PurchaseOrder, pk=pk, status=PurchaseOrder.Status.DRAFT).delete()
+    get_object_or_404(PurchaseOrder, pk=pk, status=PurchaseOrderStatus.DRAFT).delete()
     return Status(204, None)

@@ -1,6 +1,6 @@
 from apps.accounts.models import User
-from apps.inventory.models import Asset, AssetEvent
-from apps.requests.models import AssetRequest, Handover
+from apps.inventory.models import Asset, AssetEventKind
+from apps.requests.models import AssetRequest, AssetRequestStatus, Handover
 
 # 1×1 PNG
 SIGNATURE = (
@@ -10,7 +10,7 @@ SIGNATURE = (
 
 
 def ready_pickup() -> AssetRequest:
-    return AssetRequest.objects.get(status=AssetRequest.Status.READY, handover_mode="pickup")
+    return AssetRequest.objects.get(status=AssetRequestStatus.READY, handover_mode="pickup")
 
 
 def test_terminal_lists_and_signs_pickup(terminal_client):
@@ -39,7 +39,7 @@ def test_terminal_lists_and_signs_pickup(terminal_client):
 
     asset = Asset.objects.get(pk=allocation["asset"]["id"])
     assert asset.assigned_to == asset_request.requester  # devices belong to the requester
-    event = asset.events.filter(kind=AssetEvent.Kind.ASSIGNED).first()
+    event = asset.events.filter(kind=AssetEventKind.ASSIGNED).first()
     assert event is not None
     assert event.description == "Scratch on lid"
     assert terminal_client.get("/api/terminal/pickups").json() == []

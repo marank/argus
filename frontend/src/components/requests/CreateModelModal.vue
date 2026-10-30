@@ -5,18 +5,20 @@ import { useI18n } from 'vue-i18n'
 
 import { assetModelsApi, categoriesApi, manufacturersApi } from '@/api/masterdata'
 import { requestsApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import FieldLabel from '@/components/common/FieldLabel.vue'
 import { useAction } from '@/composables/useAction'
 import { useFormat } from '@/composables/useFormat'
 import type { Id } from '@/types/common'
-import type { Tracking } from '@/types/masterdata'
-import type { AssetRequest, AssetRequestItem } from '@/types/requests'
 
 /** Create a catalog model from a free-text line and assign it right away. */
-const props = defineProps<{ assetRequest: AssetRequest; item: AssetRequestItem }>()
+const props = defineProps<{
+  assetRequest: Schemas['AssetRequestOut']
+  item: Schemas['AssetRequestItemOut']
+}>()
 const show = defineModel<boolean>('show', { required: true })
-const emit = defineEmits<{ saved: [assetRequest: AssetRequest] }>()
+const emit = defineEmits<{ saved: [assetRequest: Schemas['AssetRequestOut']] }>()
 const { t } = useI18n()
 const { enumLabel } = useFormat()
 const { busy, run } = useAction()
@@ -26,7 +28,7 @@ const form = reactive({
   designation: '',
   manufacturer: null as Id | null,
   category: null as Id | null,
-  tracking: 'serialized' as Tracking,
+  tracking: 'serialized' as Schemas['Tracking'],
   part_number: '',
 })
 

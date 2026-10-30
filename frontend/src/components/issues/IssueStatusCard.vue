@@ -3,21 +3,24 @@ import { NCard } from 'naive-ui'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import type { Schemas } from '@/api/types'
 import AssignmentFields from '@/components/common/AssignmentFields.vue'
 import DetailGrid, { type DetailEntry } from '@/components/common/DetailGrid.vue'
 import { useFormat } from '@/composables/useFormat'
 import type { Id } from '@/types/common'
-import type { AssetIssueDetail } from '@/types/inventory'
 
 /**
  * Where the report stands: kind, who reported it and when, who handles it. IT
  * with write rights changes the assignment right here (`assign`).
  */
 const props = defineProps<{
-  issue: AssetIssueDetail
-  assign?: (data: { team: Id | null; assignee: Id | null }) => Promise<AssetIssueDetail>
+  issue: Schemas['AssetIssueDetailOut']
+  assign?: (data: {
+    team: Id | null
+    assignee: Id | null
+  }) => Promise<Schemas['AssetIssueDetailOut']>
 }>()
-const emit = defineEmits<{ updated: [issue: AssetIssueDetail] }>()
+const emit = defineEmits<{ updated: [issue: Schemas['AssetIssueDetailOut']] }>()
 const { t } = useI18n()
 const { dateTime, enumLabel } = useFormat()
 

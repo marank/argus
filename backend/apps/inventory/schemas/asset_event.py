@@ -6,19 +6,19 @@ from django.utils import timezone
 from ninja import Field, Schema
 
 from apps.accounts.schemas import UserRefOut
-from apps.inventory.models import AssetEvent
+from apps.inventory.models import AssetEventKind
 
 from .refs import AssetRefOut
 
 
-class AssetRequestRefOut(Schema):
+class AssetEventRequestOut(Schema):
     id: UUID
     number: str
 
 
 class AssetEventOut(Schema):
     id: UUID
-    kind: str
+    kind: AssetEventKind
     occurred_at: datetime
     description: str
     component: str
@@ -26,7 +26,7 @@ class AssetEventOut(Schema):
     cost: Decimal | None
     performed_by: UserRefOut | None
     related_user: UserRefOut | None
-    asset_request: AssetRequestRefOut | None
+    asset_request: AssetEventRequestOut | None
 
 
 class AssetEventWithAssetOut(AssetEventOut):
@@ -39,7 +39,7 @@ class ConsumeIn(Schema):
 
 
 class AssetEventIn(Schema):
-    kind: AssetEvent.Kind
+    kind: AssetEventKind
     occurred_at: datetime = Field(default_factory=timezone.now)
     description: str = ""
     component: str = ""

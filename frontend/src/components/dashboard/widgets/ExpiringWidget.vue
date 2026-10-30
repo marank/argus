@@ -8,7 +8,8 @@ import { dashboardApi } from '@/api/dashboard'
 import { kindColor } from '@/components/calendar/kinds'
 import { useLive } from '@/composables/useLive'
 import { useFeaturesStore } from '@/stores/features'
-import type { ExpiringItem, WidgetProps } from '@/types/dashboard'
+import type { Schemas } from '@/api/types'
+import type { WidgetProps } from '@/types/dashboard'
 
 import { useDateMode } from './dateMode'
 import DateModeToggle from './DateModeToggle.vue'
@@ -25,7 +26,7 @@ const { mode, setMode, when, other } = useDateMode(
   () => props.options,
   (options) => emit('update:options', options),
 )
-const items = ref<ExpiringItem[] | null>(null)
+const items = ref<Schemas['ExpiringOut'][] | null>(null)
 const load = async () => (items.value = await dashboardApi.expiring())
 onMounted(load)
 useLive(['license', 'asset'], load)
@@ -33,7 +34,7 @@ useLive(['license', 'asset'], load)
 const shown = computed(() =>
   (items.value ?? []).filter((i) => i.kind !== 'license' || features.isOn('licenses')),
 )
-const route = (item: ExpiringItem) =>
+const route = (item: Schemas['ExpiringOut']) =>
   item.kind === 'license'
     ? { name: 'license', params: { id: item.id } }
     : { name: 'asset', params: { id: item.id } }

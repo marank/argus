@@ -12,7 +12,7 @@ from apps.core.features import is_enabled
 from apps.core.models import SiteSettings
 from apps.inventory.models import License
 from apps.inventory.services import notifications as inventory_notifications
-from apps.requests.models import AssetRequest
+from apps.requests.models import AssetRequest, AssetRequestStatus
 from apps.requests.services import notifications as asset_request_notifications
 
 
@@ -23,7 +23,7 @@ def send_due_reminders() -> int:
     checked = 0
 
     lent = AssetRequest.objects.filter(
-        duration=AssetRequest.Duration.TEMPORARY, status=AssetRequest.Status.HANDED_OUT
+        duration=AssetRequest.Duration.TEMPORARY, status=AssetRequestStatus.HANDED_OUT
     ).select_related("requester")
     due_soon = lent.filter(end_date__range=(today, today + timedelta(days=settings.return_reminder_days)))
     for asset_request in due_soon:

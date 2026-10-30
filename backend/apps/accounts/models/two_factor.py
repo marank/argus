@@ -5,12 +5,13 @@ from django.utils.translation import gettext_lazy as _
 from apps.core.models.base import TimeStampedModel, UUIDModel
 
 
+class TwoFactorMethod(models.TextChoices):
+    EMAIL = "email", _("Code by email")
+    TOTP = "totp", _("Authenticator app")
+
+
 class TwoFactor(TimeStampedModel):
     """The second sign-in step a user switched on; see ``apps.accounts.services.two_factor``."""
-
-    class Method(models.TextChoices):
-        EMAIL = "email", _("Code by email")
-        TOTP = "totp", _("Authenticator app")
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -18,7 +19,7 @@ class TwoFactor(TimeStampedModel):
         on_delete=models.CASCADE,
         related_name="two_factor",
     )
-    method = models.CharField(_("method"), max_length=10, choices=Method.choices)
+    method = models.CharField(_("method"), max_length=10, choices=TwoFactorMethod.choices)
     # Base32 secret of the authenticator app (TOTP method only).
     totp_secret = models.CharField(_("app secret"), max_length=64, blank=True, editable=False)
     # Time step of the last accepted app code: a code cannot be used twice.

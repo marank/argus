@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Schemas } from '@/api/types'
 import { RefreshCw, ShoppingCart } from '@lucide/vue'
 import { NButton, NCard, NDataTable, type DataTableColumns, type DataTableRowKey } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
@@ -12,12 +13,11 @@ import StatusTag from '@/components/common/StatusTag.vue'
 import CreateOrderModal, { type DraftLine } from '@/components/procurement/CreateOrderModal.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useLive } from '@/composables/useLive'
-import type { Needs, AssetRequestNeed, ConsumableNeed } from '@/types/procurement'
 
 const { t } = useI18n()
 const { date } = useFormat()
 
-const needs = ref<Needs | null>(null)
+const needs = ref<Schemas['NeedsOut'] | null>(null)
 const loading = ref(false)
 const selectedAssetRequests = ref<DataTableRowKey[]>([])
 const selectedConsumables = ref<DataTableRowKey[]>([])
@@ -38,7 +38,7 @@ useLive(['request', 'order'], load, { paused: () => showOrder.value })
 
 const num = (value: number, cls = '') => h('span', { class: `mono ${cls}` }, value)
 
-const assetRequestColumns = computed<DataTableColumns<AssetRequestNeed>>(() => [
+const assetRequestColumns = computed<DataTableColumns<Schemas['AssetRequestNeedOut']>>(() => [
   { type: 'selection', disabled: (n) => n.to_order === 0 },
   {
     key: 'item',
@@ -113,7 +113,7 @@ const assetRequestColumns = computed<DataTableColumns<AssetRequestNeed>>(() => [
   },
 ])
 
-const consumableColumns = computed<DataTableColumns<ConsumableNeed>>(() => [
+const consumableColumns = computed<DataTableColumns<Schemas['ConsumableNeedOut']>>(() => [
   { type: 'selection', disabled: (n) => n.to_order === 0 },
   {
     key: 'item',
@@ -218,7 +218,7 @@ const defaultSupplier = computed(() => {
           :columns="assetRequestColumns"
           :data="needs?.requests ?? []"
           :loading="loading"
-          :row-key="(n: AssetRequestNeed) => n.asset_request_item.id"
+          :row-key="(n: Schemas['AssetRequestNeedOut']) => n.asset_request_item.id"
           :scroll-x="1100"
         />
       </NCard>
@@ -234,7 +234,7 @@ const defaultSupplier = computed(() => {
           :columns="consumableColumns"
           :data="needs?.consumables ?? []"
           :loading="loading"
-          :row-key="(n: ConsumableNeed) => n.consumable.id"
+          :row-key="(n: Schemas['ConsumableNeedOut']) => n.consumable.id"
           :scroll-x="900"
         />
       </NCard>

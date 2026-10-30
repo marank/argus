@@ -9,6 +9,7 @@ import { useRouter } from 'vue-router'
 
 import { usersApi } from '@/api/accounts'
 import { assetsApi, eventsApi } from '@/api/inventory'
+import type { Schemas } from '@/api/types'
 import DetailGrid, { type DetailEntry } from '@/components/common/DetailGrid.vue'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
@@ -20,7 +21,6 @@ import QuickAssignModal from '@/components/inventory/QuickAssignModal.vue'
 import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
 import { useFormat } from '@/composables/useFormat'
-import type { AssetDetail, AssetEvent } from '@/types/inventory'
 import { categoryIcon } from '@/utils/icons'
 import { useFeaturesStore } from '@/stores/features'
 import { useAuthStore } from '@/stores/auth'
@@ -39,8 +39,8 @@ const confirm = useConfirm()
 const { date, dateTime, money, enumLabel } = useFormat()
 const { busy, run } = useAction()
 
-const asset = ref<AssetDetail | null>(null)
-const events = ref<AssetEvent[]>([])
+const asset = ref<Schemas['AssetDetailOut'] | null>(null)
+const events = ref<Schemas['AssetEventOut'][]>([])
 const showForm = ref(false)
 const showEvent = ref(false)
 const showAssign = ref(false)
@@ -129,7 +129,7 @@ async function remove() {
   }
 }
 
-async function removeEvent(event: AssetEvent) {
+async function removeEvent(event: Schemas['AssetEventOut']) {
   if (!(await confirm(t('common.confirmDelete'), { danger: true }))) return
   await run(() => eventsApi.remove(event.id))
   await load()

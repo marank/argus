@@ -16,7 +16,8 @@
     "format": "prettier --write --experimental-cli src/",
     "format:check": "prettier --check --experimental-cli src/",
     "check:licenses": "node scripts/check-licenses.mjs",
-    "size": "size-limit"
+    "size": "size-limit",
+    "api:types": "openapi-typescript openapi.json -o src/api/schema.d.ts && prettier --write --experimental-cli src/api/schema.d.ts"
   },
   "dependencies": {
     "@fontsource-variable/ibm-plex-sans": "^5.3.0",
@@ -50,6 +51,7 @@
     "jsdom": "^30.0.1",
     "knip": "^6.43.0",
     "npm-run-all2": "^9.0.3",
+    "openapi-typescript": "^7.13.0",
     "oxlint": "~1.89.0",
     "prettier": "3.9.10",
     "size-limit": "^14.3.0",

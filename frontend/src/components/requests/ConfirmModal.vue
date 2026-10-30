@@ -6,11 +6,11 @@ import { useI18n } from 'vue-i18n'
 
 import { locationsApi } from '@/api/masterdata'
 import { requestsApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import DateField from '@/components/common/DateField.vue'
 import { useAction } from '@/composables/useAction'
 import { useFormat } from '@/composables/useFormat'
-import type { HandoverMode, AssetRequest } from '@/types/requests'
 import { itemLabel } from '@/utils/requests'
 
 import HandoverModeSelect from './HandoverModeSelect.vue'
@@ -20,9 +20,12 @@ import HandoverModeSelect from './HandoverModeSelect.vue'
  * confirmed request keeps what is already allocated. `schedule`: change how, when and where
  * the devices reach the employee once it is ready.
  */
-const props = defineProps<{ assetRequest: AssetRequest; mode: 'confirm' | 'schedule' }>()
+const props = defineProps<{
+  assetRequest: Schemas['AssetRequestOut']
+  mode: 'confirm' | 'schedule'
+}>()
 const show = defineModel<boolean>('show', { required: true })
-const emit = defineEmits<{ saved: [assetRequest: AssetRequest] }>()
+const emit = defineEmits<{ saved: [assetRequest: Schemas['AssetRequestOut']] }>()
 const { t } = useI18n()
 const { weekday } = useFormat()
 const { busy, run } = useAction()
@@ -34,7 +37,7 @@ const form = reactive({
   pickup_at: null as number | null,
   pickup_location: null as Id | null,
   comment: '',
-  handover_mode: 'pickup' as HandoverMode,
+  handover_mode: 'pickup' as Schemas['HandoverMode'],
   notify: true,
 })
 

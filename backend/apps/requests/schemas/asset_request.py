@@ -8,16 +8,19 @@ from apps.accounts.models import User
 from apps.accounts.schemas import TeamRefOut, UserRefOut
 from apps.core.api.security import context_is_it_staff
 from apps.core.schemas import RefOut
-from apps.inventory.models import License
+from apps.inventory.models import Asset, License
 from apps.inventory.schemas.refs import AssetRefOut
 from apps.masterdata.schemas.refs import AssetModelRefOut, CategoryRefOut, LocationRefOut
 from apps.requests.models import (
     AssetRequest,
     AssetRequestAllocation,
     AssetRequestEvent,
+    AssetRequestEventKind,
     AssetRequestItem,
+    AssetRequestStatus,
     DeviceReturn,
     Handover,
+    HandoverMethod,
 )
 
 if TYPE_CHECKING:
@@ -39,7 +42,7 @@ class LicenseSeatOut(Schema):
     model: AssetModelRefOut
     reference: str
     valid_until: date | None
-    device: AssetRefOut | None = None
+    device: AssetRefOut | None
 
 
 class AllocationOut(Schema):
@@ -53,7 +56,7 @@ class AllocationOut(Schema):
     handout_note: str
     handed_out_at: datetime | None
     returned_at: datetime | None
-    device_return: UUID | None = Field(None, alias="device_return_id")
+    device_return: UUID | None = Field(alias="device_return_id")
     returned_damaged: bool
     return_note: str
     # Icon of the device's category, so lists can show what kind of device it is.
@@ -98,16 +101,15 @@ class AssetRequestListOut(Schema):
     number: str
     title: str
     requester: UserRefOut
-    department: RefOut | None = Field(None, alias="requester.department")
-    duration: str
+    department: RefOut | None = Field(alias="requester.department")
+    duration: AssetRequest.Duration
     start_date: date
     end_date: date | None
-    status: str
-    # "request", or "direct" for devices IT handed out on the spot.
-    origin: str
+    status: AssetRequestStatus
+    origin: AssetRequest.Origin
     # The department's decision: "" (not needed), pending, approved or rejected.
-    approval: str
-    handover_mode: str
+    approval: AssetRequest.Approval
+    handover_mode: AssetRequest.HandoverMode
     is_overdue: bool
     pickup_at: datetime | None
     item_count: int = 0
@@ -115,8 +117,8 @@ class AssetRequestListOut(Schema):
     summary: str = ""
     created_at: datetime
     # IT-internal: always empty for employees (the portal does not show who works on it).
-    assigned_team: TeamRefOut | None = None
-    assignee: UserRefOut | None = None
+    assigned_team: TeamRefOut | None
+    assignee: UserRefOut | None
 
     @staticmethod
     def resolve_assigned_team(obj: AssetRequest, context: dict[str, Any] | None) -> Team | None:
@@ -140,7 +142,7 @@ class AssetRequestListOut(Schema):
 
 
 class HandoverOut(Schema):
-    method: str
+    method: HandoverMethod
     received_by: UserRefOut | None
     received_by_name: str
     signature: str
@@ -163,15 +165,15 @@ class FollowsOut(Schema):
 
     id: UUID
     number: str
-    status: str
-    approval: str
+    status: AssetRequestStatus
+    approval: AssetRequest.Approval
     approval_comment: str
     it_comment: str
 
 
 class AssetRequestEventOut(Schema):
     id: UUID
-    kind: str
+    kind: AssetRequestEventKind
     at: datetime
     actor: UserRefOut | None
     data: dict[str, Any]
@@ -179,7 +181,7 @@ class AssetRequestEventOut(Schema):
 
 def pending_approvers(asset_request: AssetRequest) -> list[User]:
     """Who may approve while the request waits for approval; asked once per request."""
-    if asset_request.status != AssetRequest.Status.PENDING_APPROVAL:
+    if asset_request.status != AssetRequestStatus.PENDING_APPROVAL:
         return []
     if not hasattr(asset_request, "_pending_approvers"):
         asset_request._pending_approvers = list(asset_request.approvers())
@@ -208,9 +210,9 @@ class AssetRequestOut(AssetRequestListOut):
     handed_out_at: datetime | None
     completed_at: datetime | None
     items: list[AssetRequestItemOut]
-    handover: HandoverOut | None = None
+    handover: HandoverOut | None
     returns: list[DeviceReturnOut] = []
-    follows: FollowsOut | None = None
+    follows: FollowsOut | None
     # What happened so far: all of it for IT, their part for the employee, and for a
     # department approver only the request and the decision.
     events: list[AssetRequestEventOut] = []
@@ -288,7 +290,7 @@ class DeclineIn(Schema):
     comment: str = Field(..., min_length=1)
 
 
-class AssignIn(Schema):
+class AssetRequestAssignIn(Schema):
     team: UUID | None = None
     assignee: UUID | None = None
 
@@ -394,7 +396,7 @@ class AssetCandidateOut(Schema):
     id: UUID
     inventory_number: str
     serial_number: str
-    condition: str
+    condition: Asset.Condition
     model: AssetModelRefOut
     location: LocationRefOut | None
 
@@ -414,7 +416,7 @@ class LicenseCandidateOut(Schema):
     id: UUID
     model: AssetModelRefOut
     reference: str
-    assign_to: str
+    assign_to: License.AssignTo
     valid_until: date | None
     free_seats: int
 

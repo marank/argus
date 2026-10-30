@@ -5,13 +5,13 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { portalApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import DetailGrid, { type DetailEntry } from '@/components/common/DetailGrid.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import ReportIssueModal from '@/components/portal/ReportIssueModal.vue'
 import { useFormat } from '@/composables/useFormat'
 import type { Id } from '@/types/common'
-import type { MyAsset } from '@/types/requests'
 import { categoryIcon } from '@/utils/icons'
 import { useFeaturesStore } from '@/stores/features'
 
@@ -21,7 +21,7 @@ const { t } = useI18n()
 const features = useFeaturesStore()
 const { date, dateTime, enumLabel } = useFormat()
 
-const asset = ref<MyAsset | null>(null)
+const asset = ref<Schemas['MyAssetOut'] | null>(null)
 const showReport = ref(false)
 
 async function load() {

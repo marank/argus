@@ -1,23 +1,19 @@
-from ninja import ModelSchema, Schema
+from uuid import UUID
 
-from apps.masterdata.models import Supplier
+from ninja import Schema
 
 
-class SupplierOut(ModelSchema):
-    class Meta:
-        model = Supplier
-        fields = [
-            "id",
-            "name",
-            "customer_number",
-            "contact_person",
-            "email",
-            "phone",
-            "website",
-            "address",
-            "notes",
-            "is_active",
-        ]
+class SupplierOut(Schema):
+    id: UUID
+    name: str
+    customer_number: str
+    contact_person: str
+    email: str
+    phone: str
+    website: str
+    address: str
+    notes: str
+    is_active: bool
 
 
 class SupplierIn(Schema):

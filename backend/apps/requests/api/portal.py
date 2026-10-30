@@ -16,7 +16,7 @@ from apps.core.api.security import AuthedRequest, permission_auth
 from apps.core.features import is_enabled
 from apps.core.models import SiteSettings
 from apps.inventory.api.issues import issue_detail
-from apps.inventory.models import Asset, AssetIssue, LicenseAssignment
+from apps.inventory.models import Asset, AssetIssue, AssetIssueStatus, LicenseAssignment
 from apps.inventory.schemas.asset_issue import (
     AssetIssueDetailOut,
     AssetIssueIn,
@@ -33,9 +33,9 @@ from apps.inventory.services.issues import (
     update_issue,
     with_messages,
 )
-from apps.masterdata.models import AssetModel, Category
+from apps.masterdata.models import AssetModel, Category, CategoryKind
 from apps.requests.api.queries import approvable_asset_requests
-from apps.requests.models import AssetRequest, AssetRequestAllocation
+from apps.requests.models import AssetRequest, AssetRequestAllocation, AssetRequestStatus
 from apps.requests.schemas.catalog import (
     AvailabilityOut,
     CatalogCategoryOut,
@@ -115,7 +115,7 @@ def catalog(
     models = AssetModel.objects.filter(is_requestable=True, is_active=True)
     if not is_enabled("software_requests"):
         # Software can be switched off as a request option in the site settings.
-        categories = categories.exclude(kind=Category.Kind.SOFTWARE)
+        categories = categories.exclude(kind=CategoryKind.SOFTWARE)
         models = models.exclude(tracking=AssetModel.Tracking.LICENSE)
     models_by_category: dict[UUID, list[AssetModel]] = {}
     for model in models.select_related("manufacturer"):
@@ -279,7 +279,7 @@ def my_issue_message(request: AuthedRequest, pk: UUID, payload: IssueMessageIn) 
 def my_issue_resolve(request: AuthedRequest, pk: UUID, payload: IssueMessageIn) -> AssetIssue:
     """The employee marks the problem resolved, optionally saying how."""
     issue = get_object_or_404(_own_issues(request), pk=pk)
-    update_issue(issue, request.user, AssetIssue.Status.RESOLVED, payload.text, by_it=False)
+    update_issue(issue, request.user, AssetIssueStatus.RESOLVED, payload.text, by_it=False)
     return issue_detail(_own_issues(request), pk)
 
 
@@ -289,14 +289,14 @@ def menu_counts(request: AuthedRequest) -> MenuCounts:
 
     Approvals always wait for the user; reports only when IT changed one since the user last opened it.
     """
-    approvals = approvable_asset_requests(request.user).filter(status=AssetRequest.Status.PENDING_APPROVAL)
+    approvals = approvable_asset_requests(request.user).filter(status=AssetRequestStatus.PENDING_APPROVAL)
     issues = AssetIssue.objects.filter(reported_by=request.user)
     return {
         "requests": AssetRequest.objects.filter(
             requester=request.user, status__in=AssetRequest.OPEN_STATUSES
         ).count(),
         "approvals": approvals.count(),
-        "issues": issues.exclude(status=AssetIssue.Status.RESOLVED).count(),
+        "issues": issues.exclude(status=AssetIssueStatus.RESOLVED).count(),
         "issues_updated": issues.filter(unseen_update=True).exists(),
     }
 

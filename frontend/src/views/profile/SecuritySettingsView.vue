@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Schemas } from '@/api/types'
 import { KeyRound, Mail, ShieldCheck, Smartphone } from '@lucide/vue'
 import { NAlert, NButton, NModal, NSkeleton, NTag, useMessage } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
@@ -12,14 +13,13 @@ import TwoFactorSetupModal from '@/components/profile/TwoFactorSetupModal.vue'
 import SettingRow from '@/components/settings/SettingRow.vue'
 import SettingsGroup from '@/components/settings/SettingsGroup.vue'
 import { useAuthStore } from '@/stores/auth'
-import type { TwoFactorMethod, TwoFactorStatus } from '@/types/accounts'
 
 /** The user's two-factor sign-in: app or email, backup codes, switching off. */
 const { t } = useI18n()
 const message = useMessage()
 const auth = useAuthStore()
 
-const status = ref<TwoFactorStatus | null>(null)
+const status = ref<Schemas['TwoFactorStatusOut'] | null>(null)
 const loadError = ref(false)
 
 async function load() {
@@ -32,16 +32,16 @@ async function load() {
 }
 onMounted(load)
 
-const METHODS: { key: TwoFactorMethod; icon: typeof Smartphone }[] = [
+const METHODS: { key: Schemas['TwoFactorMethod']; icon: typeof Smartphone }[] = [
   { key: 'totp', icon: Smartphone },
   { key: 'email', icon: Mail },
 ]
 const active = computed(() => status.value?.method ?? null)
 const fewCodes = computed(() => !!active.value && (status.value?.backup_codes_left ?? 0) <= 2)
 
-const setupMethod = ref<TwoFactorMethod>('totp')
+const setupMethod = ref<Schemas['TwoFactorMethod']>('totp')
 const showSetup = ref(false)
-function openSetup(method: TwoFactorMethod) {
+function openSetup(method: Schemas['TwoFactorMethod']) {
   setupMethod.value = method
   showSetup.value = true
 }

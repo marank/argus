@@ -3,12 +3,12 @@ import { NCard } from 'naive-ui'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import type { Schemas } from '@/api/types'
 import DetailGrid, { type DetailEntry } from '@/components/common/DetailGrid.vue'
 import { useFormat } from '@/composables/useFormat'
-import type { AssetRequest } from '@/types/requests'
 
 /** Who asked for what and when: requester, period and the messages exchanged. */
-const props = defineProps<{ assetRequest: AssetRequest }>()
+const props = defineProps<{ assetRequest: Schemas['AssetRequestOut'] }>()
 const { t } = useI18n()
 const { date, weekday, enumLabel } = useFormat()
 

@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 
 import { issuesApi } from '@/api/inventory'
 import { portalApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import IssueConversation from '@/components/issues/IssueConversation.vue'
@@ -18,14 +19,13 @@ import { useLive } from '@/composables/useLive'
 import { useAuthStore } from '@/stores/auth'
 import { useMenuCountsStore } from '@/stores/menuCounts'
 import type { Id } from '@/types/common'
-import type { AssetIssueDetail, IssueSide, IssueStatus } from '@/types/inventory'
 
 /**
  * A problem report with its conversation, for IT (`viewer` "it") and for the
  * reporter in the self-service portal. Either side writes at any time and marks
  * the problem resolved; only IT takes it into work or reopens it.
  */
-const props = defineProps<{ id: Id; viewer: IssueSide }>()
+const props = defineProps<{ id: Id; viewer: Schemas['IssueEntryOut']['side'] }>()
 const { t } = useI18n()
 const { enumLabel } = useFormat()
 const auth = useAuthStore()
@@ -35,7 +35,7 @@ const { busy, run } = useAction()
 const forIt = computed(() => props.viewer === 'it')
 const canWrite = computed(() => !forIt.value || auth.can('issues', 'write'))
 
-const issue = ref<AssetIssueDetail | null>(null)
+const issue = ref<Schemas['AssetIssueDetailOut'] | null>(null)
 const conversation = useTemplateRef('conversation')
 
 async function refresh() {
@@ -67,7 +67,7 @@ async function send(text: string) {
   }
 }
 
-async function changeStatus(status: IssueStatus, text: string) {
+async function changeStatus(status: Schemas['AssetIssueStatus'], text: string) {
   const updated = await run(
     () =>
       forIt.value

@@ -5,11 +5,11 @@ import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 
 import { portalApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import EmptyState from '@/components/common/EmptyState.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import { toIsoDate, useFormat } from '@/composables/useFormat'
 import { useLive } from '@/composables/useLive'
-import type { OwnLicense } from '@/types/inventory'
 import { categoryIcon } from '@/utils/icons'
 import { useFeaturesStore } from '@/stores/features'
 
@@ -18,14 +18,14 @@ const { t } = useI18n()
 const features = useFeaturesStore()
 const { date } = useFormat()
 
-const licenses = ref<OwnLicense[] | null>(null)
+const licenses = ref<Schemas['OwnLicenseOut'][] | null>(null)
 const load = async () => (licenses.value = await portalApi.myLicenses())
 onMounted(load)
 useLive(['license', 'request'], load)
 
 const soon = toIsoDate(Date.now() + features.rules.license_warning_days * 86_400_000) ?? ''
 
-function validity(l: OwnLicense) {
+function validity(l: Schemas['OwnLicenseOut']) {
   if (!l.valid_until) return h('span', { class: 'muted' }, t('inventory.licenses.perpetual'))
   const tag = l.is_expired
     ? h(NTag, { size: 'small', type: 'error', bordered: false }, () =>
@@ -39,7 +39,7 @@ function validity(l: OwnLicense) {
   return h('span', { class: 'validity' }, [h('span', { class: 'mono' }, date(l.valid_until)), tag])
 }
 
-const columns = computed<DataTableColumns<OwnLicense>>(() => [
+const columns = computed<DataTableColumns<Schemas['OwnLicenseOut']>>(() => [
   {
     key: 'software',
     title: t('requests.mySoftware.software'),
@@ -90,7 +90,7 @@ const columns = computed<DataTableColumns<OwnLicense>>(() => [
       :columns="columns"
       :data="licenses ?? []"
       :loading="!licenses"
-      :row-key="(l: OwnLicense) => l.id"
+      :row-key="(l: Schemas['OwnLicenseOut']) => l.id"
       :scroll-x="820"
     />
   </div>

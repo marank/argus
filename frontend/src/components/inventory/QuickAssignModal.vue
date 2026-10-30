@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 
 import { usersApi } from '@/api/accounts'
 import { requestsApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import DateField from '@/components/common/DateField.vue'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import FieldLabel from '@/components/common/FieldLabel.vue'
@@ -12,7 +13,6 @@ import { useAction } from '@/composables/useAction'
 import { toIsoDate } from '@/composables/useFormat'
 import { useFeaturesStore } from '@/stores/features'
 import type { Id } from '@/types/common'
-import type { Duration, AssetRequest } from '@/types/requests'
 
 /**
  * Assign a device from stock to an employee in one step: no request, no approval.
@@ -20,7 +20,7 @@ import type { Duration, AssetRequest } from '@/types/requests'
  */
 const props = defineProps<{ assetId: Id }>()
 const show = defineModel<boolean>('show', { required: true })
-const emit = defineEmits<{ saved: [assetRequest: AssetRequest] }>()
+const emit = defineEmits<{ saved: [assetRequest: Schemas['AssetRequestOut']] }>()
 const { t } = useI18n()
 const features = useFeaturesStore()
 const { busy, run } = useAction()
@@ -34,7 +34,7 @@ const plusDays = (ts: number, days: number) => {
 
 const form = reactive({
   requester: null as Id | null,
-  duration: 'temporary' as Duration,
+  duration: 'temporary' as Schemas['Duration'],
   end: null as number | null,
   // Left empty: from today. Earlier records an assignment that already began.
   start: null as number | null,

@@ -5,12 +5,13 @@ import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { assetsApi, consumablesApi } from '@/api/inventory'
+import type { Schemas } from '@/api/types'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import ToggleRow from '@/components/common/ToggleRow.vue'
 import DateField from '@/components/common/DateField.vue'
 import { useAction } from '@/composables/useAction'
 import { useFormat } from '@/composables/useFormat'
-import { MANUAL_EVENT_KINDS, type AssetEventKind } from '@/types/inventory'
+import { MANUAL_EVENT_KINDS } from '@/types/inventory'
 import { useFeaturesStore } from '@/stores/features'
 
 const props = defineProps<{ assetId: Id }>()
@@ -22,7 +23,7 @@ const { enumLabel } = useFormat()
 const { busy, run } = useAction()
 
 const form = reactive({
-  kind: 'battery_replaced' as AssetEventKind,
+  kind: 'battery_replaced' as Schemas['AssetEventKind'],
   occurred_at: Date.now(),
   description: '',
   component: '',

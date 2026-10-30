@@ -1,1 +1,4 @@
 * text=auto eol=lf
+# Generated from the backend's OpenAPI schema (pnpm api:types): collapsed in diffs.
+openapi.json linguist-generated=true
+src/api/schema.d.ts linguist-generated=true

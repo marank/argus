@@ -7,11 +7,12 @@ import { useI18n } from 'vue-i18n'
 
 import { assetsApi } from '@/api/inventory'
 import { assetModelsApi, locationsApi, suppliersApi } from '@/api/masterdata'
+import type { Schemas } from '@/api/types'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import FieldLabel from '@/components/common/FieldLabel.vue'
 import { useAction } from '@/composables/useAction'
 import { useFormat } from '@/composables/useFormat'
-import { ASSET_CONDITIONS, type AssetCondition } from '@/types/inventory'
+import { ASSET_CONDITIONS } from '@/types/inventory'
 
 const show = defineModel<boolean>('show', { required: true })
 const emit = defineEmits<{ created: [] }>()
@@ -24,7 +25,7 @@ const form = reactive({
   model: null as Id | null,
   location: null as Id | null,
   supplier: null as Id | null,
-  condition: 'new' as AssetCondition,
+  condition: 'new' as Schemas['Condition'],
 })
 const serialText = ref('')
 
@@ -36,7 +37,15 @@ const serials = computed(() =>
 )
 
 async function submit() {
-  const created = await run(() => assetsApi.bulkCreate({ ...form, serial_numbers: serials.value }))
+  const created = await run(() =>
+    assetsApi.bulkCreate({
+      ...form,
+      model: form.model!,
+      serial_numbers: serials.value,
+      is_loanable: true,
+      notes: '',
+    }),
+  )
   if (created) {
     serialText.value = ''
     show.value = false

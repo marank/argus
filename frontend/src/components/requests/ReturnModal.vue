@@ -5,14 +5,14 @@ import { computed, reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { requestsApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import { useAction } from '@/composables/useAction'
-import type { AssetRequest } from '@/types/requests'
 import { allocationCode, allocationModel, isReturnable } from '@/utils/requests'
 
 /** Take back some or all lent devices and seats, with a note per device and a record. */
-const props = defineProps<{ assetRequest: AssetRequest }>()
+const props = defineProps<{ assetRequest: Schemas['AssetRequestOut'] }>()
 const show = defineModel<boolean>('show', { required: true })
-const emit = defineEmits<{ saved: [assetRequest: AssetRequest] }>()
+const emit = defineEmits<{ saved: [assetRequest: Schemas['AssetRequestOut']] }>()
 const { t } = useI18n()
 const { busy, run } = useAction()
 

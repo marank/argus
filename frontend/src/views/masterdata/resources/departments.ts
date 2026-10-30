@@ -1,15 +1,15 @@
+import type { Schemas } from '@/api/types'
 import { departmentsApi, usersApi } from '@/api/accounts'
 import { mono, ownOrInherited, path, withIcon } from '@/components/crud/cells'
 import { defineResource } from '@/components/crud/types'
 import { i18n } from '@/i18n'
-import type { Department, UserRef } from '@/types/accounts'
 import { DEPARTMENT_ICONS, departmentIcon } from '@/utils/icons'
 
 const { t } = i18n.global
 
-const names = (users: UserRef[]) => users.map((u) => u.display_name).join(', ')
+const names = (users: Schemas['UserRefOut'][]) => users.map((u) => u.display_name).join(', ')
 
-export default defineResource<Department>({
+export default defineResource<Schemas['DepartmentOut']>({
   key: 'departments',
   permission: 'departments',
   api: departmentsApi,
@@ -80,8 +80,8 @@ export default defineResource<Department>({
           type: 'entity',
           fetcher: departmentsApi.list,
           // The edited row's parent comes as a bare reference, without the path.
-          display: (d: Department) => d.path?.join(' / ') ?? d.name,
-          initial: (d: Department) => d.parent,
+          display: (d: Schemas['DepartmentOut']) => d.path?.join(' / ') ?? d.name,
+          initial: (d: Schemas['DepartmentOut']) => d.parent,
         },
         {
           key: 'sort_order',
@@ -98,8 +98,8 @@ export default defineResource<Department>({
           span: 2,
           fetcher: usersApi.list,
           params: { is_active: true },
-          display: (u: UserRef) => u.display_name,
-          initial: (d: Department) => d.approvers,
+          display: (u: Schemas['UserRefOut']) => u.display_name,
+          initial: (d: Schemas['DepartmentOut']) => d.approvers,
           help: 'masterdata.fields.approversHelp',
         },
       ],

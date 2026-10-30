@@ -6,16 +6,16 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { requestsApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import BrandMark from '@/components/common/BrandMark.vue'
 import { useFormat } from '@/composables/useFormat'
-import type { AssetRequest } from '@/types/requests'
 import { allocationModel } from '@/utils/requests'
 
 /** Printable handover record (A4), opened from the request in a new tab. */
 const props = defineProps<{ id: Id }>()
 const { t } = useI18n()
 const { date, dateTime, enumLabel } = useFormat()
-const assetRequest = ref<AssetRequest | null>(null)
+const assetRequest = ref<Schemas['AssetRequestOut'] | null>(null)
 
 onMounted(async () => (assetRequest.value = await requestsApi.get(props.id)))
 

@@ -3,16 +3,16 @@ import { h } from 'vue'
 
 import { teamsApi } from '@/api/accounts'
 import { categoriesApi, numberSequencesApi } from '@/api/masterdata'
+import type { Schemas } from '@/api/types'
 import { bool, inherited, mono, ownOrInherited, path, withIcon } from '@/components/crud/cells'
 import { defineResource } from '@/components/crud/types'
 import { numberSequenceHints } from '@/components/masterdata/numberSequenceHints'
 import { i18n } from '@/i18n'
-import type { TeamRef } from '@/types/accounts'
-import { CATEGORY_KINDS, type Category } from '@/types/masterdata'
+import { CATEGORY_KINDS } from '@/types/masterdata'
 
 const { t } = i18n.global
 
-export default defineResource<Category>({
+export default defineResource<Schemas['CategoryOut']>({
   key: 'categories',
   permission: 'categories',
   api: categoriesApi,
@@ -123,8 +123,8 @@ export default defineResource<Category>({
           type: 'entity',
           fetcher: categoriesApi.list,
           // The edited row's parent comes as a bare reference, without the path.
-          display: (c: Category) => c.path?.join(' / ') ?? c.name,
-          initial: (c: Category) => c.parent,
+          display: (c: Schemas['CategoryOut']) => c.path?.join(' / ') ?? c.name,
+          initial: (c: Schemas['CategoryOut']) => c.parent,
         },
         { key: 'icon', label: 'masterdata.fields.icon', type: 'icon' },
         { key: 'description', label: 'common.description', type: 'textarea' },
@@ -142,7 +142,7 @@ export default defineResource<Category>({
           fetcher: numberSequencesApi.list,
           display: (s: { name: string; preview?: string }) =>
             s.preview ? `${s.name} · ${s.preview}` : s.name,
-          initial: (c: Category) => c.number_sequence,
+          initial: (c: Schemas['CategoryOut']) => c.number_sequence,
         },
       ],
       extra: numberSequenceHints('parent'),
@@ -157,8 +157,8 @@ export default defineResource<Category>({
           span: 2,
           help: 'masterdata.fields.categoryTeamHelp',
           fetcher: teamsApi.list,
-          display: (t: TeamRef) => t.name,
-          initial: (c: Category) => c.team,
+          display: (t: Schemas['TeamRefOut']) => t.name,
+          initial: (c: Schemas['CategoryOut']) => c.team,
         },
       ],
     },

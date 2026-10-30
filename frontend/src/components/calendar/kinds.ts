@@ -1,10 +1,9 @@
 import { CalendarClock, KeyRound, PackageCheck, ShieldAlert, Truck, Undo2 } from '@lucide/vue'
+import type { Schemas } from '@/api/types'
 import type { Component } from 'vue'
 import type { RouteLocationRaw } from 'vue-router'
 
-import type { CalendarEntry, CalendarKind } from '@/types/calendar'
-
-export const KIND_ICONS: Record<CalendarKind, Component> = {
+export const KIND_ICONS: Record<Schemas['CalendarEntryOut']['kind'], Component> = {
   loan: CalendarClock,
   pickup: PackageCheck,
   return: Undo2,
@@ -14,7 +13,7 @@ export const KIND_ICONS: Record<CalendarKind, Component> = {
 }
 
 /** One colour per kind (matching the filter chips), from the app palette. */
-const KIND_COLORS: Record<CalendarKind, string> = {
+const KIND_COLORS: Record<Schemas['CalendarEntryOut']['kind'], string> = {
   loan: 'var(--ar-primary)',
   pickup: 'var(--ar-success)',
   return: 'var(--ar-info)',
@@ -23,10 +22,10 @@ const KIND_COLORS: Record<CalendarKind, string> = {
   license: 'var(--ar-pink)',
 }
 
-export const kindColor = (kind: CalendarKind) => KIND_COLORS[kind]
+export const kindColor = (kind: Schemas['CalendarEntryOut']['kind']) => KIND_COLORS[kind]
 
 /** Overdue returns and lendings stand out in red regardless of their kind. */
-export function entryColor(entry: Pick<CalendarEntry, 'kind' | 'overdue'>): string {
+export function entryColor(entry: Pick<Schemas['CalendarEntryOut'], 'kind' | 'overdue'>): string {
   return entry.overdue ? 'var(--ar-error)' : KIND_COLORS[entry.kind]
 }
 
@@ -34,7 +33,7 @@ export function entryColor(entry: Pick<CalendarEntry, 'kind' | 'overdue'>): stri
  * Not settled yet: a request IT has not confirmed, or a pickup whose devices are
  * not prepared. Drawn as outline only; everything confirmed is filled.
  */
-export function isTentative(entry: Pick<CalendarEntry, 'kind' | 'status'>): boolean {
+export function isTentative(entry: Pick<Schemas['CalendarEntryOut'], 'kind' | 'status'>): boolean {
   return (
     (entry.kind === 'loan' && ['pending_approval', 'submitted'].includes(entry.status)) ||
     (entry.kind === 'pickup' && entry.status === 'confirmed')
@@ -44,7 +43,7 @@ export function isTentative(entry: Pick<CalendarEntry, 'kind' | 'status'>): bool
 type Translate = (key: string, named: Record<string, unknown>, plural?: number) => string
 
 /** The text shown for an entry; the API sends only the name, number or supplier. */
-export function entryLabel(entry: CalendarEntry, t: Translate): string {
+export function entryLabel(entry: Schemas['CalendarEntryOut'], t: Translate): string {
   switch (entry.kind) {
     case 'pickup':
       return t('calendar.titles.pickup', { name: entry.title })
@@ -62,9 +61,9 @@ export function entryLabel(entry: CalendarEntry, t: Translate): string {
 }
 
 /** Where an entry leads: its request, order or license, or the devices whose warranty ends. */
-export function entryRoute(entry: CalendarEntry): RouteLocationRaw | null {
-  if (entry.link.name === 'assets')
-    return { name: 'assets', query: { warranty_until: entry.link.warranty_until } }
-  if (entry.link.id) return { name: entry.link.name, params: { id: entry.link.id } }
+export function entryRoute(entry: Schemas['CalendarEntryOut']): RouteLocationRaw | null {
+  const { name, id, warranty_until } = entry.link
+  if (name === 'assets') return { name: 'assets', query: { warranty_until } }
+  if (name && id) return { name, params: { id } }
   return null
 }

@@ -1,9 +1,9 @@
+import type { Schemas } from '@/api/types'
 import { manufacturersApi } from '@/api/masterdata'
 import { bool, text } from '@/components/crud/cells'
 import { defineResource } from '@/components/crud/types'
-import type { Manufacturer } from '@/types/masterdata'
 
-export default defineResource<Manufacturer>({
+export default defineResource<Schemas['ManufacturerOut']>({
   key: 'manufacturers',
   permission: 'manufacturers',
   api: manufacturersApi,

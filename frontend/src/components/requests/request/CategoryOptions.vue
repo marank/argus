@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import type { CatalogCategory, CatalogModel } from '@/types/requests'
+import type { Schemas } from '@/api/types'
 import { categoryIcon } from '@/utils/icons'
 import { anyModelLabel } from '@/utils/requests'
 
@@ -12,20 +12,20 @@ import { offersAnyModel, optionKey, optionCounts } from './types'
 
 /** Options of one device group: "any device" first, then specific models, then accessories. */
 const props = defineProps<{
-  category: CatalogCategory
-  children: CatalogCategory[]
+  category: Schemas['CatalogCategoryOut']
+  children: Schemas['CatalogCategoryOut'][]
   cartCounts: Record<string, number>
 }>()
 const emit = defineEmits<{
-  add: [category: CatalogCategory, model?: CatalogModel]
-  addFreeText: [text: string, category: CatalogCategory]
+  add: [category: Schemas['CatalogCategoryOut'], model?: Schemas['CatalogModelOut']]
+  addFreeText: [text: string, category: Schemas['CatalogCategoryOut']]
 }>()
 const { t } = useI18n()
 
 const groups = computed(() => [props.category, ...props.children])
 
 /** Below the first level, the way down from the group: "Scanner accessories / Cradles". */
-function path(group: CatalogCategory): string {
+function path(group: Schemas['CatalogCategoryOut']): string {
   const byId = new Map(groups.value.map((g) => [g.id, g]))
   const names = [group.name]
   let parent = group.parent_id ? byId.get(group.parent_id) : undefined

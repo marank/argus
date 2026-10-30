@@ -11,7 +11,7 @@ from django.utils import timezone
 from apps.accounts.models import User
 from apps.core.models import MailSettings, SiteSettings
 from apps.masterdata.models import Category
-from apps.requests.models import AssetRequest
+from apps.requests.models import AssetRequest, AssetRequestStatus
 
 if TYPE_CHECKING:
     from django.test.client import _MonkeyPatchedWSGIResponse
@@ -137,7 +137,7 @@ def test_reminders_are_sent_once(mail_on, django_capture_on_commit_callbacks):
             duration=AssetRequest.Duration.TEMPORARY,
             start_date=today - timedelta(days=10),
             end_date=end,
-            status=AssetRequest.Status.HANDED_OUT,
+            status=AssetRequestStatus.HANDED_OUT,
         )
     with django_capture_on_commit_callbacks(execute=True):
         call_command("send_reminders", verbosity=0)

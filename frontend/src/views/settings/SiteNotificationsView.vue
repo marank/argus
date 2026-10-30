@@ -10,20 +10,21 @@ import NotificationMatrix, {
 } from '@/components/settings/NotificationMatrix.vue'
 import { useAction } from '@/composables/useAction'
 import { useFeaturesStore } from '@/stores/features'
-import type { NotificationChannel, NotificationKey, NotificationSettings } from '@/types/settings'
+import type { Schemas } from '@/api/types'
+import type { NotificationChannel } from '@/types/settings'
 
 /** Which notifications exist at all, per channel; people switch off what is on here. */
 const { t } = useI18n()
 const features = useFeaturesStore()
 const { busy, run } = useAction()
 
-const loaded = ref<NotificationSettings | null>(null)
+const loaded = ref<Schemas['NotificationSettingsOut'] | null>(null)
 const form = reactive({
-  mail: {} as Record<NotificationKey, boolean>,
-  app: {} as Record<NotificationKey, boolean>,
+  mail: {} as Record<string, boolean>,
+  app: {} as Record<string, boolean>,
 })
 
-function apply(settings: NotificationSettings) {
+function apply(settings: Schemas['NotificationSettingsOut']) {
   loaded.value = settings
   form.mail = { ...settings.mail }
   form.app = { ...settings.app }
@@ -43,8 +44,8 @@ const groups = computed<NotificationGroup[]>(() => {
   }))
 })
 
-const state = (key: NotificationKey, channel: NotificationChannel) => ({
-  value: form[channel][key],
+const state = (key: string, channel: NotificationChannel) => ({
+  value: form[channel][key] ?? false,
 })
 
 async function save() {

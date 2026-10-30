@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
-import type { AssetRequest, AssetRequestEvent } from '@/types/requests'
+import type { Schemas } from '@/api/types'
 import { handoverPlanned } from '@/utils/requests'
+
+type AssetRequestEvent = Schemas['AssetRequestEventOut']
+type Planned = Pick<Schemas['AssetRequestOut'], 'events' | 'pickup_at'>
 
 const withEvents = (...kinds: AssetRequestEvent['kind'][]) =>
   ({
     events: kinds.map((kind) => ({ kind }) as AssetRequestEvent),
     pickup_at: null,
-  }) as Pick<AssetRequest, 'events' | 'pickup_at'>
+  }) as Planned
 
 describe('handoverPlanned', () => {
   it('is not planned for a direct hand-out that was only recorded and allocated', () => {

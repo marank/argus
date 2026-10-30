@@ -1,13 +1,13 @@
+import type { Schemas } from '@/api/types'
 import { teamsApi, usersApi } from '@/api/accounts'
 import { bool, mono, text } from '@/components/crud/cells'
 import { defineResource } from '@/components/crud/types'
 import { useFeaturesStore } from '@/stores/features'
-import type { Team, UserRef } from '@/types/accounts'
 
 // The LDAP group only means something while directory login is on.
 const ldapEnabled = () => useFeaturesStore().ldapEnabled
 
-export default defineResource<Team>({
+export default defineResource<Schemas['TeamOut']>({
   key: 'teams',
   permission: 'teams',
   api: teamsApi,
@@ -60,8 +60,8 @@ export default defineResource<Team>({
           multiple: true,
           fetcher: usersApi.list,
           params: { is_staff: true, is_active: true },
-          display: (u: UserRef) => u.display_name,
-          initial: (t: Team) => t.members,
+          display: (u: Schemas['UserRefOut']) => u.display_name,
+          initial: (t: Schemas['TeamOut']) => t.members,
         },
         {
           key: 'ldap_group_dn',

@@ -3,7 +3,7 @@ from uuid import UUID
 
 from ninja import Schema
 
-from apps.accounts.models import Role, Team, User
+from apps.accounts.models import Role, Team, TwoFactorMethod, User
 from apps.core.api.security import context_is_it_staff
 from apps.core.schemas import RefOut
 from apps.masterdata.schemas.refs import LocationRefOut
@@ -34,7 +34,7 @@ class UserOut(Schema):
     is_ldap_user: bool
     approval_exempt: bool
     # Method of the second sign-in step ("email", "totp") or None; only for IT and the user.
-    two_factor: str | None = None
+    two_factor: TwoFactorMethod | None = None
     # IT staff's roles and teams; only sent to IT staff.
     roles: list[RefOut] = []
     teams: list[RefOut] = []
@@ -59,7 +59,7 @@ class UserOut(Schema):
 class CurrentUserOut(UserOut):
     # Area → "read" or "write" from the user's roles (everything for administrators).
     permissions: dict[str, str]
-    language: str
+    language: User.Language
     notification_settings: dict[str, bool]
     app_notification_settings: dict[str, bool]
     dashboard_settings: dict[str, Any]

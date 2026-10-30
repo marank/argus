@@ -9,11 +9,11 @@ from apps.accounts.schemas import UserRefOut
 from apps.core.api.security import AuthedRequest, it_staff_auth, permission_auth
 from apps.core.schemas import RefOut
 from apps.dashboard.services import widgets
-from apps.inventory.models import Consumable
+from apps.inventory.models import AssetIssueKind, AssetIssueStatus, Consumable
 from apps.inventory.schemas.refs import AssetRefOut
 from apps.masterdata.schemas.refs import AssetModelRefOut, LocationRefOut
-from apps.procurement.models import PurchaseOrder
-from apps.requests.models import AssetRequest
+from apps.procurement.models import PurchaseOrder, PurchaseOrderStatus
+from apps.requests.models import AssetRequest, AssetRequestStatus
 
 router = Router(tags=["dashboard"], auth=it_staff_auth)
 
@@ -22,7 +22,7 @@ class TaskRequestOut(Schema):
     id: UUID
     number: str
     title: str
-    status: str
+    status: AssetRequestStatus
     start_date: date
     end_date: date | None
     requester: UserRefOut
@@ -30,8 +30,8 @@ class TaskRequestOut(Schema):
 
 class TaskIssueOut(Schema):
     id: UUID
-    kind: str
-    status: str
+    kind: AssetIssueKind
+    status: AssetIssueStatus
     description: str
     created_at: datetime
     asset: AssetRefOut
@@ -99,7 +99,7 @@ class UpcomingOut(Schema):
     id: UUID
     number: str
     title: str
-    status: str
+    status: AssetRequestStatus
     start_date: date
     pickup_at: datetime | None
     requester: UserRefOut
@@ -128,7 +128,7 @@ class LowStockOut(Schema):
 class OpenOrderOut(Schema):
     id: UUID
     number: str
-    status: str
+    status: PurchaseOrderStatus
     supplier: RefOut | None
     order_date: date | None
     expected_date: date | None

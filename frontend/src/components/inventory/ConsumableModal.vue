@@ -7,12 +7,12 @@ import { useI18n } from 'vue-i18n'
 
 import { consumablesApi } from '@/api/inventory'
 import { assetModelsApi, locationsApi } from '@/api/masterdata'
+import type { Schemas } from '@/api/types'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import FieldLabel from '@/components/common/FieldLabel.vue'
 import { useAction } from '@/composables/useAction'
-import type { Consumable } from '@/types/inventory'
 
-const props = defineProps<{ item: Consumable | null }>()
+const props = defineProps<{ item: Schemas['ConsumableOut'] | null }>()
 const show = defineModel<boolean>('show', { required: true })
 const emit = defineEmits<{ saved: [] }>()
 const { t } = useI18n()

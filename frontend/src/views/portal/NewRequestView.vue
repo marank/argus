@@ -8,6 +8,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { assetsApi } from '@/api/inventory'
 import { portalApi, requestsApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import PageHeader from '@/components/common/PageHeader.vue'
 import CatalogBrowser from '@/components/requests/request/CatalogBrowser.vue'
 import ConsumableQuickPick from '@/components/requests/request/ConsumableQuickPick.vue'
@@ -25,16 +26,6 @@ import { fromIsoDate } from '@/composables/useFormat'
 import { useAuthStore } from '@/stores/auth'
 import { anyModelLabel, itemLabel } from '@/utils/requests'
 import { useFeaturesStore } from '@/stores/features'
-import type { UserRef } from '@/types/accounts'
-import type { Asset, Consumable } from '@/types/inventory'
-import type {
-  CatalogCategory,
-  CatalogModel,
-  DirectRequestInput,
-  MyConsumables,
-  AssetRequest,
-  AssetRequestInput,
-} from '@/types/requests'
 
 const { t } = useI18n()
 const features = useFeaturesStore()
@@ -88,9 +79,9 @@ function choose(value: 'request' | 'direct' | null) {
   router.replace({ query: value ? { mode: value, ...asset } : asset })
 }
 
-const catalog = ref<CatalogCategory[] | null>(null)
+const catalog = ref<Schemas['CatalogCategoryOut'][] | null>(null)
 const cart = ref<CartLine[]>([])
-const myConsumables = ref<MyConsumables[]>([])
+const myConsumables = ref<Schemas['MyConsumablesOut'][]>([])
 
 const today = new Date().setHours(0, 0, 0, 0)
 const period = reactive<RequestPeriod>({
@@ -119,10 +110,14 @@ onMounted(async () => {
 })
 
 /** Asking again: the earlier request's lines, details and period (moved to today if past). */
-const previous = ref<AssetRequest | null>(null)
-const initial = ref<{ title: string; notes: string; requester: UserRef | null } | null>(null)
+const previous = ref<Schemas['AssetRequestOut'] | null>(null)
+const initial = ref<{
+  title: string
+  notes: string
+  requester: Schemas['UserRefOut'] | null
+} | null>(null)
 
-function prefill(earlier: AssetRequest) {
+function prefill(earlier: Schemas['AssetRequestOut']) {
   previous.value = earlier
   let freeText = 0
   cart.value = earlier.items.map((item) => {
@@ -170,7 +165,7 @@ watch(
   { immediate: true },
 )
 
-function addModelOf(asset: Asset) {
+function addModelOf(asset: Schemas['AssetOut']) {
   for (const category of catalog.value ?? []) {
     const model = category.models.find((m) => m.id === asset.model.id)
     if (!model) continue
@@ -213,7 +208,7 @@ const cartCounts = computed(() =>
   Object.fromEntries(cart.value.map((line) => [line.key, line.quantity])),
 )
 
-function add(category: CatalogCategory, model?: CatalogModel) {
+function add(category: Schemas['CatalogCategoryOut'], model?: Schemas['CatalogModelOut']) {
   const key = optionKey(category, model)
   const existing = cart.value.find((line) => line.key === key)
   if (existing) {
@@ -231,7 +226,7 @@ function add(category: CatalogCategory, model?: CatalogModel) {
   })
 }
 
-function addAsset(asset: Asset) {
+function addAsset(asset: Schemas['AssetOut']) {
   const key = `a${asset.id}`
   if (cart.value.some((line) => line.key === key)) return
   cart.value.push({
@@ -245,7 +240,7 @@ function addAsset(asset: Asset) {
   })
 }
 
-function addConsumable(consumable: Consumable) {
+function addConsumable(consumable: Schemas['ConsumableOut']) {
   const key = `s${consumable.id}`
   const existing = cart.value.find((line) => line.key === key)
   if (existing) {
@@ -265,7 +260,7 @@ function addConsumable(consumable: Consumable) {
 
 let freeTextCounter = 0
 
-function addFreeText(text: string, category?: CatalogCategory) {
+function addFreeText(text: string, category?: Schemas['CatalogCategoryOut']) {
   cart.value.push({
     key: `f${++freeTextCounter}`,
     label: category ? `${category.name}: ${text}` : text,
@@ -278,7 +273,7 @@ function addFreeText(text: string, category?: CatalogCategory) {
 }
 
 /** In a direct hand-out the cart holds devices and stocks instead of catalog lines. */
-function directInput(data: AssetRequestInput): DirectRequestInput {
+function directInput(data: Schemas['AssetRequestIn']): Schemas['DirectRequestIn'] {
   const { items, ...fields } = data
   void items
   return {
@@ -290,7 +285,7 @@ function directInput(data: AssetRequestInput): DirectRequestInput {
   }
 }
 
-async function submit(data: AssetRequestInput) {
+async function submit(data: Schemas['AssetRequestIn']) {
   const assetRequest = await run(() =>
     direct.value
       ? requestsApi.createDirect(directInput(data))

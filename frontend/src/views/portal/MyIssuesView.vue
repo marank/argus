@@ -6,13 +6,13 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import { portalApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import EmptyState from '@/components/common/EmptyState.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useGroupedRows, withGroupHeaders } from '@/composables/useGroupedRows'
 import { useLive } from '@/composables/useLive'
-import type { OwnIssueWithDevice } from '@/types/inventory'
 import { categoryIcon } from '@/utils/icons'
 
 /** All problems the employee reported, open ones first; each opens its conversation. */
@@ -21,19 +21,19 @@ const router = useRouter()
 const { date, enumLabel } = useFormat()
 
 /** Reports IT changed since the employee last opened them pulse until opened. */
-const issues = ref<OwnIssueWithDevice[] | null>(null)
+const issues = ref<Schemas['OwnIssueWithDeviceOut'][] | null>(null)
 const load = async () => (issues.value = await portalApi.myIssues())
 onMounted(load)
 useLive(['issue'], load)
 
-const isDone = (i: OwnIssueWithDevice) => i.status === 'resolved'
+const isDone = (i: Schemas['OwnIssueWithDeviceOut']) => i.status === 'resolved'
 /** Open and in-progress reports first; newest first within each section (as delivered). */
 const sorted = computed(() => {
   const all = issues.value ?? []
   return [...all.filter((i) => !isDone(i)), ...all.filter(isDone)]
 })
 
-const grouping = useGroupedRows<OwnIssueWithDevice>({
+const grouping = useGroupedRows<Schemas['OwnIssueWithDeviceOut']>({
   rows: () => sorted.value,
   key: (i) => (isDone(i) ? 'done' : 'current'),
   label: (i) => [
@@ -43,12 +43,12 @@ const grouping = useGroupedRows<OwnIssueWithDevice>({
   storageKey: 'argus.groups.my-issues',
 })
 
-function openIssue(issue: OwnIssueWithDevice) {
+function openIssue(issue: Schemas['OwnIssueWithDeviceOut']) {
   router.push({ name: 'portal-issue', params: { id: issue.id } })
 }
 
 const columns = computed(() =>
-  withGroupHeaders<OwnIssueWithDevice>([
+  withGroupHeaders<Schemas['OwnIssueWithDeviceOut']>([
     {
       key: 'device',
       title: t('requests.myDevices.device'),
@@ -97,7 +97,7 @@ const columns = computed(() =>
       width: 120,
       render: (i) => h('span', { class: 'mono' }, date(i.created_at)),
     },
-  ] as DataTableColumns<OwnIssueWithDevice>),
+  ] as DataTableColumns<Schemas['OwnIssueWithDeviceOut']>),
 )
 </script>
 
@@ -112,8 +112,8 @@ const columns = computed(() =>
       :columns="columns"
       :data="grouping.rows.value"
       :loading="!issues"
-      :row-key="(i: OwnIssueWithDevice) => i.id"
-      :row-props="(i: OwnIssueWithDevice) => grouping.rowProps(i, openIssue)"
+      :row-key="(i: Schemas['OwnIssueWithDeviceOut']) => i.id"
+      :row-props="(i: Schemas['OwnIssueWithDeviceOut']) => grouping.rowProps(i, openIssue)"
       :row-class-name="grouping.rowClass"
       :scroll-x="1100"
     />

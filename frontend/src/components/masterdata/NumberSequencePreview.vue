@@ -1,14 +1,17 @@
 <script setup lang="ts">
+import type { Schemas } from '@/api/types'
 import { watchDebounced } from '@vueuse/core'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { numberSequencesApi } from '@/api/masterdata'
 import { ApiError } from '@/api/client'
-import type { NumberSequence } from '@/types/masterdata'
 
 /** Live preview of the next numbers while the pattern is being edited. */
-const props = defineProps<{ form: Partial<NumberSequence>; row?: NumberSequence | null }>()
+const props = defineProps<{
+  form: Partial<Schemas['NumberSequenceOut']>
+  row?: Schemas['NumberSequenceOut'] | null
+}>()
 const { t } = useI18n()
 
 const examples = ref<string[]>([])

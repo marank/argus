@@ -20,8 +20,8 @@ import {
 import { useLive } from '@/composables/useLive'
 import { useAuthStore } from '@/stores/auth'
 import { useFeaturesStore } from '@/stores/features'
-import type { WidgetSettings } from '@/types/accounts'
-import type { ITOverview } from '@/types/dashboard'
+import type { Schemas } from '@/api/types'
+import type { DashboardSettings, WidgetSettings } from '@/types/accounts'
 
 /** `editing`: the layout editor is open; the page header switches it on. */
 const editing = defineModel<boolean>('editing', { default: false })
@@ -30,7 +30,7 @@ const { t } = useI18n()
 const auth = useAuthStore()
 const features = useFeaturesStore()
 const message = useMessage()
-const data = ref<ITOverview | null>(null)
+const data = ref<Schemas['ITOverviewOut'] | null>(null)
 
 const load = async () => (data.value = await dashboardApi.it())
 onMounted(load)
@@ -45,7 +45,9 @@ const customTitle = (widget: WidgetSettings) =>
     : undefined
 
 /** The saved layout; while editing a copy of it is changed and stored on "Done". */
-const saved = computed(() => resolveLayout(WIDGETS, auth.user?.dashboard_settings?.widgets))
+const saved = computed(() =>
+  resolveLayout(WIDGETS, (auth.user?.dashboard_settings as DashboardSettings | undefined)?.widgets),
+)
 const draft = ref<WidgetSettings[] | null>(null)
 watch(
   editing,

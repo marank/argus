@@ -8,6 +8,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
 import { requestsApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import HandoverCard from '@/components/requests/HandoverCard.vue'
@@ -20,7 +21,6 @@ import RequestInfoCard from '@/components/requests/detail/RequestInfoCard.vue'
 import RequestHistory from '@/components/requests/detail/RequestHistory.vue'
 import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
-import type { AssetRequest, AssetRequestItem } from '@/types/requests'
 import { allocationCode, allocationModel, handoverPlanned, itemLabel } from '@/utils/requests'
 
 const props = defineProps<{ id: Id }>()
@@ -29,7 +29,7 @@ const route = useRoute()
 const confirm = useConfirm()
 const { busy, run } = useAction()
 
-const assetRequest = ref<AssetRequest | null>(null)
+const assetRequest = ref<Schemas['AssetRequestOut'] | null>(null)
 
 const load = async () => (assetRequest.value = await requestsApi.get(props.id))
 onMounted(load)
@@ -51,7 +51,7 @@ async function cancel() {
   if (updated) assetRequest.value = updated
 }
 
-const columns: DataTableColumns<AssetRequestItem> = [
+const columns: DataTableColumns<Schemas['AssetRequestItemOut']> = [
   {
     key: 'label',
     title: () => t('requests.items'),

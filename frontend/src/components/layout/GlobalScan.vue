@@ -8,7 +8,7 @@ import { useRouter } from 'vue-router'
 import { lookupApi } from '@/api/inventory'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { useScanner } from '@/composables/useScanner'
-import type { LookupResult } from '@/types/inventory'
+import type { Schemas } from '@/api/types'
 
 /**
  * Scan field in the top bar. Works with keyboard-wedge scanners even when the
@@ -19,7 +19,7 @@ const router = useRouter()
 const message = useMessage()
 
 const code = ref('')
-const result = ref<LookupResult | null>(null)
+const result = ref<Schemas['LookupOut'] | null>(null)
 const showResults = ref(false)
 
 async function lookup(value: string) {

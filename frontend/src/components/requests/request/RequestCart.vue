@@ -5,12 +5,11 @@ import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { usersApi } from '@/api/accounts'
+import type { Schemas } from '@/api/types'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import FieldLabel from '@/components/common/FieldLabel.vue'
 import { toIsoDate } from '@/composables/useFormat'
-import type { UserRef } from '@/types/accounts'
 import type { Id } from '@/types/common'
-import type { AssetRequestInput } from '@/types/requests'
 
 import { periodQuery, type CartLine, type RequestPeriod } from './types'
 
@@ -25,10 +24,10 @@ const props = defineProps<{
   requesterPlaceholder?: string
   direct?: boolean
   /** Prefilled details, e.g. when asking again for an earlier request. */
-  initial?: { title: string; notes: string; requester: UserRef | null } | null
+  initial?: { title: string; notes: string; requester: Schemas['UserRefOut'] | null } | null
 }>()
 const lines = defineModel<CartLine[]>('lines', { required: true })
-const emit = defineEmits<{ submit: [data: AssetRequestInput] }>()
+const emit = defineEmits<{ submit: [data: Schemas['AssetRequestIn']] }>()
 const { t } = useI18n()
 
 const form = reactive({

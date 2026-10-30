@@ -11,16 +11,17 @@ if TYPE_CHECKING:
     from apps.masterdata.models import AssetModel
 
 
+class AssetStatus(models.TextChoices):
+    IN_STOCK = "in_stock", _("In stock")
+    RESERVED = "reserved", _("Reserved")
+    IN_USE = "in_use", _("In use")
+    IN_REPAIR = "in_repair", _("In repair")
+    LOST = "lost", _("Lost")
+    RETIRED = "retired", _("Retired")
+
+
 class Asset(TimeStampedModel):
     """A single, individually tracked device (laptop, phone, MDE, headset, ...)."""
-
-    class Status(models.TextChoices):
-        IN_STOCK = "in_stock", _("In stock")
-        RESERVED = "reserved", _("Reserved")
-        IN_USE = "in_use", _("In use")
-        IN_REPAIR = "in_repair", _("In repair")
-        LOST = "lost", _("Lost")
-        RETIRED = "retired", _("Retired")
 
     class Condition(models.TextChoices):
         NEW = "new", _("New")
@@ -41,7 +42,7 @@ class Asset(TimeStampedModel):
     hostname = models.CharField(_("hostname"), max_length=63, blank=True)
 
     status = models.CharField(
-        _("status"), max_length=12, choices=Status.choices, default=Status.IN_STOCK, db_index=True
+        _("status"), max_length=12, choices=AssetStatus.choices, default=AssetStatus.IN_STOCK, db_index=True
     )
     condition = models.CharField(
         _("condition"), max_length=10, choices=Condition.choices, default=Condition.NEW

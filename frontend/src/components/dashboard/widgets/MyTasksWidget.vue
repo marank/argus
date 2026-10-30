@@ -8,7 +8,8 @@ import StatusTag from '@/components/common/StatusTag.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useLive } from '@/composables/useLive'
 import { useFeaturesStore } from '@/stores/features'
-import type { MyTasks, WidgetProps } from '@/types/dashboard'
+import type { Schemas } from '@/api/types'
+import type { WidgetProps } from '@/types/dashboard'
 
 import { useDateMode } from './dateMode'
 import DateModeToggle from './DateModeToggle.vue'
@@ -23,7 +24,7 @@ const { mode, setMode, when, other } = useDateMode(
   (options) => emit('update:options', options),
 )
 const features = useFeaturesStore()
-const tasks = ref<MyTasks | null>(null)
+const tasks = ref<Schemas['MyTasksOut'] | null>(null)
 
 const load = async () => (tasks.value = await dashboardApi.myTasks())
 onMounted(load)

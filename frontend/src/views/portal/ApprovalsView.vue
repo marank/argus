@@ -5,18 +5,18 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import { approvalsApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import EmptyState from '@/components/common/EmptyState.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useLive } from '@/composables/useLive'
-import type { AssetRequestListItem } from '@/types/requests'
 
 /** Requests of the approver's departments waiting for a decision, oldest first. */
 const { t } = useI18n()
 const router = useRouter()
 const { date } = useFormat()
 
-const requests = ref<AssetRequestListItem[] | null>(null)
+const requests = ref<Schemas['AssetRequestListOut'][] | null>(null)
 
 async function load() {
   requests.value = (await approvalsApi.list({ page_size: 100 })).items
@@ -24,10 +24,10 @@ async function load() {
 onMounted(load)
 useLive(['request'], load)
 
-const period = (r: AssetRequestListItem) =>
+const period = (r: Schemas['AssetRequestListOut']) =>
   `${date(r.start_date)} → ${r.end_date ? date(r.end_date) : t('common.permanent')}`
 
-const columns = computed<DataTableColumns<AssetRequestListItem>>(() => [
+const columns = computed<DataTableColumns<Schemas['AssetRequestListOut']>>(() => [
   {
     key: 'number',
     title: t('requests.number'),
@@ -79,9 +79,9 @@ const columns = computed<DataTableColumns<AssetRequestListItem>>(() => [
       :columns="columns"
       :data="requests ?? []"
       :loading="!requests"
-      :row-key="(r: AssetRequestListItem) => r.id"
+      :row-key="(r: Schemas['AssetRequestListOut']) => r.id"
       :row-props="
-        (r: AssetRequestListItem) => ({
+        (r: Schemas['AssetRequestListOut']) => ({
           onClick: () => router.push({ name: 'portal-approval', params: { id: r.id } }),
         })
       "

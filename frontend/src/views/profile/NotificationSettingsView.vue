@@ -9,7 +9,7 @@ import NotificationMatrix, {
 } from '@/components/settings/NotificationMatrix.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useFeaturesStore } from '@/stores/features'
-import type { NotificationChannel, NotificationKey } from '@/types/settings'
+import type { NotificationChannel } from '@/types/settings'
 
 /**
  * Which notifications the user wants, by email and in the app. IT and approver
@@ -46,12 +46,12 @@ const stored = (channel: NotificationChannel) =>
   (channel === 'mail' ? auth.user?.notification_settings : auth.user?.app_notification_settings) ??
   {}
 
-function state(key: NotificationKey, channel: NotificationChannel) {
+function state(key: string, channel: NotificationChannel) {
   const available = !!site.value.get(key)?.[channel] && (channel === 'app' || mailPossible.value)
   return available ? { value: stored(channel)[key] ?? true } : { value: false, disabled: true }
 }
 
-async function toggle(key: NotificationKey, channel: NotificationChannel, value: boolean) {
+async function toggle(key: string, channel: NotificationChannel, value: boolean) {
   try {
     await auth.changeNotifications({
       notification_settings: auth.user?.notification_settings ?? {},

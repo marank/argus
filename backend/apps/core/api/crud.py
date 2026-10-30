@@ -87,6 +87,9 @@ def apply_input[M: models.Model](instance: M, data: dict[str, Any]) -> M:
 
 def build_crud_router[M: models.Model](config: CrudConfig[M], *, tags: list[str]) -> Router:
     router = Router(tags=tags)
+    # Every resource built here shares the endpoint functions; their default operation
+    # IDs (module + function name) would collide in the OpenAPI schema.
+    name = config.model._meta.model_name
     write_auth = config.write_auth or (
         permission_auth(config.permission, WRITE) if config.permission else it_staff_auth
     )
@@ -104,7 +107,7 @@ def build_crud_router[M: models.Model](config: CrudConfig[M], *, tags: list[str]
             config.check_change(request, instance)
         return instance
 
-    @router.get("", response=list[Out], auth=read_auth)
+    @router.get("", response=list[Out], auth=read_auth, operation_id=f"{name}_list")
     @paginate(Pagination)
     def list_items(
         request: AuthedRequest,
@@ -116,11 +119,11 @@ def build_crud_router[M: models.Model](config: CrudConfig[M], *, tags: list[str]
         queryset = search(queryset, q, config.search_fields)
         return order(queryset, ordering, config.ordering_fields)
 
-    @router.get("/{uuid:pk}", response=Out, auth=read_auth)
+    @router.get("/{uuid:pk}", response=Out, auth=read_auth, operation_id=f"{name}_get")
     def get_item(request: AuthedRequest, pk: UUID) -> M:
         return get_instance(pk)
 
-    @router.post("", response={201: Out}, auth=write_auth)
+    @router.post("", response={201: Out}, auth=write_auth, operation_id=f"{name}_create")
     def create_item(request: AuthedRequest, payload: In) -> Status[M]:
         data = payload.dict()
         if config.check_input:
@@ -129,7 +132,7 @@ def build_crud_router[M: models.Model](config: CrudConfig[M], *, tags: list[str]
         instance = apply_input(new, config.prepare(data))
         return Status(201, get_instance(instance.pk))
 
-    @router.put("/{uuid:pk}", response=Out, auth=write_auth)
+    @router.put("/{uuid:pk}", response=Out, auth=write_auth, operation_id=f"{name}_update")
     def update_item(request: AuthedRequest, pk: UUID, payload: In) -> M:
         instance = get_for_change(request, pk)
         data = payload.dict()
@@ -138,7 +141,7 @@ def build_crud_router[M: models.Model](config: CrudConfig[M], *, tags: list[str]
         instance = apply_input(instance, config.prepare(data))
         return get_instance(instance.pk)
 
-    @router.delete("/{uuid:pk}", response={204: None}, auth=write_auth)
+    @router.delete("/{uuid:pk}", response={204: None}, auth=write_auth, operation_id=f"{name}_delete")
     def delete_item(request: AuthedRequest, pk: UUID) -> Status[None]:
         instance = get_for_change(request, pk)
         if config.check_delete:

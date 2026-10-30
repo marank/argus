@@ -4,15 +4,18 @@ import { NButton, NCard } from 'naive-ui'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import type { Schemas } from '@/api/types'
 import DetailGrid, { type DetailEntry } from '@/components/common/DetailGrid.vue'
 import { useFormat } from '@/composables/useFormat'
-import type { AssetRequest } from '@/types/requests'
 import { allocationCode, allocationModel } from '@/utils/requests'
 
 /** `printable`: link the handover protocol (IT only). */
-const props = withDefaults(defineProps<{ assetRequest: AssetRequest; printable?: boolean }>(), {
-  printable: true,
-})
+const props = withDefaults(
+  defineProps<{ assetRequest: Schemas['AssetRequestOut']; printable?: boolean }>(),
+  {
+    printable: true,
+  },
+)
 const { t } = useI18n()
 const { dateTime, enumLabel } = useFormat()
 

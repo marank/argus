@@ -3,16 +3,16 @@ import { NCard, NTimeline, NTimelineItem } from 'naive-ui'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import type { Schemas } from '@/api/types'
 import { useFormat } from '@/composables/useFormat'
-import type { AssetRequest, AssetRequestEvent, AssetRequestEventKind } from '@/types/requests'
 
 /** What happened to the request, newest first, as the backend recorded it. */
-const props = defineProps<{ assetRequest: AssetRequest }>()
+const props = defineProps<{ assetRequest: Schemas['AssetRequestOut'] }>()
 const { t } = useI18n()
 const { date, dateTime, weekday, enumLabel } = useFormat()
 
 type Tone = 'default' | 'info' | 'success' | 'warning' | 'error'
-const TONES: Partial<Record<AssetRequestEventKind, Tone>> = {
+const TONES: Partial<Record<Schemas['AssetRequestEventKind'], Tone>> = {
   approved: 'success',
   declined: 'error',
   confirmed: 'info',
@@ -27,11 +27,16 @@ const TONES: Partial<Record<AssetRequestEventKind, Tone>> = {
 interface Entry {
   key: string
   at: string
-  kind: AssetRequestEventKind
+  kind: Schemas['AssetRequestEventKind']
   by?: string
   items: string[]
-  event: AssetRequestEvent
+  event: Schemas['AssetRequestEventOut']
 }
+
+/** `data` is free-form: the plain texts and lists of texts the workflow recorded. */
+const text = (value: unknown) => (typeof value === 'string' ? value : '')
+const texts = (value: unknown) =>
+  Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : []
 
 const MINUTE = 60_000
 const closeInTime = (a: string, b: string) =>
@@ -49,7 +54,7 @@ const entries = computed<Entry[]>(() => {
       last.by === by &&
       closeInTime(last.at, event.at)
     ) {
-      last.items.push(...(event.data.items ?? []))
+      last.items.push(...texts(event.data.items))
       continue
     }
     list.push({
@@ -57,7 +62,7 @@ const entries = computed<Entry[]>(() => {
       at: event.at,
       kind: event.kind,
       by,
-      items: [...(event.data.items ?? [])],
+      items: texts(event.data.items),
       event,
     })
   }
@@ -74,57 +79,59 @@ function title(entry: Entry): string {
 /** The details worth a line: who for, which devices, which dates, what was said. */
 function details(entry: Entry): string[] {
   const d = entry.event.data
+  const added = texts(d.added)
+  const removed = texts(d.removed)
+  const damaged = texts(d.damaged)
   const lines: string[] = []
   switch (entry.kind) {
     case 'created':
     case 'direct':
     case 'quick':
-      if (d.requester) lines.push(t('requests.detail.event.for', { name: d.requester }))
-      if (d.follows) lines.push(t('requests.again.follows') + ' ' + d.follows)
+      if (d.requester) lines.push(t('requests.detail.event.for', { name: text(d.requester) }))
+      if (d.follows) lines.push(t('requests.again.follows') + ' ' + text(d.follows))
       break
     case 'assigned':
       lines.push(
-        [d.team, d.assignee].filter(Boolean).join(' · ') || t('requests.detail.event.nobody'),
+        [text(d.team), text(d.assignee)].filter(Boolean).join(' · ') ||
+          t('requests.detail.event.nobody'),
       )
       break
     case 'ready':
     case 'rescheduled':
       lines.push(
         [
-          d.handover_mode ? t(`handover.mode.${d.handover_mode}`) : '',
-          d.pickup_at ? weekday(d.pickup_at) : '',
-          d.pickup_location ?? '',
+          d.handover_mode ? t(`handover.mode.${text(d.handover_mode)}`) : '',
+          d.pickup_at ? weekday(text(d.pickup_at)) : '',
+          text(d.pickup_location),
           d.notified === false ? t('handover.notNotified') : '',
         ]
           .filter(Boolean)
           .join(' · '),
       )
       // Ready again after a change: only what changed (the first time lists everything).
-      if (d.added?.length)
-        lines.push(`${t('assetRequests.detail.event.added')}: ${d.added.join(', ')}`)
-      if (d.removed?.length)
-        lines.push(`${t('assetRequests.detail.event.removed')}: ${d.removed.join(', ')}`)
+      if (added.length) lines.push(`${t('assetRequests.detail.event.added')}: ${added.join(', ')}`)
+      if (removed.length)
+        lines.push(`${t('assetRequests.detail.event.removed')}: ${removed.join(', ')}`)
       break
     case 'handed_out':
       lines.push(
         [
-          d.method ? enumLabel('handoverMethod', d.method) : '',
-          d.received_by ? `${t('handover.receivedBy')}: ${d.received_by}` : '',
-          d.location ?? '',
+          d.method ? enumLabel('handoverMethod', text(d.method)) : '',
+          d.received_by ? `${t('handover.receivedBy')}: ${text(d.received_by)}` : '',
+          text(d.location),
         ]
           .filter(Boolean)
           .join(' · '),
       )
       break
     case 'extended':
-      if (d.previous && d.end_date) lines.push(`${date(d.previous)} → ${date(d.end_date)}`)
+      if (d.previous && d.end_date)
+        lines.push(`${date(text(d.previous))} → ${date(text(d.end_date))}`)
       break
   }
   if (entry.items.length) lines.push(entry.items.join(', '))
-  if (d.damaged?.length)
-    lines.push(`${t('assetRequests.returning.damaged')}: ${d.damaged.join(', ')}`)
-  if (d.comment) lines.push(d.comment)
-  if (d.notes) lines.push(d.notes)
+  if (damaged.length) lines.push(`${t('assetRequests.returning.damaged')}: ${damaged.join(', ')}`)
+  lines.push(text(d.comment), text(d.notes))
   return lines.filter(Boolean)
 }
 </script>

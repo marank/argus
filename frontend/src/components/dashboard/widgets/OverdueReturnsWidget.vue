@@ -7,7 +7,8 @@ import { useI18n } from 'vue-i18n'
 import { dashboardApi } from '@/api/dashboard'
 import { useFormat } from '@/composables/useFormat'
 import { useLive } from '@/composables/useLive'
-import type { OverdueReturn, WidgetProps } from '@/types/dashboard'
+import type { Schemas } from '@/api/types'
+import type { WidgetProps } from '@/types/dashboard'
 
 import { useDateMode } from './dateMode'
 import DateModeToggle from './DateModeToggle.vue'
@@ -22,14 +23,14 @@ const { mode, setMode } = useDateMode(
   () => props.options,
   (options) => emit('update:options', options),
 )
-const rows = ref<OverdueReturn[] | null>(null)
+const rows = ref<Schemas['OverdueReturnOut'][] | null>(null)
 
 const load = async () => (rows.value = await dashboardApi.overdueReturns())
 onMounted(load)
 useLive(['request'], load)
 const { remind, sending } = useRemind(load)
 
-const daysOverdue = (row: OverdueReturn) =>
+const daysOverdue = (row: Schemas['OverdueReturnOut']) =>
   Math.round((Date.now() - new Date(`${row.end_date}T00:00:00`).getTime()) / 86_400_000)
 </script>
 

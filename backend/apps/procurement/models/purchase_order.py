@@ -8,17 +8,22 @@ from django.utils.translation import gettext_lazy as _
 from apps.core.models import TimeStampedModel
 
 
+class PurchaseOrderStatus(models.TextChoices):
+    DRAFT = "draft", _("To order")
+    ORDERED = "ordered", _("Ordered")
+    PARTIALLY_RECEIVED = "partially_received", _("Partially received")
+    RECEIVED = "received", _("Received")
+    CANCELLED = "cancelled", _("Cancelled")
+
+
 class PurchaseOrder(TimeStampedModel):
     """Tracks what has to be ordered, what was ordered and what has arrived."""
 
-    class Status(models.TextChoices):
-        DRAFT = "draft", _("To order")
-        ORDERED = "ordered", _("Ordered")
-        PARTIALLY_RECEIVED = "partially_received", _("Partially received")
-        RECEIVED = "received", _("Received")
-        CANCELLED = "cancelled", _("Cancelled")
-
-    OPEN_STATUSES = (Status.DRAFT, Status.ORDERED, Status.PARTIALLY_RECEIVED)
+    OPEN_STATUSES = (
+        PurchaseOrderStatus.DRAFT,
+        PurchaseOrderStatus.ORDERED,
+        PurchaseOrderStatus.PARTIALLY_RECEIVED,
+    )
 
     number = models.CharField(_("number"), max_length=30, unique=True, blank=True)
     supplier = models.ForeignKey(
@@ -30,7 +35,11 @@ class PurchaseOrder(TimeStampedModel):
         related_name="purchase_orders",
     )
     status = models.CharField(
-        _("status"), max_length=20, choices=Status.choices, default=Status.DRAFT, db_index=True
+        _("status"),
+        max_length=20,
+        choices=PurchaseOrderStatus.choices,
+        default=PurchaseOrderStatus.DRAFT,
+        db_index=True,
     )
     order_date = models.DateField(_("order date"), null=True, blank=True)
     expected_date = models.DateField(_("expected delivery"), null=True, blank=True)

@@ -8,14 +8,14 @@ from apps.core.schemas import RefOut
 from apps.inventory.models import Consumable
 from apps.masterdata.models import Supplier
 from apps.masterdata.schemas.refs import AssetModelRefOut, CategoryRefOut, LocationRefOut
-from apps.requests.models import AssetRequestItem
+from apps.requests.models import AssetRequestItem, AssetRequestStatus
 
 
 class NeedAssetRequestOut(Schema):
     id: UUID
     number: str
     title: str
-    status: str
+    status: AssetRequestStatus
     start_date: date
     requester: UserRefOut
 

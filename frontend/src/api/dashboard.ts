@@ -1,31 +1,22 @@
-import type {
-  DueReturn,
-  EmployeeOverview,
-  ExpiringItem,
-  ITOverview,
-  LowStockItem,
-  MyTasks,
-  OpenOrder,
-  OverdueReturn,
-  TeamLoad,
-  TrendWeek,
-  UpcomingHandout,
-  WaitingRequest,
-} from '@/types/dashboard'
+import type { Schemas } from '@/api/types'
 
 import { http } from './client'
 
 export const dashboardApi = {
-  it: () => http.get<ITOverview>('/dashboard/it'),
-  me: () => http.get<EmployeeOverview>('/dashboard/me'),
-  myTasks: () => http.get<MyTasks>('/dashboard/widgets/my-tasks'),
-  overdueReturns: () => http.get<OverdueReturn[]>('/dashboard/widgets/overdue-returns'),
-  teamLoad: () => http.get<TeamLoad>('/dashboard/widgets/team-load'),
-  requestTrend: () => http.get<TrendWeek[]>('/dashboard/widgets/request-trend'),
-  upcoming: (days: number) => http.get<UpcomingHandout[]>('/dashboard/widgets/upcoming', { days }),
-  dueReturns: (days: number) => http.get<DueReturn[]>('/dashboard/widgets/due-returns', { days }),
-  expiring: () => http.get<ExpiringItem[]>('/dashboard/widgets/expiring'),
-  lowStock: () => http.get<LowStockItem[]>('/dashboard/widgets/low-stock'),
-  openOrders: () => http.get<OpenOrder[]>('/dashboard/widgets/open-orders'),
-  waitingRequests: () => http.get<WaitingRequest[]>('/dashboard/widgets/waiting-requests'),
+  it: () => http.get<Schemas['ITOverviewOut']>('/dashboard/it'),
+  me: () => http.get<Schemas['EmployeeOverviewOut']>('/dashboard/me'),
+  myTasks: () => http.get<Schemas['MyTasksOut']>('/dashboard/widgets/my-tasks'),
+  overdueReturns: () =>
+    http.get<Schemas['OverdueReturnOut'][]>('/dashboard/widgets/overdue-returns'),
+  teamLoad: () => http.get<Schemas['TeamLoadOut']>('/dashboard/widgets/team-load'),
+  requestTrend: () => http.get<Schemas['TrendWeekOut'][]>('/dashboard/widgets/request-trend'),
+  upcoming: (days: number) =>
+    http.get<Schemas['UpcomingOut'][]>('/dashboard/widgets/upcoming', { days }),
+  dueReturns: (days: number) =>
+    http.get<Schemas['DueReturnOut'][]>('/dashboard/widgets/due-returns', { days }),
+  expiring: () => http.get<Schemas['ExpiringOut'][]>('/dashboard/widgets/expiring'),
+  lowStock: () => http.get<Schemas['LowStockOut'][]>('/dashboard/widgets/low-stock'),
+  openOrders: () => http.get<Schemas['OpenOrderOut'][]>('/dashboard/widgets/open-orders'),
+  waitingRequests: () =>
+    http.get<Schemas['WaitingRequestOut'][]>('/dashboard/widgets/waiting-requests'),
 }

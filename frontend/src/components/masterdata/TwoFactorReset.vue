@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Schemas } from '@/api/types'
 import { ShieldCheck, ShieldOff } from '@lucide/vue'
 import { NButton } from 'naive-ui'
 import { ref, watch } from 'vue'
@@ -8,12 +9,11 @@ import { usersApi } from '@/api/accounts'
 import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
 import { useAuthStore } from '@/stores/auth'
-import type { User } from '@/types/accounts'
 
 /** Two-factor state of an employee in the edit drawer; IT resets it when the phone is lost. */
 const props = defineProps<{
   form: Record<string, unknown>
-  row?: User | null
+  row?: Schemas['UserOut'] | null
   readonly?: boolean
 }>()
 const { t } = useI18n()

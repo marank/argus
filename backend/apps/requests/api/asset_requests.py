@@ -18,12 +18,12 @@ from apps.core.api.querying import order, search
 from apps.core.api.security import AuthedRequest, permission_auth
 from apps.core.exceptions import BusinessError
 from apps.inventory.models import Asset
-from apps.requests.models import AssetRequest
+from apps.requests.models import AssetRequest, AssetRequestStatus
 from apps.requests.schemas.asset_request import (
+    AssetRequestAssignIn,
     AssetRequestIn,
     AssetRequestListOut,
     AssetRequestOut,
-    AssignIn,
     ConfirmIn,
     DirectRequestIn,
     ExtendIn,
@@ -66,7 +66,7 @@ class AssetRequestFilter(FilterSchema):
     def filter_overdue(self, value: bool | None) -> Q:
         if not value:
             return Q()
-        return Q(status=AssetRequest.Status.HANDED_OUT, end_date__lt=timezone.localdate())
+        return Q(status=AssetRequestStatus.HANDED_OUT, end_date__lt=timezone.localdate())
 
     def filter_open(self, value: bool | None) -> Q:
         return Q(status__in=AssetRequest.OPEN_STATUSES) if value else Q()
@@ -235,7 +235,7 @@ def remind(request: AuthedRequest, pk: UUID) -> AssetRequest:
 
 @router.post("/{uuid:pk}/assign", response=AssetRequestOut, auth=requests_write)
 @transaction.atomic
-def assign(request: AuthedRequest, pk: UUID, payload: AssignIn) -> AssetRequest:
+def assign(request: AuthedRequest, pk: UUID, payload: AssetRequestAssignIn) -> AssetRequest:
     workflow.assign(get_for_update(pk), payload.team, payload.assignee, request.user)
     return get_asset_request(request, pk)
 

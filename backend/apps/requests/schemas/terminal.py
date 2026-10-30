@@ -6,7 +6,14 @@ from ninja import Field, Schema
 from apps.core.schemas import RefOut
 from apps.inventory.schemas.refs import AssetRefOut
 from apps.masterdata.schemas.refs import LocationRefOut
-from apps.requests.models import AssetRequest, AssetRequestAllocation, AssetRequestItem, Handover
+from apps.requests.models import (
+    AssetRequest,
+    AssetRequestAllocation,
+    AssetRequestItem,
+    AssetRequestStatus,
+    Handover,
+    HandoverMethod,
+)
 
 from .asset_request import AllocationNoteIn, AllocationOut, ConsumableRefOut, LicenseSeatOut
 
@@ -71,7 +78,7 @@ class TerminalPickupItemOut(Schema):
 
 
 class TerminalHandoverOut(Schema):
-    method: str
+    method: HandoverMethod
     received_by_name: str
     handed_out_by: TerminalStaffOut | None
     handed_out_at: datetime
@@ -87,10 +94,10 @@ class TerminalPickupDetailOut(Schema):
     id: UUID
     number: str
     title: str
-    status: str
+    status: AssetRequestStatus
     requester: TerminalStaffOut
-    department: RefOut | None = Field(None, alias="requester.department")
-    duration: str
+    department: RefOut | None = Field(alias="requester.department")
+    duration: AssetRequest.Duration
     start_date: date
     end_date: date | None
     pickup_at: datetime | None
@@ -100,7 +107,7 @@ class TerminalPickupDetailOut(Schema):
     prepared_by: TerminalStaffOut | None
     handled_by: TerminalStaffOut | None
     items: list[TerminalPickupItemOut]
-    handover: TerminalHandoverOut | None = None
+    handover: TerminalHandoverOut | None
 
     @staticmethod
     def resolve_items(obj: AssetRequest) -> list[AssetRequestItem]:

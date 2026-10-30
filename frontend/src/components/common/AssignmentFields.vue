@@ -8,7 +8,7 @@ import { teamsApi, usersApi } from '@/api/accounts'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import { useAction } from '@/composables/useAction'
 import { useAuthStore } from '@/stores/auth'
-import type { Team, TeamRef, User, UserRef } from '@/types/accounts'
+import type { Schemas } from '@/api/types'
 import type { Id } from '@/types/common'
 
 /**
@@ -16,8 +16,8 @@ import type { Id } from '@/types/common'
  * neither. Every change is saved right away through `assign`.
  */
 const props = defineProps<{
-  team: TeamRef | null
-  assignee: UserRef | null
+  team: Schemas['TeamRefOut'] | null
+  assignee: Schemas['UserRefOut'] | null
   assign: (data: { team: Id | null; assignee: Id | null }) => Promise<T>
 }>()
 const emit = defineEmits<{ updated: [record: T] }>()
@@ -36,8 +36,8 @@ onMounted(async () => {
 })
 
 // Refs carry what the select labels need (name / display_name).
-const initialTeam = computed(() => props.team as Team | null)
-const initialAssignee = computed(() => props.assignee as User | null)
+const initialTeam = computed(() => props.team as Schemas['TeamOut'] | null)
+const initialAssignee = computed(() => props.assignee as Schemas['UserOut'] | null)
 const isMine = computed(() => assignee.value === auth.user?.id)
 
 async function save() {
@@ -52,7 +52,7 @@ async function save() {
   }
 }
 
-function onTeam(selected: Team | null) {
+function onTeam(selected: Schemas['TeamOut'] | null) {
   memberIds.value = new Set(selected?.members.map((m) => m.id) ?? [])
   save()
 }
@@ -70,7 +70,7 @@ function assignToMe() {
         <EntitySelect
           v-model="team"
           :fetcher="teamsApi.list"
-          :label="(item: Team) => item.name"
+          :label="(item: Schemas['TeamOut']) => item.name"
           :initial="initialTeam"
           :placeholder="t('common.assignment.noTeam')"
           :disabled="busy"
@@ -91,9 +91,9 @@ function assignToMe() {
           v-model="assignee"
           :fetcher="usersApi.list"
           :params="{ is_staff: true, is_active: true }"
-          :label="(item: User) => item.display_name"
+          :label="(item: Schemas['UserOut']) => item.display_name"
           :initial="initialAssignee"
-          :prefer="(item: User) => memberIds.has(item.id)"
+          :prefer="(item: Schemas['UserOut']) => memberIds.has(item.id)"
           :placeholder="t('common.assignment.nobody')"
           :disabled="busy"
           @select="save"

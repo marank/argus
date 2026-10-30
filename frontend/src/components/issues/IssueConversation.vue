@@ -4,8 +4,8 @@ import { NButton, NCard, NInput } from 'naive-ui'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import type { Schemas } from '@/api/types'
 import { useFormat } from '@/composables/useFormat'
-import type { AssetIssueDetail, IssueSide, IssueStatus } from '@/types/inventory'
 
 /**
  * A report's conversation: the report itself, then messages and changes of status
@@ -14,15 +14,15 @@ import type { AssetIssueDetail, IssueSide, IssueStatus } from '@/types/inventory
  * and the status actions the viewer may take.
  */
 const props = defineProps<{
-  issue: AssetIssueDetail
-  viewer: IssueSide
+  issue: Schemas['AssetIssueDetailOut']
+  viewer: Schemas['IssueEntryOut']['side']
   /** Read-only roles see the conversation without the field. */
   canWrite: boolean
   busy: boolean
 }>()
 const emit = defineEmits<{
   send: [text: string]
-  status: [status: IssueStatus, text: string]
+  status: [status: Schemas['AssetIssueStatus'], text: string]
 }>()
 const { t } = useI18n()
 const { dateTime, enumLabel } = useFormat()
@@ -32,7 +32,7 @@ const draft = ref('')
 interface Message {
   type: 'message'
   key: string
-  side: IssueSide
+  side: Schemas['IssueEntryOut']['side']
   name: string
   text: string
   at: string
@@ -42,7 +42,7 @@ interface Message {
 interface StatusChange {
   type: 'status'
   key: string
-  status: IssueStatus
+  status: Schemas['AssetIssueStatus']
   name: string
   at: string
 }
@@ -66,7 +66,7 @@ const items = computed<(Message | StatusChange)[]>(() => {
         ? {
             type: 'status',
             key: entry.id,
-            status: entry.status as IssueStatus,
+            status: entry.status as Schemas['AssetIssueStatus'],
             name,
             at: entry.created_at,
           }
@@ -96,7 +96,7 @@ function send() {
   const text = draft.value.trim()
   if (text) emit('send', text)
 }
-function changeStatus(status: IssueStatus) {
+function changeStatus(status: Schemas['AssetIssueStatus']) {
   emit('status', status, draft.value.trim())
 }
 function onKeydown(event: KeyboardEvent) {

@@ -5,23 +5,23 @@ import { useI18n } from 'vue-i18n'
 
 import { locationsApi } from '@/api/masterdata'
 import { requestsApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import DateField from '@/components/common/DateField.vue'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import { useAction } from '@/composables/useAction'
 import { useFormat } from '@/composables/useFormat'
 import type { Id } from '@/types/common'
-import type { HandoverMode, AssetRequest } from '@/types/requests'
 
 import HandoverModeSelect from './HandoverModeSelect.vue'
 
-const props = defineProps<{ assetRequest: AssetRequest }>()
+const props = defineProps<{ assetRequest: Schemas['AssetRequestOut'] }>()
 const show = defineModel<boolean>('show', { required: true })
-const emit = defineEmits<{ saved: [assetRequest: AssetRequest] }>()
+const emit = defineEmits<{ saved: [assetRequest: Schemas['AssetRequestOut']] }>()
 const { t } = useI18n()
 const { weekday } = useFormat()
 const { busy, run } = useAction()
 
-const mode = ref<HandoverMode>('pickup')
+const mode = ref<Schemas['HandoverMode']>('pickup')
 const skipCheck = ref(false)
 const notify = ref(true)
 const when = ref<number | null>(null)

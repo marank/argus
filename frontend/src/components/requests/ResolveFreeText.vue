@@ -6,17 +6,20 @@ import { useI18n } from 'vue-i18n'
 
 import { assetModelsApi } from '@/api/masterdata'
 import { requestsApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import { useAction } from '@/composables/useAction'
 import type { Id } from '@/types/common'
-import type { AssetRequest, AssetRequestItem } from '@/types/requests'
 import { modelLabel } from '@/utils/models'
 
 import CreateModelModal from './CreateModelModal.vue'
 
 /** Decision panel for a free-text line: create a new model or map an existing one. */
-const props = defineProps<{ assetRequest: AssetRequest; item: AssetRequestItem }>()
-const emit = defineEmits<{ updated: [assetRequest: AssetRequest] }>()
+const props = defineProps<{
+  assetRequest: Schemas['AssetRequestOut']
+  item: Schemas['AssetRequestItemOut']
+}>()
+const emit = defineEmits<{ updated: [assetRequest: Schemas['AssetRequestOut']] }>()
 const { t } = useI18n()
 const { busy, run } = useAction()
 

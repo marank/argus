@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Schemas } from '@/api/types'
 import { ArrowLeft, LogIn, ShieldCheck } from '@lucide/vue'
 import { useIntervalFn } from '@vueuse/core'
 import { NAlert, NButton, NForm, NFormItem, NInput } from 'naive-ui'
@@ -11,7 +12,6 @@ import { ApiError, isUnreachable } from '@/api/client'
 import BrandMark from '@/components/common/BrandMark.vue'
 import CodeInput from '@/components/common/CodeInput.vue'
 import { useAuthStore } from '@/stores/auth'
-import type { TwoFactorChallenge } from '@/types/accounts'
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -24,7 +24,7 @@ const error = ref('')
 const busy = ref(false)
 
 /** Set once the password fits and the second step is due. */
-const challenge = ref<TwoFactorChallenge | null>(null)
+const challenge = ref<Schemas['TwoFactorChallengeOut'] | null>(null)
 const code = ref('')
 const useBackup = ref(false)
 /** The digit boxes, or the text field for backup codes. */

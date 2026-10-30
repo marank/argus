@@ -9,15 +9,13 @@ from django.utils.translation import gettext as _
 from apps.accounts.models import User
 from apps.core.exceptions import BusinessError
 from apps.core.models import NumberSequence
-from apps.inventory.models import Asset, AssetEvent, ConsumableMovement
+from apps.inventory.models import Asset, AssetEvent, AssetEventKind, AssetStatus, ConsumableMovement
 from apps.inventory.services.consumables import move_consumable
 from apps.inventory.services.events import log_event
 from apps.masterdata.models import AssetModel
 
 if TYPE_CHECKING:
     from apps.requests.models import AssetRequestAllocation
-
-Kind = AssetEvent.Kind
 
 
 def _apply(asset: Asset, data: dict[str, Any]) -> None:
@@ -43,14 +41,14 @@ def create_asset(data: dict[str, Any], user: User) -> Asset:
     asset = Asset()
     _apply(asset, data)
     if asset.assigned_to_id:
-        asset.status = Asset.Status.IN_USE
+        asset.status = AssetStatus.IN_USE
         asset.assigned_since = timezone.now()
     asset.full_clean(exclude=["inventory_number"])
     asset.save()
     _set_consumables(asset, consumables)
-    log_event(asset, Kind.CREATED, user)
+    log_event(asset, AssetEventKind.CREATED, user)
     if asset.assigned_to_id:
-        log_event(asset, Kind.ASSIGNED, user, related_user_id=asset.assigned_to_id)
+        log_event(asset, AssetEventKind.ASSIGNED, user, related_user_id=asset.assigned_to_id)
     return asset
 
 
@@ -77,7 +75,7 @@ def _sync_asset_request(asset: Asset, user: User) -> None:
 
 def _guard_reserved_status(asset: Asset, status: str) -> None:
     """A device set aside for a request keeps its status until it is removed there."""
-    if asset.status != Asset.Status.RESERVED or status == Asset.Status.RESERVED:
+    if asset.status != AssetStatus.RESERVED or status == AssetStatus.RESERVED:
         return
     allocation = _open_allocations(asset).filter(handed_out_at__isnull=True).first()
     if allocation:
@@ -100,22 +98,22 @@ def update_asset(asset: Asset, data: dict[str, Any], user: User) -> Asset:
 
     if asset.assigned_to_id != previous_user:
         if previous_user:
-            log_event(asset, Kind.RETURNED, user, related_user_id=previous_user)
+            log_event(asset, AssetEventKind.RETURNED, user, related_user_id=previous_user)
         if asset.assigned_to_id:
-            asset.status = Asset.Status.IN_USE
+            asset.status = AssetStatus.IN_USE
             asset.assigned_since = timezone.now()
-            log_event(asset, Kind.ASSIGNED, user, related_user_id=asset.assigned_to_id)
+            log_event(asset, AssetEventKind.ASSIGNED, user, related_user_id=asset.assigned_to_id)
         else:
             asset.assigned_since = None
-            if asset.status == Asset.Status.IN_USE:
-                asset.status = Asset.Status.IN_STOCK
+            if asset.status == AssetStatus.IN_USE:
+                asset.status = AssetStatus.IN_STOCK
 
     if asset.status != previous_status:
         log_event(
             asset,
-            Kind.STATUS_CHANGED,
+            AssetEventKind.STATUS_CHANGED,
             user,
-            description=f"{Asset.Status(previous_status).label} → {asset.get_status_display()}",
+            description=f"{AssetStatus(previous_status).label} → {asset.get_status_display()}",
         )
     asset.full_clean()
     asset.save()

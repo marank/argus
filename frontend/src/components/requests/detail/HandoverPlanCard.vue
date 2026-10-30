@@ -3,15 +3,15 @@ import { NCard } from 'naive-ui'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import type { Schemas } from '@/api/types'
 import DetailGrid, { type DetailEntry } from '@/components/common/DetailGrid.vue'
 import { useFormat } from '@/composables/useFormat'
-import type { AssetRequest } from '@/types/requests'
 
 /**
  * How the devices will reach the employee, until they are handed out.
  * `forEmployee` leaves out IT's own notes (who prepared it, what to do next).
  */
-const props = defineProps<{ assetRequest: AssetRequest; forEmployee?: boolean }>()
+const props = defineProps<{ assetRequest: Schemas['AssetRequestOut']; forEmployee?: boolean }>()
 const { t } = useI18n()
 const { weekday } = useFormat()
 

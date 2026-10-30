@@ -3,8 +3,8 @@ import { Check, Plus } from '@lucide/vue'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import type { Schemas } from '@/api/types'
 import type { Id } from '@/types/common'
-import type { CatalogCategory, CatalogModel, MyConsumables } from '@/types/requests'
 
 import { optionKey } from './types'
 
@@ -13,15 +13,20 @@ import { optionKey } from './types'
  * cartridges for their printer. Only consumables listed in the catalog are offered.
  */
 const props = defineProps<{
-  groups: MyConsumables[]
-  catalog: CatalogCategory[]
+  groups: Schemas['MyConsumablesOut'][]
+  catalog: Schemas['CatalogCategoryOut'][]
   cartCounts: Record<string, number>
 }>()
-const emit = defineEmits<{ add: [category: CatalogCategory, model: CatalogModel] }>()
+const emit = defineEmits<{
+  add: [category: Schemas['CatalogCategoryOut'], model: Schemas['CatalogModelOut']]
+}>()
 const { t } = useI18n()
 
 const catalogModels = computed(() => {
-  const byId = new Map<Id, { category: CatalogCategory; model: CatalogModel }>()
+  const byId = new Map<
+    Id,
+    { category: Schemas['CatalogCategoryOut']; model: Schemas['CatalogModelOut'] }
+  >()
   for (const category of props.catalog) {
     for (const model of category.models) byId.set(model.id, { category, model })
   }

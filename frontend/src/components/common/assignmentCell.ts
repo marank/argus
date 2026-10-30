@@ -1,10 +1,12 @@
+import type { Schemas } from '@/api/types'
 import { NTag } from 'naive-ui'
 import { h } from 'vue'
 
-import type { TeamRef, UserRef } from '@/types/accounts'
-
 /** Table cell "Responsible": team tag with the assignee below, or a dash. */
-export function assignmentCell(row: { assigned_team: TeamRef | null; assignee: UserRef | null }) {
+export function assignmentCell(row: {
+  assigned_team: Schemas['TeamRefOut'] | null
+  assignee: Schemas['UserRefOut'] | null
+}) {
   if (!row.assigned_team && !row.assignee) return h('span', { class: 'muted' }, '—')
   return h('div', { class: 'assignment-cell' }, [
     row.assigned_team

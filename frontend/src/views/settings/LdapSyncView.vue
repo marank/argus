@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Schemas } from '@/api/types'
 import { ArrowLeft, ArrowRight, Play } from '@lucide/vue'
 import {
   NAlert,
@@ -19,21 +20,14 @@ import { ldapSettingsApi } from '@/api/settings'
 import StatusTag from '@/components/common/StatusTag.vue'
 import SettingsGroup from '@/components/settings/SettingsGroup.vue'
 import { useAction } from '@/composables/useAction'
-import type {
-  LdapSettings,
-  LdapSyncAction,
-  LdapSyncItem,
-  LdapSyncPreview,
-  LdapSyncQuery,
-} from '@/types/settings'
 
 const { t } = useI18n()
 const message = useMessage()
 const { busy: searching, run: runSearch } = useAction()
 const { busy: applying, run: runApply } = useAction()
 
-const ACTIONS: LdapSyncAction[] = ['create', 'update', 'unchanged', 'skipped']
-const SELECTABLE: LdapSyncAction[] = ['create', 'update']
+const ACTIONS: Schemas['LdapSyncItemOut']['action'][] = ['create', 'update', 'unchanged', 'skipped']
+const SELECTABLE: Schemas['LdapSyncItemOut']['action'][] = ['create', 'update']
 
 // Argus field -> label key, in the order the changes are listed.
 const FIELD_LABELS: Record<string, string> = {
@@ -47,7 +41,7 @@ const FIELD_LABELS: Record<string, string> = {
 }
 
 // The sync runs on the saved configuration, so that is what the page shows.
-const settings = ref<LdapSettings | null>(null)
+const settings = ref<Schemas['LdapSettingsOut'] | null>(null)
 const usable = computed(
   () =>
     settings.value !== null &&
@@ -79,11 +73,11 @@ onMounted(async () => {
   if (!filter.value) filter.value = loginFilter.value
 })
 
-const preview = ref<LdapSyncPreview | null>(null)
+const preview = ref<Schemas['LdapSyncPreviewOut'] | null>(null)
 /** The query the preview ran with; applying uses it, not the (possibly edited) editor. */
-const previewQuery = ref<LdapSyncQuery | null>(null)
+const previewQuery = ref<Schemas['LdapSyncQueryIn'] | null>(null)
 const checked = ref<string[]>([])
-const visible = ref<LdapSyncAction[]>(['create', 'update', 'skipped'])
+const visible = ref<Schemas['LdapSyncItemOut']['action'][]>(['create', 'update', 'skipped'])
 const search = ref('')
 
 const stale = computed(
@@ -114,12 +108,15 @@ async function apply() {
 }
 
 const counts = computed(() => {
-  const result = Object.fromEntries(ACTIONS.map((a) => [a, 0])) as Record<LdapSyncAction, number>
+  const result = Object.fromEntries(ACTIONS.map((a) => [a, 0])) as Record<
+    Schemas['LdapSyncItemOut']['action'],
+    number
+  >
   for (const item of preview.value?.items ?? []) result[item.action]++
   return result
 })
 
-function toggle(action: LdapSyncAction) {
+function toggle(action: Schemas['LdapSyncItemOut']['action']) {
   visible.value = visible.value.includes(action)
     ? visible.value.filter((a) => a !== action)
     : [...visible.value, action]
@@ -140,7 +137,7 @@ const rows = computed(() => {
 const fieldLabel = (field: string) =>
   FIELD_LABELS[field] ? t(`settings.ldap.${FIELD_LABELS[field]}`) : field
 
-function renderChanges(item: LdapSyncItem) {
+function renderChanges(item: Schemas['LdapSyncItemOut']) {
   if (item.action === 'skipped') {
     return h('span', { class: 'muted' }, t(`settings.ldap.sync.reason.${item.reason}`))
   }
@@ -161,7 +158,7 @@ function renderChanges(item: LdapSyncItem) {
   )
 }
 
-const columns = computed<DataTableColumns<LdapSyncItem>>(() => [
+const columns = computed<DataTableColumns<Schemas['LdapSyncItemOut']>>(() => [
   {
     type: 'selection',
     disabled: (i) => !SELECTABLE.includes(i.action),
@@ -322,7 +319,7 @@ const columns = computed<DataTableColumns<LdapSyncItem>>(() => [
           size="small"
           :columns="columns"
           :data="rows"
-          :row-key="(i: LdapSyncItem) => i.dn"
+          :row-key="(i: Schemas['LdapSyncItemOut']) => i.dn"
           :pagination="{ pageSize: 50 }"
           :scroll-x="900"
         />

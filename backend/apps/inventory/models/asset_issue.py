@@ -5,6 +5,19 @@ from django.utils.translation import gettext_lazy as _
 from apps.core.models import TimeStampedModel
 
 
+class AssetIssueKind(models.TextChoices):
+    DEFECT = "defect", _("Not working")
+    DAMAGE = "damage", _("Damaged")
+    LOST = "lost", _("Lost or stolen")
+    OTHER = "other", _("Other")
+
+
+class AssetIssueStatus(models.TextChoices):
+    OPEN = "open", _("Open")
+    IN_PROGRESS = "in_progress", _("In progress")
+    RESOLVED = "resolved", _("Resolved")
+
+
 class AssetIssue(TimeStampedModel):
     """A problem an employee reports for one of their devices; IT handles it.
 
@@ -12,24 +25,19 @@ class AssetIssue(TimeStampedModel):
     side marks the problem resolved; only IT takes it into work or reopens it.
     """
 
-    class Kind(models.TextChoices):
-        DEFECT = "defect", _("Not working")
-        DAMAGE = "damage", _("Damaged")
-        LOST = "lost", _("Lost or stolen")
-        OTHER = "other", _("Other")
-
-    class Status(models.TextChoices):
-        OPEN = "open", _("Open")
-        IN_PROGRESS = "in_progress", _("In progress")
-        RESOLVED = "resolved", _("Resolved")
-
     asset = models.ForeignKey(
         "inventory.Asset", verbose_name=_("device"), on_delete=models.CASCADE, related_name="issues"
     )
-    kind = models.CharField(_("kind"), max_length=10, choices=Kind.choices, default=Kind.DEFECT)
+    kind = models.CharField(
+        _("kind"), max_length=10, choices=AssetIssueKind.choices, default=AssetIssueKind.DEFECT
+    )
     description = models.TextField(_("description"))
     status = models.CharField(
-        _("status"), max_length=12, choices=Status.choices, default=Status.OPEN, db_index=True
+        _("status"),
+        max_length=12,
+        choices=AssetIssueStatus.choices,
+        default=AssetIssueStatus.OPEN,
+        db_index=True,
     )
     reported_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -81,20 +89,21 @@ class AssetIssue(TimeStampedModel):
 
     @property
     def is_open(self) -> bool:
-        return self.status != self.Status.RESOLVED
+        return self.status != AssetIssueStatus.RESOLVED
+
+
+class AssetIssueEntryKind(models.TextChoices):
+    MESSAGE = "message", _("Message")
+    STATUS = "status", _("Change of status")
 
 
 class AssetIssueEntry(TimeStampedModel):
     """A step in a report's conversation: a message or a change of status, and who it came from."""
 
-    class Kind(models.TextChoices):
-        MESSAGE = "message", _("Message")
-        STATUS = "status", _("Change of status")
-
     issue = models.ForeignKey(
         AssetIssue, verbose_name=_("problem report"), on_delete=models.CASCADE, related_name="entries"
     )
-    kind = models.CharField(_("kind"), max_length=10, choices=Kind.choices)
+    kind = models.CharField(_("kind"), max_length=10, choices=AssetIssueEntryKind.choices)
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_("author"),
@@ -104,7 +113,7 @@ class AssetIssueEntry(TimeStampedModel):
     )
     text = models.TextField(_("text"), blank=True)
     # The new status of a status change.
-    status = models.CharField(_("status"), max_length=12, choices=AssetIssue.Status.choices, blank=True)
+    status = models.CharField(_("status"), max_length=12, choices=AssetIssueStatus.choices, blank=True)
 
     # Set by the detail views for the response ("reporter" or "it"), not a column.
     side: str

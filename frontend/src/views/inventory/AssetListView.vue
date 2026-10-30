@@ -11,6 +11,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { usersApi } from '@/api/accounts'
 import { assetsApi } from '@/api/inventory'
 import { assetModelsApi, categoriesApi, locationsApi } from '@/api/masterdata'
+import type { Schemas } from '@/api/types'
 import CheckField from '@/components/common/CheckField.vue'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
@@ -21,7 +22,7 @@ import SeriesCreateModal from '@/components/inventory/SeriesCreateModal.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useGroupedRows, withGroupHeaders } from '@/composables/useGroupedRows'
 import { useList } from '@/composables/useList'
-import { ASSET_STATUSES, type Asset } from '@/types/inventory'
+import { ASSET_STATUSES } from '@/types/inventory'
 import { categoryIcon } from '@/utils/icons'
 import { useAuthStore } from '@/stores/auth'
 
@@ -66,7 +67,7 @@ const loanableOnly = computed({
   set: (value: boolean) => (list.filters.is_loanable = value ? true : null),
 })
 
-const baseColumns = computed<DataTableColumns<Asset>>(() => [
+const baseColumns = computed<DataTableColumns<Schemas['AssetOut']>>(() => [
   {
     key: 'inventory_number',
     title: t('inventory.fields.inventoryNumber'),
@@ -127,14 +128,14 @@ const baseColumns = computed<DataTableColumns<Asset>>(() => [
 const columns = computed(() =>
   grouped.value ? withGroupHeaders(baseColumns.value) : baseColumns.value,
 )
-const grouping = useGroupedRows<Asset>({
+const grouping = useGroupedRows<Schemas['AssetOut']>({
   rows: () => list.rows.value,
   key: (a) => a.category.id,
   label: (a) => [h(categoryIcon(a.category.icon), { size: 14 }), a.category.name],
   enabled: () => grouped.value,
   storageKey: 'argus.groups.assets',
 })
-const openAsset = (a: Asset) => router.push({ name: 'asset', params: { id: a.id } })
+const openAsset = (a: Schemas['AssetOut']) => router.push({ name: 'asset', params: { id: a.id } })
 
 function onSaved(asset: { id: Id }) {
   router.push({ name: 'asset', params: { id: asset.id } })
@@ -219,8 +220,8 @@ function onSaved(asset: { id: Id }) {
         :data="grouping.rows.value"
         :loading="list.loading.value"
         :pagination="list.pagination.value"
-        :row-key="(a: Asset) => a.id"
-        :row-props="(a: Asset) => grouping.rowProps(a, openAsset)"
+        :row-key="(a: Schemas['AssetOut']) => a.id"
+        :row-props="(a: Schemas['AssetOut']) => grouping.rowProps(a, openAsset)"
         :row-class-name="grouping.rowClass"
         :scroll-x="1100"
         @update:sorter="list.onSort"

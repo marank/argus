@@ -3,8 +3,8 @@ from datetime import date, timedelta
 from django.test import Client
 
 from apps.accounts.models import User
-from apps.inventory.models import Asset
-from apps.masterdata.models import AssetModel, Category, Location
+from apps.inventory.models import Asset, AssetStatus
+from apps.masterdata.models import AssetModel, Category, Location, LocationKind
 from apps.requests.models import AssetRequest, Handover
 
 JSON = "application/json"
@@ -56,7 +56,7 @@ def test_reserved_device_keeps_its_status(employee_client, it_client):
     response = it_client.put(f"/api/inventory/assets/{asset.pk}", body, content_type=JSON)
     assert response.status_code == 409, response.content
     asset.refresh_from_db()
-    assert asset.status == Asset.Status.RESERVED
+    assert asset.status == AssetStatus.RESERVED
 
 
 def test_consumables_only_complete_on_hand_out(employee_client, it_client):
@@ -88,13 +88,13 @@ def test_return_with_notes_damage_and_record(employee_client, it_client):
     assert len(data["returns"]) == 1 and data["returns"][0]["notes"] == "Came back early"
     first.refresh_from_db()
     assert first.asset is not None
-    assert first.return_note == "Display cracked" and first.asset.status == Asset.Status.IN_REPAIR
+    assert first.return_note == "Display cracked" and first.asset.status == AssetStatus.IN_REPAIR
 
     data = it_client.post(f"/api/requests/{rid}/return", {}, content_type=JSON).json()
     assert data["status"] == "completed" and len(data["returns"]) == 2
     second.refresh_from_db()
     assert second.asset is not None
-    assert second.asset.status == Asset.Status.IN_STOCK
+    assert second.asset.status == AssetStatus.IN_STOCK
 
 
 def test_permanent_devices_can_be_taken_back_on_the_request(employee_client, it_client):
@@ -137,9 +137,9 @@ def test_terminal_can_name_someone_else_from_it(employee_client, it_client, term
 
 
 def test_terminal_with_a_site_lists_only_its_pickups(employee_client, it_client, terminal_client):
-    north = Location.objects.create(name="North", kind=Location.Kind.SITE)
+    north = Location.objects.create(name="North", kind=LocationKind.SITE)
     north_desk = Location.objects.create(name="Desk", parent=north, is_pickup_point=True)
-    south = Location.objects.create(name="South", kind=Location.Kind.SITE, is_pickup_point=True)
+    south = Location.objects.create(name="South", kind=LocationKind.SITE, is_pickup_point=True)
     here = prepare(
         employee_client, it_client, laptops(), handover_mode="pickup", pickup_location=str(north_desk.pk)
     )

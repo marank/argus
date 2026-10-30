@@ -3,6 +3,7 @@ from uuid import UUID
 from ninja import Schema
 
 from apps.inventory.schemas.asset_issue import OwnIssueOut
+from apps.masterdata.models import AssetModel, CategoryKind
 from apps.masterdata.schemas.refs import AssetModelRefOut
 
 
@@ -10,7 +11,7 @@ class CatalogModelOut(Schema):
     id: UUID
     name: str
     full_name: str
-    tracking: str
+    tracking: AssetModel.Tracking
     description: str
     # Only filled for IT staff; employees do not see pool sizes.
     available: int | None
@@ -20,7 +21,7 @@ class CatalogModelOut(Schema):
 class CatalogCategoryOut(Schema):
     id: UUID
     name: str
-    kind: str
+    kind: CategoryKind
     item_name: str
     code: str
     icon: str

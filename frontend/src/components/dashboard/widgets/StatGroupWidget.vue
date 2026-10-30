@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Schemas } from '@/api/types'
 import { ArrowLeft, ArrowRight, Eye, EyeOff } from '@lucide/vue'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -15,7 +16,6 @@ import {
 } from '@/components/dashboard/widgets'
 import { useAuthStore } from '@/stores/auth'
 import { useFeaturesStore } from '@/stores/features'
-import type { ITOverview } from '@/types/dashboard'
 
 /**
  * A panel of key figures. While editing, every card can be dragged within the
@@ -23,7 +23,7 @@ import type { ITOverview } from '@/types/dashboard'
  */
 const props = defineProps<{
   def: WidgetDef
-  data: ITOverview
+  data: Schemas['ITOverviewOut']
   hiddenCards: string[]
   cardOrder: string[]
   editing?: boolean

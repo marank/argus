@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Schemas } from '@/api/types'
 import { NButton, NInput, NInputNumber, NSelect, NSkeleton, NSwitch, useMessage } from 'naive-ui'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -9,7 +10,6 @@ import SettingsGroup from '@/components/settings/SettingsGroup.vue'
 import { useAction } from '@/composables/useAction'
 import { useAuthStore } from '@/stores/auth'
 import { useFeaturesStore } from '@/stores/features'
-import type { MailSettings, MailSettingsInput } from '@/types/settings'
 
 /** SMTP server and sender; which notifications go out is set in its own section. */
 const { t } = useI18n()
@@ -18,8 +18,8 @@ const auth = useAuthStore()
 const features = useFeaturesStore()
 const { busy, run } = useAction()
 
-const loaded = ref<MailSettings | null>(null)
-const form = reactive<MailSettingsInput>({
+const loaded = ref<Schemas['MailSettingsOut'] | null>(null)
+const form = reactive<Schemas['MailSettingsIn']>({
   enabled: false,
   host: '',
   port: 587,
@@ -34,7 +34,7 @@ const newPassword = ref('')
 const testTo = ref('')
 const testing = ref(false)
 
-function apply(settings: MailSettings) {
+function apply(settings: Schemas['MailSettingsOut']) {
   loaded.value = settings
   Object.assign(form, {
     enabled: settings.enabled,

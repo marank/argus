@@ -11,6 +11,8 @@ VS Code tasks (`.vscode/tasks.json`) hold the everyday commands; the README list
 - **Check: all** runs everything CI runs and must pass before a push. If you change a check, change it in
   both `tasks.json` and `.gitea/workflows/build.yaml`.
 - **DB: make migrations** after model changes; commit the migrations (CI fails on missing ones).
+- **API: update types** after any API change: exports `frontend/openapi.json` and regenerates
+  `frontend/src/api/schema.d.ts`; commit both (CI fails when they are out of date).
 - Frontend package manager is **pnpm** only. Backend dependencies via `uv add` / `uv add --dev`.
 
 ## Backend rules
@@ -37,8 +39,11 @@ VS Code tasks (`.vscode/tasks.json`) hold the everyday commands; the README list
 
 ## Frontend rules
 
-- API calls through the per-domain modules in `src/api/`, types in `src/types/`; views per area in
-  `src/views/`, shared pieces in `src/components/` and `src/composables/`.
+- API calls through the per-domain modules in `src/api/`; views per area in `src/views/`, shared
+  pieces in `src/components/` and `src/composables/`.
+- Types of API payloads in `src/types/` are aliases of the generated schema types
+  (`Schemas['AssetOut']` from `src/api/types.ts`), never hand-written copies. Never edit
+  `src/api/schema.d.ts`.
 - UI from Naive UI, themed in `src/theme/`. Every visible text goes through vue-i18n
   (`src/i18n/locales/en` and `de`, one file per area).
 - No inline `<script>` and no remote scripts or fonts: the CSP only allows our own origin.

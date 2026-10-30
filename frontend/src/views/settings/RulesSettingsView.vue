@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Schemas } from '@/api/types'
 import { NButton, NInputNumber, NSkeleton } from 'naive-ui'
 import { onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -7,14 +8,13 @@ import SettingRow from '@/components/settings/SettingRow.vue'
 import SettingsGroup from '@/components/settings/SettingsGroup.vue'
 import { useAction } from '@/composables/useAction'
 import { useFeaturesStore } from '@/stores/features'
-import type { Rules } from '@/types/settings'
 
 /** Deadlines and warning periods, in days. */
 const { t } = useI18n()
 const features = useFeaturesStore()
 const { busy, run } = useAction()
 
-const form = reactive<Rules>({ ...features.rules })
+const form = reactive<Schemas['RulesSchema']>({ ...features.rules })
 const loaded = ref(false)
 
 onMounted(async () => {
@@ -31,7 +31,12 @@ async function save() {
   await run(() => features.updateRules({ ...form }), t('common.saved'))
 }
 
-const FIELDS: { key: keyof Rules; min: number; max: number; group: 'loans' | 'warnings' }[] = [
+const FIELDS: {
+  key: keyof Schemas['RulesSchema']
+  min: number
+  max: number
+  group: 'loans' | 'warnings'
+}[] = [
   { key: 'default_loan_days', min: 1, max: 365, group: 'loans' },
   { key: 'max_loan_days', min: 0, max: 3650, group: 'loans' },
   { key: 'return_reminder_days', min: 0, max: 60, group: 'loans' },

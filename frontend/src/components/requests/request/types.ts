@@ -1,12 +1,7 @@
+import type { Schemas } from '@/api/types'
 import type { Id } from '@/types/common'
 import { toIsoDate } from '@/composables/useFormat'
-import type {
-  AvailabilityCounts,
-  CatalogCategory,
-  CatalogModel,
-  Duration,
-  PeriodQuery,
-} from '@/types/requests'
+import type { PeriodQuery } from '@/types/requests'
 
 /** One line of the request being assembled. */
 export interface CartLine {
@@ -31,7 +26,7 @@ export interface CartLine {
 
 /** When the devices are needed; shared by the period card, the cart and the catalog. */
 export interface RequestPeriod {
-  duration: Duration
+  duration: Schemas['Duration']
   range: [number, number]
   start: number
   /** Preferred pickup day: follows the first day unless the employee picks another. */
@@ -49,23 +44,25 @@ export function periodQuery(period: RequestPeriod): PeriodQuery {
 /** Something that can be put into the request: a whole group ("any") or a model. */
 export interface CatalogOption {
   key: string
-  category: CatalogCategory
-  model?: CatalogModel
+  category: Schemas['CatalogCategoryOut']
+  model?: Schemas['CatalogModelOut']
 }
 
-export const optionKey = (category: CatalogCategory, model?: CatalogModel) =>
-  model ? `m${model.id}` : `c${category.id}`
+export const optionKey = (
+  category: Schemas['CatalogCategoryOut'],
+  model?: Schemas['CatalogModelOut'],
+) => (model ? `m${model.id}` : `c${category.id}`)
 
 /** "Any device of this group" only makes sense when allowed and there is a choice. */
-export function offersAnyModel(category: CatalogCategory): boolean {
+export function offersAnyModel(category: Schemas['CatalogCategoryOut']): boolean {
   return category.allow_any_model && category.models.length > 1
 }
 
 /** Counts of an option for display; null when availability is hidden. */
 export function optionCounts(
-  category: CatalogCategory,
-  model?: CatalogModel,
-): AvailabilityCounts | null {
+  category: Schemas['CatalogCategoryOut'],
+  model?: Schemas['CatalogModelOut'],
+): Schemas['CountsOut'] | null {
   const source = model ?? category
   if (source.available === null || source.reserved === null) return null
   return { available: source.available, reserved: source.reserved }

@@ -1,9 +1,9 @@
+import type { Schemas } from '@/api/types'
 import { suppliersApi } from '@/api/masterdata'
 import { bool, mono, text } from '@/components/crud/cells'
 import { defineResource } from '@/components/crud/types'
-import type { Supplier } from '@/types/masterdata'
 
-export default defineResource<Supplier>({
+export default defineResource<Schemas['SupplierOut']>({
   key: 'suppliers',
   permission: 'suppliers',
   api: suppliersApi,

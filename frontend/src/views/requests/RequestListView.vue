@@ -15,6 +15,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { departmentsApi, teamsApi, usersApi } from '@/api/accounts'
 import { requestsApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import AssignedTabs from '@/components/common/AssignedTabs.vue'
 import { assignmentCell } from '@/components/common/assignmentCell'
 import EntitySelect from '@/components/common/EntitySelect.vue'
@@ -24,8 +25,7 @@ import { useFormat } from '@/composables/useFormat'
 import { useAssigned } from '@/composables/useAssigned'
 import { useList } from '@/composables/useList'
 import { useAuthStore } from '@/stores/auth'
-import type { Team, User } from '@/types/accounts'
-import { ASSET_REQUEST_STATUSES, type AssetRequestListItem } from '@/types/requests'
+import { ASSET_REQUEST_STATUSES } from '@/types/requests'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -65,7 +65,7 @@ const statusOptions = computed(() =>
   ASSET_REQUEST_STATUSES.map((s) => ({ value: s, label: enumLabel('requestStatus', s) })),
 )
 
-const columns = computed<DataTableColumns<AssetRequestListItem>>(() => [
+const columns = computed<DataTableColumns<Schemas['AssetRequestListOut']>>(() => [
   {
     key: 'number',
     title: t('requests.number'),
@@ -198,7 +198,7 @@ const columns = computed<DataTableColumns<AssetRequestListItem>>(() => [
         <EntitySelect
           v-model="list.filters.team as string[]"
           :fetcher="teamsApi.list"
-          :label="(team: Team) => team.name"
+          :label="(team: Schemas['TeamOut']) => team.name"
           multiple
           max-tag-count="responsive"
           :placeholder="t('common.assignment.team')"
@@ -208,7 +208,7 @@ const columns = computed<DataTableColumns<AssetRequestListItem>>(() => [
           v-model="list.filters.assignee as string | null"
           :fetcher="usersApi.list"
           :params="{ is_staff: true }"
-          :label="(user: User) => user.display_name"
+          :label="(user: Schemas['UserOut']) => user.display_name"
           :placeholder="t('common.assignment.assignee')"
           style="width: 180px"
         />
@@ -221,9 +221,9 @@ const columns = computed<DataTableColumns<AssetRequestListItem>>(() => [
         :data="list.rows.value"
         :loading="list.loading.value"
         :pagination="list.pagination.value"
-        :row-key="(r: AssetRequestListItem) => r.id"
+        :row-key="(r: Schemas['AssetRequestListOut']) => r.id"
         :row-props="
-          (r: AssetRequestListItem) => ({
+          (r: Schemas['AssetRequestListOut']) => ({
             onClick: () => router.push({ name: 'request', params: { id: r.id } }),
           })
         "

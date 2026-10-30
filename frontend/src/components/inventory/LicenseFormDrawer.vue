@@ -16,6 +16,7 @@ import { useI18n } from 'vue-i18n'
 
 import { licensesApi } from '@/api/inventory'
 import { assetModelsApi, suppliersApi } from '@/api/masterdata'
+import type { Schemas } from '@/api/types'
 import DateField from '@/components/common/DateField.vue'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import FieldLabel from '@/components/common/FieldLabel.vue'
@@ -23,18 +24,21 @@ import FormSection from '@/components/common/FormSection.vue'
 import { useAction } from '@/composables/useAction'
 import { useFieldErrors } from '@/composables/useFieldErrors'
 import { fromIsoDate, toIsoDate, useFormat } from '@/composables/useFormat'
-import type { LicenseDetail, LicenseInput } from '@/types/inventory'
+import type { Id } from '@/types/common'
 import { modelLabel } from '@/utils/models'
 
-const props = defineProps<{ license?: LicenseDetail | null }>()
+const props = defineProps<{ license?: Schemas['LicenseDetailOut'] | null }>()
 const show = defineModel<boolean>('show', { required: true })
-const emit = defineEmits<{ saved: [license: LicenseDetail] }>()
+const emit = defineEmits<{ saved: [license: Schemas['LicenseDetailOut']] }>()
 
 const { t } = useI18n()
 const { enumLabel } = useFormat()
 const { busy, run } = useAction()
 
-function empty(): LicenseInput {
+/** The software stays empty until one is picked; saving waits for it. */
+type Form = Omit<Schemas['LicenseIn'], 'model'> & { model: Id | null }
+
+function empty(): Form {
   return {
     model: null,
     reference: '',
@@ -50,7 +54,7 @@ function empty(): LicenseInput {
   }
 }
 
-const form = reactive<LicenseInput>(empty())
+const form = reactive<Form>(empty())
 const fieldErrors = useFieldErrors(form)
 
 watch(show, (visible) => {
@@ -95,9 +99,10 @@ const assignToLocked = computed(() => !!props.license?.seats_used)
 async function save() {
   const saved = await run(
     () =>
-      (props.license ? licensesApi.update(props.license.id, form) : licensesApi.create(form)).catch(
-        fieldErrors.capture,
-      ),
+      (props.license
+        ? licensesApi.update(props.license.id, { ...form, model: form.model! })
+        : licensesApi.create({ ...form, model: form.model! })
+      ).catch(fieldErrors.capture),
     t('common.saved'),
   )
   if (saved) {

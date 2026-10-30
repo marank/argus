@@ -17,7 +17,7 @@ class MailSettingsOut(Schema):
     enabled: bool
     host: str
     port: int
-    security: str
+    security: MailSettings.Security
     username: str
     password_set: bool
     from_email: str

@@ -6,6 +6,7 @@ import { RouterLink, useRouter } from 'vue-router'
 
 import { teamsApi, usersApi } from '@/api/accounts'
 import { issuesApi } from '@/api/inventory'
+import type { Schemas } from '@/api/types'
 import AssignedTabs from '@/components/common/AssignedTabs.vue'
 import { assignmentCell } from '@/components/common/assignmentCell'
 import CheckField from '@/components/common/CheckField.vue'
@@ -15,15 +16,14 @@ import StatusTag from '@/components/common/StatusTag.vue'
 import { useAssigned } from '@/composables/useAssigned'
 import { useFormat } from '@/composables/useFormat'
 import { useList } from '@/composables/useList'
-import type { Team, User } from '@/types/accounts'
-import { ISSUE_KINDS, type AssetIssue, type IssueStatus } from '@/types/inventory'
+import { ISSUE_KINDS } from '@/types/inventory'
 
 /** Problems employees reported for their devices; each opens its page with the conversation. */
 const { t } = useI18n()
 const router = useRouter()
 const { date, enumLabel } = useFormat()
 
-const OPEN: IssueStatus[] = ['open', 'in_progress']
+const OPEN: Schemas['AssetIssueStatus'][] = ['open', 'in_progress']
 const { assigned, param: assignedParam } = useAssigned('issues')
 const list = useList(issuesApi.list, {
   live: ['issue'],
@@ -47,7 +47,7 @@ const kindOptions = computed(() =>
   ISSUE_KINDS.map((k) => ({ value: k, label: enumLabel('issueKind', k) })),
 )
 
-const columns = computed<DataTableColumns<AssetIssue>>(() => [
+const columns = computed<DataTableColumns<Schemas['AssetIssueOut']>>(() => [
   {
     key: 'status',
     title: t('common.status'),
@@ -132,7 +132,7 @@ const columns = computed<DataTableColumns<AssetIssue>>(() => [
         <EntitySelect
           v-model="list.filters.team as string[]"
           :fetcher="teamsApi.list"
-          :label="(team: Team) => team.name"
+          :label="(team: Schemas['TeamOut']) => team.name"
           multiple
           max-tag-count="responsive"
           :placeholder="t('common.assignment.team')"
@@ -142,7 +142,7 @@ const columns = computed<DataTableColumns<AssetIssue>>(() => [
           v-model="list.filters.assignee as string | null"
           :fetcher="usersApi.list"
           :params="{ is_staff: true }"
-          :label="(user: User) => user.display_name"
+          :label="(user: Schemas['UserOut']) => user.display_name"
           :placeholder="t('common.assignment.assignee')"
           style="width: 180px"
         />
@@ -156,9 +156,9 @@ const columns = computed<DataTableColumns<AssetIssue>>(() => [
         :data="list.rows.value"
         :loading="list.loading.value"
         :pagination="list.pagination.value"
-        :row-key="(i: AssetIssue) => i.id"
+        :row-key="(i: Schemas['AssetIssueOut']) => i.id"
         :row-props="
-          (i: AssetIssue) => ({
+          (i: Schemas['AssetIssueOut']) => ({
             onClick: () => router.push({ name: 'issue', params: { id: i.id } }),
           })
         "

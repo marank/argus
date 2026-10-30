@@ -6,23 +6,25 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { assetsApi, consumablesApi, lookupApi } from '@/api/inventory'
+import type { Schemas } from '@/api/types'
 import EmptyState from '@/components/common/EmptyState.vue'
 import { useAction } from '@/composables/useAction'
 import { useFormat } from '@/composables/useFormat'
 import { useScanner } from '@/composables/useScanner'
-import type { Asset, Consumable } from '@/types/inventory'
-import type { CatalogCategory } from '@/types/requests'
 
 /**
  * Middle column of a direct hand-out: scan or search specific devices in stock,
  * or browse what the group chosen on the left has in stock.
  */
 const props = defineProps<{
-  category: CatalogCategory | null
+  category: Schemas['CatalogCategoryOut'] | null
   /** Keys of the cart lines, to mark what is already picked. */
   cartCounts: Record<string, number>
 }>()
-const emit = defineEmits<{ addAsset: [asset: Asset]; addConsumable: [consumable: Consumable] }>()
+const emit = defineEmits<{
+  addAsset: [asset: Schemas['AssetOut']]
+  addConsumable: [consumable: Schemas['ConsumableOut']]
+}>()
 const { t } = useI18n()
 const { enumLabel } = useFormat()
 const message = useMessage()
@@ -30,8 +32,8 @@ const { run } = useAction()
 
 const query = ref('')
 const loading = ref(false)
-const assets = ref<Asset[]>([])
-const consumables = ref<Consumable[]>([])
+const assets = ref<Schemas['AssetOut'][]>([])
+const consumables = ref<Schemas['ConsumableOut'][]>([])
 
 let latest = 0
 async function load() {

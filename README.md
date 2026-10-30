@@ -307,6 +307,20 @@ The backend tests run in parallel (pytest-xdist, up to 8 workers). For a single 
 or test, `-n0` skips the worker start-up, e.g.
 `uv run pytest -n0 apps/accounts/tests/test_roles.py`.
 
+## API types
+
+The frontend's types for API payloads are generated from the backend's OpenAPI schema.
+After changing an endpoint or a schema, run the VS Code task **API: update types**, or:
+
+```bash
+cd backend && uv run python manage.py export_openapi ../frontend/openapi.json
+cd frontend && pnpm api:types
+```
+
+Commit `frontend/openapi.json` and `frontend/src/api/schema.d.ts`; CI fails when they do
+not match the code. `src/types/` refers to them (`Schemas['AssetOut']`), so a changed
+API shows up as a type error in the frontend.
+
 ## Translations
 
 ```bash

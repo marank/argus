@@ -12,9 +12,9 @@ from datetime import date, datetime, timedelta
 from django.db.models import Count, Q
 from django.utils import timezone
 
-from apps.inventory.models import Asset, License
-from apps.procurement.models import PurchaseOrder
-from apps.requests.models import AssetRequest
+from apps.inventory.models import Asset, AssetStatus, License
+from apps.procurement.models import PurchaseOrder, PurchaseOrderStatus
+from apps.requests.models import AssetRequest, AssetRequestStatus
 
 KINDS = ("loan", "pickup", "return", "delivery", "warranty", "license")
 
@@ -79,7 +79,7 @@ def calendar_entries(
 
     if "pickup" in kinds:
         pickups = asset_requests.filter(
-            status__in=(AssetRequest.Status.CONFIRMED, AssetRequest.Status.READY),
+            status__in=(AssetRequestStatus.CONFIRMED, AssetRequestStatus.READY),
             pickup_at__date__gte=start,
             pickup_at__date__lte=end,
         )
@@ -99,7 +99,7 @@ def calendar_entries(
 
     if "return" in kinds:
         # Overdue returns move along on today until the devices are back.
-        for r in temporary.filter(status=AssetRequest.Status.HANDED_OUT, end_date__lte=end):
+        for r in temporary.filter(status=AssetRequestStatus.HANDED_OUT, end_date__lte=end):
             assert r.end_date is not None  # the filter excludes NULL
             overdue = r.end_date < today
             day = today if overdue else r.end_date
@@ -121,7 +121,7 @@ def calendar_entries(
 
     if "delivery" in kinds:
         orders = PurchaseOrder.objects.select_related("supplier").filter(
-            status__in=(PurchaseOrder.Status.ORDERED, PurchaseOrder.Status.PARTIALLY_RECEIVED),
+            status__in=(PurchaseOrderStatus.ORDERED, PurchaseOrderStatus.PARTIALLY_RECEIVED),
             expected_date__gte=start,
             expected_date__lte=end,
         )
@@ -143,7 +143,7 @@ def calendar_entries(
         assets = (
             Asset.objects.select_related("model__manufacturer")
             .filter(warranty_until__gte=start, warranty_until__lte=end)
-            .exclude(status__in=(Asset.Status.RETIRED, Asset.Status.LOST))
+            .exclude(status__in=(AssetStatus.RETIRED, AssetStatus.LOST))
         )
         by_day: dict[date, list[Asset]] = defaultdict(list)
         for asset in assets:

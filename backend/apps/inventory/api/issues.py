@@ -16,7 +16,7 @@ from apps.inventory.schemas.asset_issue import (
     AssetIssueDetailOut,
     AssetIssueOut,
     AssetIssueUpdateIn,
-    AssignIn,
+    IssueAssignIn,
     IssueMessageIn,
 )
 from apps.inventory.services import notifications
@@ -113,7 +113,7 @@ def message(request: AuthedRequest, pk: UUID, payload: IssueMessageIn) -> AssetI
 
 
 @router.post("/{uuid:pk}/assign", response=AssetIssueDetailOut)
-def assign(request: AuthedRequest, pk: UUID, payload: AssignIn) -> AssetIssue:
+def assign(request: AuthedRequest, pk: UUID, payload: IssueAssignIn) -> AssetIssue:
     issue = get_object_or_404(AssetIssue, pk=pk)
     if assignment.assign(issue, payload.team, payload.assignee, request.user):
         notifications.issue_assigned(issue)

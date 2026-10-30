@@ -7,16 +7,17 @@ from django.utils.translation import gettext_lazy as _
 from apps.core.models import TimeStampedModel
 
 
-class Location(TimeStampedModel):
-    class Kind(models.TextChoices):
-        SITE = "site", _("Site")
-        BUILDING = "building", _("Building")
-        ROOM = "room", _("Room")
-        STORAGE = "storage", _("Storage")
+class LocationKind(models.TextChoices):
+    SITE = "site", _("Site")
+    BUILDING = "building", _("Building")
+    ROOM = "room", _("Room")
+    STORAGE = "storage", _("Storage")
 
+
+class Location(TimeStampedModel):
     name = models.CharField(_("name"), max_length=100)
     code = models.CharField(_("code"), max_length=30, blank=True)
-    kind = models.CharField(_("kind"), max_length=10, choices=Kind.choices, default=Kind.ROOM)
+    kind = models.CharField(_("kind"), max_length=10, choices=LocationKind.choices, default=LocationKind.ROOM)
     parent = models.ForeignKey(
         "self",
         verbose_name=_("parent location"),

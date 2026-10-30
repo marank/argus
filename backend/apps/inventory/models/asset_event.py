@@ -6,38 +6,39 @@ from django.utils.translation import gettext_lazy as _
 from apps.core.models import TimeStampedModel
 
 
+class AssetEventKind(models.TextChoices):
+    CREATED = "created", _("Created")
+    STATUS_CHANGED = "status_changed", _("Status changed")
+    ASSIGNED = "assigned", _("Handed out")
+    RETURNED = "returned", _("Returned")
+    RESERVED = "reserved", _("Reserved")
+    BATTERY_REPLACED = "battery_replaced", _("Battery replaced")
+    COMPONENT_REPLACED = "component_replaced", _("Component replaced")
+    REPAIR = "repair", _("Repair")
+    MAINTENANCE = "maintenance", _("Maintenance")
+    INSPECTION = "inspection", _("Inspection")
+    NOTE = "note", _("Note")
+    ISSUE_REPORTED = "issue_reported", _("Problem reported")
+    ISSUE_RESOLVED = "issue_resolved", _("Problem resolved")
+
+
 class AssetEvent(TimeStampedModel):
     """Entry in the life cycle log of an asset (battery swap, repair, hand-out, ...)."""
 
-    class Kind(models.TextChoices):
-        CREATED = "created", _("Created")
-        STATUS_CHANGED = "status_changed", _("Status changed")
-        ASSIGNED = "assigned", _("Handed out")
-        RETURNED = "returned", _("Returned")
-        RESERVED = "reserved", _("Reserved")
-        BATTERY_REPLACED = "battery_replaced", _("Battery replaced")
-        COMPONENT_REPLACED = "component_replaced", _("Component replaced")
-        REPAIR = "repair", _("Repair")
-        MAINTENANCE = "maintenance", _("Maintenance")
-        INSPECTION = "inspection", _("Inspection")
-        NOTE = "note", _("Note")
-        ISSUE_REPORTED = "issue_reported", _("Problem reported")
-        ISSUE_RESOLVED = "issue_resolved", _("Problem resolved")
-
     # Kinds a technician records manually; the others are written by workflows.
     MANUAL_KINDS = (
-        Kind.BATTERY_REPLACED,
-        Kind.COMPONENT_REPLACED,
-        Kind.REPAIR,
-        Kind.MAINTENANCE,
-        Kind.INSPECTION,
-        Kind.NOTE,
+        AssetEventKind.BATTERY_REPLACED,
+        AssetEventKind.COMPONENT_REPLACED,
+        AssetEventKind.REPAIR,
+        AssetEventKind.MAINTENANCE,
+        AssetEventKind.INSPECTION,
+        AssetEventKind.NOTE,
     )
 
     asset = models.ForeignKey(
         "inventory.Asset", verbose_name=_("asset"), on_delete=models.CASCADE, related_name="events"
     )
-    kind = models.CharField(_("kind"), max_length=20, choices=Kind.choices, db_index=True)
+    kind = models.CharField(_("kind"), max_length=20, choices=AssetEventKind.choices, db_index=True)
     occurred_at = models.DateTimeField(_("occurred at"), default=timezone.now)
     description = models.TextField(_("description"), blank=True)
     component = models.CharField(_("component"), max_length=100, blank=True)

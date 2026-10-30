@@ -7,13 +7,14 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { suppliersApi } from '@/api/masterdata'
 import { ordersApi } from '@/api/procurement'
+import type { Schemas } from '@/api/types'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { useAction } from '@/composables/useAction'
 import { useFormat } from '@/composables/useFormat'
 import { useList } from '@/composables/useList'
-import { ORDER_STATUSES, type OrderListItem } from '@/types/procurement'
+import { ORDER_STATUSES } from '@/types/procurement'
 import { useAuthStore } from '@/stores/auth'
 
 const { t } = useI18n()
@@ -42,7 +43,7 @@ const statusOptions = computed(() =>
   ORDER_STATUSES.map((s) => ({ value: s, label: enumLabel('orderStatus', s) })),
 )
 
-const columns = computed<DataTableColumns<OrderListItem>>(() => [
+const columns = computed<DataTableColumns<Schemas['PurchaseOrderListOut']>>(() => [
   {
     key: 'number',
     title: t('procurement.orders.number'),
@@ -157,9 +158,9 @@ async function createEmpty() {
         :data="list.rows.value"
         :loading="list.loading.value"
         :pagination="list.pagination.value"
-        :row-key="(o: OrderListItem) => o.id"
+        :row-key="(o: Schemas['PurchaseOrderListOut']) => o.id"
         :row-props="
-          (o: OrderListItem) => ({
+          (o: Schemas['PurchaseOrderListOut']) => ({
             onClick: () => router.push({ name: 'order', params: { id: o.id } }),
           })
         "

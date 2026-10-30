@@ -11,7 +11,7 @@ from ninja.pagination import paginate
 from apps.core.api.pagination import Pagination
 from apps.core.api.querying import search
 from apps.core.api.security import AuthedRequest
-from apps.requests.models import AssetRequest
+from apps.requests.models import AssetRequest, AssetRequestStatus
 from apps.requests.schemas.asset_request import (
     ApproveIn,
     AssetRequestListOut,
@@ -31,7 +31,7 @@ def list_approvals(request: AuthedRequest, q: str | None = None) -> QuerySet[Ass
     """Requests waiting for a decision, the oldest first; once decided they leave the list."""
     queryset = (
         approvable_asset_requests(request.user)
-        .filter(status=AssetRequest.Status.PENDING_APPROVAL)
+        .filter(status=AssetRequestStatus.PENDING_APPROVAL)
         .order_by("created_at")
     )
     return search(

@@ -33,7 +33,7 @@ class ConsumableUpdateIn(Schema):
 class ConsumableMovementOut(Schema):
     id: UUID
     delta: int
-    reason: str
+    reason: ConsumableMovement.Reason
     note: str
     performed_by: UserRefOut | None
     recipient: UserRefOut | None

@@ -15,14 +15,14 @@ import { useI18n } from 'vue-i18n'
 
 import { usersApi } from '@/api/accounts'
 import { consumablesApi } from '@/api/inventory'
+import type { Schemas } from '@/api/types'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import FieldLabel from '@/components/common/FieldLabel.vue'
 import { useAction } from '@/composables/useAction'
-import type { Consumable, ConsumableReason } from '@/types/inventory'
 
 type Direction = 'in' | 'out' | 'adjust'
 
-const props = defineProps<{ item: Consumable | null; direction: Direction }>()
+const props = defineProps<{ item: Schemas['ConsumableOut'] | null; direction: Direction }>()
 const show = defineModel<boolean>('show', { required: true })
 const emit = defineEmits<{ saved: [] }>()
 const { t } = useI18n()
@@ -54,7 +54,7 @@ watch(
   (direction) => (form.quantity = defaultQuantity(direction)),
 )
 
-const REASONS: Record<Direction, ConsumableReason> = {
+const REASONS: Record<Direction, Schemas['Reason']> = {
   in: 'receipt',
   out: 'issue',
   adjust: 'adjustment',

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Schemas } from '@/api/types'
 import type { Id } from '@/types/common'
 import { modelLabel } from '@/utils/models'
 import { PackageCheck, Plus, Save, Send, Trash2, X } from '@lucide/vue'
@@ -28,7 +29,6 @@ import ReceiveModal from '@/components/procurement/ReceiveModal.vue'
 import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
 import { fromIsoDate, toIsoDate, useFormat } from '@/composables/useFormat'
-import type { Order, OrderLineInput } from '@/types/procurement'
 import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps<{ id: Id }>()
@@ -40,7 +40,7 @@ const confirm = useConfirm()
 const { date, money } = useFormat()
 const { busy, run } = useAction()
 
-const order = ref<Order | null>(null)
+const order = ref<Schemas['PurchaseOrderOut'] | null>(null)
 const showReceive = ref(false)
 const showOrdered = ref(false)
 
@@ -51,14 +51,14 @@ const header = reactive({
   delivery_location: null as Id | null,
   notes: '',
 })
-const lines = ref<(OrderLineInput & { price: number | null })[]>([])
+const lines = ref<(Schemas['PurchaseOrderLineIn'] & { price: number | null })[]>([])
 const ordered = reactive({
   order_date: Date.now() as number | null,
   expected_date: null as number | null,
   supplier_reference: '',
 })
 
-function apply(value: Order) {
+function apply(value: Schemas['PurchaseOrderOut']) {
   order.value = value
   Object.assign(header, {
     supplier: value.supplier?.id ?? null,

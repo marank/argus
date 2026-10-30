@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import type { Schemas } from '@/api/types'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { categoriesApi, numberSequencesApi } from '@/api/masterdata'
-import type { Category, NumberSequence } from '@/types/masterdata'
 
 /**
  * Number sequences worth picking for a record's `number_sequence`: the sequence of the category
@@ -18,8 +18,11 @@ const props = defineProps<{
 const emit = defineEmits<{ set: [key: string, value: unknown] }>()
 const { t } = useI18n()
 
-const general = ref<NumberSequence | null>(null)
-const source = ref<{ category: Category; sequence: NumberSequence } | null>(null)
+const general = ref<Schemas['NumberSequenceOut'] | null>(null)
+const source = ref<{
+  category: Schemas['CategoryOut']
+  sequence: Schemas['NumberSequenceOut']
+} | null>(null)
 
 onMounted(async () => {
   const page = await numberSequencesApi.list({ q: 'asset', page_size: 30 })
@@ -53,7 +56,7 @@ const hints = computed(() => [
     : []),
 ])
 
-function pick(sequence: NumberSequence) {
+function pick(sequence: Schemas['NumberSequenceOut']) {
   if (!props.readonly) emit('set', 'number_sequence', sequence.id)
 }
 </script>

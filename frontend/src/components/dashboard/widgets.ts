@@ -28,6 +28,7 @@ import {
   UsersRound,
   Zap,
 } from '@lucide/vue'
+import type { Schemas } from '@/api/types'
 import type { Component } from 'vue'
 import type { RouteLocationRaw } from 'vue-router'
 
@@ -47,19 +48,18 @@ import UpcomingWidget from '@/components/dashboard/widgets/UpcomingWidget.vue'
 import WaitingRequestsWidget from '@/components/dashboard/widgets/WaitingRequestsWidget.vue'
 import WeekWidget from '@/components/dashboard/widgets/WeekWidget.vue'
 import type { PermissionKey, WidgetSettings, WidgetSize } from '@/types/accounts'
-import type { ITOverview } from '@/types/dashboard'
-import type { FlagKey, Rules } from '@/types/settings'
+import type { FlagKey } from '@/types/settings'
 import type { Tone } from '@/utils/status'
 
 /** One key figure in a panel; `key` is what the user's layout stores when it is switched off. */
 export interface StatCardDef {
   key: string
   label: string
-  labelArgs?: (rules: Rules) => Record<string, unknown>
+  labelArgs?: (rules: Schemas['RulesSchema']) => Record<string, unknown>
   icon: Component
-  value: (data: ITOverview) => number
-  tone?: (data: ITOverview) => Tone
-  alert?: (data: ITOverview) => boolean
+  value: (data: Schemas['ITOverviewOut']) => number
+  tone?: (data: Schemas['ITOverviewOut']) => Tone
+  alert?: (data: Schemas['ITOverviewOut']) => boolean
   to?: RouteLocationRaw
   /** Shown only while this module or feature is on. */
   flag?: FlagKey

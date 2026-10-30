@@ -6,14 +6,15 @@ import { useI18n } from 'vue-i18n'
 import { dashboardApi } from '@/api/dashboard'
 import { useLive } from '@/composables/useLive'
 import { useFeaturesStore } from '@/stores/features'
-import type { LowStockItem, WidgetProps } from '@/types/dashboard'
+import type { Schemas } from '@/api/types'
+import type { WidgetProps } from '@/types/dashboard'
 
 /** Consumables below their minimum; they are on the needs list to be ordered. */
 defineProps<WidgetProps>()
 
 const { t } = useI18n()
 const features = useFeaturesStore()
-const items = ref<LowStockItem[] | null>(null)
+const items = ref<Schemas['LowStockOut'][] | null>(null)
 const load = async () => (items.value = await dashboardApi.lowStock())
 onMounted(load)
 useLive(['consumable', 'order'], load)

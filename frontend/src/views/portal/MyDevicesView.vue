@@ -6,12 +6,12 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import { portalApi } from '@/api/requests'
+import type { Schemas } from '@/api/types'
 import EmptyState from '@/components/common/EmptyState.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import ReportIssueModal from '@/components/portal/ReportIssueModal.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useLive } from '@/composables/useLive'
-import type { MyAsset } from '@/types/requests'
 import { categoryIcon } from '@/utils/icons'
 import { useFeaturesStore } from '@/stores/features'
 
@@ -20,8 +20,8 @@ const { t } = useI18n()
 const features = useFeaturesStore()
 const router = useRouter()
 const { date } = useFormat()
-const assets = ref<MyAsset[] | null>(null)
-const reporting = ref<MyAsset | null>(null)
+const assets = ref<Schemas['MyAssetOut'][] | null>(null)
+const reporting = ref<Schemas['MyAssetOut'] | null>(null)
 const showReport = ref(false)
 
 async function load() {
@@ -30,13 +30,13 @@ async function load() {
 onMounted(load)
 useLive(['asset', 'request'], load, { paused: () => showReport.value })
 
-function report(asset: MyAsset) {
+function report(asset: Schemas['MyAssetOut']) {
   reporting.value = asset
   showReport.value = true
 }
 
 /** Small badge next to the device name while a report is open or in progress. */
-function reportBadge(a: MyAsset) {
+function reportBadge(a: Schemas['MyAssetOut']) {
   const issue = a.issues.find((i) => i.status !== 'resolved')
   if (!issue) return null
   const inProgress = issue.status === 'in_progress'
@@ -47,7 +47,7 @@ function reportBadge(a: MyAsset) {
   )
 }
 
-const columns = computed<DataTableColumns<MyAsset>>(() => [
+const columns = computed<DataTableColumns<Schemas['MyAssetOut']>>(() => [
   {
     key: 'model',
     title: () => t('requests.myDevices.device'),
@@ -110,7 +110,7 @@ const columns = computed<DataTableColumns<MyAsset>>(() => [
               },
             ),
         },
-      ] as DataTableColumns<MyAsset>)
+      ] as DataTableColumns<Schemas['MyAssetOut']>)
     : []),
 ])
 </script>
@@ -129,9 +129,9 @@ const columns = computed<DataTableColumns<MyAsset>>(() => [
       :columns="columns"
       :data="assets ?? []"
       :loading="!assets"
-      :row-key="(a: MyAsset) => a.id"
+      :row-key="(a: Schemas['MyAssetOut']) => a.id"
       :row-props="
-        (a: MyAsset) => ({
+        (a: Schemas['MyAssetOut']) => ({
           onClick: () => router.push({ name: 'portal-device', params: { id: a.id } }),
         })
       "

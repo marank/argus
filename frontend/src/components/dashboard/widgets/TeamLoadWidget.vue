@@ -6,7 +6,8 @@ import { useI18n } from 'vue-i18n'
 import { dashboardApi } from '@/api/dashboard'
 import { useLive } from '@/composables/useLive'
 import { useFeaturesStore } from '@/stores/features'
-import type { TeamLoad, WidgetProps } from '@/types/dashboard'
+import type { Schemas } from '@/api/types'
+import type { WidgetProps } from '@/types/dashboard'
 
 defineProps<WidgetProps>()
 
@@ -15,7 +16,7 @@ const MAX_ROWS = 8
 
 const { t } = useI18n()
 const features = useFeaturesStore()
-const load = ref<TeamLoad | null>(null)
+const load = ref<Schemas['TeamLoadOut'] | null>(null)
 
 const fetchLoad = async () => (load.value = await dashboardApi.teamLoad())
 onMounted(fetchLoad)

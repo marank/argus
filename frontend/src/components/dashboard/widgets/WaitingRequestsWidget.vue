@@ -5,7 +5,8 @@ import { useI18n } from 'vue-i18n'
 
 import { dashboardApi } from '@/api/dashboard'
 import { useLive } from '@/composables/useLive'
-import type { WaitingRequest, WidgetProps } from '@/types/dashboard'
+import type { Schemas } from '@/api/types'
+import type { WidgetProps } from '@/types/dashboard'
 
 import { useDateMode } from './dateMode'
 import DateModeToggle from './DateModeToggle.vue'
@@ -19,7 +20,7 @@ const { mode, setMode, when, other } = useDateMode(
   () => props.options,
   (options) => emit('update:options', options),
 )
-const rows = ref<WaitingRequest[] | null>(null)
+const rows = ref<Schemas['WaitingRequestOut'][] | null>(null)
 const load = async () => (rows.value = await dashboardApi.waitingRequests())
 onMounted(load)
 useLive(['request'], load)

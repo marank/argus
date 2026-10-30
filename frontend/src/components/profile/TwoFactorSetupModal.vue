@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Schemas } from '@/api/types'
 import { Copy } from '@lucide/vue'
 import { useIntervalFn } from '@vueuse/core'
 import {
@@ -18,7 +19,6 @@ import { useI18n } from 'vue-i18n'
 import { twoFactorApi } from '@/api/auth'
 import { ApiError } from '@/api/client'
 import CodeInput from '@/components/common/CodeInput.vue'
-import type { TwoFactorMethod, TwoFactorSetup } from '@/types/accounts'
 
 import BackupCodes from './BackupCodes.vue'
 
@@ -26,7 +26,7 @@ import BackupCodes from './BackupCodes.vue'
  * Switches a method on (or changes to it): password, then the first code from
  * the app or the email, then the new backup codes.
  */
-const props = defineProps<{ method: TwoFactorMethod }>()
+const props = defineProps<{ method: Schemas['TwoFactorMethod'] }>()
 const show = defineModel<boolean>('show', { required: true })
 const emit = defineEmits<{ done: [] }>()
 const { t } = useI18n()
@@ -38,7 +38,7 @@ const stepIndex = computed(() => ({ password: 1, verify: 2, codes: 3 })[step.val
 
 const password = ref('')
 const code = ref('')
-const setup = ref<TwoFactorSetup | null>(null)
+const setup = ref<Schemas['TwoFactorSetupOut'] | null>(null)
 const codes = ref<string[]>([])
 const stored = ref(false)
 const error = ref('')

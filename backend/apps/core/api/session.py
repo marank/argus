@@ -11,7 +11,7 @@ from ninja import Router, Schema, Status
 from ninja.errors import HttpError
 from ninja.utils import check_csrf
 
-from apps.accounts.models import TwoFactor, User
+from apps.accounts.models import TwoFactor, TwoFactorMethod, User
 from apps.accounts.schemas import CodeIn, CurrentUserOut, PreferencesIn, TwoFactorChallengeOut
 from apps.accounts.services import throttle, two_factor
 from apps.core.api.security import AuthedRequest, session_auth
@@ -93,7 +93,7 @@ def resend_login_code(request: HttpRequest) -> two_factor.LoginChallenge:
     """Sends a new email code for the pending sign-in."""
     require_csrf(request)
     state, user = pending_or_401(request)
-    if user.two_factor.method != TwoFactor.Method.EMAIL:
+    if user.two_factor.method != TwoFactorMethod.EMAIL:
         raise HttpError(409, _("This sign-in uses an authenticator app."))
     if not two_factor.can_resend(state):
         raise HttpError(429, _("Please wait a moment before requesting another code."))
