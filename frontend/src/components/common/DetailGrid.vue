@@ -6,6 +6,8 @@ export interface DetailEntry {
   /** Name of a slot to render instead of `value`. */
   slot?: string
   wide?: boolean
+  /** Needs attention, e.g. a date that has passed. */
+  warning?: boolean
 }
 
 defineProps<{ entries: DetailEntry[] }>()
@@ -15,7 +17,7 @@ defineProps<{ entries: DetailEntry[] }>()
   <dl class="detail-grid">
     <div v-for="entry in entries" :key="entry.label" class="entry" :class="{ wide: entry.wide }">
       <dt class="eyebrow">{{ entry.label }}</dt>
-      <dd :class="{ mono: entry.mono }">
+      <dd :class="{ mono: entry.mono, warning: entry.warning }">
         <slot v-if="entry.slot" :name="entry.slot" />
         <template v-else>{{
           entry.value === null || entry.value === undefined || entry.value === ''
@@ -44,5 +46,8 @@ dd {
   margin: 0;
   overflow-wrap: anywhere;
   white-space: pre-line;
+}
+dd.warning {
+  color: var(--ar-error);
 }
 </style>

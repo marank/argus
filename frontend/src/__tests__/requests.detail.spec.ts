@@ -263,7 +263,10 @@ describe('RequestDetailView', () => {
     })
 
     it('drops the device check and the pickup place when IT delivers', async () => {
-      const request = allocatedRequest({ skip_device_check: true })
+      const request = allocatedRequest({
+        skip_device_check: true,
+        pickup_at: '2026-11-02T08:00:00.000Z',
+      })
       api.requests.markReady.mockResolvedValue({ ...request, status: 'ready' })
       await open(request)
       await click('Ready for pickup')
@@ -285,9 +288,26 @@ describe('RequestDetailView', () => {
       )
     })
 
+    it('asks for date and place before telling the employee', async () => {
+      await open(allocatedRequest())
+      await click('Ready for pickup')
+      expect(openModal().textContent).toContain('Enter date and place to notify the employee.')
+      const submit = [...openModal().querySelectorAll('button')].find((b) =>
+        b.textContent?.includes('Ready for pickup'),
+      )!
+      expect(submit.disabled).toBe(true)
+
+      // Without a message, nothing has to be planned.
+      openModal().querySelectorAll<HTMLElement>('.n-switch')[1]!.click()
+      await flushPromises()
+      expect(submit.disabled).toBe(false)
+    })
+
     it('keeps the ready dialog open and shows why marking ready failed', async () => {
       api.requests.markReady.mockRejectedValue(new ApiError(409, 'INV-001 is no longer available.'))
-      await open(allocatedRequest())
+      await open(
+        allocatedRequest({ pickup_at: '2026-11-02T08:00:00.000Z', pickup_location: PICKUP_POINT }),
+      )
       await click('Ready for pickup')
       await click('Ready for pickup')
       expect(screen()).toContain('INV-001 is no longer available.')
@@ -360,6 +380,23 @@ describe('RequestDetailView', () => {
     it('tells IT to hand the devices over and record it', async () => {
       await open(readyRequest())
       expect(screen()).toContain('Hand the devices to Jane Doe, then record the hand-out.')
+    })
+
+    it('warns that handing out here skips the planned signature', async () => {
+      await open(readyRequest())
+      await click('Hand out')
+      expect(openModal().textContent).not.toContain('was planned')
+
+      await open(readyRequest({ handover_mode: 'pickup' }))
+      await click('Hand out')
+      expect(openModal().textContent).toContain(
+        'Pickup with a signature at the terminal was planned.',
+      )
+    })
+
+    it('marks a pickup date that has passed', async () => {
+      await open(readyRequest({ pickup_at: '2020-01-06T09:00:00Z' }))
+      expect(document.querySelector('dd.warning')?.textContent).toContain('passed')
     })
 
     it('records who received the devices, with notes only for devices that have one', async () => {

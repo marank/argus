@@ -2,7 +2,7 @@ from datetime import date
 from typing import Annotated
 from uuid import UUID
 
-from django.db.models import ProtectedError, Q, QuerySet
+from django.db.models import Prefetch, ProtectedError, Q, QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from ninja import FilterLookup, FilterSchema, Query, Router, Status
@@ -25,6 +25,7 @@ from apps.inventory.schemas.asset import (
 )
 from apps.inventory.services import assets as asset_service
 from apps.masterdata.models import AssetModel, Category
+from apps.requests.models import AssetRequestAllocation
 
 router = Router(tags=["assets"], auth=permission_auth(ResourceKey.ASSETS))
 
@@ -81,6 +82,14 @@ def asset_queryset() -> QuerySet[Asset]:
         "assigned_to",
         "parent",
         "supplier",
+    ).prefetch_related(
+        Prefetch(
+            "asset_request_allocations",
+            queryset=AssetRequestAllocation.objects.filter(returned_at__isnull=True).select_related(
+                "item__asset_request__requester"
+            ),
+            to_attr="open_allocations",
+        )
     )
 
 

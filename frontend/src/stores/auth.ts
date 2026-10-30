@@ -9,6 +9,8 @@ import type { Schemas } from '@/api/types'
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<Schemas['CurrentUserOut'] | null>(null)
   const checked = ref(false)
+  /** Why the last session ended, for the notice on the login page; reset by the next sign-in. */
+  const endReason = ref<'signedOut' | 'expired' | null>(null)
 
   const isAuthenticated = computed(() => user.value !== null)
   const isItStaff = computed(() => user.value?.is_it_staff ?? false)
@@ -27,7 +29,10 @@ export const useAuthStore = defineStore('auth', () => {
 
   function apply(current: Schemas['CurrentUserOut'] | null) {
     user.value = current
-    if (current) setLocale(current.language)
+    if (current) {
+      setLocale(current.language)
+      endReason.value = null
+    }
   }
 
   async function fetchCurrentUser() {
@@ -60,6 +65,13 @@ export const useAuthStore = defineStore('auth', () => {
   async function logout() {
     await authApi.logout()
     user.value = null
+    endReason.value = 'signedOut'
+  }
+
+  /** The server no longer knows the session (a 401 on any call). */
+  function expire() {
+    user.value = null
+    endReason.value = 'expired'
   }
 
   async function changeNotifications(
@@ -83,6 +95,7 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     user,
     checked,
+    endReason,
     isAuthenticated,
     isItStaff,
     isSuperuser,
@@ -93,6 +106,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     verifyLogin,
     logout,
+    expire,
     changeLanguage,
     changeNotifications,
     changeDashboard,

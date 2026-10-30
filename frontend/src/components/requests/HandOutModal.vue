@@ -1,6 +1,15 @@
 <script setup lang="ts">
 import type { Id } from '@/types/common'
-import { NButton, NForm, NFormItem, NInput, NModal, NRadioButton, NRadioGroup } from 'naive-ui'
+import {
+  NAlert,
+  NButton,
+  NForm,
+  NFormItem,
+  NInput,
+  NModal,
+  NRadioButton,
+  NRadioGroup,
+} from 'naive-ui'
 import { computed, reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -68,6 +77,15 @@ async function save() {
     :title="t('requests.actions.handOut')"
     style="max-width: 640px"
   >
+    <!-- Planned with a signature at the terminal: handing out here records none. -->
+    <NAlert
+      v-if="assetRequest.handover_mode === 'pickup'"
+      type="warning"
+      :bordered="false"
+      class="planned"
+    >
+      {{ t('handover.signaturePlanned') }}
+    </NAlert>
     <NForm class="ar-form" label-placement="top" size="medium" :show-feedback="false">
       <NFormItem :label="t('handover.method')">
         <NRadioGroup v-model:value="form.method">
@@ -119,6 +137,9 @@ async function save() {
 </template>
 
 <style scoped>
+.planned {
+  margin-bottom: 14px;
+}
 .cols {
   display: grid;
   grid-template-columns: 1fr 1fr;

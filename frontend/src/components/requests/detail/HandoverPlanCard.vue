@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n'
 import type { Schemas } from '@/api/types'
 import DetailGrid, { type DetailEntry } from '@/components/common/DetailGrid.vue'
 import { useFormat } from '@/composables/useFormat'
+import { isPast } from '@/utils/requests'
 
 /**
  * How the devices will reach the employee, until they are handed out.
@@ -14,6 +15,11 @@ import { useFormat } from '@/composables/useFormat'
 const props = defineProps<{ assetRequest: Schemas['AssetRequestOut']; forEmployee?: boolean }>()
 const { t } = useI18n()
 const { weekday } = useFormat()
+
+/** Ready, but the planned date has gone by without the devices being picked up. */
+const pickupPassed = computed(
+  () => props.assetRequest.status === 'ready' && isPast(props.assetRequest.pickup_at),
+)
 
 const entries = computed<DetailEntry[]>(() => {
   const r = props.assetRequest
@@ -29,8 +35,11 @@ const entries = computed<DetailEntry[]>(() => {
     },
     {
       label: r.handover_mode === 'delivery' ? t('handover.deliveryAt') : t('requests.pickupAt'),
-      value: r.pickup_at ? weekday(r.pickup_at) : null,
+      value: r.pickup_at
+        ? weekday(r.pickup_at) + (pickupPassed.value ? ` · ${t('requests.datePassed')}` : '')
+        : null,
       mono: true,
+      warning: pickupPassed.value,
     },
     { label: t('requests.pickupLocation'), value: r.pickup_location?.full_name },
     ...(r.status === 'ready' && !props.forEmployee

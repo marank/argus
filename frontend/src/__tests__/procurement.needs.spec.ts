@@ -142,10 +142,26 @@ describe('NeedsView', () => {
     expect(card('Consumables below minimum').textContent).toContain('No open demand.')
   })
 
-  it('lets only lines with something to order be selected', async () => {
-    await show({ requests: [requestNeed({ on_order: 2, to_order: 0 })] })
-    const checkbox = rowsIn('From requests')[0]!.querySelector('.n-checkbox')!
-    expect(checkbox.classList).toContain('n-checkbox--disabled')
+  it('hides lines the pool or an order covers until asked, and never selects them', async () => {
+    await show({
+      requests: [
+        requestNeed({ on_order: 2, to_order: 0 }, { id: 'ri2', label: 'Covered laptop' }),
+        requestNeed(),
+      ],
+    })
+    expect(rowsIn('From requests')).toHaveLength(1)
+    expect(card('From requests').textContent).not.toContain('Covered laptop')
+
+    card('From requests').querySelector<HTMLElement>('.n-card-header .n-checkbox')!.click()
+    await flushPromises()
+    expect(card('From requests').textContent).toContain('Show 1 covered line')
+    const covered = rowsIn('From requests').find((r) => r.textContent?.includes('Covered laptop'))!
+    expect(covered.querySelector('.n-checkbox')!.classList).toContain('n-checkbox--disabled')
+  })
+
+  it('says there is no demand when every line is covered', async () => {
+    await show({ requests: [requestNeed({ available: 5, to_order: 0 })] })
+    expect(card('From requests').textContent).toContain('No open demand.')
   })
 
   it('waits for a selection before creating an order', async () => {

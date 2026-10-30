@@ -12,6 +12,7 @@ import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useLive } from '@/composables/useLive'
+import { isPast } from '@/utils/requests'
 
 /**
  * The employee's requests: running ones as cards with progress and what happens
@@ -64,9 +65,10 @@ function nextStep(r: Schemas['AssetRequestListOut']): string {
     case 'confirmed':
       return t('requests.mine.next.confirmed')
     case 'ready':
-      return r.pickup_at
-        ? t('requests.mine.next.readyAt', { date: weekday(r.pickup_at) })
-        : t('requests.mine.next.ready')
+      if (!r.pickup_at) return t('requests.mine.next.ready')
+      return isPast(r.pickup_at)
+        ? t('requests.mine.next.readyMissed', { date: weekday(r.pickup_at) })
+        : t('requests.mine.next.readyAt', { date: weekday(r.pickup_at) })
     default:
       if (r.is_overdue) return t('requests.mine.next.overdue', { date: date(r.end_date) })
       return r.end_date

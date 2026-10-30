@@ -56,12 +56,18 @@ router.afterEach((to) => {
   document.title = title ? `${title} · Argus` : 'Argus'
 })
 
-// A 401 from any API call means the session expired: back to the login page.
+// A 401 from any API call means the session expired: back to the login page, which
+// says so. Calls still running after a sign-out answer 401 as well; they change nothing.
 onUnauthorized(() => {
-  useAuthStore().clear()
+  const auth = useAuthStore()
+  if (!auth.isAuthenticated) return
+  auth.expire()
   const current = router.currentRoute.value
   if (!current.meta.public) {
-    router.push({ name: 'login', query: { next: current.fullPath, expired: '1' } })
+    router.push({
+      name: 'login',
+      query: current.fullPath !== '/' ? { next: current.fullPath } : {},
+    })
   }
 })
 

@@ -6,6 +6,7 @@ export default {
   signIn: 'Anmelden',
   serverDown: 'Argus ist gerade nicht erreichbar. Bitte laden Sie die Seite in einem Moment neu.',
   sessionExpired: 'Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.',
+  signedOut: 'Sie wurden abgemeldet.',
   twoFactor: {
     title: 'Anmeldung bestätigen',
     code: 'Code',

@@ -28,6 +28,10 @@ export default {
     'Der Mitarbeiter holt die Geräte ohne Unterschrift ab. Anschließend unter „Ausgeben“ den Empfänger erfassen.',
   deliveryPending: 'Die IT liefert die Geräte aus und erfasst anschließend die Ausgabe.',
   waitingAtTerminal: 'Kann am Abholterminal abgeschlossen werden.',
+  signaturePlanned:
+    'Geplant war die Abholung mit Unterschrift am Terminal. Hier ausgegeben, gibt es keine Unterschrift.',
+  planMissing: 'Zur Benachrichtigung Termin und Ort angeben.',
+  planMissingDelivery: 'Zur Benachrichtigung das Lieferdatum angeben.',
   receivedBy: 'Entgegengenommen von',
   deliveredTo: 'Geliefert an',
   deliveredToPlaceholder: 'z. B. Büro 2.14',

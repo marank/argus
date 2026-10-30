@@ -10,11 +10,15 @@ import { useLive } from '@/composables/useLive'
 import { useFeaturesStore } from '@/stores/features'
 import type { Schemas } from '@/api/types'
 import type { WidgetProps } from '@/types/dashboard'
+import { isPast } from '@/utils/requests'
 
 import { useDateMode } from './dateMode'
 import DateModeToggle from './DateModeToggle.vue'
 
-/** Licenses and warranties ending within the warning periods of the site rules. */
+/**
+ * Licenses and warranties ending within the warning periods of the site rules, and expired
+ * licenses still assigned to someone (shown with their date in red).
+ */
 const props = defineProps<WidgetProps>()
 const emit = defineEmits<{ 'update:options': [options: Record<string, unknown>] }>()
 
@@ -69,7 +73,7 @@ const route = (item: Schemas['ExpiringOut']) =>
         >
         <span
           class="when"
-          :class="{ 'mono muted full': mode === 'full' }"
+          :class="{ 'mono muted full': mode === 'full', ended: isPast(item.ends_on) }"
           :title="other(item.ends_on)"
           >{{ when(item.ends_on) }}</span
         >
@@ -82,5 +86,8 @@ const route = (item: Schemas['ExpiringOut']) =>
 <style scoped>
 .icon {
   color: var(--tone);
+}
+.when.ended {
+  color: var(--ar-error);
 }
 </style>

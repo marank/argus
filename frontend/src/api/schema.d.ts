@@ -2672,6 +2672,7 @@ export interface components {
       purchase_date: string | null
       /** Purchase Price */
       purchase_price: string | null
+      reserved_for: components['schemas']['ActiveAssetRequestOut'] | null
       /** Serial Number */
       serial_number: string
       status: components['schemas']['AssetStatus']
@@ -3156,6 +3157,7 @@ export interface components {
       purchase_date: string | null
       /** Purchase Price */
       purchase_price: string | null
+      reserved_for: components['schemas']['ActiveAssetRequestOut'] | null
       /** Serial Number */
       serial_number: string
       status: components['schemas']['AssetStatus']

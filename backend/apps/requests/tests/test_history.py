@@ -7,6 +7,7 @@ from apps.accounts.models import User
 from apps.inventory.models import Asset, AssetStatus
 from apps.masterdata.models import Category
 from apps.requests.models import AssetRequest
+from apps.requests.tests.plan import handover_plan
 
 JSON = "application/json"
 
@@ -33,7 +34,7 @@ def run_cycle(employee_client, it_client) -> str:
     it_client.post(f"{url}/confirm", {"comment": "Fine"}, content_type=JSON)
     it_client.post(f"{url}/assign", {"assignee": str(User.objects.get(username="it").pk)}, content_type=JSON)
     it_client.post(f"{url}/auto-allocate")
-    it_client.post(f"{url}/ready", {"handover_mode": "collect"}, content_type=JSON)
+    it_client.post(f"{url}/ready", {"handover_mode": "collect", **handover_plan()}, content_type=JSON)
     it_client.post(f"{url}/hand-out", {}, content_type=JSON)
     new_end = (start + timedelta(days=9)).isoformat()
     it_client.post(f"{url}/extend", {"end_date": new_end}, content_type=JSON)
@@ -107,7 +108,9 @@ def test_preparing_leaves_no_trace(employee_client, it_client):
     assert kinds(body) == ["created", "confirmed"]
     assert laptop.events.count() == device_history
 
-    body = it_client.post(f"{url}/ready", {"handover_mode": "collect"}, content_type=JSON).json()
+    body = it_client.post(
+        f"{url}/ready", {"handover_mode": "collect", **handover_plan()}, content_type=JSON
+    ).json()
     assert body["events"][-1]["data"]["items"] == [laptop.inventory_number]
     assert laptop.events.count() == device_history
 
@@ -118,13 +121,15 @@ def test_ready_again_lists_what_changed(employee_client, it_client):
     body = it_client.post(
         f"{url}/allocations", {"item": str(item.pk), "asset": str(first.pk)}, content_type=JSON
     ).json()
-    it_client.post(f"{url}/ready", {"handover_mode": "collect"}, content_type=JSON)
+    it_client.post(f"{url}/ready", {"handover_mode": "collect", **handover_plan()}, content_type=JSON)
 
     # Swapped while ready: back in preparation, then ready with the other laptop.
     body = it_client.delete(f"{url}/allocations/{body['items'][0]['allocations'][0]['id']}").json()
     assert kinds(body)[-1] == "reopened"
     it_client.post(f"{url}/allocations", {"item": str(item.pk), "asset": str(second.pk)}, content_type=JSON)
-    body = it_client.post(f"{url}/ready", {"handover_mode": "collect"}, content_type=JSON).json()
+    body = it_client.post(
+        f"{url}/ready", {"handover_mode": "collect", **handover_plan()}, content_type=JSON
+    ).json()
 
     again = body["events"][-1]
     assert again["kind"] == "ready"
@@ -157,7 +162,9 @@ def test_confirming_leaves_the_handover_to_marking_ready(employee_client, it_cli
 
     it_client.post(f"{url}/auto-allocate")
     body = it_client.post(
-        f"{url}/ready", {"handover_mode": "collect", "pickup_at": pickup}, content_type=JSON
+        f"{url}/ready",
+        {"handover_mode": "collect", "pickup_at": pickup, **handover_plan()},
+        content_type=JSON,
     ).json()
     assert body["pickup_at"] is not None
     # One step, not "handover changed" and "ready" for the same click.

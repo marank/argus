@@ -128,7 +128,7 @@ describe('IT dashboard', () => {
         'Procurement & stock',
         'Deadlines & reports',
         'Devices by status',
-        'Upcoming hand-outs (7 days)',
+        'Hand-outs (due and next 7 days)',
         'Recent activity',
       ])
         expect(text).toContain(title)

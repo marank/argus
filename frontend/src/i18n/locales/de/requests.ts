@@ -16,6 +16,7 @@ export default {
   wishHint: 'Wunsch des Mitarbeiters: {date}',
   requestedPickup: 'Abholwunsch',
   pickupAt: 'Abholung',
+  datePassed: 'verstrichen',
   pickupLocation: 'Abholort',
   itComment: 'Kommentar der IT',
   overdue: 'überfällig',
@@ -85,6 +86,7 @@ export default {
       confirmed: 'Bestätigt. Die IT bereitet die Ausgabe vor.',
       ready: 'Abholbereit',
       readyAt: 'Abholbereit: {date}',
+      readyMissed: 'Abholtermin {date} verpasst. Die Geräte liegen weiter für Sie bereit.',
       handedOut: 'Ausgegeben. Rückgabe bis {date}.',
       handedOutPermanent: 'Ausgegeben.',
       overdue: 'Rückgabe überfällig seit {date}.',
@@ -144,7 +146,7 @@ export default {
     rejectReason: 'Begründung für den Mitarbeiter',
     schedule: 'Übergabe ändern',
     autoAllocate: 'Automatisch zuweisen',
-    autoAllocated: '{count} Einheiten zugewiesen',
+    autoAllocated: '{count} Einheit zugewiesen | {count} Einheiten zugewiesen',
     allocate: 'Zuweisen',
     reopen: 'Zurück in Vorbereitung',
     confirmReopen:
@@ -300,6 +302,7 @@ export default {
     noSeats: 'Keine freie Lizenz. Lizenz anlegen oder Plätze erhöhen:',
     toLicenses: 'Zu den Lizenzen',
     handedOut: 'ausgegeben',
+    consumed: 'übergeben, ohne Rückgabe',
     returned: 'zurückgegeben',
   },
   returning: {

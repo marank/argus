@@ -4,6 +4,7 @@ import {
   allocationCode,
   allocationModel,
   anyModelLabel,
+  isPast,
   isReturnable,
   itemLabel,
 } from '@/utils/requests'
@@ -83,5 +84,22 @@ describe('status tones', () => {
 
   it('falls back to default for an unknown group', () => {
     expect(toneOf('nothing', 'open')).toBe('default')
+  })
+})
+
+describe('isPast', () => {
+  const now = new Date('2026-10-30T15:00:00')
+
+  it('compares a moment with now, a plain day with today', () => {
+    expect(isPast('2026-10-30T14:00:00', now)).toBe(true)
+    expect(isPast('2026-10-30T16:00:00', now)).toBe(false)
+    expect(isPast('2026-10-29', now)).toBe(true)
+    // Today is not over yet.
+    expect(isPast('2026-10-30', now)).toBe(false)
+  })
+
+  it('treats a missing date as not passed', () => {
+    expect(isPast(null, now)).toBe(false)
+    expect(isPast(undefined, now)).toBe(false)
   })
 })

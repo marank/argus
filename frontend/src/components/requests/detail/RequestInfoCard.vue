@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n'
 import type { Schemas } from '@/api/types'
 import DetailGrid, { type DetailEntry } from '@/components/common/DetailGrid.vue'
 import { useFormat } from '@/composables/useFormat'
+import { isPast } from '@/utils/requests'
 
 /** Who asked for what and when: requester, period and the messages exchanged. */
 const props = defineProps<{ assetRequest: Schemas['AssetRequestOut'] }>()
@@ -17,6 +18,15 @@ const period = computed(() => {
   return r.duration === 'permanent'
     ? `${date(r.start_date)} → ${t('common.permanent')}`
     : `${date(r.start_date)} → ${date(r.end_date)}`
+})
+
+/** The wished day is over and nothing is planned yet: the employee is waiting. */
+const wishPassed = computed(() => {
+  const r = props.assetRequest
+  return (
+    ['pending_approval', 'submitted', 'confirmed'].includes(r.status) &&
+    isPast(r.requested_pickup_date)
+  )
 })
 
 const entries = computed<DetailEntry[]>(() => {
@@ -52,8 +62,11 @@ const entries = computed<DetailEntry[]>(() => {
       ? [
           {
             label: t('requests.requestedPickup'),
-            value: weekday(r.requested_pickup_date),
+            value:
+              weekday(r.requested_pickup_date) +
+              (wishPassed.value ? ` · ${t('requests.datePassed')}` : ''),
             mono: true,
+            warning: wishPassed.value,
           },
         ]
       : []),

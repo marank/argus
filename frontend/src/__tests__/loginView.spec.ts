@@ -5,6 +5,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { ApiError } from '@/api/client'
 import { i18n } from '@/i18n'
+import { useAuthStore } from '@/stores/auth'
 import LoginView from '@/views/auth/LoginView.vue'
 
 import { makeUser } from './helpers'
@@ -133,9 +134,22 @@ describe('LoginView', () => {
     expect(wrapper.text()).toContain('SYS · ONLINE')
   })
 
-  it('says when the session expired', async () => {
-    const { wrapper } = await login('/login?expired=1')
+  it('says why the last session ended, until the next sign-in', async () => {
+    const { wrapper } = await login()
+    expect(wrapper.text()).not.toContain('signed out')
+    const auth = useAuthStore()
+    auth.endReason = 'signedOut'
+    await flushPromises()
+    expect(wrapper.text()).toContain('You have been signed out.')
+    expect(wrapper.text()).not.toContain('expired')
+
+    auth.endReason = 'expired'
+    await flushPromises()
     expect(wrapper.text()).toContain('Your session has expired')
+
+    api.login.mockResolvedValue(makeUser())
+    await signIn(wrapper)
+    expect(auth.endReason).toBeNull()
   })
 
   it('asks for the app code as second step and signs in once it is complete', async () => {

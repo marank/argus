@@ -3021,3 +3021,11 @@ msgstr "Diese E-Mail wurde automatisch von Argus, der IT-Asset-Verwaltung, verse
 #: apps/core/templates/core/mail/message.html
 msgid "Manage notifications"
 msgstr "Benachrichtigungen verwalten"
+
+#: apps/requests/services/workflow.py
+msgid "Set the delivery date, or do not notify the employee."
+msgstr "Legen Sie das Lieferdatum fest oder benachrichtigen Sie den Mitarbeiter nicht."
+
+#: apps/requests/services/workflow.py
+msgid "Set date and place of the pickup, or do not notify the employee."
+msgstr "Legen Sie Termin und Ort der Abholung fest oder benachrichtigen Sie den Mitarbeiter nicht."

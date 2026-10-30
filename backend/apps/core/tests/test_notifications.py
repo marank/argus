@@ -12,6 +12,7 @@ from apps.accounts.models import User
 from apps.core.models import MailSettings, SiteSettings
 from apps.masterdata.models import Category
 from apps.requests.models import AssetRequest, AssetRequestStatus
+from apps.requests.tests.plan import handover_plan
 
 if TYPE_CHECKING:
     from django.test.client import _MonkeyPatchedWSGIResponse
@@ -204,7 +205,9 @@ def test_it_decides_whether_the_ready_message_goes_out(
     mail.outbox.clear()
     with django_capture_on_commit_callbacks(execute=True):
         response = it_client.post(
-            f"{url}/ready", {"handover_mode": "collect", "notify": notify}, content_type=JSON
+            f"{url}/ready",
+            {"handover_mode": "collect", "notify": notify, **handover_plan()},
+            content_type=JSON,
         )
     assert response.status_code == 200, response.content
     assert (recipients() == {"employee@example.com"}) is notify
@@ -217,7 +220,9 @@ def _ready(employee_client, it_client) -> str:
     url = f"/api/requests/{submit(employee_client).json()['id']}"
     it_client.post(f"{url}/confirm", {"items": []}, content_type=JSON)
     it_client.post(f"{url}/auto-allocate")
-    it_client.post(f"{url}/ready", {"handover_mode": "collect", "notify": False}, content_type=JSON)
+    it_client.post(
+        f"{url}/ready", {"handover_mode": "collect", "notify": False, **handover_plan()}, content_type=JSON
+    )
     return url
 
 
@@ -227,7 +232,11 @@ def test_the_employee_hears_of_every_step_after_ready(
     """Changed handover, hand-out, extension and return: each one mail for the record."""
     url = _ready(employee_client, it_client)
     steps = [
-        ("schedule", {"handover_mode": "delivery", "pickup_location": None}, "Übergabe geändert"),
+        (
+            "schedule",
+            {"handover_mode": "delivery", "pickup_location": None, "pickup_at": handover_plan()["pickup_at"]},
+            "Übergabe geändert",
+        ),
         ("hand-out", {}, "Ausgegeben"),
         ("extend", {"end_date": (date.today() + timedelta(days=20)).isoformat()}, "Leihfrist verlängert"),
         ("return", {}, "Zurückgenommen"),

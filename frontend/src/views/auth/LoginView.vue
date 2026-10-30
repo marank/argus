@@ -164,12 +164,13 @@ function back() {
       <h1>{{ challenge ? t('auth.twoFactor.title') : t('auth.title') }}</h1>
 
       <NAlert
-        v-if="route.query.expired && !error && !challenge && !serverDown"
-        type="warning"
+        v-if="auth.endReason && !error && !challenge && !serverDown"
+        :type="auth.endReason === 'expired' ? 'warning' : 'success'"
         :bordered="false"
         class="alert"
+        role="status"
       >
-        {{ t('auth.sessionExpired') }}
+        {{ auth.endReason === 'expired' ? t('auth.sessionExpired') : t('auth.signedOut') }}
       </NAlert>
       <NAlert v-if="serverDown" type="warning" :bordered="false" class="alert" role="status">
         {{ t('auth.serverDown') }}

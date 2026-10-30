@@ -106,7 +106,15 @@ const baseColumns = computed<DataTableColumns<Schemas['AssetOut']>>(() => [
     title: t('inventory.fields.assignedTo'),
     sorter: true,
     width: 170,
-    render: (a) => a.assigned_to?.display_name ?? '—',
+    render: (a) =>
+      a.assigned_to?.display_name ??
+      // Set aside, not yet handed out: for whom and with which request.
+      (a.reserved_for
+        ? h('span', { class: 'muted' }, [
+            t('inventory.reservedFor', { name: a.reserved_for.requester.display_name }),
+            h('small', { class: 'mono reserved-number' }, a.reserved_for.number),
+          ])
+        : '—'),
   },
   {
     key: 'location__name',
@@ -242,5 +250,9 @@ function onSaved(asset: { id: Id }) {
 }
 :deep(.strong) {
   font-weight: 600;
+}
+:deep(.reserved-number) {
+  display: block;
+  font-size: 11px;
 }
 </style>

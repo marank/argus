@@ -190,8 +190,22 @@ describe('expired session', () => {
     await visit('/profile')
     api.unauthorized!()
     await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('login'))
-    expect(router.currentRoute.value.query).toEqual({ next: '/profile', expired: '1' })
+    expect(router.currentRoute.value.query).toEqual({ next: '/profile' })
     expect(useAuthStore().isAuthenticated).toBe(false)
+    expect(useAuthStore().endReason).toBe('expired')
+  })
+
+  it('ignores calls that fail after a sign-out', async () => {
+    signIn()
+    await visit('/profile')
+    const auth = useAuthStore()
+    auth.user = null
+    auth.endReason = 'signedOut'
+    await visit('/login')
+    api.unauthorized!()
+    await Promise.resolve()
+    expect(router.currentRoute.value.fullPath).toBe('/login')
+    expect(auth.endReason).toBe('signedOut')
   })
 
   it('stays on a public page', async () => {

@@ -274,9 +274,18 @@ describe('dashboard widgets', () => {
       api.upcoming.mockResolvedValue([row])
       await show(UpcomingWidget, { stored: { days: 14 } })
       expect(api.upcoming).toHaveBeenCalledWith(14)
-      expect(pageText()).toContain('Upcoming hand-outs (14 days)')
+      expect(pageText()).toContain('Hand-outs (due and next 14 days)')
       expect(link('REQ-2026-00007').getAttribute('href')).toBe(`/requests/${ID(7)}`)
       expect(link('REQ-2026-00007').textContent).toContain('Paul Wolf')
+      expect(link('REQ-2026-00007').querySelector('.when')!.classList).not.toContain('overdue')
+    })
+
+    it('marks hand-outs whose day has passed as overdue', async () => {
+      api.upcoming.mockResolvedValue([{ ...row, start_date: '2026-10-20' }])
+      await show(UpcomingWidget)
+      const when = link('REQ-2026-00007').querySelector('.when')!
+      expect(when.classList).toContain('overdue')
+      expect(when.getAttribute('title')).toContain('Hand-out overdue')
     })
 
     it('falls back to a week for a period it does not offer', async () => {

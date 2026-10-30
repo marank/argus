@@ -328,11 +328,13 @@ def reschedule(
     asset_request.pickup_location_id = pickup_location_id
     if handover_mode:
         asset_request.handover_mode = handover_mode
+    # The employee hears of the handover once it is ready; before that there is nothing to correct.
+    ready = asset_request.status == AssetRequestStatus.READY
+    if ready and notify:
+        _require_handover_plan(asset_request)
     asset_request.handled_by = user
     asset_request.save()
     asset_request.refresh_from_db(fields=["pickup_location"])
-    # The employee hears of the handover once it is ready; before that there is nothing to correct.
-    ready = asset_request.status == AssetRequestStatus.READY
     _record_schedule(
         asset_request,
         AssetRequestEventKind.RESCHEDULED,
@@ -342,6 +344,15 @@ def reschedule(
     if ready and notify:
         notifications.request_rescheduled(asset_request)
     return asset_request
+
+
+def _require_handover_plan(asset_request: AssetRequest) -> None:
+    """A message to the employee must say when, and unless IT delivers, where."""
+    if asset_request.handover_mode == AssetRequest.HandoverMode.DELIVERY:
+        if not asset_request.pickup_at:
+            raise BusinessError(_("Set the delivery date, or do not notify the employee."))
+    elif not asset_request.pickup_at or not asset_request.pickup_location_id:
+        raise BusinessError(_("Set date and place of the pickup, or do not notify the employee."))
 
 
 def _record_schedule(asset_request: AssetRequest, kind: str, user: User, **extra: object) -> None:
@@ -665,6 +676,8 @@ def mark_ready(
     if pickup_location_id is not KEEP:
         asset_request.pickup_location_id = pickup_location_id
     asset_request.skip_device_check = skip_device_check
+    if notify and _has_physical(asset_request):
+        _require_handover_plan(asset_request)
     asset_request.status = AssetRequestStatus.READY
     asset_request.handled_by = user
     asset_request.prepared_by = user

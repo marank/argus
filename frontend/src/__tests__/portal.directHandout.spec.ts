@@ -77,6 +77,7 @@ const LOCATION = { id: 'l1', name: 'IT store', full_name: 'HQ / IT store' }
 function device(overrides: Partial<Schemas['AssetOut']> = {}): Schemas['AssetOut'] {
   return {
     id: 'a1',
+    reserved_for: null,
     inventory_number: 'NB-0001',
     serial_number: 'SN-111',
     status: 'in_stock',

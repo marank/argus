@@ -1,7 +1,7 @@
 from datetime import timedelta
 from typing import TypedDict
 
-from django.db.models import Count, F
+from django.db.models import Count, F, Q, QuerySet
 from django.utils import timezone
 
 from apps.accounts.models import User
@@ -18,6 +18,15 @@ from apps.inventory.models import (
 )
 from apps.procurement.models import PurchaseOrder, PurchaseOrderStatus
 from apps.requests.models import AssetRequest, AssetRequestStatus
+
+
+def licenses_to_watch() -> QuerySet[License]:
+    """Licenses ending within the warning period, and expired ones still assigned to someone."""
+    today = timezone.localdate()
+    soon = today + timedelta(days=SiteSettings.load().license_warning_days)
+    return License.objects.filter(
+        Q(valid_until__range=(today, soon)) | Q(valid_until__lt=today, assignments__isnull=False)
+    ).distinct()
 
 
 class ITOverview(TypedDict):
@@ -98,9 +107,7 @@ def it_overview(user: User) -> ITOverview:
         )
         .exclude(status=AssetStatus.RETIRED)
         .count(),
-        "licenses_expiring": License.objects.filter(
-            valid_until__range=(today, today + timedelta(days=rules.license_warning_days))
-        ).count(),
+        "licenses_expiring": licenses_to_watch().count(),
         "recent_events": list(
             AssetEvent.objects.select_related("asset__model__manufacturer", "performed_by")[:10]
         ),

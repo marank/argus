@@ -181,10 +181,15 @@ async function removeEvent(event: Schemas['AssetEventOut']) {
           <NAlert v-if="asset.asset_request" type="info" :bordered="false">
             <RouterLink :to="{ name: 'request', params: { id: asset.asset_request.id } }">
               {{
-                t('inventory.activeRequest', {
-                  number: asset.asset_request.number,
-                  name: asset.asset_request.requester.display_name,
-                })
+                t(
+                  asset.asset_request.status === 'handed_out'
+                    ? 'inventory.handedOutRequest'
+                    : 'inventory.activeRequest',
+                  {
+                    number: asset.asset_request.number,
+                    name: asset.asset_request.requester.display_name,
+                  },
+                )
               }}
             </RouterLink>
           </NAlert>

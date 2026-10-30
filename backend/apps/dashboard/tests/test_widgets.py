@@ -3,6 +3,7 @@ from datetime import timedelta
 from django.utils import timezone
 
 from apps.accounts.models import User
+from apps.inventory.models import License
 from apps.requests.models import AssetRequest, AssetRequestStatus
 
 
@@ -90,3 +91,18 @@ def test_waiting_requests_list_submitted_requests(it_client):
 def test_list_widgets_answer(it_client):
     for path in ("expiring", "low-stock", "open-orders"):
         assert it_client.get(f"/api/dashboard/widgets/{path}").status_code == 200
+
+
+def test_expired_licenses_count_while_still_assigned(it_client):
+    today = timezone.localdate()
+    License.objects.update(valid_until=None)
+    used = License.objects.filter(assignments__isnull=False).distinct().first()
+    assert used is not None
+    unused = License.objects.get(pk=used.pk)
+    unused.pk = None
+    unused.save()  # a copy without seats taken
+    License.objects.filter(pk__in=[used.pk, unused.pk]).update(valid_until=today - timedelta(days=5))
+
+    rows = it_client.get("/api/dashboard/widgets/expiring").json()
+    assert [r["id"] for r in rows if r["kind"] == "license"] == [str(used.pk)]
+    assert it_client.get("/api/dashboard/it").json()["licenses_expiring"] == 1

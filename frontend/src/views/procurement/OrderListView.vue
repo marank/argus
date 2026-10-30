@@ -16,6 +16,7 @@ import { useFormat } from '@/composables/useFormat'
 import { useList } from '@/composables/useList'
 import { ORDER_STATUSES } from '@/types/procurement'
 import { useAuthStore } from '@/stores/auth'
+import { isPast } from '@/utils/requests'
 
 const { t } = useI18n()
 // Without the right to change procurement, the page is for viewing only.
@@ -38,6 +39,10 @@ const list = useList(ordersApi.list, {
   },
 })
 onMounted(list.load)
+
+/** Placed but not (fully) received after the expected day. */
+const late = (o: Schemas['PurchaseOrderListOut']) =>
+  ['ordered', 'partially_received'].includes(o.status) && isPast(o.expected_date)
 
 const statusOptions = computed(() =>
   ORDER_STATUSES.map((s) => ({ value: s, label: enumLabel('orderStatus', s) })),
@@ -89,7 +94,12 @@ const columns = computed<DataTableColumns<Schemas['PurchaseOrderListOut']>>(() =
     title: t('procurement.orders.expectedDate'),
     sorter: true,
     width: 120,
-    render: (o) => h('span', { class: 'mono' }, date(o.expected_date)),
+    render: (o) =>
+      late(o)
+        ? h('span', { class: 'mono late', title: t('procurement.orders.late') }, [
+            date(o.expected_date),
+          ])
+        : h('span', { class: 'mono' }, date(o.expected_date)),
   },
   {
     key: 'status',
@@ -174,5 +184,8 @@ async function createEmpty() {
 <style scoped>
 :deep(.strong) {
   font-weight: 600;
+}
+:deep(.late) {
+  color: var(--ar-error);
 }
 </style>

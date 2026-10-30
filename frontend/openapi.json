@@ -654,6 +654,16 @@
             ],
             "title": "Purchase Price"
           },
+          "reserved_for": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ActiveAssetRequestOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "serial_number": {
             "title": "Serial Number",
             "type": "string"
@@ -713,6 +723,7 @@
           "notes",
           "created_at",
           "updated_at",
+          "reserved_for",
           "components",
           "asset_request",
           "consumables",
@@ -2101,6 +2112,16 @@
             ],
             "title": "Purchase Price"
           },
+          "reserved_for": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ActiveAssetRequestOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "serial_number": {
             "title": "Serial Number",
             "type": "string"
@@ -2159,7 +2180,8 @@
           "warranty_until",
           "notes",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "reserved_for"
         ],
         "title": "AssetOut",
         "type": "object"

@@ -5,6 +5,7 @@ from apps.inventory.models import Asset, AssetStatus
 from apps.inventory.services.assets import create_asset
 from apps.masterdata.models import AssetModel, Category, Manufacturer
 from apps.requests.models import AssetRequest, AssetRequestStatus
+from apps.requests.tests.plan import handover_plan
 
 JSON = "application/json"
 
@@ -28,7 +29,7 @@ def prepare(employee_client, it_client, items, handover_mode="collect"):
     it_client.post(f"/api/requests/{rid}/confirm", {"items": []}, content_type=JSON)
     it_client.post(f"/api/requests/{rid}/auto-allocate")
     response = it_client.post(
-        f"/api/requests/{rid}/ready", {"handover_mode": handover_mode}, content_type=JSON
+        f"/api/requests/{rid}/ready", {"handover_mode": handover_mode, **handover_plan()}, content_type=JSON
     )
     assert response.status_code == 200, response.content
     return rid
@@ -100,7 +101,9 @@ def test_terminal_hides_lines_without_confirmed_devices(employee_client, it_clie
     ]
     it_client.post(f"/api/requests/{rid}/confirm", {"items": confirmation}, content_type=JSON)
     it_client.post(f"/api/requests/{rid}/auto-allocate")
-    it_client.post(f"/api/requests/{rid}/ready", {"handover_mode": "pickup"}, content_type=JSON)
+    it_client.post(
+        f"/api/requests/{rid}/ready", {"handover_mode": "pickup", **handover_plan()}, content_type=JSON
+    )
 
     pickup = next(p for p in terminal_client.get("/api/terminal/pickups").json() if p["id"] == rid)
     assert "0×" not in pickup["summary"]

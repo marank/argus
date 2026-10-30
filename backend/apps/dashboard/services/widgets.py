@@ -12,7 +12,8 @@ from apps.accounts.models import User
 from apps.accounts.services.assignment import assigned_q
 from apps.core.models import SiteSettings
 from apps.core.notifications import it_staff
-from apps.inventory.models import Asset, AssetIssue, AssetIssueStatus, AssetStatus, Consumable, License
+from apps.dashboard.services.overview import licenses_to_watch
+from apps.inventory.models import Asset, AssetIssue, AssetIssueStatus, AssetStatus, Consumable
 from apps.procurement.models import PurchaseOrder, PurchaseOrderStatus
 from apps.requests.models import AssetRequest, AssetRequestStatus
 
@@ -160,12 +161,13 @@ def due_returns(days: int) -> list[AssetRequest]:
 
 
 def expiring() -> list[Expiring]:
-    """Licenses and warranties ending within the warning periods of the site rules, the soonest first."""
+    """Licenses and warranties ending within the warning periods of the site rules, the soonest first.
+
+    Expired licenses still assigned to someone come first: they need a renewal or the seats back.
+    """
     today = timezone.localdate()
     rules = SiteSettings.load()
-    licenses = License.objects.filter(
-        valid_until__range=(today, today + timedelta(days=rules.license_warning_days))
-    ).select_related("model__manufacturer")
+    licenses = licenses_to_watch().select_related("model__manufacturer")
     assets = (
         Asset.objects.filter(
             warranty_until__range=(today, today + timedelta(days=rules.warranty_warning_days))

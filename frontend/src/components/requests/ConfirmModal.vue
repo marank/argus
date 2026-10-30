@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Id } from '@/types/common'
 import { NButton, NForm, NFormItem, NInput, NInputNumber, NModal, NSwitch, NTable } from 'naive-ui'
-import { computed, reactive, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { locationsApi } from '@/api/masterdata'
@@ -29,8 +29,11 @@ const emit = defineEmits<{ saved: [assetRequest: Schemas['AssetRequestOut']] }>(
 const { t } = useI18n()
 const { weekday } = useFormat()
 const { busy, run } = useAction()
-/** Changing the quantities of a request that is already confirmed. */
-const editing = computed(() => props.assetRequest.status === 'confirmed')
+/**
+ * Changing the quantities of a request that is already confirmed. Fixed when the dialog
+ * opens: confirming turns the request confirmed while the dialog still fades out.
+ */
+const editing = ref(false)
 
 const form = reactive({
   quantities: {} as Record<Id, number>,
@@ -50,6 +53,7 @@ function defaultPickup(): number {
 watch(show, (visible) => {
   if (!visible) return
   const r = props.assetRequest
+  editing.value = r.status === 'confirmed'
   form.quantities = Object.fromEntries(
     r.items.map((i) => [i.id, i.quantity_confirmed ?? i.quantity_requested]),
   )
@@ -60,6 +64,15 @@ watch(show, (visible) => {
   // As when marking it ready: a direct hand-out is usually done with the employee there.
   form.notify = r.origin !== 'direct'
 })
+
+/** Once the employee was told it is ready, a new message needs when and, unless IT delivers, where. */
+const needsWhen = computed(
+  () => props.mode === 'schedule' && props.assetRequest.status === 'ready' && form.notify,
+)
+const needsWhere = computed(() => needsWhen.value && form.handover_mode !== 'delivery')
+const incomplete = computed(
+  () => (needsWhen.value && !form.pickup_at) || (needsWhere.value && !form.pickup_location),
+)
 
 async function save() {
   const pickup_at = form.pickup_at ? new Date(form.pickup_at).toISOString() : null
@@ -146,7 +159,7 @@ async function save() {
         </NFormItem>
       </template>
       <div v-else class="cols">
-        <NFormItem :label="t('requests.pickupAt')">
+        <NFormItem :label="t('requests.pickupAt')" :required="needsWhen">
           <div class="when">
             <DateField
               v-model:value="form.pickup_at"
@@ -160,7 +173,7 @@ async function save() {
             }}</small>
           </div>
         </NFormItem>
-        <NFormItem :label="t('requests.pickupLocation')">
+        <NFormItem :label="t('requests.pickupLocation')" :required="needsWhere">
           <EntitySelect
             v-model="form.pickup_location"
             :fetcher="locationsApi.list"
@@ -185,8 +198,13 @@ async function save() {
     </NForm>
     <template #footer>
       <div class="row" style="justify-content: flex-end">
+        <small v-if="incomplete" class="muted missing">{{
+          form.handover_mode === 'delivery'
+            ? t('handover.planMissingDelivery')
+            : t('handover.planMissing')
+        }}</small>
         <NButton @click="show = false">{{ t('common.cancel') }}</NButton>
-        <NButton type="primary" :loading="busy" @click="save">
+        <NButton type="primary" :loading="busy" :disabled="incomplete" @click="save">
           {{ mode === 'confirm' && !editing ? t('requests.actions.confirm') : t('common.save') }}
         </NButton>
       </div>
@@ -216,6 +234,9 @@ async function save() {
 }
 .small {
   font-size: 11.5px;
+}
+.missing {
+  margin-right: auto;
 }
 .notify {
   display: flex;

@@ -6,6 +6,7 @@ from django.utils import timezone
 from apps.accounts.models import User
 from apps.inventory.models import Asset
 from apps.masterdata.models import Category, Location
+from apps.requests.tests.plan import handover_plan
 
 
 def test_full_asset_request_cycle(employee_client, it_client):
@@ -37,7 +38,7 @@ def test_full_asset_request_cycle(employee_client, it_client):
 
     # Not ready while devices are missing.
     response = it_client.post(
-        f"/api/requests/{asset_request['id']}/ready", {}, content_type="application/json"
+        f"/api/requests/{asset_request['id']}/ready", handover_plan(), content_type="application/json"
     )
     assert response.status_code == 409
 
@@ -47,7 +48,7 @@ def test_full_asset_request_cycle(employee_client, it_client):
     assert set(Asset.objects.filter(pk__in=allocated).values_list("status", flat=True)) == {"reserved"}
 
     response = it_client.post(
-        f"/api/requests/{asset_request['id']}/ready", {}, content_type="application/json"
+        f"/api/requests/{asset_request['id']}/ready", handover_plan(), content_type="application/json"
     )
     assert response.status_code == 200
     response = it_client.post(
@@ -179,7 +180,7 @@ def _ready_request(employee_client, it_client, **ready) -> dict[str, Any]:
         content_type="application/json",
     )
     it_client.post(f"{base}/auto-allocate")
-    response = it_client.post(f"{base}/ready", ready, content_type="application/json")
+    response = it_client.post(f"{base}/ready", {**handover_plan(), **ready}, content_type="application/json")
     assert response.status_code == 200, response.content
     body: dict[str, Any] = response.json()
     return body
@@ -205,6 +206,65 @@ def test_ready_request_can_be_reopened(employee_client, it_client, terminal_clie
     assert terminal_client.get(f"/api/terminal/pickups/{asset_request['id']}").status_code == 404
     # Only ready requests can be reopened.
     assert it_client.post(f"{base}/reopen").status_code == 409
+
+
+def _confirmed_headset(employee_client, it_client) -> str:
+    """A confirmed request with its headset allocated; returns its URL."""
+    start = date.today() + timedelta(days=2)
+    asset_request = employee_client.post(
+        "/api/requests",
+        {
+            "title": "Calls",
+            "duration": "permanent",
+            "start_date": start.isoformat(),
+            "items": [{"category": Category.objects.get(code="headsets").pk, "quantity": 1}],
+        },
+        content_type="application/json",
+    ).json()
+    base = f"/api/requests/{asset_request['id']}"
+    it_client.post(f"{base}/confirm", {"items": []}, content_type="application/json")
+    it_client.post(f"{base}/auto-allocate")
+    return base
+
+
+def test_ready_message_needs_date_and_place(employee_client, it_client):
+    base = _confirmed_headset(employee_client, it_client)
+    plan = handover_plan()
+    ready = lambda **data: it_client.post(f"{base}/ready", data, content_type="application/json")  # noqa: E731
+
+    response = ready(handover_mode="collect", pickup_at=plan["pickup_at"])
+    assert response.status_code == 409
+    assert "date and place" in response.json()["detail"]
+    # A delivery has no place, but still a date.
+    assert ready(handover_mode="delivery").status_code == 409
+    assert ready(handover_mode="delivery", pickup_at=plan["pickup_at"]).status_code == 200
+
+
+def test_ready_without_message_needs_no_plan(employee_client, it_client):
+    base = _confirmed_headset(employee_client, it_client)
+    response = it_client.post(
+        f"{base}/ready", {"handover_mode": "collect", "notify": False}, content_type="application/json"
+    )
+    assert response.status_code == 200
+    assert response.json()["pickup_at"] is None
+
+
+def test_changed_handover_message_needs_date_and_place(employee_client, it_client):
+    base = _confirmed_headset(employee_client, it_client)
+    it_client.post(
+        f"{base}/ready", {"handover_mode": "collect", **handover_plan()}, content_type="application/json"
+    )
+    without_place = {
+        "handover_mode": "collect",
+        "pickup_at": handover_plan()["pickup_at"],
+        "pickup_location": None,
+    }
+    response = it_client.post(f"{base}/schedule", without_place, content_type="application/json")
+    assert response.status_code == 409
+    response = it_client.post(
+        f"{base}/schedule", {**without_place, "notify": False}, content_type="application/json"
+    )
+    assert response.status_code == 200
 
 
 def test_ready_confirms_date_and_place(employee_client, it_client):

@@ -6,6 +6,7 @@ from apps.accounts.models import User
 from apps.inventory.models import Asset, AssetStatus
 from apps.masterdata.models import AssetModel, Category, Location, LocationKind
 from apps.requests.models import AssetRequest, Handover
+from apps.requests.tests.plan import handover_plan
 
 JSON = "application/json"
 
@@ -25,7 +26,9 @@ def prepare(employee_client, it_client, items, duration="temporary", handover_mo
     it_client.post(f"/api/requests/{rid}/confirm", {"items": []}, content_type=JSON)
     it_client.post(f"/api/requests/{rid}/auto-allocate")
     response = it_client.post(
-        f"/api/requests/{rid}/ready", {"handover_mode": handover_mode, **ready}, content_type=JSON
+        f"/api/requests/{rid}/ready",
+        {"handover_mode": handover_mode, **handover_plan(), **ready},
+        content_type=JSON,
     )
     assert response.status_code == 200, response.content
     return rid
@@ -57,6 +60,19 @@ def test_reserved_device_keeps_its_status(employee_client, it_client):
     assert response.status_code == 409, response.content
     asset.refresh_from_db()
     assert asset.status == AssetStatus.RESERVED
+
+
+def test_device_list_names_the_request_a_device_is_reserved_for(employee_client, it_client):
+    rid = prepare(employee_client, it_client, laptops())
+    asset = lent_allocation(rid).asset
+    rows = it_client.get("/api/inventory/assets", {"q": asset.inventory_number}).json()["items"]
+    row = next(r for r in rows if r["id"] == str(asset.pk))
+    assert row["reserved_for"]["id"] == rid
+    assert row["reserved_for"]["requester"]["username"] == "employee"
+
+    it_client.post(f"/api/requests/{rid}/hand-out", {"method": "direct"}, content_type=JSON)
+    rows = it_client.get("/api/inventory/assets", {"q": asset.inventory_number}).json()["items"]
+    assert next(r for r in rows if r["id"] == str(asset.pk))["reserved_for"] is None
 
 
 def test_consumables_only_complete_on_hand_out(employee_client, it_client):

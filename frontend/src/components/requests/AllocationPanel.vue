@@ -10,7 +10,7 @@ import type { Schemas } from '@/api/types'
 import ScanCombobox from '@/components/common/ScanCombobox.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { useAction } from '@/composables/useAction'
-import { itemLabel } from '@/utils/requests'
+import { isReturnable, itemLabel } from '@/utils/requests'
 
 import ResolveFreeText from './ResolveFreeText.vue'
 
@@ -120,7 +120,7 @@ const AS_INPUT = {
 async function autoAllocate() {
   const result = await run(() => requestsApi.autoAllocate(props.assetRequest.id, props.item.id))
   if (!result) return
-  message.info(t('requests.actions.autoAllocated', { count: result.allocated }))
+  message.info(t('requests.actions.autoAllocated', { count: result.allocated }, result.allocated))
   emit('updated', result.asset_request)
   await loadCandidates()
 }
@@ -225,8 +225,11 @@ async function remove(allocationId: Id) {
             group="assetStatus"
             :value="allocation.returned_damaged ? 'in_repair' : 'in_stock'"
           />
+          <!-- Consumables stay with the employee and are not taken back. -->
           <span v-else-if="allocation.handed_out_at" class="muted small">{{
-            t('requests.allocation.handedOut')
+            isReturnable(allocation)
+              ? t('requests.allocation.handedOut')
+              : t('requests.allocation.consumed')
           }}</span>
           <NButton
             v-else-if="editable || assetRequest.status === 'ready'"

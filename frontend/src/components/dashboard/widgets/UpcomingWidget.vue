@@ -8,6 +8,7 @@ import StatusTag from '@/components/common/StatusTag.vue'
 import { useLive } from '@/composables/useLive'
 import type { Schemas } from '@/api/types'
 import type { WidgetProps } from '@/types/dashboard'
+import { isPast } from '@/utils/requests'
 
 import { useDateMode } from './dateMode'
 import DateModeToggle from './DateModeToggle.vue'
@@ -27,6 +28,9 @@ const rows = ref<Schemas['UpcomingOut'][] | null>(null)
 const load = async () => (rows.value = await dashboardApi.upcoming(days.value))
 watch(days, load, { immediate: true })
 useLive(['request'], load)
+
+/** Should have gone out already: the planned pickup has passed, or without one the start day. */
+const overdue = (row: Schemas['UpcomingOut']) => isPast(row.pickup_at ?? row.start_date)
 </script>
 
 <template>
@@ -59,8 +63,12 @@ useLive(['request'], load)
         >
         <span
           class="when"
-          :class="{ 'mono muted full': mode === 'full' }"
-          :title="other(r.pickup_at ?? r.start_date)"
+          :class="{ 'mono muted full': mode === 'full', overdue: overdue(r) }"
+          :title="
+            overdue(r)
+              ? `${t('dashboard.overdueHandout')} · ${other(r.pickup_at ?? r.start_date)}`
+              : other(r.pickup_at ?? r.start_date)
+          "
           >{{ when(r.pickup_at ?? r.start_date) }}</span
         >
         <!-- Pending hand-outs wait for IT: the dot pulses. -->
@@ -71,3 +79,8 @@ useLive(['request'], load)
 </template>
 
 <style scoped src="./lines.css"></style>
+<style scoped>
+.when.overdue {
+  color: var(--ar-error);
+}
+</style>

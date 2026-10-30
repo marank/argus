@@ -184,7 +184,7 @@ class Command(BaseCommand):
         storage = Location.objects.create(
             name="IT storage", code="HQ-IT-01", kind=LocationKind.STORAGE, parent=hq
         )
-        Location.objects.create(
+        service_desk = Location.objects.create(
             name="IT service desk",
             code="HQ-IT-00",
             kind=LocationKind.ROOM,
@@ -390,7 +390,12 @@ class Command(BaseCommand):
         )
         workflow.confirm(onboarding, it, {})
         workflow.auto_allocate(onboarding, it)
-        workflow.mark_ready(onboarding, it, pickup_at=timezone.now() + timedelta(hours=2))
+        workflow.mark_ready(
+            onboarding,
+            it,
+            pickup_at=timezone.now() + timedelta(hours=2),
+            pickup_location_id=service_desk.pk,
+        )
 
         return {
             "admin": admin,
@@ -834,18 +839,28 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:
     def confirm(asset_request: AssetRequest, comment: str = "") -> AssetRequest:
         return workflow.confirm(asset_request, it, {}, comment)
 
+    service_desk = Location.objects.get(code="HQ-IT-00")
+
     def mark_ready(
-        asset_request: AssetRequest, pickup_days: int = 1, location: Location | None = None
+        asset_request: AssetRequest,
+        pickup_days: int = 1,
+        location: Location | None = None,
+        notify: bool = True,
     ) -> AssetRequest:
         pickup = now.replace(hour=10, minute=0, second=0, microsecond=0) + timedelta(days=pickup_days)
         workflow.auto_allocate(asset_request, it)
         return workflow.mark_ready(
-            asset_request, it, pickup_at=pickup, pickup_location_id=location.pk if location else None
+            asset_request,
+            it,
+            pickup_at=pickup,
+            pickup_location_id=(location or service_desk).pk,
+            notify=notify,
         )
 
     def hand_out(asset_request: AssetRequest) -> AssetRequest:
         confirm(asset_request)
-        mark_ready(asset_request, pickup_days=0)
+        # Handed out right away, with the employee there: no ready message.
+        mark_ready(asset_request, pickup_days=0, notify=False)
         return workflow.hand_out(asset_request, it, method=HandoverMethod.DIRECT)
 
     tablets, monitors = categories["tablets"], categories["monitors"]

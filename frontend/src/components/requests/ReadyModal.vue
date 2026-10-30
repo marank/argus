@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NButton, NFormItem, NModal, NSwitch } from 'naive-ui'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { locationsApi } from '@/api/masterdata'
@@ -38,6 +38,17 @@ watch(show, (visible) => {
   where.value = r.pickup_location?.id ?? null
 })
 
+/** Only devices and consumables are collected; a request of licenses alone is handed out at once. */
+const hasPhysical = computed(() =>
+  props.assetRequest.items.some((i) => i.allocations.some((a) => a.asset || a.consumable)),
+)
+/** The ready message tells when and, unless IT delivers, where. */
+const needsWhen = computed(() => notify.value && hasPhysical.value)
+const needsWhere = computed(() => needsWhen.value && mode.value !== 'delivery')
+const incomplete = computed(
+  () => (needsWhen.value && !when.value) || (needsWhere.value && !where.value),
+)
+
 async function save() {
   const saved = await run(
     () =>
@@ -69,6 +80,7 @@ async function save() {
     <div class="cols">
       <NFormItem
         :label="mode === 'delivery' ? t('handover.deliveryAt') : t('requests.pickupAt')"
+        :required="needsWhen"
         :show-feedback="false"
       >
         <div class="when">
@@ -87,6 +99,7 @@ async function save() {
       <NFormItem
         v-if="mode !== 'delivery'"
         :label="t('requests.pickupLocation')"
+        :required="needsWhere"
         :show-feedback="false"
       >
         <EntitySelect
@@ -114,8 +127,11 @@ async function save() {
     </label>
     <template #footer>
       <div class="row" style="justify-content: flex-end">
+        <small v-if="incomplete" class="muted missing">{{
+          mode === 'delivery' ? t('handover.planMissingDelivery') : t('handover.planMissing')
+        }}</small>
         <NButton @click="show = false">{{ t('common.cancel') }}</NButton>
-        <NButton type="primary" :loading="busy" @click="save">{{
+        <NButton type="primary" :loading="busy" :disabled="incomplete" @click="save">{{
           t('requests.actions.markReady')
         }}</NButton>
       </div>
@@ -154,5 +170,8 @@ async function save() {
 .skip > span {
   display: grid;
   gap: 2px;
+}
+.missing {
+  margin-right: auto;
 }
 </style>

@@ -43,6 +43,22 @@ class AssetOut(Schema):
     notes: str
     created_at: datetime
     updated_at: datetime
+    # The request a reserved device is set aside for; lists show it where "assigned to" is empty.
+    reserved_for: ActiveAssetRequestOut | None = None
+
+    @staticmethod
+    def resolve_reserved_for(obj: Asset) -> AssetRequest | None:
+        if obj.status != AssetStatus.RESERVED:
+            return None
+        # Prefetched by the list (asset_queryset); a single device asks the database.
+        allocations = getattr(obj, "open_allocations", None)
+        if allocations is None:
+            allocations = list(
+                obj.asset_request_allocations.filter(returned_at__isnull=True).select_related(
+                    "item__asset_request__requester"
+                )[:1]
+            )
+        return allocations[0].item.asset_request if allocations else None
 
 
 class AssetParentOut(Schema):

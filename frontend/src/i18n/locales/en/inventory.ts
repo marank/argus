@@ -50,6 +50,8 @@ export default {
     saved: 'Device assigned.',
   },
   activeRequest: 'Reserved for {number} ({name})',
+  handedOutRequest: 'Handed out with {number} ({name})',
+  reservedFor: 'reserved for {name}',
   history: 'History',
   groupByCategory: 'Group by category',
   viaModel: 'via model',

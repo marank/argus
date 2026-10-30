@@ -16,6 +16,7 @@ export default {
   wishHint: 'Employee’s preference: {date}',
   requestedPickup: 'Preferred pickup',
   pickupAt: 'Pickup',
+  datePassed: 'passed',
   pickupLocation: 'Pickup location',
   itComment: 'Comment from IT',
   overdue: 'overdue',
@@ -84,6 +85,7 @@ export default {
       confirmed: 'Confirmed. IT is preparing everything.',
       ready: 'Ready for pickup',
       readyAt: 'Ready for pickup: {date}',
+      readyMissed: 'Pickup on {date} missed. The devices are still ready for you.',
       handedOut: 'Handed out. Return by {date}.',
       handedOutPermanent: 'Handed out.',
       overdue: 'Return overdue since {date}.',
@@ -142,7 +144,7 @@ export default {
     rejectReason: 'Reason for the employee',
     schedule: 'Change handover',
     autoAllocate: 'Allocate automatically',
-    autoAllocated: '{count} units allocated',
+    autoAllocated: '{count} unit allocated | {count} units allocated',
     allocate: 'Allocate',
     reopen: 'Back to preparation',
     confirmReopen:
@@ -297,6 +299,7 @@ export default {
     noSeats: 'No free license. Add a license or more seats:',
     toLicenses: 'Open licenses',
     handedOut: 'handed out',
+    consumed: 'handed over, not returned',
     returned: 'returned',
   },
   returning: {

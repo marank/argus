@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import type { Schemas } from '@/api/types'
 import { RefreshCw, ShoppingCart } from '@lucide/vue'
-import { NButton, NCard, NDataTable, type DataTableColumns, type DataTableRowKey } from 'naive-ui'
+import {
+  NButton,
+  NCard,
+  NCheckbox,
+  NDataTable,
+  type DataTableColumns,
+  type DataTableRowKey,
+} from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
@@ -22,6 +29,15 @@ const loading = ref(false)
 const selectedAssetRequests = ref<DataTableRowKey[]>([])
 const selectedConsumables = ref<DataTableRowKey[]>([])
 const showOrder = ref(false)
+/** Lines the pool or an open order already covers; they need allocating, not ordering. */
+const showCovered = ref(false)
+
+const coveredCount = computed(
+  () => needs.value?.requests.filter((n) => n.to_order === 0).length ?? 0,
+)
+const requestRows = computed(() =>
+  (needs.value?.requests ?? []).filter((n) => showCovered.value || n.to_order > 0),
+)
 
 async function load() {
   loading.value = true
@@ -210,13 +226,18 @@ const defaultSupplier = computed(() => {
     <div class="stack">
       <p class="muted">{{ t('procurement.needs.selectHint') }}</p>
       <NCard :title="t('procurement.needs.fromRequests')" size="small">
-        <EmptyState v-if="needs && !needs.requests.length" :text="t('procurement.needs.empty')" />
+        <template v-if="coveredCount" #header-extra>
+          <NCheckbox v-model:checked="showCovered" size="small">
+            {{ t('procurement.needs.showCovered', { count: coveredCount }, coveredCount) }}
+          </NCheckbox>
+        </template>
+        <EmptyState v-if="needs && !requestRows.length" :text="t('procurement.needs.empty')" />
         <NDataTable
           v-else
           v-model:checked-row-keys="selectedAssetRequests"
           size="small"
           :columns="assetRequestColumns"
-          :data="needs?.requests ?? []"
+          :data="requestRows"
           :loading="loading"
           :row-key="(n: Schemas['AssetRequestNeedOut']) => n.asset_request_item.id"
           :scroll-x="1100"

@@ -6,6 +6,7 @@ export default {
   signIn: 'Sign in',
   serverDown: 'Argus is not reachable right now. Please reload the page in a moment.',
   sessionExpired: 'Your session has expired. Please sign in again.',
+  signedOut: 'You have been signed out.',
   twoFactor: {
     title: 'Confirm sign-in',
     code: 'Code',

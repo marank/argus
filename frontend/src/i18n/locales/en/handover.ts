@@ -27,6 +27,10 @@ export default {
     'The employee collects the devices without signing. Afterwards record under “Hand out” who received them.',
   deliveryPending: 'IT delivers the devices and then records the hand-out.',
   waitingAtTerminal: 'Can be completed at the pickup terminal.',
+  signaturePlanned:
+    'Pickup with a signature at the terminal was planned. Handed out here, there is no signature.',
+  planMissing: 'Enter date and place to notify the employee.',
+  planMissingDelivery: 'Enter the delivery date to notify the employee.',
   receivedBy: 'Received by',
   deliveredTo: 'Delivered to',
   deliveredToPlaceholder: 'e.g. office 2.14',

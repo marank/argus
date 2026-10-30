@@ -9,6 +9,7 @@ import { dashboardApi } from '@/api/dashboard'
 import StatCard from '@/components/common/StatCard.vue'
 import { useFormat } from '@/composables/useFormat'
 import { useLive } from '@/composables/useLive'
+import { isPast } from '@/utils/requests'
 
 const { t } = useI18n()
 const { weekday } = useFormat()
@@ -58,7 +59,11 @@ useLive(['request', 'issue', 'asset', 'license'], load)
       >
         <span class="mono">{{ r.number }}</span>
         <span>{{ r.title }}</span>
-        <strong class="mono">{{ t('dashboard.pickupAt', { date: weekday(r.pickup_at) }) }}</strong>
+        <strong class="mono" :class="{ passed: isPast(r.pickup_at) }">{{
+          isPast(r.pickup_at)
+            ? t('dashboard.pickupMissed', { date: weekday(r.pickup_at) })
+            : t('dashboard.pickupAt', { date: weekday(r.pickup_at) })
+        }}</strong>
       </RouterLink>
     </NCard>
 
@@ -90,5 +95,8 @@ useLive(['request', 'issue', 'asset', 'license'], load)
 .line strong {
   margin-left: auto;
   color: var(--ar-success);
+}
+.line strong.passed {
+  color: var(--ar-warning);
 }
 </style>

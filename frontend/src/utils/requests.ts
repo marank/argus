@@ -42,6 +42,18 @@ export function isReturnable(allocation: Schemas['AllocationOut']): boolean {
 }
 
 /**
+ * Whether a planned pickup (date and time) has passed, or for a plain day ("2026-10-20")
+ * whether that day is over.
+ */
+export function isPast(when: string | null | undefined, now = new Date()): boolean {
+  if (!when) return false
+  if (when.length === 10) {
+    return new Date(`${when}T00:00:00`).getTime() < new Date(now).setHours(0, 0, 0, 0)
+  }
+  return new Date(when).getTime() < now.getTime()
+}
+
+/**
  * Whether IT has planned how the devices reach the employee, which happens when marking
  * it ready (or changing the handover after that). Before that the handover mode is only
  * the default. Older requests got date and place when they were confirmed.

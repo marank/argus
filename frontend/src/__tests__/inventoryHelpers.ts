@@ -279,6 +279,7 @@ export function makeModel(overrides: Partial<Schemas['AssetModelOut']> = {}) {
 export function makeAsset(overrides: Partial<Schemas['AssetDetailOut']> = {}) {
   return {
     id: 'a1',
+    reserved_for: null,
     inventory_number: 'NB-0042',
     serial_number: 'SN-1',
     imei: '',

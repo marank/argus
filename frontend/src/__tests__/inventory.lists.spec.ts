@@ -93,6 +93,24 @@ describe('inventory lists', () => {
       )
     })
 
+    it('names who a reserved device is set aside for', async () => {
+      const reserved = {
+        ...asset('a3', 'NB-0003'),
+        status: 'reserved',
+        reserved_for: {
+          id: 'r1',
+          number: 'RES-2026-00023',
+          requester: userRef('Erika Muster', 'u9'),
+          status: 'confirmed',
+        },
+      } as Schemas['AssetOut']
+      vi.mocked(assetsApi.list).mockResolvedValue(page([reserved]))
+      await show(AssetListView)
+      const row = rows().find((tr) => tr.textContent?.includes('NB-0003'))!
+      expect(row.textContent).toContain('reserved for Erika Muster')
+      expect(row.textContent).toContain('RES-2026-00023')
+    })
+
     it('opens a device from its row', async () => {
       vi.mocked(assetsApi.list).mockResolvedValue(page([asset('a7', 'NB-0007')]))
       const { router } = await show(AssetListView)

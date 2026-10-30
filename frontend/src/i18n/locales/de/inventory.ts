@@ -51,6 +51,8 @@ export default {
     saved: 'Gerät zugewiesen.',
   },
   activeRequest: 'Reserviert für {number} ({name})',
+  handedOutRequest: 'Ausgegeben über {number} ({name})',
+  reservedFor: 'reserviert für {name}',
   history: 'Historie',
   groupByCategory: 'Nach Kategorie gruppieren',
   viaModel: 'über Modell',

@@ -5,6 +5,7 @@ from django.utils import timezone
 from apps.accounts.models import User
 from apps.inventory.models import Asset, AssetStatus, Consumable
 from apps.requests.models import AssetRequest
+from apps.requests.tests.plan import handover_plan
 
 URL = "/api/requests/direct"
 JSON = "application/json"
@@ -68,7 +69,7 @@ def test_then_runs_like_any_request(it_client):
     ).json()
     url = f"/api/requests/{body['id']}"
 
-    ready = it_client.post(f"{url}/ready", {"handover_mode": "collect"}, content_type=JSON)
+    ready = it_client.post(f"{url}/ready", {"handover_mode": "collect", **handover_plan()}, content_type=JSON)
     assert ready.status_code == 200, ready.content
     handed = it_client.post(f"{url}/hand-out", {}, content_type=JSON)
     assert handed.json()["status"] == "handed_out"

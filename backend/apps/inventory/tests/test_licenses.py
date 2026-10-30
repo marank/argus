@@ -5,6 +5,7 @@ from typing import Any
 from apps.accounts.models import User
 from apps.inventory.models import Asset, License
 from apps.masterdata.models import AssetModel, Category
+from apps.requests.tests.plan import handover_plan
 
 JSON = "application/json"
 
@@ -147,7 +148,7 @@ def test_software_request_is_filled_with_a_license_seat(employee_client, it_clie
     )
     assert response.json()["items"][0]["quantity_missing"] == 1
     # Without a seat the request cannot be marked ready.
-    assert it_client.post(f"/api/requests/{rid}/ready", {}, content_type=JSON).status_code == 409
+    assert it_client.post(f"/api/requests/{rid}/ready", handover_plan(), content_type=JSON).status_code == 409
 
     candidates = it_client.get(f"/api/requests/items/{item['id']}/candidates").json()
     assert candidates["licenses"] and candidates["licenses"][0]["free_seats"] > 0
@@ -156,7 +157,9 @@ def test_software_request_is_filled_with_a_license_seat(employee_client, it_clie
     assert LicenseAssignment.objects.filter(license__model=acrobat, user=employee).exists()
 
     # Nothing to collect: marking ready hands it out and completes the permanent request.
-    response = it_client.post(f"/api/requests/{rid}/ready", {"handover_mode": "pickup"}, content_type=JSON)
+    response = it_client.post(
+        f"/api/requests/{rid}/ready", {"handover_mode": "pickup", **handover_plan()}, content_type=JSON
+    )
     assert response.status_code == 200, response.content
     assert response.json()["status"] == "completed"
     assert response.json()["items"][0]["allocations"][0]["license"]["model"]["name"] == "Acrobat Pro"
@@ -180,7 +183,7 @@ def test_temporary_software_seat_is_taken_back(employee_client, it_client):
     ).json()["id"]
     it_client.post(f"/api/requests/{rid}/confirm", {"items": []}, content_type=JSON)
     it_client.post(f"/api/requests/{rid}/auto-allocate")
-    asset_request = it_client.post(f"/api/requests/{rid}/ready", {}, content_type=JSON).json()
+    asset_request = it_client.post(f"/api/requests/{rid}/ready", handover_plan(), content_type=JSON).json()
     assert asset_request["status"] == "handed_out"
     employee = User.objects.get(username="employee")
 
