@@ -11,8 +11,11 @@ const props = defineProps<{ assetRequest: Schemas['AssetRequestOut'] }>()
 const { t } = useI18n()
 const { date, dateTime, weekday, enumLabel } = useFormat()
 
+type Event = Schemas['AssetRequestEventOut']
+type Kind = Event['kind']
+
 type Tone = 'default' | 'info' | 'success' | 'warning' | 'error'
-const TONES: Partial<Record<Schemas['AssetRequestEventKind'], Tone>> = {
+const TONES: Partial<Record<Kind, Tone>> = {
   approved: 'success',
   declined: 'error',
   confirmed: 'info',
@@ -27,16 +30,13 @@ const TONES: Partial<Record<Schemas['AssetRequestEventKind'], Tone>> = {
 interface Entry {
   key: string
   at: string
-  kind: Schemas['AssetRequestEventKind']
   by?: string
   items: string[]
-  event: Schemas['AssetRequestEventOut']
+  event: Event
 }
 
-/** `data` is free-form: the plain texts and lists of texts the workflow recorded. */
-const text = (value: unknown) => (typeof value === 'string' ? value : '')
-const texts = (value: unknown) =>
-  Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : []
+/** The devices a step names, for the kinds that note any. */
+const itemsOf = (event: Event): string[] => ('items' in event.data ? event.data.items : [])
 
 const MINUTE = 60_000
 const closeInTime = (a: string, b: string) =>
@@ -50,89 +50,89 @@ const entries = computed<Entry[]>(() => {
     const by = event.actor?.display_name
     if (
       event.kind === 'allocated' &&
-      last?.kind === 'allocated' &&
+      last?.event.kind === 'allocated' &&
       last.by === by &&
       closeInTime(last.at, event.at)
     ) {
-      last.items.push(...texts(event.data.items))
+      last.items.push(...itemsOf(event))
       continue
     }
-    list.push({
-      key: event.id,
-      at: event.at,
-      kind: event.kind,
-      by,
-      items: texts(event.data.items),
-      event,
-    })
+    list.push({ key: event.id, at: event.at, by, items: itemsOf(event), event })
   }
   return list.reverse()
 })
 
 function title(entry: Entry): string {
-  const key = `requests.detail.event.${entry.kind}`
-  return ['allocated', 'released'].includes(entry.kind)
+  const kind = entry.event.kind
+  const key = `requests.detail.event.${kind}`
+  return kind === 'allocated' || kind === 'released'
     ? t(key, { count: entry.items.length }, entry.items.length)
     : t(key)
 }
 
+const joined = (parts: (string | null | false)[]) => parts.filter(Boolean).join(' · ')
+
 /** The details worth a line: who for, which devices, which dates, what was said. */
 function details(entry: Entry): string[] {
-  const d = entry.event.data
-  const added = texts(d.added)
-  const removed = texts(d.removed)
-  const damaged = texts(d.damaged)
-  const lines: string[] = []
-  switch (entry.kind) {
+  const event = entry.event
+  const lines: (string | null)[] = []
+  switch (event.kind) {
     case 'created':
     case 'direct':
     case 'quick':
-      if (d.requester) lines.push(t('requests.detail.event.for', { name: text(d.requester) }))
-      if (d.follows) lines.push(t('requests.again.follows') + ' ' + text(d.follows))
+      if (event.data.requester)
+        lines.push(t('requests.detail.event.for', { name: event.data.requester }))
+      if (event.data.follows) lines.push(t('requests.again.follows') + ' ' + event.data.follows)
+      break
+    case 'approved':
+    case 'declined':
+    case 'confirmed':
+    case 'rejected':
+      lines.push(event.data.comment)
       break
     case 'assigned':
       lines.push(
-        [text(d.team), text(d.assignee)].filter(Boolean).join(' · ') ||
-          t('requests.detail.event.nobody'),
+        joined([event.data.team, event.data.assignee]) || t('requests.detail.event.nobody'),
       )
       break
     case 'ready':
-    case 'rescheduled':
+    case 'rescheduled': {
+      const d = event.data
       lines.push(
-        [
-          d.handover_mode ? t(`handover.mode.${text(d.handover_mode)}`) : '',
-          d.pickup_at ? weekday(text(d.pickup_at)) : '',
-          text(d.pickup_location),
-          d.notified === false ? t('handover.notNotified') : '',
-        ]
-          .filter(Boolean)
-          .join(' · '),
+        joined([
+          d.handover_mode && t(`handover.mode.${d.handover_mode}`),
+          d.pickup_at && weekday(d.pickup_at),
+          d.pickup_location,
+          d.notified === false && t('handover.notNotified'),
+        ]),
       )
       // Ready again after a change: only what changed (the first time lists everything).
-      if (added.length) lines.push(`${t('assetRequests.detail.event.added')}: ${added.join(', ')}`)
-      if (removed.length)
-        lines.push(`${t('assetRequests.detail.event.removed')}: ${removed.join(', ')}`)
+      if (d.added.length) lines.push(`${t('requests.detail.event.added')}: ${d.added.join(', ')}`)
+      if (d.removed.length)
+        lines.push(`${t('requests.detail.event.removed')}: ${d.removed.join(', ')}`)
       break
+    }
     case 'handed_out':
       lines.push(
-        [
-          d.method ? enumLabel('handoverMethod', text(d.method)) : '',
-          d.received_by ? `${t('handover.receivedBy')}: ${text(d.received_by)}` : '',
-          text(d.location),
-        ]
-          .filter(Boolean)
-          .join(' · '),
+        joined([
+          event.data.method && enumLabel('handoverMethod', event.data.method),
+          event.data.received_by && `${t('handover.receivedBy')}: ${event.data.received_by}`,
+          event.data.location,
+        ]),
       )
       break
     case 'extended':
-      if (d.previous && d.end_date)
-        lines.push(`${date(text(d.previous))} → ${date(text(d.end_date))}`)
+      if (event.data.previous && event.data.end_date)
+        lines.push(`${date(event.data.previous)} → ${date(event.data.end_date)}`)
       break
   }
   if (entry.items.length) lines.push(entry.items.join(', '))
-  if (damaged.length) lines.push(`${t('assetRequests.returning.damaged')}: ${damaged.join(', ')}`)
-  lines.push(text(d.comment), text(d.notes))
-  return lines.filter(Boolean)
+  if (event.kind === 'returned') {
+    if (event.data.damaged.length)
+      lines.push(`${t('requests.returning.damaged')}: ${event.data.damaged.join(', ')}`)
+    lines.push(event.data.notes)
+  }
+  return lines.filter((line): line is string => !!line)
 }
 </script>
 
@@ -142,7 +142,7 @@ function details(entry: Entry): string[] {
       <NTimelineItem
         v-for="entry in entries"
         :key="entry.key"
-        :type="TONES[entry.kind] ?? 'default'"
+        :type="TONES[entry.event.kind] ?? 'default'"
         :time="dateTime(entry.at)"
       >
         <template #header>

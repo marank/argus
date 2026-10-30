@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Any, Literal, TypedDict
+from typing import TYPE_CHECKING, Annotated, Any, Literal, TypedDict
 from uuid import UUID
 
 from ninja import Field
@@ -172,12 +172,139 @@ class FollowsOut(Schema):
     it_comment: str
 
 
-class AssetRequestEventOut(Schema):
+# What each kind of step noted (``AssetRequestEvent.data``). Every value is optional:
+# the workflow leaves out empty ones, and older steps may lack values added since.
+
+
+class RequestedData(Schema):
+    # Recorded by IT on someone's behalf: for whom.
+    requester: str | None = None
+    # The number of the request this one follows.
+    follows: str | None = None
+
+
+class DecisionData(Schema):
+    comment: str | None = None
+
+
+class ScheduleData(Schema):
+    handover_mode: AssetRequest.HandoverMode | None = None
+    pickup_at: datetime | None = None
+    pickup_location: str | None = None
+    # False when the employee was deliberately not told.
+    notified: bool | None = None
+    # Ready the first time: every allocation; again after a change: what changed.
+    items: list[str] = []
+    added: list[str] = []
+    removed: list[str] = []
+
+
+class AssignmentData(Schema):
+    team: str | None = None
+    assignee: str | None = None
+
+
+class ExtensionData(Schema):
+    previous: date | None = None
+    end_date: date | None = None
+
+
+class HandOutData(Schema):
+    method: HandoverMethod | None = None
+    received_by: str | None = None
+    location: str | None = None
+    items: list[str] = []
+
+
+class ReturnData(Schema):
+    items: list[str] = []
+    damaged: list[str] = []
+    notes: str | None = None
+
+
+class AllocationData(Schema):
+    # Steps of older requests; allocations are now noted when the request is ready.
+    items: list[str] = []
+
+
+class NoData(Schema):
+    pass
+
+
+class AssetRequestEventBase(Schema):
     id: UUID
-    kind: AssetRequestEventKind
     at: datetime
     actor: UserRefOut | None
-    data: dict[str, Any]
+
+
+class RequestedEventOut(AssetRequestEventBase):
+    kind: Literal[AssetRequestEventKind.CREATED, AssetRequestEventKind.DIRECT, AssetRequestEventKind.QUICK]
+    data: RequestedData
+
+
+class DecisionEventOut(AssetRequestEventBase):
+    kind: Literal[
+        AssetRequestEventKind.APPROVED,
+        AssetRequestEventKind.DECLINED,
+        AssetRequestEventKind.CONFIRMED,
+        AssetRequestEventKind.REJECTED,
+    ]
+    data: DecisionData
+
+
+class ScheduleEventOut(AssetRequestEventBase):
+    kind: Literal[AssetRequestEventKind.READY, AssetRequestEventKind.RESCHEDULED]
+    data: ScheduleData
+
+
+class AssignmentEventOut(AssetRequestEventBase):
+    kind: Literal[AssetRequestEventKind.ASSIGNED]
+    data: AssignmentData
+
+
+class ExtensionEventOut(AssetRequestEventBase):
+    kind: Literal[AssetRequestEventKind.EXTENDED]
+    data: ExtensionData
+
+
+class HandOutEventOut(AssetRequestEventBase):
+    kind: Literal[AssetRequestEventKind.HANDED_OUT]
+    data: HandOutData
+
+
+class ReturnEventOut(AssetRequestEventBase):
+    kind: Literal[AssetRequestEventKind.RETURNED]
+    data: ReturnData
+
+
+class AllocationEventOut(AssetRequestEventBase):
+    kind: Literal[AssetRequestEventKind.ALLOCATED, AssetRequestEventKind.RELEASED]
+    data: AllocationData
+
+
+class PlainEventOut(AssetRequestEventBase):
+    kind: Literal[
+        AssetRequestEventKind.CANCELLED,
+        AssetRequestEventKind.REOPENED,
+        AssetRequestEventKind.REMINDED,
+        AssetRequestEventKind.COMPLETED,
+    ]
+    data: NoData
+
+
+# A step of the history; ``kind`` tells which data it carries.
+type AssetRequestEventOut = Annotated[
+    RequestedEventOut
+    | DecisionEventOut
+    | ScheduleEventOut
+    | AssignmentEventOut
+    | ExtensionEventOut
+    | HandOutEventOut
+    | ReturnEventOut
+    | AllocationEventOut
+    | PlainEventOut,
+    Field(discriminator="kind"),
+]
 
 
 def pending_approvers(asset_request: AssetRequest) -> list[User]:

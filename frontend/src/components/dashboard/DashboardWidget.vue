@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ArrowDown, ArrowUp, GripVertical, Pencil, Scaling, X } from '@lucide/vue'
 import type { Schemas } from '@/api/types'
+import { allValues } from '@/utils/enums'
 import { NButton, NInput, NPopover, type PopoverInst } from 'naive-ui'
 import { ref, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -53,8 +54,17 @@ function setHeight(height: Schemas['WidgetHeight']) {
   emit('setHeight', height)
   followButton()
 }
-const SIZES: Schemas['WidgetSize'][] = ['small', 'medium', 'large']
-const HEIGHTS: Schemas['WidgetHeight'][] = ['auto', 'small', 'medium', 'large']
+const SIZES = allValues<Schemas['WidgetSize']>({
+  small: true,
+  medium: true,
+  large: true,
+})
+const HEIGHTS = allValues<Schemas['WidgetHeight']>({
+  auto: true,
+  small: true,
+  medium: true,
+  large: true,
+})
 </script>
 
 <template>

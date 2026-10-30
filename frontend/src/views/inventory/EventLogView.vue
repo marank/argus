@@ -7,6 +7,7 @@ import { RouterLink } from 'vue-router'
 import { eventsApi } from '@/api/inventory'
 import { assetModelsApi } from '@/api/masterdata'
 import type { Schemas } from '@/api/types'
+import { allValues } from '@/utils/enums'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import DateField from '@/components/common/DateField.vue'
@@ -17,19 +18,21 @@ import { modelLabel } from '@/utils/models'
 const { t } = useI18n()
 const { dateTime, enumLabel, money } = useFormat()
 
-const ALL_KINDS: Schemas['AssetEventKind'][] = [
-  'battery_replaced',
-  'component_replaced',
-  'repair',
-  'maintenance',
-  'inspection',
-  'note',
-  'assigned',
-  'returned',
-  'reserved',
-  'status_changed',
-  'created',
-]
+const ALL_KINDS = allValues<Schemas['AssetEventKind']>({
+  battery_replaced: true,
+  component_replaced: true,
+  repair: true,
+  maintenance: true,
+  inspection: true,
+  note: true,
+  assigned: true,
+  returned: true,
+  reserved: true,
+  status_changed: true,
+  created: true,
+  issue_reported: true,
+  issue_resolved: true,
+})
 
 const list = useList(eventsApi.list, {
   live: ['asset'],

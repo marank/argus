@@ -60,7 +60,7 @@ const columns = computed(() =>
             h('div', i.asset.model.full_name),
             h('small', { class: 'muted mono' }, [
               i.asset.inventory_number,
-              i.still_assigned ? null : ` · ${t('assetRequests.myIssues.returned')}`,
+              i.still_assigned ? null : ` · ${t('requests.myIssues.returned')}`,
             ]),
           ]),
         ]),

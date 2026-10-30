@@ -36,7 +36,7 @@ const deviceId = ref<Id | null>(null)
 const licenseOptions = computed(() =>
   (candidates.value?.licenses ?? []).map((l) => ({
     value: l.id,
-    label: `${l.model.full_name}${l.reference ? ` (${l.reference})` : ''} · ${t('assetRequests.allocation.freeSeats', { count: l.free_seats })}`,
+    label: `${l.model.full_name}${l.reference ? ` (${l.reference})` : ''} · ${t('requests.allocation.freeSeats', { count: l.free_seats })}`,
   })),
 )
 const chosenLicense = computed(() =>

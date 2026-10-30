@@ -97,6 +97,67 @@
         "title": "AllocateIn",
         "type": "object"
       },
+      "AllocationData": {
+        "properties": {
+          "items": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "AllocationData",
+        "type": "object"
+      },
+      "AllocationEventOut": {
+        "properties": {
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AllocationData"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "allocated",
+              "released"
+            ],
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "at",
+          "actor",
+          "kind",
+          "data"
+        ],
+        "title": "AllocationEventOut",
+        "type": "object"
+      },
       "AllocationNoteIn": {
         "properties": {
           "allocation": {
@@ -1335,14 +1396,6 @@
         "title": "AssetIssueDetailOut",
         "type": "object"
       },
-      "AssetIssueEntryKind": {
-        "enum": [
-          "message",
-          "status"
-        ],
-        "title": "AssetIssueEntryKind",
-        "type": "string"
-      },
       "AssetIssueIn": {
         "properties": {
           "description": {
@@ -2192,71 +2245,60 @@
         "title": "AssetRequestAssignIn",
         "type": "object"
       },
-      "AssetRequestEventKind": {
-        "enum": [
-          "created",
-          "direct",
-          "quick",
-          "approved",
-          "declined",
-          "confirmed",
-          "rejected",
-          "cancelled",
-          "assigned",
-          "allocated",
-          "released",
-          "ready",
-          "reopened",
-          "rescheduled",
-          "handed_out",
-          "returned",
-          "extended",
-          "reminded",
-          "completed"
-        ],
-        "title": "AssetRequestEventKind",
-        "type": "string"
-      },
       "AssetRequestEventOut": {
-        "properties": {
-          "actor": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/UserRefOut"
-              },
-              {
-                "type": "null"
-              }
-            ]
+        "discriminator": {
+          "mapping": {
+            "allocated": "#/components/schemas/AllocationEventOut",
+            "approved": "#/components/schemas/DecisionEventOut",
+            "assigned": "#/components/schemas/AssignmentEventOut",
+            "cancelled": "#/components/schemas/PlainEventOut",
+            "completed": "#/components/schemas/PlainEventOut",
+            "confirmed": "#/components/schemas/DecisionEventOut",
+            "created": "#/components/schemas/RequestedEventOut",
+            "declined": "#/components/schemas/DecisionEventOut",
+            "direct": "#/components/schemas/RequestedEventOut",
+            "extended": "#/components/schemas/ExtensionEventOut",
+            "handed_out": "#/components/schemas/HandOutEventOut",
+            "quick": "#/components/schemas/RequestedEventOut",
+            "ready": "#/components/schemas/ScheduleEventOut",
+            "rejected": "#/components/schemas/DecisionEventOut",
+            "released": "#/components/schemas/AllocationEventOut",
+            "reminded": "#/components/schemas/PlainEventOut",
+            "reopened": "#/components/schemas/PlainEventOut",
+            "rescheduled": "#/components/schemas/ScheduleEventOut",
+            "returned": "#/components/schemas/ReturnEventOut"
           },
-          "at": {
-            "format": "date-time",
-            "title": "At",
-            "type": "string"
-          },
-          "data": {
-            "additionalProperties": true,
-            "title": "Data",
-            "type": "object"
-          },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "kind": {
-            "$ref": "#/components/schemas/AssetRequestEventKind"
-          }
+          "propertyName": "kind"
         },
-        "required": [
-          "id",
-          "kind",
-          "at",
-          "actor",
-          "data"
-        ],
-        "title": "AssetRequestEventOut",
-        "type": "object"
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/RequestedEventOut"
+          },
+          {
+            "$ref": "#/components/schemas/DecisionEventOut"
+          },
+          {
+            "$ref": "#/components/schemas/ScheduleEventOut"
+          },
+          {
+            "$ref": "#/components/schemas/AssignmentEventOut"
+          },
+          {
+            "$ref": "#/components/schemas/ExtensionEventOut"
+          },
+          {
+            "$ref": "#/components/schemas/HandOutEventOut"
+          },
+          {
+            "$ref": "#/components/schemas/ReturnEventOut"
+          },
+          {
+            "$ref": "#/components/schemas/AllocationEventOut"
+          },
+          {
+            "$ref": "#/components/schemas/PlainEventOut"
+          }
+        ]
       },
       "AssetRequestFilter": {
         "properties": {
@@ -3362,6 +3404,79 @@
         ],
         "title": "AssignTo",
         "type": "string"
+      },
+      "AssignmentData": {
+        "properties": {
+          "assignee": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee"
+          },
+          "team": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Team"
+          }
+        },
+        "required": [
+          "team",
+          "assignee"
+        ],
+        "title": "AssignmentData",
+        "type": "object"
+      },
+      "AssignmentEventOut": {
+        "properties": {
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AssignmentData"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "assigned",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "at",
+          "actor",
+          "kind",
+          "data"
+        ],
+        "title": "AssignmentEventOut",
+        "type": "object"
       },
       "AutoAllocateOut": {
         "properties": {
@@ -4750,6 +4865,72 @@
         "title": "DashboardWidgetOut",
         "type": "object"
       },
+      "DecisionData": {
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          }
+        },
+        "required": [
+          "comment"
+        ],
+        "title": "DecisionData",
+        "type": "object"
+      },
+      "DecisionEventOut": {
+        "properties": {
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/DecisionData"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "approved",
+              "declined",
+              "confirmed",
+              "rejected"
+            ],
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "at",
+          "actor",
+          "kind",
+          "data"
+        ],
+        "title": "DecisionEventOut",
+        "type": "object"
+      },
       "DeclineIn": {
         "properties": {
           "comment": {
@@ -5289,6 +5470,81 @@
         "title": "ExtendIn",
         "type": "object"
       },
+      "ExtensionData": {
+        "properties": {
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "previous": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous"
+          }
+        },
+        "required": [
+          "previous",
+          "end_date"
+        ],
+        "title": "ExtensionData",
+        "type": "object"
+      },
+      "ExtensionEventOut": {
+        "properties": {
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ExtensionData"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "extended",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "at",
+          "actor",
+          "kind",
+          "data"
+        ],
+        "title": "ExtensionEventOut",
+        "type": "object"
+      },
       "FeatureKey": {
         "enum": [
           "calendar_warranty",
@@ -5379,6 +5635,99 @@
           "it_comment"
         ],
         "title": "FollowsOut",
+        "type": "object"
+      },
+      "HandOutData": {
+        "properties": {
+          "items": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HandoverMethod"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "received_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Received By"
+          }
+        },
+        "required": [
+          "method",
+          "received_by",
+          "location",
+          "items"
+        ],
+        "title": "HandOutData",
+        "type": "object"
+      },
+      "HandOutEventOut": {
+        "properties": {
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/HandOutData"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "handed_out",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "at",
+          "actor",
+          "kind",
+          "data"
+        ],
+        "title": "HandOutEventOut",
         "type": "object"
       },
       "HandOutIn": {
@@ -5832,66 +6181,21 @@
         "type": "object"
       },
       "IssueEntryOut": {
-        "properties": {
-          "author": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/UserRefOut"
-              },
-              {
-                "type": "null"
-              }
-            ]
+        "discriminator": {
+          "mapping": {
+            "message": "#/components/schemas/IssueMessageOut",
+            "status": "#/components/schemas/IssueStatusChangeOut"
           },
-          "created_at": {
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
-          },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "kind": {
-            "$ref": "#/components/schemas/AssetIssueEntryKind"
-          },
-          "side": {
-            "enum": [
-              "reporter",
-              "it"
-            ],
-            "title": "Side",
-            "type": "string"
-          },
-          "status": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AssetIssueStatus"
-              },
-              {
-                "const": "",
-                "type": "string"
-              }
-            ],
-            "title": "Status"
-          },
-          "text": {
-            "title": "Text",
-            "type": "string"
-          }
+          "propertyName": "kind"
         },
-        "required": [
-          "id",
-          "kind",
-          "author",
-          "side",
-          "text",
-          "status",
-          "created_at"
-        ],
-        "title": "IssueEntryOut",
-        "type": "object"
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/IssueMessageOut"
+          },
+          {
+            "$ref": "#/components/schemas/IssueStatusChangeOut"
+          }
+        ]
       },
       "IssueFilter": {
         "properties": {
@@ -5975,6 +6279,57 @@
         "title": "IssueMessageIn",
         "type": "object"
       },
+      "IssueMessageOut": {
+        "properties": {
+          "author": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "message",
+            "title": "Kind",
+            "type": "string"
+          },
+          "side": {
+            "enum": [
+              "reporter",
+              "it"
+            ],
+            "title": "Side",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "author",
+          "side",
+          "text",
+          "created_at"
+        ],
+        "title": "IssueMessageOut",
+        "type": "object"
+      },
       "IssueReporterOut": {
         "properties": {
           "department": {
@@ -6019,6 +6374,61 @@
           "department"
         ],
         "title": "IssueReporterOut",
+        "type": "object"
+      },
+      "IssueStatusChangeOut": {
+        "properties": {
+          "author": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "status",
+            "title": "Kind",
+            "type": "string"
+          },
+          "side": {
+            "enum": [
+              "reporter",
+              "it"
+            ],
+            "title": "Side",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AssetIssueStatus"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "author",
+          "side",
+          "text",
+          "status",
+          "created_at"
+        ],
+        "title": "IssueStatusChangeOut",
         "type": "object"
       },
       "IssueSummaryOut": {
@@ -8131,6 +8541,11 @@
         "title": "NeedsOut",
         "type": "object"
       },
+      "NoData": {
+        "properties": {},
+        "title": "NoData",
+        "type": "object"
+      },
       "NotificationAudience": {
         "enum": [
           "employee",
@@ -9218,6 +9633,52 @@
         "title": "PickupOut",
         "type": "object"
       },
+      "PlainEventOut": {
+        "properties": {
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/NoData"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "cancelled",
+              "reopened",
+              "reminded",
+              "completed"
+            ],
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "at",
+          "actor",
+          "kind",
+          "data"
+        ],
+        "title": "PlainEventOut",
+        "type": "object"
+      },
       "PreferencesIn": {
         "properties": {
           "app_notification_settings": {
@@ -9918,6 +10379,83 @@
         "title": "RejectIn",
         "type": "object"
       },
+      "RequestedData": {
+        "properties": {
+          "follows": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Follows"
+          },
+          "requester": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requester"
+          }
+        },
+        "required": [
+          "requester",
+          "follows"
+        ],
+        "title": "RequestedData",
+        "type": "object"
+      },
+      "RequestedEventOut": {
+        "properties": {
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/RequestedData"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "created",
+              "direct",
+              "quick"
+            ],
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "at",
+          "actor",
+          "kind",
+          "data"
+        ],
+        "title": "RequestedEventOut",
+        "type": "object"
+      },
       "ResetPeriod": {
         "enum": [
           "never",
@@ -9986,6 +10524,85 @@
           "group"
         ],
         "title": "ResourceOut",
+        "type": "object"
+      },
+      "ReturnData": {
+        "properties": {
+          "damaged": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Damaged",
+            "type": "array"
+          },
+          "items": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "required": [
+          "items",
+          "damaged",
+          "notes"
+        ],
+        "title": "ReturnData",
+        "type": "object"
+      },
+      "ReturnEventOut": {
+        "properties": {
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ReturnData"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "returned",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "at",
+          "actor",
+          "kind",
+          "data"
+        ],
+        "title": "ReturnEventOut",
         "type": "object"
       },
       "ReturnIn": {
@@ -10152,6 +10769,133 @@
           "return_reminder_days"
         ],
         "title": "RulesSchema",
+        "type": "object"
+      },
+      "ScheduleData": {
+        "properties": {
+          "added": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Added",
+            "type": "array"
+          },
+          "handover_mode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HandoverMode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "items": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "notified": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notified"
+          },
+          "pickup_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pickup At"
+          },
+          "pickup_location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pickup Location"
+          },
+          "removed": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Removed",
+            "type": "array"
+          }
+        },
+        "required": [
+          "handover_mode",
+          "pickup_at",
+          "pickup_location",
+          "notified",
+          "items",
+          "added",
+          "removed"
+        ],
+        "title": "ScheduleData",
+        "type": "object"
+      },
+      "ScheduleEventOut": {
+        "properties": {
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ScheduleData"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "ready",
+              "rescheduled"
+            ],
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "at",
+          "actor",
+          "kind",
+          "data"
+        ],
+        "title": "ScheduleEventOut",
         "type": "object"
       },
       "ScheduleIn": {

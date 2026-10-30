@@ -209,7 +209,8 @@ def test_it_decides_whether_the_ready_message_goes_out(
     assert response.status_code == 200, response.content
     assert (recipients() == {"employee@example.com"}) is notify
     ready = next(e for e in response.json()["events"] if e["kind"] == "ready")
-    assert ready["data"].get("notified", True) is notify
+    # Only a skipped message is noted (False); sending it is the normal case (null).
+    assert ready["data"]["notified"] == (None if notify else False)
 
 
 def _ready(employee_client, it_client) -> str:

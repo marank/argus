@@ -130,7 +130,8 @@ def test_ready_again_lists_what_changed(employee_client, it_client):
     assert again["kind"] == "ready"
     assert again["data"]["added"] == [second.inventory_number]
     assert again["data"]["removed"] == [first.inventory_number]
-    assert "items" not in again["data"]
+    # Only what changed; the full list belongs to the first time.
+    assert again["data"]["items"] == []
     first.refresh_from_db()
     assert first.status == AssetStatus.IN_STOCK
     # Set aside and given back without being handed out: nothing for the device's history.

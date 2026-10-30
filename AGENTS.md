@@ -44,6 +44,8 @@ VS Code tasks (`.vscode/tasks.json`) hold the everyday commands; the README list
 - Types of API payloads in `src/types/` are aliases of the generated schema types
   (`Schemas['AssetOut']` from `src/api/types.ts`), never hand-written copies. Never edit
   `src/api/schema.d.ts`.
+- A list of every value of an API enum is written with `allValues<Schemas['AssetStatus']>({ … })`
+  (`src/utils/enums.ts`), so a value added in the backend fails the type check until it is listed.
 - UI from Naive UI, themed in `src/theme/`. Every visible text goes through vue-i18n
   (`src/i18n/locales/en` and `de`, one file per area).
 - No inline `<script>` and no remote scripts or fonts: the CSP only allows our own origin.

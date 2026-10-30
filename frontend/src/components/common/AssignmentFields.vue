@@ -35,9 +35,6 @@ onMounted(async () => {
     memberIds.value = new Set((await teamsApi.get(team.value)).members.map((m) => m.id))
 })
 
-// Refs carry what the select labels need (name / display_name).
-const initialTeam = computed(() => props.team as Schemas['TeamOut'] | null)
-const initialAssignee = computed(() => props.assignee as Schemas['UserOut'] | null)
 const isMine = computed(() => assignee.value === auth.user?.id)
 
 async function save() {
@@ -52,8 +49,11 @@ async function save() {
   }
 }
 
-function onTeam(selected: Schemas['TeamOut'] | null) {
-  memberIds.value = new Set(selected?.members.map((m) => m.id) ?? [])
+// The select lists full teams; the reference passed as `initial` has no members.
+function onTeam(selected: Schemas['TeamOut'] | Schemas['TeamRefOut'] | null) {
+  memberIds.value = new Set(
+    selected && 'members' in selected ? selected.members.map((m) => m.id) : [],
+  )
   save()
 }
 
@@ -70,8 +70,8 @@ function assignToMe() {
         <EntitySelect
           v-model="team"
           :fetcher="teamsApi.list"
-          :label="(item: Schemas['TeamOut']) => item.name"
-          :initial="initialTeam"
+          :label="(item: Schemas['TeamOut'] | Schemas['TeamRefOut']) => item.name"
+          :initial="props.team"
           :placeholder="t('common.assignment.noTeam')"
           :disabled="busy"
           @select="onTeam"
@@ -91,9 +91,9 @@ function assignToMe() {
           v-model="assignee"
           :fetcher="usersApi.list"
           :params="{ is_staff: true, is_active: true }"
-          :label="(item: Schemas['UserOut']) => item.display_name"
-          :initial="initialAssignee"
-          :prefer="(item: Schemas['UserOut']) => memberIds.has(item.id)"
+          :label="(item: Schemas['UserOut'] | Schemas['UserRefOut']) => item.display_name"
+          :initial="props.assignee"
+          :prefer="(item: Schemas['UserOut'] | Schemas['UserRefOut']) => memberIds.has(item.id)"
           :placeholder="t('common.assignment.nobody')"
           :disabled="busy"
           @select="save"

@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from ninja import Field
@@ -98,16 +98,29 @@ class IssueMessageIn(Schema):
     text: str = Field("", max_length=4000)
 
 
-class IssueEntryOut(Schema):
+class IssueMessageOut(Schema):
     id: UUID
-    kind: AssetIssueEntryKind
+    kind: Literal[AssetIssueEntryKind.MESSAGE]
     author: UserRefOut | None
     # Which side it came from.
     side: Literal["reporter", "it"]
     text: str
-    # The new status of a status change, empty for a message.
-    status: AssetIssueStatus | Literal[""]
     created_at: datetime
+
+
+class IssueStatusChangeOut(Schema):
+    id: UUID
+    kind: Literal[AssetIssueEntryKind.STATUS]
+    author: UserRefOut | None
+    side: Literal["reporter", "it"]
+    # An optional note to the change.
+    text: str
+    status: AssetIssueStatus
+    created_at: datetime
+
+
+# A step of the conversation: a message or a change of status, told apart by ``kind``.
+type IssueEntryOut = Annotated[IssueMessageOut | IssueStatusChangeOut, Field(discriminator="kind")]
 
 
 class IssueReporterOut(Schema):

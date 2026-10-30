@@ -8,7 +8,8 @@ import type { Id, ListParams, Page } from '@/types/common'
 /**
  * Searchable select backed by a paginated API list endpoint.
  * Options are loaded on demand; the currently selected record is passed via `initial`
- * so its label shows without an extra request.
+ * so its label shows without an extra request. `select` only hands out records loaded
+ * from the list, never `initial`, which may be a reference with fewer fields.
  */
 const props = withDefaults(
   defineProps<{
@@ -34,7 +35,10 @@ const items = ref<T[]>([]) as { value: T[] }
 const loading = ref(false)
 // The options load in the background on mount; the spinner only matters while the list is open.
 const open = ref(false)
+// Records loaded from the list; `select` only hands these out, as only they are complete.
 const known = new Map<Id, T>()
+// What `initial` named, for labels of selected records that were not loaded (yet).
+const initials = new Map<Id, T>()
 
 function remember(list: T[]) {
   for (const item of list) known.set(item.id, item)
@@ -56,20 +60,28 @@ const onSearch = useDebounceFn((q: string) => load(q), 200)
 const options = computed<SelectOption[]>(() => {
   const list = [...items.value]
   const selected = Array.isArray(model.value) ? model.value : model.value ? [model.value] : []
-  for (const id of selected) {
-    const item = known.get(id)
-    if (item && !list.some((i) => i.id === id)) list.unshift(item)
-  }
   const prefer = props.prefer
   const ordered = prefer
     ? [...list.filter((i) => prefer(i)), ...list.filter((i) => !prefer(i))]
     : list
-  return ordered.map((item) => ({ label: props.label(item), value: item.id }))
+  const result: SelectOption[] = ordered.map((item) => ({
+    label: props.label(item),
+    value: item.id,
+  }))
+  for (const id of selected) {
+    if (result.some((o) => o.value === id)) continue
+    const item = known.get(id) ?? initials.get(id)
+    if (item) result.unshift({ label: props.label(item), value: id })
+  }
+  return result
 })
 
 watch(
   () => props.initial,
-  (value) => remember(Array.isArray(value) ? value : value ? [value] : []),
+  (value) => {
+    for (const item of Array.isArray(value) ? value : value ? [value] : [])
+      initials.set(item.id, item)
+  },
   { immediate: true },
 )
 watch(

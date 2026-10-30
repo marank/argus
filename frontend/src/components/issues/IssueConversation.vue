@@ -66,7 +66,7 @@ const items = computed<(Message | StatusChange)[]>(() => {
         ? {
             type: 'status',
             key: entry.id,
-            status: entry.status as Schemas['AssetIssueStatus'],
+            status: entry.status,
             name,
             at: entry.created_at,
           }

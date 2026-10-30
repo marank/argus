@@ -1,14 +1,20 @@
 import type { Schemas } from '@/api/types'
+import { allValues } from '@/utils/enums'
 
-export const ASSET_STATUSES: Schemas['AssetStatus'][] = [
-  'in_stock',
-  'reserved',
-  'in_use',
-  'in_repair',
-  'lost',
-  'retired',
-]
-export const ASSET_CONDITIONS: Schemas['Condition'][] = ['new', 'good', 'worn', 'defective']
+export const ASSET_STATUSES = allValues<Schemas['AssetStatus']>({
+  in_stock: true,
+  reserved: true,
+  in_use: true,
+  in_repair: true,
+  lost: true,
+  retired: true,
+})
+export const ASSET_CONDITIONS = allValues<Schemas['Condition']>({
+  new: true,
+  good: true,
+  worn: true,
+  defective: true,
+})
 
 /** Kinds a technician records by hand; the others are written by workflows. */
 export const MANUAL_EVENT_KINDS: Schemas['AssetEventKind'][] = [
@@ -20,4 +26,9 @@ export const MANUAL_EVENT_KINDS: Schemas['AssetEventKind'][] = [
   'note',
 ]
 
-export const ISSUE_KINDS: Schemas['AssetIssueKind'][] = ['defect', 'damage', 'lost', 'other']
+export const ISSUE_KINDS = allValues<Schemas['AssetIssueKind']>({
+  defect: true,
+  damage: true,
+  lost: true,
+  other: true,
+})

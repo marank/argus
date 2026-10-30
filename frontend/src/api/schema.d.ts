@@ -2484,6 +2484,34 @@ export interface components {
        */
       quantity: number
     }
+    /** AllocationData */
+    AllocationData: {
+      /**
+       * Items
+       * @default []
+       */
+      items: string[]
+    }
+    /** AllocationEventOut */
+    AllocationEventOut: {
+      actor: components['schemas']['UserRefOut'] | null
+      /**
+       * At
+       * Format: date-time
+       */
+      at: string
+      data: components['schemas']['AllocationData']
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'allocated' | 'released'
+    }
     /** AllocationNoteIn */
     AllocationNoteIn: {
       /**
@@ -2886,11 +2914,6 @@ export interface components {
       /** Unseen Update */
       unseen_update: boolean
     }
-    /**
-     * AssetIssueEntryKind
-     * @enum {string}
-     */
-    AssetIssueEntryKind: 'message' | 'status'
     /** AssetIssueIn */
     AssetIssueIn: {
       /** Description */
@@ -3176,49 +3199,16 @@ export interface components {
       /** Team */
       team?: string | null
     }
-    /**
-     * AssetRequestEventKind
-     * @enum {string}
-     */
-    AssetRequestEventKind:
-      | 'created'
-      | 'direct'
-      | 'quick'
-      | 'approved'
-      | 'declined'
-      | 'confirmed'
-      | 'rejected'
-      | 'cancelled'
-      | 'assigned'
-      | 'allocated'
-      | 'released'
-      | 'ready'
-      | 'reopened'
-      | 'rescheduled'
-      | 'handed_out'
-      | 'returned'
-      | 'extended'
-      | 'reminded'
-      | 'completed'
-    /** AssetRequestEventOut */
-    AssetRequestEventOut: {
-      actor: components['schemas']['UserRefOut'] | null
-      /**
-       * At
-       * Format: date-time
-       */
-      at: string
-      /** Data */
-      data: {
-        [key: string]: unknown
-      }
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string
-      kind: components['schemas']['AssetRequestEventKind']
-    }
+    AssetRequestEventOut:
+      | components['schemas']['RequestedEventOut']
+      | components['schemas']['DecisionEventOut']
+      | components['schemas']['ScheduleEventOut']
+      | components['schemas']['AssignmentEventOut']
+      | components['schemas']['ExtensionEventOut']
+      | components['schemas']['HandOutEventOut']
+      | components['schemas']['ReturnEventOut']
+      | components['schemas']['AllocationEventOut']
+      | components['schemas']['PlainEventOut']
     /** AssetRequestFilter */
     AssetRequestFilter: {
       /** Assignee */
@@ -3571,6 +3561,33 @@ export interface components {
      * @enum {string}
      */
     AssignTo: 'user' | 'device'
+    /** AssignmentData */
+    AssignmentData: {
+      /** Assignee */
+      assignee: string | null
+      /** Team */
+      team: string | null
+    }
+    /** AssignmentEventOut */
+    AssignmentEventOut: {
+      actor: components['schemas']['UserRefOut'] | null
+      /**
+       * At
+       * Format: date-time
+       */
+      at: string
+      data: components['schemas']['AssignmentData']
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'assigned'
+    }
     /** AutoAllocateOut */
     AutoAllocateOut: {
       /** Allocated */
@@ -4104,6 +4121,31 @@ export interface components {
       /** Widget */
       widget: string | null
     }
+    /** DecisionData */
+    DecisionData: {
+      /** Comment */
+      comment: string | null
+    }
+    /** DecisionEventOut */
+    DecisionEventOut: {
+      actor: components['schemas']['UserRefOut'] | null
+      /**
+       * At
+       * Format: date-time
+       */
+      at: string
+      data: components['schemas']['DecisionData']
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'approved' | 'confirmed' | 'declined' | 'rejected'
+    }
     /** DeclineIn */
     DeclineIn: {
       /** Comment */
@@ -4333,6 +4375,33 @@ export interface components {
        */
       end_date: string
     }
+    /** ExtensionData */
+    ExtensionData: {
+      /** End Date */
+      end_date: string | null
+      /** Previous */
+      previous: string | null
+    }
+    /** ExtensionEventOut */
+    ExtensionEventOut: {
+      actor: components['schemas']['UserRefOut'] | null
+      /**
+       * At
+       * Format: date-time
+       */
+      at: string
+      data: components['schemas']['ExtensionData']
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'extended'
+    }
     /**
      * FeatureKey
      * @enum {string}
@@ -4375,6 +4444,39 @@ export interface components {
       /** Number */
       number: string
       status: components['schemas']['AssetRequestStatus']
+    }
+    /** HandOutData */
+    HandOutData: {
+      /**
+       * Items
+       * @default []
+       */
+      items: string[]
+      /** Location */
+      location: string | null
+      method: components['schemas']['HandoverMethod'] | null
+      /** Received By */
+      received_by: string | null
+    }
+    /** HandOutEventOut */
+    HandOutEventOut: {
+      actor: components['schemas']['UserRefOut'] | null
+      /**
+       * At
+       * Format: date-time
+       */
+      at: string
+      data: components['schemas']['HandOutData']
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'handed_out'
     }
     /**
      * HandOutIn
@@ -4551,30 +4653,8 @@ export interface components {
       /** Warranty Until */
       warranty_until: string | null
     }
-    /** IssueEntryOut */
-    IssueEntryOut: {
-      author: components['schemas']['UserRefOut'] | null
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string
-      kind: components['schemas']['AssetIssueEntryKind']
-      /**
-       * Side
-       * @enum {string}
-       */
-      side: 'reporter' | 'it'
-      /** Status */
-      status: components['schemas']['AssetIssueStatus'] | ''
-      /** Text */
-      text: string
-    }
+    IssueEntryOut:
+      components['schemas']['IssueMessageOut'] | components['schemas']['IssueStatusChangeOut']
     /** IssueFilter */
     IssueFilter: {
       /** Asset */
@@ -4596,6 +4676,32 @@ export interface components {
        */
       text: string
     }
+    /** IssueMessageOut */
+    IssueMessageOut: {
+      author: components['schemas']['UserRefOut'] | null
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'message'
+      /**
+       * Side
+       * @enum {string}
+       */
+      side: 'reporter' | 'it'
+      /** Text */
+      text: string
+    }
     /** IssueReporterOut */
     IssueReporterOut: {
       /** Department */
@@ -4613,6 +4719,33 @@ export interface components {
       job_title: string
       /** Phone */
       phone: string
+    }
+    /** IssueStatusChangeOut */
+    IssueStatusChangeOut: {
+      author: components['schemas']['UserRefOut'] | null
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'status'
+      /**
+       * Side
+       * @enum {string}
+       */
+      side: 'reporter' | 'it'
+      status: components['schemas']['AssetIssueStatus']
+      /** Text */
+      text: string
     }
     /**
      * IssueSummaryOut
@@ -5438,6 +5571,8 @@ export interface components {
       /** Requests */
       requests: components['schemas']['AssetRequestNeedOut'][]
     }
+    /** NoData */
+    NoData: Record<string, never>
     /**
      * NotificationAudience
      * @enum {string}
@@ -5877,6 +6012,26 @@ export interface components {
       /** Title */
       title: string
     }
+    /** PlainEventOut */
+    PlainEventOut: {
+      actor: components['schemas']['UserRefOut'] | null
+      /**
+       * At
+       * Format: date-time
+       */
+      at: string
+      data: components['schemas']['NoData']
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'cancelled' | 'completed' | 'reminded' | 'reopened'
+    }
     /** PreferencesIn */
     PreferencesIn: {
       /** App Notification Settings */
@@ -6127,6 +6282,33 @@ export interface components {
       /** Comment */
       comment: string
     }
+    /** RequestedData */
+    RequestedData: {
+      /** Follows */
+      follows: string | null
+      /** Requester */
+      requester: string | null
+    }
+    /** RequestedEventOut */
+    RequestedEventOut: {
+      actor: components['schemas']['UserRefOut'] | null
+      /**
+       * At
+       * Format: date-time
+       */
+      at: string
+      data: components['schemas']['RequestedData']
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'created' | 'direct' | 'quick'
+    }
     /**
      * ResetPeriod
      * @enum {string}
@@ -6171,6 +6353,41 @@ export interface components {
     ResourceOut: {
       group: components['schemas']['ResourceGroup']
       key: components['schemas']['ResourceKey']
+    }
+    /** ReturnData */
+    ReturnData: {
+      /**
+       * Damaged
+       * @default []
+       */
+      damaged: string[]
+      /**
+       * Items
+       * @default []
+       */
+      items: string[]
+      /** Notes */
+      notes: string | null
+    }
+    /** ReturnEventOut */
+    ReturnEventOut: {
+      actor: components['schemas']['UserRefOut'] | null
+      /**
+       * At
+       * Format: date-time
+       */
+      at: string
+      data: components['schemas']['ReturnData']
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'returned'
     }
     /** ReturnIn */
     ReturnIn: {
@@ -6248,6 +6465,51 @@ export interface components {
       return_reminder_days: number
       /** Warranty Warning Days */
       warranty_warning_days: number
+    }
+    /** ScheduleData */
+    ScheduleData: {
+      /**
+       * Added
+       * @default []
+       */
+      added: string[]
+      handover_mode: components['schemas']['HandoverMode'] | null
+      /**
+       * Items
+       * @default []
+       */
+      items: string[]
+      /** Notified */
+      notified: boolean | null
+      /** Pickup At */
+      pickup_at: string | null
+      /** Pickup Location */
+      pickup_location: string | null
+      /**
+       * Removed
+       * @default []
+       */
+      removed: string[]
+    }
+    /** ScheduleEventOut */
+    ScheduleEventOut: {
+      actor: components['schemas']['UserRefOut'] | null
+      /**
+       * At
+       * Format: date-time
+       */
+      at: string
+      data: components['schemas']['ScheduleData']
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'ready' | 'rescheduled'
     }
     /** ScheduleIn */
     ScheduleIn: {
