@@ -15,7 +15,7 @@ export default mergeConfig(
         exclude: ['src/main.ts', 'src/i18n/locales/**', '**/*.d.ts'],
         // A floor at today's level so coverage cannot drop; raise it as tests are
         // added, towards the 90 % the backend holds.
-        thresholds: { lines: 6, statements: 6, functions: 3, branches: 4 },
+        thresholds: { lines: 21, statements: 20, functions: 15, branches: 18 },
       },
     },
   }),
