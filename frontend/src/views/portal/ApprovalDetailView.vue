@@ -39,10 +39,13 @@ const comment = ref('')
 useLive(['request'], load, { id: () => props.id, paused: () => deciding.value })
 
 /** Why the earlier request ended: the department's or IT's comment. */
-const earlierReason = computed(() => {
+/** How the earlier request ended, with the reason given: Rejected: „Too expensive“. */
+const earlierOutcome = computed(() => {
   const f = assetRequest.value?.follows
   if (!f) return ''
-  return f.approval === 'rejected' ? f.approval_comment : f.it_comment
+  const reason = f.approval === 'rejected' ? f.approval_comment : f.it_comment
+  const status = enumLabel('requestStatus', f.status)
+  return reason ? `${status}: „${reason}“` : status
 })
 
 function open(kind: 'approve' | 'decline') {
@@ -100,8 +103,7 @@ async function decide() {
           type="warning"
           :title="t('requests.again.approverTitle', { number: assetRequest.follows.number })"
         >
-          {{ enumLabel('requestStatus', assetRequest.follows.status) }}
-          <template v-if="earlierReason">: „{{ earlierReason }}“</template>
+          {{ earlierOutcome }}
         </NAlert>
         <div class="layout">
           <div class="stack">

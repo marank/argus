@@ -7,7 +7,11 @@ import type { Schemas } from '@/api/types'
 import { useFormat } from '@/composables/useFormat'
 import { MANUAL_EVENT_KINDS } from '@/types/inventory'
 
-defineProps<{ events: Schemas['AssetEventOut'][] }>()
+defineProps<{
+  events: Schemas['AssetEventOut'][]
+  /** Entries recorded by hand can be deleted (needs the right to change devices). */
+  editable: boolean
+}>()
 const emit = defineEmits<{ remove: [event: Schemas['AssetEventOut']] }>()
 const { t } = useI18n()
 const { dateTime, enumLabel, money } = useFormat()
@@ -40,7 +44,7 @@ const TYPES: Partial<
           <span v-if="event.component" class="muted">· {{ event.component }}</span>
           <span v-if="event.component_serial" class="mono muted">{{ event.component_serial }}</span>
           <NButton
-            v-if="MANUAL_EVENT_KINDS.includes(event.kind)"
+            v-if="editable && MANUAL_EVENT_KINDS.includes(event.kind)"
             quaternary
             size="tiny"
             class="remove"

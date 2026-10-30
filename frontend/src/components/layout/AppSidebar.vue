@@ -13,7 +13,13 @@ import { useFeaturesStore } from '@/stores/features'
 import { useLiveStore } from '@/stores/live'
 import { useMenuCountsStore } from '@/stores/menuCounts'
 
-import { activeKey, NAVIGATION, type MenuBadge, type NavItem } from './navigation'
+import {
+  activeKey,
+  NAVIGATION,
+  type MenuBadge,
+  type NavItem,
+  visibleNavigation,
+} from './navigation'
 
 const props = defineProps<{ collapsed: boolean }>()
 
@@ -117,23 +123,7 @@ function sectionTitle(key: string, label: string, canFold: boolean) {
     )
 }
 
-const sections = computed(() =>
-  NAVIGATION.filter(
-    (section) => (!section.it || auth.isItStaff) && (!section.superuser || auth.isSuperuser),
-  )
-    .map((section) => ({
-      ...section,
-      items: section.items.filter(
-        (item) =>
-          (!item.module || features.isOn(item.module)) &&
-          (!item.approver || auth.isApprover) &&
-          (!item.permission || auth.can(item.permission)) &&
-          (!item.superuser || auth.isSuperuser),
-      ),
-    }))
-    // Sections whose modules are all switched off disappear.
-    .filter((section) => section.items.length),
-)
+const sections = computed(() => visibleNavigation(auth, features.isOn))
 
 /**
  * Sections fold only when there is something to choose between (employees see a

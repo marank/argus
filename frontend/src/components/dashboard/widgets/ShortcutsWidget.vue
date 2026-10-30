@@ -4,7 +4,7 @@ import { NButton, NCard, NCheckbox, NCheckboxGroup, NPopover } from 'naive-ui'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { NAVIGATION, type NavItem } from '@/components/layout/navigation'
+import { type NavItem, visibleNavigation } from '@/components/layout/navigation'
 import { useAuthStore } from '@/stores/auth'
 import { useFeaturesStore } from '@/stores/features'
 import type { WidgetProps } from '@/types/dashboard'
@@ -21,9 +21,9 @@ const features = useFeaturesStore()
 
 /** Every page of the navigation the user can open, except the dashboard itself. */
 const candidates = computed<NavItem[]>(() =>
-  NAVIGATION.filter((section) => !section.superuser || auth.isSuperuser)
+  visibleNavigation(auth, features.isOn)
     .flatMap((section) => section.items)
-    .filter((item) => item.key !== 'dashboard' && (!item.module || features.isOn(item.module))),
+    .filter((item) => item.key !== 'dashboard'),
 )
 
 const keys = computed<string[]>(() =>

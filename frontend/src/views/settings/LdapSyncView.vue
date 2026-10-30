@@ -87,6 +87,13 @@ const stale = computed(
       previewQuery.value.search_base !== searchBase.value.trim()),
 )
 
+/** Ctrl+Enter (Cmd+Enter on a Mac) in the filter runs the preview. */
+function previewOnShortcut(event: KeyboardEvent) {
+  if (event.key !== 'Enter' || !(event.ctrlKey || event.metaKey)) return
+  event.preventDefault()
+  runPreview()
+}
+
 async function runPreview() {
   const query = { filter: filter.value.trim(), search_base: searchBase.value.trim() }
   const result = await runSearch(() => ldapSettingsApi.syncPreview(query))
@@ -251,8 +258,7 @@ const columns = computed<DataTableColumns<Schemas['LdapSyncItemOut']>>(() => [
               class="mono-input"
               :input-props="{ id: 'ldap-sync-filter', spellcheck: false }"
               :autosize="{ minRows: 3, maxRows: 10 }"
-              @keydown.ctrl.enter.prevent="runPreview"
-              @keydown.meta.enter.prevent="runPreview"
+              @keydown="previewOnShortcut"
             />
             <div class="editor-foot">
               <div class="presets">

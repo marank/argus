@@ -274,7 +274,7 @@ async function removeEvent(event: Schemas['AssetEventOut']) {
           /></NCard>
         </div>
         <NCard :title="t('inventory.history')" size="small" class="history">
-          <AssetTimeline :events="events" @remove="removeEvent" />
+          <AssetTimeline :events="events" :editable="canWrite" @remove="removeEvent" />
         </NCard>
       </div>
 

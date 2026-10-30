@@ -161,9 +161,14 @@ const orderLines = computed<DraftLine[]>(() =>
     })),
 )
 
-async function act(action: () => Promise<Schemas['AssetRequestOut']>, success?: string) {
+/** Runs an action on the request and shows its result; false when it failed. */
+async function act(
+  action: () => Promise<Schemas['AssetRequestOut']>,
+  success?: string,
+): Promise<boolean> {
   const updated = await run(action, success)
   if (updated) assetRequest.value = updated
+  return !!updated
 }
 
 function openConfirm(mode: 'confirm' | 'schedule') {
@@ -172,8 +177,8 @@ function openConfirm(mode: 'confirm' | 'schedule') {
 }
 
 async function reject() {
-  await act(() => requestsApi.reject(props.id, rejectReason.value))
-  showReject.value = false
+  // Stays open when it fails (e.g. a colleague confirmed meanwhile), like every dialog here.
+  if (await act(() => requestsApi.reject(props.id, rejectReason.value))) showReject.value = false
 }
 
 async function reopen() {

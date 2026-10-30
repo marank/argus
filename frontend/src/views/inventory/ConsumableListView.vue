@@ -144,18 +144,21 @@ const columns = computed<DataTableColumns<Schemas['ConsumableOut']>>(() => [
     render: (s) =>
       h(RowMenu, {
         title: t('common.actions'),
-        items: [
-          { key: 'in', label: t('inventory.consumables.bookIn'), icon: ArrowDownToLine },
-          { key: 'out', label: t('inventory.consumables.bookOut'), icon: ArrowUpFromLine },
-          { key: 'adjust', label: t('inventory.consumables.adjust'), icon: Scale },
-          {
-            key: 'movements',
-            label: t('inventory.consumables.movements'),
-            icon: History,
-            divided: true,
-          },
-          { key: 'edit', label: t('common.edit'), icon: Settings2 },
-        ],
+        // Without the right to change stock only the movements can be looked at.
+        items: canWrite.value
+          ? [
+              { key: 'in', label: t('inventory.consumables.bookIn'), icon: ArrowDownToLine },
+              { key: 'out', label: t('inventory.consumables.bookOut'), icon: ArrowUpFromLine },
+              { key: 'adjust', label: t('inventory.consumables.adjust'), icon: Scale },
+              {
+                key: 'movements',
+                label: t('inventory.consumables.movements'),
+                icon: History,
+                divided: true,
+              },
+              { key: 'edit', label: t('common.edit'), icon: Settings2 },
+            ]
+          : [{ key: 'movements', label: t('inventory.consumables.movements'), icon: History }],
         onSelect: (key: string) => onRowAction(s, key),
       }),
   },

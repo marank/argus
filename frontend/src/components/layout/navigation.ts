@@ -282,6 +282,38 @@ export const NAVIGATION: NavSection[] = [
 ]
 
 /** Which menu entry is active for a route (detail pages highlight their list). */
+/** What the navigation needs to know about the signed-in user (the auth store). */
+export interface NavViewer {
+  isItStaff: boolean
+  isSuperuser: boolean
+  isApprover: boolean
+  can: (area: Schemas['ResourceKey']) => boolean
+}
+
+/**
+ * The navigation as `viewer` may use it: sections and pages their role, rights and the
+ * switched-on modules allow (the router guard refuses the others). Empty sections go.
+ */
+export function visibleNavigation(
+  viewer: NavViewer,
+  isOn: (module: Schemas['ModuleKey']) => boolean,
+): NavSection[] {
+  return NAVIGATION.filter(
+    (section) => (!section.it || viewer.isItStaff) && (!section.superuser || viewer.isSuperuser),
+  )
+    .map((section) => ({
+      ...section,
+      items: section.items.filter(
+        (item) =>
+          (!item.module || isOn(item.module)) &&
+          (!item.approver || viewer.isApprover) &&
+          (!item.permission || viewer.can(item.permission)) &&
+          (!item.superuser || viewer.isSuperuser),
+      ),
+    }))
+    .filter((section) => section.items.length)
+}
+
 export function activeKey(name: string | undefined, params: Record<string, unknown>): string {
   switch (name) {
     case 'asset':

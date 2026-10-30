@@ -71,7 +71,7 @@ useLive(['request', 'issue'], load)
         <RouterLink
           v-for="i in tasks.issues"
           :key="i.id"
-          :to="{ name: 'asset', params: { id: i.asset.id } }"
+          :to="{ name: 'issue', params: { id: i.id } }"
           class="line"
           :title="i.description"
         >

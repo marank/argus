@@ -283,7 +283,7 @@ cd frontend && pnpm lint && pnpm format:check && pnpm type-check && pnpm test:co
 ```
 
 Coverage must not fall below the minimum: 90 % in the backend (`fail_under` in
-`pyproject.toml`), a floor at today's level in the frontend (`vitest.config.ts`; raise
+`pyproject.toml`), a floor at today's level in the frontend (`vitest.config.ts`, about 88 % of lines; raise
 it as tests are added). CI also refuses GPL/AGPL/SSPL licenses in production
 dependencies (`backend/scripts/check_licenses.py`, `frontend/scripts/check-licenses.mjs`).
 `pnpm lint` includes knip (unused files, exports and dependencies; `knip.jsonc`), and

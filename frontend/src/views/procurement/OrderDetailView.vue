@@ -104,10 +104,12 @@ async function save() {
     t('common.saved'),
   )
   if (updated) apply(updated)
+  return !!updated
 }
 
 async function markOrdered() {
-  await save()
+  // Lines that could not be saved must not go out with the order.
+  if (!(await save())) return
   const updated = await run(() =>
     ordersApi.markOrdered(props.id, {
       order_date: toIsoDate(ordered.order_date),

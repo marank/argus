@@ -137,7 +137,7 @@ async function remove() {
           <NAlert v-if="full" type="warning" :bordered="false" class="gap">
             {{ t('inventory.licenses.noSeatsLeft') }}
           </NAlert>
-          <div v-else-if="!license.is_expired" class="assign">
+          <div v-else-if="canWrite && !license.is_expired" class="assign">
             <EntitySelect
               v-if="perDevice"
               v-model="target"
@@ -186,6 +186,7 @@ async function remove() {
                 </small>
               </div>
               <NButton
+                v-if="canWrite"
                 quaternary
                 size="tiny"
                 :title="t('inventory.licenses.unassign')"

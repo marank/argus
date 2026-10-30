@@ -25,7 +25,14 @@ const showResults = ref(false)
 async function lookup(value: string) {
   const trimmed = value.trim()
   if (!trimmed) return
-  const found = await lookupApi.lookup(trimmed)
+  let found: Schemas['LookupOut']
+  try {
+    found = await lookupApi.lookup(trimmed)
+  } catch (error) {
+    // The code stays in the field, so the user can try again.
+    message.error(error instanceof Error ? error.message : t('common.error'))
+    return
+  }
   code.value = ''
   if (found.kind === 'asset') {
     router.push({ name: 'asset', params: { id: found.assets[0]!.id } })
