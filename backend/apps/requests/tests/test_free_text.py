@@ -1,4 +1,6 @@
-from datetime import date, timedelta
+from datetime import timedelta
+
+from django.utils import timezone
 
 from apps.inventory.models import Asset
 from apps.masterdata.models import Category, Manufacturer
@@ -7,7 +9,7 @@ JSON = "application/json"
 
 
 def submit(client, items):
-    start = date.today() + timedelta(days=2)
+    start = timezone.localdate() + timedelta(days=2)
     response = client.post(
         "/api/requests",
         {
@@ -73,7 +75,7 @@ def test_free_text_lines_need_resolution(employee_client, it_client):
 
 
 def test_empty_line_is_rejected(employee_client):
-    start = date.today() + timedelta(days=1)
+    start = timezone.localdate() + timedelta(days=1)
     response = employee_client.post(
         "/api/requests",
         {
@@ -89,7 +91,7 @@ def test_empty_line_is_rejected(employee_client):
 
 def test_any_model_can_be_disabled_per_group(employee_client):
     accessories = Category.objects.get(code="mde-accessories")
-    start = date.today() + timedelta(days=1)
+    start = timezone.localdate() + timedelta(days=1)
     item = {"category": str(accessories.pk), "quantity": 2}
     payload = {
         "title": "Handles",

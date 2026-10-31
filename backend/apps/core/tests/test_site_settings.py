@@ -3,14 +3,9 @@ from typing import Any
 from django.test import Client
 
 from apps.core.features import FeatureKey, effective_flags
+from apps.inventory.models import License
 
 JSON = "application/json"
-
-
-def admin_client() -> Client:
-    client = Client()
-    client.login(username="admin", password="argus-demo")
-    return client
 
 
 def switch(client: Client, **flags: bool) -> dict[str, Any]:
@@ -37,8 +32,8 @@ def test_only_administrators_change_settings(it_client):
     assert response.status_code == 403
 
 
-def test_switched_off_module_is_gone_from_the_api(demo, it_client, employee_client):
-    admin = admin_client()
+def test_switched_off_module_is_gone_from_the_api(it_client, employee_client, admin_client):
+    admin = admin_client
     result = switch(admin, licenses=False)
     assert result["flags"]["licenses"] is False
     assert result["stored"]["calendar_license_expiry"] is True  # kept for when licenses come back
@@ -53,9 +48,15 @@ def test_switched_off_module_is_gone_from_the_api(demo, it_client, employee_clie
     assert it_client.get("/api/inventory/licenses").status_code == 200
 
 
-def test_calendar_hides_switched_off_kinds(demo, it_client):
-    switch(admin_client(), calendar_license_expiry=False)
-    response = it_client.get(
-        "/api/calendar", {"start": "2026-01-01", "end": "2026-12-31", "kinds": ["license"]}
-    )
-    assert all(entry["kind"] != "license" for entry in response.json())
+def test_calendar_hides_switched_off_kinds(it_client, admin_client):
+    license = License.objects.exclude(valid_until=None).order_by("valid_until").first()
+    assert license is not None and license.valid_until is not None
+    day = license.valid_until.isoformat()
+
+    def kinds() -> set[str]:
+        response = it_client.get("/api/calendar", {"start": day, "end": day, "kinds": ["license"]})
+        return {entry["kind"] for entry in response.json()}
+
+    assert kinds() == {"license"}
+    switch(admin_client, calendar_license_expiry=False)
+    assert kinds() == set()

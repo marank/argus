@@ -7,6 +7,11 @@ export default mergeConfig(
   defineConfig({
     test: {
       environment: 'jsdom',
+      // Most of the time goes into importing Vue/Naive UI and building jsdom per file;
+      // VM contexts in a few threads do that ~3x faster than isolated forks, and
+      // more workers only contend with each other (measured: 6 → 32 s, 23 → 109 s).
+      pool: 'vmThreads',
+      maxWorkers: 6,
       exclude: [...configDefaults.exclude, 'e2e/**'],
       root: fileURLToPath(new URL('./', import.meta.url)),
       coverage: {

@@ -73,6 +73,7 @@ describe('allocations', () => {
 describe('status tones', () => {
   it.each([
     ['assetStatus', 'lost', 'error'],
+    ['requestStatus', 'ready', 'success'],
     ['orderStatus', 'draft', 'warning'],
     ['condition', 'defective', 'error'],
     ['issueStatus', 'resolved', 'success'],
@@ -82,8 +83,9 @@ describe('status tones', () => {
     expect(toneOf(group, value)).toBe(tone)
   })
 
-  it('falls back to default for an unknown group', () => {
+  it('falls back to default for an unknown group or status', () => {
     expect(toneOf('nothing', 'open')).toBe('default')
+    expect(toneOf('assetStatus', 'unknown')).toBe('default')
   })
 })
 

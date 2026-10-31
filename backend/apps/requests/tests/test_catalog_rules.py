@@ -1,7 +1,8 @@
-from datetime import date, timedelta
+from datetime import timedelta
 from typing import Any
 
 import pytest
+from django.utils import timezone
 
 from apps.accounts.models import User
 from apps.core.models import SiteSettings
@@ -11,7 +12,7 @@ JSON = "application/json"
 
 
 def request(client, item: dict[str, Any]):
-    start = date.today() + timedelta(days=2)
+    start = timezone.localdate() + timedelta(days=2)
     data = {
         "title": "Catalog check",
         "duration": "temporary",
@@ -70,7 +71,7 @@ def test_unknown_or_inactive_requester_is_refused_with_a_message(it_client):
     sales.save()
     model = hardware_model()
     for requester in (str(sales.pk), "00000000-0000-0000-0000-000000000000"):
-        start = date.today() + timedelta(days=2)
+        start = timezone.localdate() + timedelta(days=2)
         data = {
             "title": "On behalf",
             "duration": "permanent",

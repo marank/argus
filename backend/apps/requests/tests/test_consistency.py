@@ -1,38 +1,11 @@
-from datetime import date, timedelta
+from django.utils import timezone
 
 from apps.accounts.models import User
 from apps.inventory.models import Asset, AssetStatus
 from apps.inventory.services.assets import create_asset
 from apps.masterdata.models import AssetModel, Category, Manufacturer
 from apps.requests.models import AssetRequest, AssetRequestStatus
-from apps.requests.tests.plan import handover_plan
-
-JSON = "application/json"
-
-
-def prepare(employee_client, it_client, items, handover_mode="collect"):
-    """Submit, confirm, allocate and mark ready; returns the request id."""
-    start = date.today()
-    response = employee_client.post(
-        "/api/requests",
-        {
-            "title": "Test",
-            "duration": "temporary",
-            "start_date": start.isoformat(),
-            "end_date": (start + timedelta(days=3)).isoformat(),
-            "items": items,
-        },
-        content_type=JSON,
-    )
-    assert response.status_code == 201, response.content
-    rid = response.json()["id"]
-    it_client.post(f"/api/requests/{rid}/confirm", {"items": []}, content_type=JSON)
-    it_client.post(f"/api/requests/{rid}/auto-allocate")
-    response = it_client.post(
-        f"/api/requests/{rid}/ready", {"handover_mode": handover_mode, **handover_plan()}, content_type=JSON
-    )
-    assert response.status_code == 200, response.content
-    return rid
+from apps.requests.tests.flow import JSON, handover_plan, prepare
 
 
 def allocated_assets(rid):
@@ -55,15 +28,14 @@ def test_any_model_never_picks_accessories(employee_client, it_client):
     dock = AssetModel.objects.create(
         name="Dock", designation="Dock", manufacturer=manufacturer, category=accessories
     )
-    create_asset({"model": dock.pk, "status": AssetStatus.IN_STOCK}, User.objects.get(username="it"))
+    docked = create_asset({"model": dock.pk, "status": AssetStatus.IN_STOCK}, User.objects.get(username="it"))
     rid = prepare(employee_client, it_client, [{"category": str(laptops.pk), "quantity": 1}])
     assert [asset.model.category_id for asset in allocated_assets(rid)] == [laptops.pk]
 
     item = AssetRequest.objects.get(pk=rid).items.get()
     candidates = it_client.get(f"/api/requests/items/{item.pk}/candidates").json()["assets"]
-    assert candidates == [] or all(
-        Asset.objects.get(pk=c["id"]).model.category_id == laptops.pk for c in candidates
-    )
+    assert str(docked.pk) not in {c["id"] for c in candidates}
+    assert all(Asset.objects.get(pk=c["id"]).model.category_id == laptops.pk for c in candidates)
 
 
 def test_deleting_a_device_with_history_is_refused(employee_client, it_client):
@@ -79,7 +51,7 @@ def test_terminal_hides_lines_without_confirmed_devices(employee_client, it_clie
     laptops = Category.objects.get(code="laptops")
     model = laptops.asset_models.first()
     assert model is not None
-    start = date.today()
+    start = timezone.localdate()
     rid = employee_client.post(
         "/api/requests",
         {

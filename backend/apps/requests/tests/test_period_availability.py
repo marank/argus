@@ -1,6 +1,8 @@
 from datetime import date, timedelta
 from typing import Any
 
+from django.utils import timezone
+
 from apps.masterdata.models import Category
 
 
@@ -38,7 +40,7 @@ def _laptops(client, start: date, end: date) -> dict[str, int]:
 
 
 def test_confirmed_requests_reserve_their_period_only(employee_client, it_client):
-    start = date.today() + timedelta(days=10)
+    start = timezone.localdate() + timedelta(days=10)
     before = _laptops(it_client, start, start + timedelta(days=2))
     _request_laptops(employee_client, it_client, start, days=4, quantity=2)
 
@@ -53,7 +55,7 @@ def test_confirmed_requests_reserve_their_period_only(employee_client, it_client
 
 
 def test_allocated_devices_stay_reserved_for_their_period(employee_client, it_client):
-    start = date.today() + timedelta(days=10)
+    start = timezone.localdate() + timedelta(days=10)
     before = _laptops(it_client, start, start)
     asset_request = _request_laptops(employee_client, it_client, start, days=1, quantity=2)
     it_client.post(f"/api/requests/{asset_request['id']}/auto-allocate")
@@ -67,7 +69,7 @@ def test_allocated_devices_stay_reserved_for_their_period(employee_client, it_cl
 
 
 def test_catalog_counts_follow_the_period(employee_client, it_client):
-    start = date.today() + timedelta(days=10)
+    start = timezone.localdate() + timedelta(days=10)
     _request_laptops(employee_client, it_client, start, days=1, quantity=1)
     laptops = str(Category.objects.get(code="laptops").pk)
 
@@ -83,13 +85,8 @@ def test_catalog_counts_follow_the_period(employee_client, it_client):
     assert catalog(start=start.isoformat(), permanent="true")["reserved"] == inside["reserved"]
 
 
-def test_availability_is_for_it_staff_only(employee_client):
-    response = employee_client.get("/api/portal/availability", {"start": date.today().isoformat()})
-    assert response.status_code in (401, 403)
-
-
 def test_early_pickup_reserves_from_the_pickup_day(employee_client, it_client):
-    start = date.today() + timedelta(days=10)
+    start = timezone.localdate() + timedelta(days=10)
     pickup = start - timedelta(days=2)
     earlier = pickup - timedelta(days=1)
     before_pickup_day = _laptops(it_client, pickup, pickup)

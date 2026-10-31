@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import timedelta
 
 from django.utils import timezone
 
@@ -56,25 +56,19 @@ def test_overdue_returns_appear_today(it_client):
     workshop = AssetRequest.objects.get(title="Training workshop")
     AssetRequest.objects.filter(pk=workshop.pk).update(
         status=AssetRequestStatus.HANDED_OUT,
-        start_date=date.today() - timedelta(days=9),
-        end_date=date.today() - timedelta(days=2),
+        start_date=timezone.localdate() - timedelta(days=9),
+        end_date=timezone.localdate() - timedelta(days=2),
     )
     entry = next(e for e in fetch(it_client, kinds=["return"]) if e["id"] == f"return-{workshop.pk}")
     assert entry["overdue"] is True
     assert entry["start"] == timezone.localdate().isoformat()
 
 
-def test_calendar_is_for_it_only(employee_client):
-    assert (
-        employee_client.get("/api/calendar", {"start": "2026-01-01", "end": "2026-01-31"}).status_code == 403
-    )
-
-
 def test_warranty_ends_are_grouped_per_day(it_client):
     from apps.inventory.models import Asset
 
     day = timezone.localdate() + timedelta(days=5)
-    ids = list(Asset.objects.values_list("pk", flat=True)[:2])
+    ids = list(Asset.objects.order_by("pk").values_list("pk", flat=True)[:2])
     Asset.objects.filter(pk__in=ids).update(warranty_until=day)
     entries = [e for e in fetch(it_client, kinds=["warranty"]) if e["start"] == day.isoformat()]
     assert len(entries) == 1

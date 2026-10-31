@@ -5,7 +5,7 @@ from django.utils import timezone
 from apps.accounts.models import User
 from apps.inventory.models import Asset, AssetStatus, Consumable
 from apps.requests.models import AssetRequest
-from apps.requests.tests.plan import handover_plan
+from apps.requests.tests.flow import handover_plan
 
 URL = "/api/requests/direct"
 JSON = "application/json"
@@ -100,11 +100,6 @@ def test_device_in_use_is_refused_and_nothing_is_kept(it_client):
 
 def test_needs_something_to_hand_out(it_client):
     assert post(it_client).status_code == 409
-
-
-def test_only_for_it(employee_client):
-    (asset,) = in_stock()
-    assert post(employee_client, assets=[str(asset.pk)]).status_code == 403
 
 
 def test_list_filters_by_origin(it_client):

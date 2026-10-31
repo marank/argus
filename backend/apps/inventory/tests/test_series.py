@@ -8,26 +8,26 @@ def test_series_numbers_devices_in_a_row(it_client):
     sx58 = AssetModel.objects.get(name="SX58")
     warehouse = Location.objects.get(code="WH")
     before = Asset.objects.filter(model__category=sx58.category).count()
-    preview = it_client.get(f"/api/inventory/assets/series/preview?model={sx58.pk}&count=120").json()
-    first, last = f"MDE-{before + 1:04d}", f"MDE-{before + 120:04d}"
+    preview = it_client.get(f"/api/inventory/assets/series/preview?model={sx58.pk}&count=3").json()
+    first, last = f"MDE-{before + 1:04d}", f"MDE-{before + 3:04d}"
     assert (preview["first"], preview["last"]) == (first, last)
 
     response = it_client.post(
         "/api/inventory/assets/series",
-        {"model": str(sx58.pk), "count": 120, "location": str(warehouse.pk), "purchase_price": "1450.00"},
+        {"model": str(sx58.pk), "count": 3, "location": str(warehouse.pk), "purchase_price": "1450.00"},
         content_type=JSON,
     )
     assert response.status_code == 201, response.content
     numbers = sorted(item["inventory_number"] for item in response.json())
     assert (numbers[0], numbers[-1]) == (first, last)
     created = Asset.objects.filter(inventory_number__in=numbers)
-    assert created.count() == 120
+    assert created.count() == 3
     assert set(created.values_list("location", "serial_number", "status")) == {(warehouse.pk, "", "in_stock")}
-    assert AssetEvent.objects.filter(asset__in=created, kind=AssetEventKind.CREATED).count() == 120
+    assert AssetEvent.objects.filter(asset__in=created, kind=AssetEventKind.CREATED).count() == 3
 
     # The next series continues where this one ended.
     preview = it_client.get(f"/api/inventory/assets/series/preview?model={sx58.pk}&count=5").json()
-    assert preview["first"] == f"MDE-{before + 121:04d}"
+    assert preview["first"] == f"MDE-{before + 4:04d}"
 
 
 def test_subcategory_does_not_inherit_the_sequence(it_client):

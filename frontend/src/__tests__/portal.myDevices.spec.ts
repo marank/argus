@@ -7,7 +7,7 @@ import MyDevicesView from '@/views/portal/MyDevicesView.vue'
 import MyIssuesView from '@/views/portal/MyIssuesView.vue'
 import MyLicensesView from '@/views/portal/MyLicensesView.vue'
 
-import { button, click, hasButton, typeInto } from './dom'
+import { button, click, fakeMatchMedia, hasButton, typeInto } from './dom'
 import { bodyText, field, mountPage, unmountPages } from './portalHelpers'
 
 const api = vi.hoisted(() => ({
@@ -96,17 +96,12 @@ describe('MyDevicesView', () => {
   })
 
   describe('on a phone', () => {
-    const original = window.matchMedia
+    let restore: () => void
     beforeEach(() => {
-      window.matchMedia = ((query: string) => ({
-        matches: query.includes('max-width'),
-        media: query,
-        addEventListener: () => undefined,
-        removeEventListener: () => undefined,
-      })) as unknown as typeof window.matchMedia
+      restore = fakeMatchMedia(375)
     })
     afterEach(() => {
-      window.matchMedia = original
+      restore()
     })
 
     it('shows one card per device with return date and report button', async () => {

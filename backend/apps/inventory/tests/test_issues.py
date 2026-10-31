@@ -70,10 +70,6 @@ def test_report_needs_description(employee_client):
     assert response.status_code == 409
 
 
-def test_employees_cannot_list_all_reports(employee_client):
-    assert employee_client.get("/api/inventory/issues").status_code in (401, 403)
-
-
 def test_device_detail_shows_all_reports(employee_client):
     asset = own_device()
     employee_client.post(

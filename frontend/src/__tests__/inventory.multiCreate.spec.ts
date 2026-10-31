@@ -24,9 +24,9 @@ import {
 const created = (count: number) =>
   Array.from({ length: count }, (_, i) => ({ id: `a${i}` })) as Schemas['AssetOut'][]
 
-/** The series preview waits for typing to settle. */
+/** The series preview waits 250 ms for typing to settle. */
 const settle = async () => {
-  await new Promise((resolve) => setTimeout(resolve, 300))
+  await vi.advanceTimersByTimeAsync(300)
   await flushPromises()
 }
 
@@ -57,6 +57,12 @@ describe('creating many devices', () => {
 
   describe('SeriesCreateModal', () => {
     const PREVIEW = { first: 'NB-0100', last: 'NB-0109', sequence: 'Notebooks (NB-)' }
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    })
+    afterEach(() => {
+      vi.useRealTimers()
+    })
 
     it('asks for a model before it shows any numbers', async () => {
       const preview = vi.spyOn(assetsApi, 'seriesPreview')

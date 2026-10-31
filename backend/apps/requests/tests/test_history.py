@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import timedelta
 from typing import Any
 
 from django.utils import timezone
@@ -7,7 +7,7 @@ from apps.accounts.models import User
 from apps.inventory.models import Asset, AssetStatus
 from apps.masterdata.models import Category
 from apps.requests.models import AssetRequest
-from apps.requests.tests.plan import handover_plan
+from apps.requests.tests.flow import handover_plan
 
 JSON = "application/json"
 
@@ -18,7 +18,7 @@ def kinds(body: dict[str, Any]) -> list[str]:
 
 def run_cycle(employee_client, it_client) -> str:
     """Request, confirm, allocate, ready, hand out, extend, take back."""
-    start = date.today()
+    start = timezone.localdate()
     created = employee_client.post(
         "/api/requests",
         {
@@ -63,7 +63,7 @@ def test_every_step_is_recorded(employee_client, it_client):
     assert events["ready"]["data"]["handover_mode"] == "collect"
     # Plain values that stay readable, e.g. the inventory number and the old return date.
     assert events["ready"]["data"]["items"] == events["returned"]["data"]["items"]
-    assert events["extended"]["data"]["previous"] == (date.today() + timedelta(days=2)).isoformat()
+    assert events["extended"]["data"]["previous"] == (timezone.localdate() + timedelta(days=2)).isoformat()
 
 
 def test_employee_sees_their_part(employee_client, it_client):
@@ -80,7 +80,7 @@ def _confirmed_laptops(employee_client, it_client, quantity=1):
         {
             "title": "Workshop",
             "duration": "permanent",
-            "start_date": (date.today() + timedelta(days=1)).isoformat(),
+            "start_date": (timezone.localdate() + timedelta(days=1)).isoformat(),
             "items": [{"category": str(Category.objects.get(code="laptops").pk), "quantity": quantity}],
         },
         content_type=JSON,
@@ -150,7 +150,7 @@ def test_confirming_leaves_the_handover_to_marking_ready(employee_client, it_cli
         {
             "title": "Workshop",
             "duration": "permanent",
-            "start_date": date.today().isoformat(),
+            "start_date": timezone.localdate().isoformat(),
             "items": [{"category": str(Category.objects.get(code="laptops").pk), "quantity": 1}],
         },
         content_type=JSON,

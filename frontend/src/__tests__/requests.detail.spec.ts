@@ -5,7 +5,16 @@ import { ApiError } from '@/api/client'
 import type { Schemas } from '@/api/types'
 import RequestDetailView from '@/views/requests/RequestDetailView.vue'
 
-import { button, buttons, click, typeInto } from './dom'
+import {
+  button,
+  buttons,
+  chooseMenuEntry,
+  click,
+  control,
+  menuEntries,
+  rowWith,
+  typeInto,
+} from './dom'
 import {
   JANE,
   REQUEST_ID,
@@ -104,22 +113,13 @@ describe('RequestDetailView', () => {
 
   /** Opens the "More actions" menu and picks an entry. */
   async function menu(label: string) {
-    document.body.querySelector<HTMLButtonElement>('button[title="More actions"]')!.click()
-    await flushPromises()
-    const option = [...document.body.querySelectorAll<HTMLElement>('.n-dropdown-option')].find(
-      (o) => o.textContent?.trim() === label,
-    )
-    if (!option) throw new Error(`no menu entry "${label}"`)
-    option.querySelector<HTMLElement>('.n-dropdown-option-body')!.click()
-    await flushPromises()
+    await click('More actions')
+    await chooseMenuEntry(label)
   }
 
-  const menuEntries = async () => {
-    document.body.querySelector<HTMLButtonElement>('button[title="More actions"]')!.click()
-    await flushPromises()
-    return [...document.body.querySelectorAll('.n-dropdown-option')].map((o) =>
-      o.textContent?.trim(),
-    )
+  const moreActions = async () => {
+    await click('More actions')
+    return menuEntries()
   }
 
   describe('a submitted request', () => {
@@ -298,7 +298,7 @@ describe('RequestDetailView', () => {
       expect(submit.disabled).toBe(true)
 
       // Without a message, nothing has to be planned.
-      openModal().querySelectorAll<HTMLElement>('.n-switch')[1]!.click()
+      control('switch', 'Notify the employee', openModal()).click()
       await flushPromises()
       expect(submit.disabled).toBe(false)
     })
@@ -405,9 +405,8 @@ describe('RequestDetailView', () => {
       await open(request)
       await click('Hand out')
 
-      const deviceNotes = openModal().querySelectorAll<HTMLInputElement>('.device input')
-      expect(deviceNotes).toHaveLength(2)
-      typeInto(deviceNotes[1], 'Charger missing')
+      expect(openModal().querySelectorAll('.device input')).toHaveLength(2)
+      typeInto(rowWith('INV-002', openModal(), '.device').querySelector('input'), 'Charger missing')
       await flushPromises()
       await click('Hand out')
 
@@ -448,7 +447,7 @@ describe('RequestDetailView', () => {
 
     it('offers changing the handover, going back to preparation and cancelling', async () => {
       await open(readyRequest())
-      expect(await menuEntries()).toEqual([
+      expect(await moreActions()).toEqual([
         'Change handover',
         'Back to preparation',
         'Cancel request',
@@ -491,7 +490,7 @@ describe('RequestDetailView', () => {
       expect(screen()).toContain('The devices are on loan until 11/06/2026.')
       expect(buttons('Extend loan')).toHaveLength(1)
       expect(buttons('Take back')).toHaveLength(1)
-      expect(await menuEntries()).toEqual(['Send return reminder'])
+      expect(await moreActions()).toEqual(['Send return reminder'])
     })
 
     it('takes back all devices, marking one as damaged', async () => {
@@ -499,10 +498,10 @@ describe('RequestDetailView', () => {
       await open(lentRequest())
       await click('Take back')
 
-      const rows = openModal().querySelectorAll('.device')
-      expect(rows).toHaveLength(2)
-      ;(rows[1]!.querySelectorAll('.n-checkbox')[1] as HTMLElement).click()
-      typeInto(rows[1]!.querySelector('input'), 'Cracked display')
+      expect(openModal().querySelectorAll('.device')).toHaveLength(2)
+      const broken = rowWith('INV-002', openModal(), '.device')
+      control('checkbox', 'Damaged', broken).click()
+      typeInto(broken.querySelector('input'), 'Cracked display')
       typeInto(openModal().querySelector('textarea'), 'Returned at the desk.')
       await flushPromises()
       await click('Take back')
@@ -520,9 +519,7 @@ describe('RequestDetailView', () => {
       await open(lentRequest())
       await click('Take back')
 
-      const first = openModal().querySelector('.device .n-checkbox') as HTMLElement
-      first.click()
-      await flushPromises()
+      await click(rowWith('INV-001', openModal(), '.device').querySelector('[role="checkbox"]')!)
       expect(buttons('Take back')).toHaveLength(1) // only the page's button now
       await click('Take back selected')
 

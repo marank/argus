@@ -1,10 +1,11 @@
 """Lookups by scanned code and query counts of the employee's pages."""
 
-from datetime import date, timedelta
+from datetime import timedelta
 from typing import Any
 
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
+from django.utils import timezone
 
 from apps.accounts.models import User
 from apps.inventory.models import Asset
@@ -14,7 +15,7 @@ JSON = "application/json"
 
 
 def confirmed_request(employee_client, it_client, model) -> dict[str, Any]:
-    start = date.today() + timedelta(days=2)
+    start = timezone.localdate() + timedelta(days=2)
     asset_request = employee_client.post(
         "/api/requests",
         {
@@ -55,7 +56,9 @@ def test_colliding_serial_numbers_are_not_guessed(employee_client, it_client):
 
 def test_my_issues_load_their_last_messages_at_once(employee_client):
     employee = User.objects.get(username="employee")
-    assets = list(Asset.objects.filter(assigned_to=employee)[:1]) or list(Asset.objects.all()[:1])
+    assets = list(Asset.objects.filter(assigned_to=employee).order_by("pk")[:1]) or list(
+        Asset.objects.order_by("pk")[:1]
+    )
     for _i in range(3):
         report_issue(assets[0], employee, "defect", "Broken")
     with CaptureQueriesContext(connection) as few:

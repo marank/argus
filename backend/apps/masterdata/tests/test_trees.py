@@ -1,6 +1,5 @@
 import pytest
 from django.core.exceptions import ValidationError
-from django.test import Client
 
 from apps.accounts.models import Department, Team
 from apps.masterdata.models import Category, Location
@@ -39,10 +38,8 @@ def test_a_loop_in_the_database_does_not_hang(demo):
     assert x.descendant_ids() == {x.pk, y.pk}
 
 
-def test_categories_and_locations_can_be_created_through_the_api(demo):
+def test_categories_and_locations_can_be_created_through_the_api(admin_client):
     # The UUID is set before saving; clean() must not look up the unsaved record (was a 500).
-    admin = Client()
-    admin.login(username="admin", password="argus-demo")
     team = Team.objects.create(name="Logistics IT")
     payload = {
         "name": "MDEs",
@@ -59,15 +56,15 @@ def test_categories_and_locations_can_be_created_through_the_api(demo):
         "requires_approval": False,
         "sort_order": 0,
     }
-    response = admin.post("/api/masterdata/categories", payload, content_type="application/json")
+    response = admin_client.post("/api/masterdata/categories", payload, content_type="application/json")
     assert response.status_code == 201, response.content
     child = {**payload, "name": "Ring scanners", "code": "MDE-R", "parent": response.json()["id"]}
-    response = admin.post("/api/masterdata/categories", child, content_type="application/json")
+    response = admin_client.post("/api/masterdata/categories", child, content_type="application/json")
     assert response.status_code == 201, response.content
 
     root = Location.objects.first()
     assert root is not None
-    response = admin.post(
+    response = admin_client.post(
         "/api/masterdata/locations",
         {"name": "Store room", "code": "t-store", "parent": str(root.pk)},
         content_type="application/json",
@@ -75,34 +72,34 @@ def test_categories_and_locations_can_be_created_through_the_api(demo):
     assert response.status_code == 201, response.content
 
 
-def test_category_code_is_optional_but_unique_when_given(demo):
-    admin = Client()
-    admin.login(username="admin", password="argus-demo")
+def test_category_code_is_optional_but_unique_when_given(admin_client):
     for name in ("Headsets", "Docking stations"):
-        response = admin.post("/api/masterdata/categories", {"name": name}, content_type="application/json")
+        response = admin_client.post(
+            "/api/masterdata/categories", {"name": name}, content_type="application/json"
+        )
         assert response.status_code == 201, response.content
         assert response.json()["code"] == ""
 
     coded = Category.objects.exclude(code="").first()
     assert coded is not None
     taken = coded.code
-    response = admin.post(
+    response = admin_client.post(
         "/api/masterdata/categories", {"name": "Copy", "code": taken}, content_type="application/json"
     )
     assert response.status_code == 422, response.content
     assert "code" in response.json()["errors"]
 
 
-def test_categories_list_parents_before_their_subcategories(demo):
-    admin = Client()
-    admin.login(username="admin", password="argus-demo")
+def test_categories_list_parents_before_their_subcategories(admin_client):
     mde = Category.objects.create(name="MDEs", code="t-mde", sort_order=50)
     Category.objects.create(name="Handgriffe", code="t-handles", parent=mde, sort_order=0)
     Category.objects.create(name="Dockingstationen", code="t-docks", parent=mde, sort_order=0)
     Category.objects.create(name="Laptops 2", code="t-laptops", sort_order=40)
 
     for ordering in ("", "kind,tree_position"):
-        items = admin.get(f"/api/masterdata/categories?page_size=200&ordering={ordering}").json()["items"]
+        items = admin_client.get(f"/api/masterdata/categories?page_size=200&ordering={ordering}").json()[
+            "items"
+        ]
         names = [" / ".join(c["path"]) for c in items if c["code"].startswith("t-")]
         assert names == ["Laptops 2", "MDEs", "MDEs / Dockingstationen", "MDEs / Handgriffe"]
         # Every subcategory directly follows its parent's branch.
@@ -112,26 +109,22 @@ def test_categories_list_parents_before_their_subcategories(demo):
                 assert paths[index - 1].startswith(path.rsplit(" / ", 1)[0])
 
 
-def test_categories_show_the_team_and_approval_that_apply(demo):
-    admin = Client()
-    admin.login(username="admin", password="argus-demo")
+def test_categories_show_the_team_and_approval_that_apply(admin_client):
     team = Team.objects.create(name="Logistics IT")
     mde = Category.objects.create(name="MDEs", code="t-mde", team=team, requires_approval=True)
     docks = Category.objects.create(name="Docks", code="t-docks", parent=mde)
     cradles = Category.objects.create(name="Cradles", code="t-cradles", parent=docks)
 
-    body = admin.get(f"/api/masterdata/categories/{cradles.pk}").json()
+    body = admin_client.get(f"/api/masterdata/categories/{cradles.pk}").json()
     assert body["team"] is None and body["effective_team"]["id"] == str(team.pk)
     assert body["requires_approval"] is False and body["needs_approval"] is True
-    body = admin.get(f"/api/masterdata/categories/{mde.pk}").json()
+    body = admin_client.get(f"/api/masterdata/categories/{mde.pk}").json()
     assert body["effective_team"]["id"] == str(team.pk) and body["needs_approval"] is True
 
 
-def test_the_default_team_applies_where_nothing_else_does(demo):
+def test_the_default_team_applies_where_nothing_else_does(admin_client):
     from apps.masterdata.models import AssetModel
 
-    admin = Client()
-    admin.login(username="admin", password="argus-demo")
     support = Team.objects.create(name="Front desk", is_default=True)
     hardware = Team.objects.create(name="Hardware")
     mde = Category.objects.create(name="MDEs", code="t-mde")
@@ -140,26 +133,28 @@ def test_the_default_team_applies_where_nothing_else_does(demo):
     model.category, model.team = mde, None
     model.save()
 
-    assert admin.get(f"/api/masterdata/categories/{mde.pk}").json()["effective_team"]["id"] == str(support.pk)
-    assert admin.get(f"/api/masterdata/models/{model.pk}").json()["effective_team"]["id"] == str(support.pk)
+    assert admin_client.get(f"/api/masterdata/categories/{mde.pk}").json()["effective_team"]["id"] == str(
+        support.pk
+    )
+    assert admin_client.get(f"/api/masterdata/models/{model.pk}").json()["effective_team"]["id"] == str(
+        support.pk
+    )
     mde.team = hardware
     mde.save()
-    body = admin.get(f"/api/masterdata/models/{model.pk}").json()
+    body = admin_client.get(f"/api/masterdata/models/{model.pk}").json()
     assert body["team"] is None and body["effective_team"]["id"] == str(hardware.pk)
 
 
-def test_departments_get_an_icon_from_the_choices(demo):
-    admin = Client()
-    admin.login(username="admin", password="argus-demo")
+def test_departments_get_an_icon_from_the_choices(admin_client):
     operations = Department.objects.create(name="Operations")
     assert operations.icon == Department.Icon.BUILDING
 
     payload = {"name": "Support", "icon": "headset", "parent": str(operations.pk)}
-    response = admin.post("/api/accounts/departments", payload, content_type="application/json")
+    response = admin_client.post("/api/accounts/departments", payload, content_type="application/json")
     assert response.status_code == 201, response.content
     assert response.json()["icon"] == "headset"
 
-    response = admin.post(
+    response = admin_client.post(
         "/api/accounts/departments",
         {**payload, "name": "Shoes", "icon": "rocket"},
         content_type="application/json",

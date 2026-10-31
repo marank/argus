@@ -1,9 +1,10 @@
-from datetime import date, timedelta
+from datetime import timedelta
 from typing import Any
 
 import pytest
 from django.core import mail
 from django.test import Client
+from django.utils import timezone
 
 from apps.accounts.models import Department, User
 from apps.core.models import MailSettings
@@ -35,7 +36,7 @@ def approver_client(approval_setup) -> Client:
 
 
 def request(client, *categories: str, requester: User | None = None) -> dict[str, Any]:
-    start = date.today() + timedelta(days=3)
+    start = timezone.localdate() + timedelta(days=3)
     payload = {
         "title": "Workshop",
         "duration": "temporary",
@@ -202,7 +203,7 @@ def test_asking_again_shows_the_approver_why_it_was_declined(
         f"/api/approvals/{declined['id']}/decline", {"comment": "Not this quarter"}, content_type=JSON
     )
 
-    start = date.today() + timedelta(days=3)
+    start = timezone.localdate() + timedelta(days=3)
     response = employee_client.post(
         "/api/requests",
         {
@@ -228,7 +229,7 @@ def test_asking_again_shows_the_approver_why_it_was_declined(
 
 def test_follows_only_an_own_request(approval_setup, employee_client, it_client):
     someone_else = request(it_client, "headsets")
-    start = date.today() + timedelta(days=3)
+    start = timezone.localdate() + timedelta(days=3)
     response = employee_client.post(
         "/api/requests",
         {

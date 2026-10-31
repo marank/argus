@@ -1,5 +1,4 @@
-import ast
-import os
+import json
 import subprocess
 import sys
 from io import StringIO
@@ -17,40 +16,66 @@ BACKEND = Path(__file__).resolve().parents[3]
 STRONG_KEY = "x" * 20 + "a-long-random-looking-test-key"
 
 
-def load_settings(show="DEBUG", **env) -> subprocess.CompletedProcess[str]:
-    """Imports the settings in a fresh interpreter with only ``env`` set and prints ``show``."""
-    clean = {k: v for k, v in os.environ.items() if k not in {"SECRET_KEY", "DEBUG", "APP_URLS"}}
-    return subprocess.run(
-        [sys.executable, "-c", f"from config import settings; print(settings.{show})"],
+APP_URLS = "http://192.168.1.10:8080,https://[FD00::1]:8443"
+WEAK_KEYS = ["change-me", "short-but-not-a-placeholder", "django-insecure-" + "x" * 40]
+ENVIRONMENTS = {
+    "nothing": {},
+    "secret key": {"SECRET_KEY": STRONG_KEY},
+    "secret key and debug": {"SECRET_KEY": STRONG_KEY, "DEBUG": "true"},
+    "app urls": {"SECRET_KEY": STRONG_KEY, "APP_URLS": APP_URLS},
+} | {f"weak key {key}": {"SECRET_KEY": key} for key in WEAK_KEYS}
+
+# Imports the settings once per environment, all in one fresh interpreter (starting
+# one per case took seconds each), and prints what each import gave as JSON.
+LOAD_EACH = """
+import importlib, json, os, sys
+base = {k: v for k, v in os.environ.items() if k not in {"SECRET_KEY", "DEBUG", "APP_URLS"}}
+results = {}
+for name, env in json.loads(sys.argv[1]).items():
+    os.environ.clear()
+    os.environ.update(base | env)
+    sys.modules.pop("config.settings", None)
+    try:
+        settings = importlib.import_module("config.settings")
+    except Exception as error:
+        results[name] = {"error": type(error).__name__}
+    else:
+        results[name] = {k: getattr(settings, k) for k in ("DEBUG", "ALLOWED_HOSTS", "CSRF_TRUSTED_ORIGINS")}
+print(json.dumps(results))
+"""
+
+
+@pytest.fixture(scope="module")
+def loaded():
+    result = subprocess.run(
+        [sys.executable, "-c", LOAD_EACH, json.dumps(ENVIRONMENTS)],
         cwd=BACKEND,
-        env=clean | env,
         capture_output=True,
         text=True,
+        check=True,
     )
+    return json.loads(result.stdout)
 
 
-def test_debug_is_on_only_without_a_secret_key():
-    assert load_settings().stdout.strip() == "True"
-    assert load_settings(SECRET_KEY=STRONG_KEY).stdout.strip() == "False"
-    assert load_settings(SECRET_KEY=STRONG_KEY, DEBUG="true").stdout.strip() == "True"
+def test_debug_is_on_only_without_a_secret_key(loaded):
+    assert loaded["nothing"]["DEBUG"] is True
+    assert loaded["secret key"]["DEBUG"] is False
+    assert loaded["secret key and debug"]["DEBUG"] is True
 
 
-def test_app_urls_with_ip_addresses_are_allowed_hosts():
-    urls = "http://192.168.1.10:8080,https://[FD00::1]:8443"
-    env = {"APP_URLS": urls, "SECRET_KEY": STRONG_KEY}
-    hosts = ast.literal_eval(load_settings("ALLOWED_HOSTS", **env).stdout)
-    origins = ast.literal_eval(load_settings("CSRF_TRUSTED_ORIGINS", **env).stdout)
-
+def test_app_urls_with_ip_addresses_are_allowed_hosts(loaded):
+    hosts = loaded["app urls"]["ALLOWED_HOSTS"]
     for host in ("192.168.1.10:8080", "[fd00::1]:8443"):
         assert validate_host(split_domain_port(host)[0], hosts)
-    assert origins == ["http://192.168.1.10:8080", "https://[fd00::1]:8443"]
+    assert loaded["app urls"]["CSRF_TRUSTED_ORIGINS"] == [
+        "http://192.168.1.10:8080",
+        "https://[fd00::1]:8443",
+    ]
 
 
-@pytest.mark.parametrize("key", ["change-me", "short-but-not-a-placeholder", "django-insecure-" + "x" * 40])
-def test_weak_secret_keys_are_refused_without_debug(key):
-    result = load_settings(SECRET_KEY=key)
-    assert result.returncode != 0
-    assert "ImproperlyConfigured" in result.stderr
+@pytest.mark.parametrize("key", WEAK_KEYS)
+def test_weak_secret_keys_are_refused_without_debug(loaded, key):
+    assert loaded[f"weak key {key}"] == {"error": "ImproperlyConfigured"}
 
 
 def test_initial_administrator_takes_any_password(db, monkeypatch):

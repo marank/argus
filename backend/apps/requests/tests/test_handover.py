@@ -62,10 +62,6 @@ def test_terminal_account_is_confined(terminal_client):
     assert terminal_client.get("/api/inventory/assets").status_code == 403
 
 
-def test_employee_cannot_use_terminal(employee_client):
-    assert employee_client.get("/api/terminal/pickups").status_code == 403
-
-
 def test_delivered_by_it(it_client):
     asset_request = ready_pickup()
     response = it_client.post(

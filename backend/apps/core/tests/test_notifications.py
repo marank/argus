@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
 import pytest
@@ -12,7 +12,7 @@ from apps.accounts.models import User
 from apps.core.models import MailSettings, SiteSettings
 from apps.masterdata.models import Category
 from apps.requests.models import AssetRequest, AssetRequestStatus
-from apps.requests.tests.plan import handover_plan
+from apps.requests.tests.flow import handover_plan
 
 if TYPE_CHECKING:
     from django.test.client import _MonkeyPatchedWSGIResponse
@@ -20,19 +20,8 @@ if TYPE_CHECKING:
 JSON = "application/json"
 
 
-@pytest.fixture
-def mail_on(demo):
-    settings = MailSettings.load()
-    settings.enabled = True
-    settings.host = "smtp.example.com"
-    settings.from_email = "argus@example.com"
-    settings.app_url = "https://argus.example.com"
-    settings.save()
-    return settings
-
-
 def submit(client: Client, days: int = 3) -> _MonkeyPatchedWSGIResponse:
-    start = date.today() + timedelta(days=1)
+    start = timezone.localdate() + timedelta(days=1)
     response = client.post(
         "/api/requests",
         {
@@ -161,9 +150,7 @@ def test_maximum_loan_period(demo, employee_client):
     assert submit(employee_client, days=5).status_code == 201
 
 
-def test_mail_settings_keep_the_password_and_send_a_test(demo):
-    admin = Client()
-    admin.login(username="admin", password="argus-demo")
+def test_mail_settings_keep_the_password_and_send_a_test(admin_client):
     payload = {
         "enabled": True,
         "host": "smtp.example.com",
@@ -173,16 +160,16 @@ def test_mail_settings_keep_the_password_and_send_a_test(demo):
         "password": "secret",
         "from_email": "argus@example.com",
     }
-    response = admin.put("/api/settings/mail", payload, content_type=JSON)
+    response = admin_client.put("/api/settings/mail", payload, content_type=JSON)
     assert response.status_code == 200, response.content
     assert response.json()["password_set"] is True
     assert "password" not in response.json()
 
     # Saving without a password keeps the stored one.
-    response = admin.put("/api/settings/mail", {**payload, "password": None}, content_type=JSON)
+    response = admin_client.put("/api/settings/mail", {**payload, "password": None}, content_type=JSON)
     assert MailSettings.load().password == "secret"
 
-    response = admin.post("/api/settings/mail/test", {"to": "admin@example.com"}, content_type=JSON)
+    response = admin_client.post("/api/settings/mail/test", {"to": "admin@example.com"}, content_type=JSON)
     assert response.status_code == 200, response.content
     assert mail.outbox[-1].to == ["admin@example.com"]
 
@@ -238,7 +225,11 @@ def test_the_employee_hears_of_every_step_after_ready(
             "Übergabe geändert",
         ),
         ("hand-out", {}, "Ausgegeben"),
-        ("extend", {"end_date": (date.today() + timedelta(days=20)).isoformat()}, "Leihfrist verlängert"),
+        (
+            "extend",
+            {"end_date": (timezone.localdate() + timedelta(days=20)).isoformat()},
+            "Leihfrist verlängert",
+        ),
         ("return", {}, "Zurückgenommen"),
     ]
     for action, data, subject in steps:
@@ -393,11 +384,9 @@ def test_read_all(demo, employee_client, it_client, django_capture_on_commit_cal
     assert employee_client.get("/api/notifications").json()["count"] == 2
 
 
-def test_site_wide_switches_per_channel(demo):
-    admin = Client()
-    admin.login(username="admin", password="argus-demo")
+def test_site_wide_switches_per_channel(admin_client):
     data = {"mail": {"request_ready": False, "unknown": False}, "app": {"license_expiring": False}}
-    body = admin.put("/api/settings/notifications", data, content_type=JSON).json()
+    body = admin_client.put("/api/settings/notifications", data, content_type=JSON).json()
     assert body["mail"]["request_ready"] is False and body["app"]["request_ready"] is True
     assert body["app"]["license_expiring"] is False and "unknown" not in body["mail"]
     assert Client().get("/api/settings/notifications").status_code in (401, 403)

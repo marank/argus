@@ -2,12 +2,13 @@ from django.core.management import call_command
 from django.utils import timezone
 
 from apps.accounts.models import Team, User
+from apps.core.management.commands.seed_demo import Command
 from apps.inventory.models import Asset, AssetIssue, AssetIssueStatus, AssetStatus, License
 from apps.procurement.models import PurchaseOrder, PurchaseOrderStatus
 from apps.requests.models import AssetRequest, AssetRequestStatus
 
 
-def test_full_demo_data_covers_every_state(db):
+def test_full_demo_data_covers_every_state(empty_db):
     """The complete demo data runs through and shows every state at least once."""
     call_command("seed_demo", verbosity=0)
 
@@ -34,9 +35,9 @@ def test_full_demo_data_covers_every_state(db):
     assert AssetIssue.objects.filter(assignee__username="it").exists()
 
 
-def test_seeding_keeps_the_password_of_existing_accounts(db):
+def test_seeding_keeps_the_password_of_existing_accounts(empty_db):
     User.objects.create_superuser("admin", password="the-real-one")
-    call_command("seed_demo", verbosity=0)
+    Command().seed_base()  # creates the accounts; the full command adds only data
     admin = User.objects.get(username="admin")
     assert admin.check_password("the-real-one")
     assert not admin.check_password("argus-demo")

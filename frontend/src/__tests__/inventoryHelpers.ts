@@ -16,7 +16,7 @@ import { useFeaturesStore } from '@/stores/features'
 import type { Page } from '@/types/common'
 
 import { makeSiteSettings, makeUser } from './helpers'
-import { hasButton } from './dom'
+import { fakeMatchMedia, hasButton } from './dom'
 
 type Permissions = Record<string, 'read' | 'write'>
 
@@ -40,22 +40,6 @@ export function stubPickers() {
     vi.spyOn(api, 'list').mockResolvedValue(page([]))
 }
 
-/** jsdom lacks matchMedia, which Naive UI's dropdowns ask. */
-function installMatchMedia() {
-  if (typeof window.matchMedia === 'function') return
-  window.matchMedia = (query: string) =>
-    ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      addListener: () => {},
-      removeListener: () => {},
-      dispatchEvent: () => false,
-    }) as MediaQueryList
-}
-
 /**
  * Mounts `component` the way the app shows it: Naive UI's message and dialog
  * providers, i18n (English), Pinia with a signed-in IT user holding
@@ -67,7 +51,7 @@ export async function mountPage(
   props: Record<string, unknown> = {},
   options: { permissions?: Permissions; flags?: Record<string, boolean>; url?: string } = {},
 ) {
-  installMatchMedia()
+  if (typeof window.matchMedia !== 'function') fakeMatchMedia()
   const pinia = createPinia()
   setActivePinia(pinia)
   useAuthStore().user = makeUser({ is_it_staff: true, permissions: options.permissions ?? {} })

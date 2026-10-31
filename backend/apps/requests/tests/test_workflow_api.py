@@ -6,12 +6,13 @@ from django.utils import timezone
 from apps.accounts.models import User
 from apps.inventory.models import Asset
 from apps.masterdata.models import Category, Location
-from apps.requests.tests.plan import handover_plan
+from apps.requests.models import AssetRequest
+from apps.requests.tests.flow import handover_plan
 
 
 def test_full_asset_request_cycle(employee_client, it_client):
     laptops = Category.objects.get(code="laptops")
-    start = date.today() + timedelta(days=3)
+    start = timezone.localdate() + timedelta(days=3)
     response = employee_client.post(
         "/api/requests",
         {
@@ -75,7 +76,8 @@ def test_employee_sees_only_own_asset_requests(employee_client, demo):
     other = Client()
     other.login(username="newbie", password="argus-demo")
     assert other.get("/api/requests").json()["count"] == 0
-    assert employee_client.get("/api/requests").json()["count"] == 3
+    own = AssetRequest.objects.filter(requester__username="employee").count()
+    assert employee_client.get("/api/requests").json()["count"] == own > 0
 
 
 def test_order_from_need_and_receive(it_client):
@@ -133,7 +135,7 @@ def test_catalog_hides_availability_from_employees(employee_client, it_client):
 def test_auto_allocate_a_single_item(employee_client, it_client):
     laptops = Category.objects.get(code="laptops")
     headsets = Category.objects.get(code="headsets")
-    start = date.today() + timedelta(days=2)
+    start = timezone.localdate() + timedelta(days=2)
     asset_request = employee_client.post(
         "/api/requests",
         {
@@ -160,7 +162,7 @@ def test_auto_allocate_a_single_item(employee_client, it_client):
 
 def _ready_request(employee_client, it_client, **ready) -> dict[str, Any]:
     headsets = Category.objects.get(code="headsets")
-    start = date.today() + timedelta(days=2)
+    start = timezone.localdate() + timedelta(days=2)
     asset_request = employee_client.post(
         "/api/requests",
         {
@@ -210,7 +212,7 @@ def test_ready_request_can_be_reopened(employee_client, it_client, terminal_clie
 
 def _confirmed_headset(employee_client, it_client) -> str:
     """A confirmed request with its headset allocated; returns its URL."""
-    start = date.today() + timedelta(days=2)
+    start = timezone.localdate() + timedelta(days=2)
     asset_request = employee_client.post(
         "/api/requests",
         {
@@ -315,7 +317,7 @@ def _request_with_pickup_wish(client, start: date, wish: date):
 
 
 def test_employees_name_a_preferred_pickup_day(employee_client):
-    start = date.today() + timedelta(days=5)
+    start = timezone.localdate() + timedelta(days=5)
     response = _request_with_pickup_wish(employee_client, start, start - timedelta(days=1))
     assert response.status_code == 201, response.content
     assert response.json()["requested_pickup_date"] == (start - timedelta(days=1)).isoformat()
@@ -324,5 +326,8 @@ def test_employees_name_a_preferred_pickup_day(employee_client):
     # Not after the devices are needed, not in the past.
     assert _request_with_pickup_wish(employee_client, start, start + timedelta(days=1)).status_code == 409
     assert (
-        _request_with_pickup_wish(employee_client, start, date.today() - timedelta(days=1)).status_code == 409
+        _request_with_pickup_wish(
+            employee_client, start, timezone.localdate() - timedelta(days=1)
+        ).status_code
+        == 409
     )

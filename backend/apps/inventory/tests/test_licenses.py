@@ -1,11 +1,13 @@
 import uuid
-from datetime import date, timedelta
+from datetime import timedelta
 from typing import Any
+
+from django.utils import timezone
 
 from apps.accounts.models import User
 from apps.inventory.models import Asset, License
 from apps.masterdata.models import AssetModel, Category
-from apps.requests.tests.plan import handover_plan
+from apps.requests.tests.flow import handover_plan
 
 JSON = "application/json"
 
@@ -18,8 +20,9 @@ def test_license_list_counts_used_seats(it_client):
     response = it_client.get("/api/inventory/licenses?ordering=model__name")
     assert response.status_code == 200, response.content
     by_name = {item["model"]["name"]: item for item in response.json()["items"]}
-    assert by_name["365 Business Standard"]["seats"] == 25
-    assert by_name["365 Business Standard"]["seats_used"] == 4
+    m365 = License.objects.get(model__name="365 Business Standard")
+    assert by_name["365 Business Standard"]["seats"] == m365.seats
+    assert by_name["365 Business Standard"]["seats_used"] == m365.assignments.count() > 0
     assert by_name["AutoCAD LT"]["assign_to"] == "device"
     assert by_name["AutoCAD LT"]["category"]["kind"] == "software"
 
@@ -77,7 +80,9 @@ def test_assignment_must_match_license_type(it_client):
 
 
 def test_expired_license_cannot_be_assigned(it_client):
-    License.objects.filter(model__name="Acrobat Pro").update(valid_until=date.today() - timedelta(days=1))
+    License.objects.filter(model__name="Acrobat Pro").update(
+        valid_until=timezone.localdate() - timedelta(days=1)
+    )
     acrobat = License.objects.get(model__name="Acrobat Pro")
     admin = User.objects.get(username="admin")
     response = it_client.post(
@@ -125,7 +130,7 @@ def test_software_request_is_filled_with_a_license_seat(employee_client, it_clie
     from apps.inventory.models import LicenseAssignment
 
     acrobat = AssetModel.objects.get(name="Acrobat Pro")
-    start = date.today() + timedelta(days=1)
+    start = timezone.localdate() + timedelta(days=1)
     response = employee_client.post(
         "/api/requests",
         {
@@ -169,7 +174,7 @@ def test_temporary_software_seat_is_taken_back(employee_client, it_client):
     from apps.inventory.models import LicenseAssignment
 
     acrobat = AssetModel.objects.get(name="Acrobat Pro")
-    start = date.today()
+    start = timezone.localdate()
     rid = employee_client.post(
         "/api/requests",
         {
@@ -201,7 +206,8 @@ def test_catalog_shows_free_seats_to_it(it_client):
     office = next(c for c in catalog if c["code"] == "office-software")
     assert office["kind"] == "software"
     m365 = next(m for m in office["models"] if m["name"] == "365 Business Standard")
-    assert m365["available"] == 21
+    license = License.objects.get(model__name="365 Business Standard")
+    assert m365["available"] == license.seats - license.assignments.count()
 
 
 def test_my_licenses_lists_user_and_device_seats(employee_client, it_client):

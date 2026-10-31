@@ -121,7 +121,3 @@ def test_widget_data_for_it(it_client):
         response = it_client.get(f"/api/dashboard/widgets/{path}")
         assert response.status_code == 200, (path, response.content)
     assert len(it_client.get("/api/dashboard/widgets/request-trend").json()) == 12
-
-
-def test_widget_data_is_for_it_only(employee_client):
-    assert employee_client.get("/api/dashboard/widgets/team-load").status_code in (401, 403)

@@ -1,41 +1,13 @@
-from datetime import date, timedelta
+from datetime import timedelta
 
 from django.test import Client
+from django.utils import timezone
 
 from apps.accounts.models import User
 from apps.inventory.models import Asset, AssetStatus
 from apps.masterdata.models import AssetModel, Category, Location, LocationKind
 from apps.requests.models import AssetRequest, Handover
-from apps.requests.tests.plan import handover_plan
-
-JSON = "application/json"
-
-
-def submit(client, items, duration="temporary", start=None):
-    start = start or date.today()
-    data = {"title": "Test", "duration": duration, "start_date": start.isoformat(), "items": items}
-    if duration == "temporary":
-        data["end_date"] = (start + timedelta(days=3)).isoformat()
-    return client.post("/api/requests", data, content_type=JSON)
-
-
-def prepare(employee_client, it_client, items, duration="temporary", handover_mode="collect", **ready):
-    response = submit(employee_client, items, duration)
-    assert response.status_code == 201, response.content
-    rid = response.json()["id"]
-    it_client.post(f"/api/requests/{rid}/confirm", {"items": []}, content_type=JSON)
-    it_client.post(f"/api/requests/{rid}/auto-allocate")
-    response = it_client.post(
-        f"/api/requests/{rid}/ready",
-        {"handover_mode": handover_mode, **handover_plan(), **ready},
-        content_type=JSON,
-    )
-    assert response.status_code == 200, response.content
-    return rid
-
-
-def laptops():
-    return [{"category": str(Category.objects.get(code="laptops").pk), "quantity": 1}]
+from apps.requests.tests.flow import JSON, laptops, prepare, submit
 
 
 def lent_allocation(rid):
@@ -43,7 +15,7 @@ def lent_allocation(rid):
 
 
 def test_start_date_must_not_be_in_the_past(employee_client):
-    response = submit(employee_client, laptops(), start=date.today() - timedelta(days=1))
+    response = submit(employee_client, laptops(), start=timezone.localdate() - timedelta(days=1))
     assert response.status_code == 409
 
 

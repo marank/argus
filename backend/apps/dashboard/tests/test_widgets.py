@@ -111,7 +111,7 @@ def test_expired_licenses_count_while_still_assigned(it_client):
 def test_employee_dashboard_lists_returns_overdue_or_due_soon(employee_client):
     employee = User.objects.get(username="employee")
     today = timezone.localdate()
-    lent = AssetRequest.objects.filter(requester=employee)[:3]
+    lent = AssetRequest.objects.filter(requester=employee).order_by("pk")[:3]
     overdue, soon, later = (r.pk for r in lent)
     for pk, end in ((overdue, -3), (soon, 5), (later, 30)):
         AssetRequest.objects.filter(pk=pk).update(

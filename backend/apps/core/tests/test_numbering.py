@@ -27,10 +27,6 @@ def test_api_requires_login(client, db):
     assert client.get("/api/inventory/assets").status_code == 401
 
 
-def test_employee_cannot_access_inventory(employee_client):
-    assert employee_client.get("/api/inventory/assets").status_code == 403
-
-
 def test_ids_are_uuids(it_client):
     import uuid
 
@@ -85,21 +81,19 @@ def test_preview_needs_the_right_to_edit_number_sequences(it_client):
     assert response.status_code == 403
 
 
-def test_sequence_code_is_optional_but_unique_and_fixed_for_system_sequences(demo):
-    admin = Client()
-    admin.login(username="admin", password="argus-demo")
+def test_sequence_code_is_optional_but_unique_and_fixed_for_system_sequences(admin_client):
     url = "/api/masterdata/number-sequences"
     for name in ("Headsets", "Docks"):
-        response = admin.post(url, {"name": name}, content_type=JSON)
+        response = admin_client.post(url, {"name": name}, content_type=JSON)
         assert response.status_code == 201, response.content
 
-    response = admin.post(url, {"name": "Copy", "code": "asset"}, content_type=JSON)
+    response = admin_client.post(url, {"name": "Copy", "code": "asset"}, content_type=JSON)
     assert response.status_code == 422, response.content
     assert "code" in response.json()["errors"]
 
     # Argus draws inventory numbers by the code "asset"; renaming it would start a new range.
     asset = NumberSequence.objects.get(code="asset")
-    response = admin.put(
+    response = admin_client.put(
         f"{url}/{asset.pk}", {"name": asset.name, "code": "", "pattern": asset.pattern}, content_type=JSON
     )
     assert response.status_code == 422, response.content
@@ -112,14 +106,12 @@ def test_system_sequences_exist_from_the_start(db):
     assert set(system.values_list("code", flat=True)) == {"asset", "request", "purchase-order"}
 
 
-def test_system_sequences_cannot_be_deleted(demo):
-    admin = Client()
-    admin.login(username="admin", password="argus-demo")
+def test_system_sequences_cannot_be_deleted(admin_client):
     url = "/api/masterdata/number-sequences"
     asset = NumberSequence.objects.get(code="asset")
-    assert admin.delete(f"{url}/{asset.pk}").status_code == 409
+    assert admin_client.delete(f"{url}/{asset.pk}").status_code == 409
     own = NumberSequence.objects.create(name="Headsets")
-    assert admin.delete(f"{url}/{own.pk}").status_code == 204
+    assert admin_client.delete(f"{url}/{own.pk}").status_code == 204
 
 
 def test_numbers_already_taken_are_skipped(db):

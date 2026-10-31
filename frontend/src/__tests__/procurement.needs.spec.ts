@@ -7,7 +7,7 @@ import type { Schemas } from '@/api/types'
 import NeedsView from '@/views/procurement/NeedsView.vue'
 import OrderListView from '@/views/procurement/OrderListView.vue'
 
-import { button, click } from './dom'
+import { button, click, control, rowWith } from './dom'
 import {
   bodyText,
   categoryRef,
@@ -103,7 +103,7 @@ describe('NeedsView', () => {
   const rowsIn = (title: string) => [...card(title).querySelectorAll<HTMLElement>('tbody tr')]
 
   async function select(title: string, index = 0) {
-    rowsIn(title)[index]!.querySelector<HTMLElement>('.n-checkbox')!.click()
+    rowsIn(title)[index]!.querySelector<HTMLElement>('[role="checkbox"]')!.click()
     await flushPromises()
   }
 
@@ -152,11 +152,9 @@ describe('NeedsView', () => {
     expect(rowsIn('From requests')).toHaveLength(1)
     expect(card('From requests').textContent).not.toContain('Covered laptop')
 
-    card('From requests').querySelector<HTMLElement>('.n-card-header .n-checkbox')!.click()
-    await flushPromises()
-    expect(card('From requests').textContent).toContain('Show 1 covered line')
-    const covered = rowsIn('From requests').find((r) => r.textContent?.includes('Covered laptop'))!
-    expect(covered.querySelector('.n-checkbox')!.classList).toContain('n-checkbox--disabled')
+    await click(control('checkbox', 'Show 1 covered line', card('From requests')))
+    const covered = rowWith('Covered laptop', card('From requests'))
+    expect(covered.querySelector('[role="checkbox"]')!.classList).toContain('n-checkbox--disabled')
   })
 
   it('says there is no demand when every line is covered', async () => {
@@ -255,10 +253,9 @@ describe('NeedsView', () => {
     await select('From requests')
     await select('Consumables below minimum')
     await click('Create order (2)')
-    const removes = document.body.querySelectorAll<HTMLButtonElement>(
-      '.n-modal tbody td:last-child button',
-    )
-    await click(removes[0]!)
+    const line = rowWith('Dell Latitude 5450 · REQ-0007', document.body.querySelector('.n-modal')!)
+    // The untitled bin button ends the line, after the quantity's steppers.
+    await click([...line.querySelectorAll('button')].at(-1)!)
     await click(button('Create order'))
     expect(create.mock.calls[0]![0].lines).toEqual([
       expect.objectContaining({ asset_model: 'm5', quantity: 8 }),

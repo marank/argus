@@ -96,9 +96,3 @@ def test_taking_back_on_the_device_page_completes_it(it_client):
     asset.refresh_from_db()
     assert asset.status == AssetStatus.IN_STOCK
     assert asset.events.filter(kind=AssetEventKind.RETURNED, asset_request_id=body["id"]).count() == 1
-
-
-def test_employees_cannot(employee_client):
-    asset = in_stock()
-    response = post(employee_client, asset, duration="permanent")
-    assert response.status_code == 403

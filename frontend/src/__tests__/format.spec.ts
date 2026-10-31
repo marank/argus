@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 
 import { fromIsoDate, toIsoDate } from '@/composables/useFormat'
 import { modelLabel } from '@/utils/models'
-import { toneOf } from '@/utils/status'
 
 describe('date helpers', () => {
   it('round-trips ISO dates in local time', () => {
@@ -13,13 +12,6 @@ describe('date helpers', () => {
   it('handles empty values', () => {
     expect(toIsoDate(null)).toBeNull()
     expect(fromIsoDate('')).toBeNull()
-  })
-})
-
-describe('status tones', () => {
-  it('maps known statuses and falls back to default', () => {
-    expect(toneOf('requestStatus', 'ready')).toBe('success')
-    expect(toneOf('assetStatus', 'unknown')).toBe('default')
   })
 })
 

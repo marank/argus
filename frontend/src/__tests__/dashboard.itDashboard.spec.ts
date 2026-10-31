@@ -246,22 +246,16 @@ describe('IT dashboard', () => {
       expect(pageText()).not.toContain('Recent activity')
     })
 
-    it('changes the width of a widget', async () => {
+    it.each([
+      ['width', 'Third', { size: 'small' }],
+      ['height', 'Tall', { height: 'large' }],
+    ])('changes the %s of a widget', async (_, choice, saved) => {
       await dashboard()
       await edit()
       await click(editBar('Recent activity').button('Size'))
-      await click('Third')
+      await click(choice)
       await click('Done')
-      expect(savedLayout().find((w) => w.id === 'activity')).toMatchObject({ size: 'small' })
-    })
-
-    it('changes the height of a widget', async () => {
-      await dashboard()
-      await edit()
-      await click(editBar('Recent activity').button('Size'))
-      await click('Tall')
-      await click('Done')
-      expect(savedLayout().find((w) => w.id === 'activity')).toMatchObject({ height: 'large' })
+      expect(savedLayout().find((w) => w.id === 'activity')).toMatchObject(saved)
     })
 
     it('moves a widget back and forward', async () => {

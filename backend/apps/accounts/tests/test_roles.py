@@ -1,11 +1,13 @@
-from datetime import date, timedelta
+from datetime import timedelta
 
 import pytest
 from django.test import Client
+from django.utils import timezone
 
 from apps.accounts.models import Role, User
 from apps.accounts.permissions import PermissionLevel, ResourceKey, can, effective_permissions
 from apps.masterdata.models import Category, Manufacturer
+from apps.requests.models import AssetRequest
 
 JSON = "application/json"
 
@@ -88,7 +90,7 @@ def test_superusers_and_employees(demo):
 
 
 def test_asset_request_rights(staff, staff_client, employee_client):
-    start = date.today() + timedelta(days=3)
+    start = timezone.localdate() + timedelta(days=3)
     asset_request = employee_client.post(
         "/api/requests",
         {
@@ -112,23 +114,21 @@ def test_asset_request_rights(staff, staff_client, employee_client):
     assert staff_client.post(f"{url}/confirm", {"items": []}, content_type=JSON).status_code == 200
 
 
-def test_only_administrators_manage_roles(staff, staff_client, it_client):
+def test_only_administrators_manage_roles(staff, staff_client, it_client, admin_client):
     grant(staff, users="write")
     # Not even with the right to edit users: that would let them raise their own rights.
     assert staff_client.get("/api/accounts/roles").status_code == 403
     response = staff_client.post("/api/accounts/roles", {"name": "Mine"}, content_type=JSON)
     assert response.status_code == 403
 
-    admin = Client()
-    admin.login(username="admin", password="argus-demo")
-    response = admin.post(
+    response = admin_client.post(
         "/api/accounts/roles",
         {"name": "Purchasing", "permissions": {"procurement": "write"}, "members": [str(staff.pk)]},
         content_type=JSON,
     )
     assert response.status_code == 201, response.content
     assert response.json()["members"][0]["username"] == "staff"
-    resources = admin.get("/api/accounts/roles/resources").json()
+    resources = admin_client.get("/api/accounts/roles/resources").json()
     assert {r["key"] for r in resources} == set(ResourceKey)
     assert staff_client.get("/api/auth/me").json()["permissions"] == {
         "users": "write",
@@ -151,7 +151,7 @@ def test_dashboard_shows_only_readable_areas(staff, staff_client, it_client):
     assert overview["asset_status"] == full["asset_status"]
 
 
-def test_only_administrators_change_or_delete_administrators(staff, staff_client):
+def test_only_administrators_change_or_delete_administrators(staff, staff_client, admin_client):
     grant(staff, users="write")
     admin = User.objects.get(username="admin")
     payload = {"username": "admin", "first_name": "Ada", "last_name": "Admin", "is_active": False}
@@ -166,18 +166,14 @@ def test_only_administrators_change_or_delete_administrators(staff, staff_client
     payload = {"username": "employee", "first_name": "Erika", "last_name": "Neu"}
     response = staff_client.put(f"/api/accounts/users/{employee.pk}", payload, content_type=JSON)
     assert response.status_code == 200, response.content
-    admin_client = Client()
-    admin_client.login(username="admin", password="argus-demo")
     payload = {"username": "admin", "first_name": "Ada", "last_name": "Lovelace"}
     response = admin_client.put(f"/api/accounts/users/{admin.pk}", payload, content_type=JSON)
     assert response.status_code == 200, response.content
 
 
-def test_nobody_deletes_their_own_account(demo):
+def test_nobody_deletes_their_own_account(admin_client):
     admin = User.objects.get(username="admin")
-    client = Client()
-    client.login(username="admin", password="argus-demo")
-    assert client.delete(f"/api/accounts/users/{admin.pk}").status_code == 409
+    assert admin_client.delete(f"/api/accounts/users/{admin.pk}").status_code == 409
 
 
 def test_employees_cannot_read_master_data(employee_client):
@@ -193,10 +189,31 @@ def test_employees_cannot_read_master_data(employee_client):
     assert employee_client.get(f"/api/accounts/users/{admin.pk}").status_code == 403
 
 
-def test_only_administrators_appoint_administrators(staff, staff_client):
+@pytest.mark.parametrize(
+    ("method", "path"),
+    [
+        ("get", "/api/inventory/assets"),
+        ("get", "/api/inventory/issues"),
+        ("get", "/api/terminal/pickups"),
+        ("get", "/api/portal/availability?start=2026-01-01"),
+        ("get", "/api/calendar?start=2026-01-01&end=2026-01-31"),
+        ("get", "/api/dashboard/widgets/team-load"),
+        ("post", "/api/requests/quick"),
+        ("post", "/api/requests/direct"),
+        # Not even for their own request.
+        ("post", "/api/requests/{own}/extend"),
+        ("post", "/api/requests/{own}/remind"),
+    ],
+)
+def test_employees_stay_out_of_it_work(employee_client, method, path):
+    own = AssetRequest.objects.filter(requester__username="employee").order_by("pk").first()
+    assert own is not None
+    response = getattr(employee_client, method)(path.format(own=own.pk), content_type=JSON)
+    assert response.status_code == 403
+
+
+def test_only_administrators_appoint_administrators(staff, staff_client, admin_client):
     grant(staff, users="write")
-    admin = Client()
-    admin.login(username="admin", password="argus-demo")
     url = f"/api/accounts/users/{staff.pk}"
     data = {"username": "staff", "is_staff": True}
 
@@ -211,36 +228,36 @@ def test_only_administrators_appoint_administrators(staff, staff_client):
     assert staff_client.put(url, {**data, "is_superuser": False}, content_type=JSON).status_code == 200
     assert staff_client.put(url, {**data, "job_title": "Support"}, content_type=JSON).status_code == 200
 
-    response = admin.put(url, {**data, "is_superuser": True}, content_type=JSON)
+    response = admin_client.put(url, {**data, "is_superuser": True}, content_type=JSON)
     assert response.status_code == 200, response.content
     assert response.json()["is_superuser"] is True
     staff.refresh_from_db()
     assert staff.is_superuser
 
     # Leaving the field out keeps the status.
-    assert admin.put(url, data, content_type=JSON).status_code == 200
+    assert admin_client.put(url, data, content_type=JSON).status_code == 200
     staff.refresh_from_db()
     assert staff.is_superuser
 
     # Administrators demote others, but never themselves.
     own = User.objects.get(username="admin")
-    response = admin.put(
-        f"/api/accounts/users/{own.pk}", {"username": "admin", "is_superuser": False}, content_type=JSON
+    response = admin_client.put(
+        f"/api/accounts/users/{own.pk}",
+        {"username": "admin", "is_superuser": False},
+        content_type=JSON,
     )
     assert response.status_code == 409
     assert User.objects.get(pk=own.pk).is_superuser
-    assert admin.put(url, {**data, "is_superuser": False}, content_type=JSON).status_code == 200
+    assert admin_client.put(url, {**data, "is_superuser": False}, content_type=JSON).status_code == 200
     staff.refresh_from_db()
     assert not staff.is_superuser
 
 
-def test_nobody_deactivates_themselves(demo):
-    admin = Client()
-    admin.login(username="admin", password="argus-demo")
+def test_nobody_deactivates_themselves(admin_client):
     own = User.objects.get(username="admin")
     url = f"/api/accounts/users/{own.pk}"
     data = {"username": "admin", "is_staff": True}
-    assert admin.put(url, {**data, "is_active": False}, content_type=JSON).status_code == 409
+    assert admin_client.put(url, {**data, "is_active": False}, content_type=JSON).status_code == 409
     assert User.objects.get(pk=own.pk).is_active
 
     # Another administrator may deactivate them, e.g. the one from ADMIN_USERNAME.
@@ -251,12 +268,10 @@ def test_nobody_deactivates_themselves(demo):
     assert not User.objects.get(pk=own.pk).is_active
 
 
-def test_roles_and_teams_in_the_user_form(staff, staff_client):
+def test_roles_and_teams_in_the_user_form(staff, staff_client, admin_client):
     from apps.accounts.models import Team
 
     grant(staff, users="write")
-    admin = Client()
-    admin.login(username="admin", password="argus-demo")
     role = Role.objects.create(name="Support", permissions={"inventory": "read"})
     team = Team.objects.create(name="Ledgerline")
     colleague = User.objects.create_user("colleague", is_staff=True)
@@ -271,7 +286,7 @@ def test_roles_and_teams_in_the_user_form(staff, staff_client):
     assert response.status_code == 200, response.content
     assert [t["name"] for t in response.json()["teams"]] == ["Ledgerline"]
 
-    response = admin.put(url, {**data, "roles": [str(role.pk)]}, content_type=JSON)
+    response = admin_client.put(url, {**data, "roles": [str(role.pk)]}, content_type=JSON)
     assert response.status_code == 200, response.content
     assert [r["name"] for r in response.json()["roles"]] == ["Support"]
     # Leaving both out keeps them.
@@ -280,18 +295,16 @@ def test_roles_and_teams_in_the_user_form(staff, staff_client):
     assert list(colleague.teams.all()) == [team]
 
 
-def test_terminal_location_only_for_terminals(demo):
+def test_terminal_location_only_for_terminals(admin_client):
     from apps.masterdata.models import Location
 
-    admin = Client()
-    admin.login(username="admin", password="argus-demo")
     location = Location.objects.first()
     assert location is not None
     user = User.objects.create_user("kiosk")
     url = f"/api/accounts/users/{user.pk}"
     data = {"username": "kiosk", "terminal_location": str(location.pk)}
 
-    terminal = admin.put(url, {**data, "is_terminal": True}, content_type=JSON).json()
+    terminal = admin_client.put(url, {**data, "is_terminal": True}, content_type=JSON).json()
     assert terminal["terminal_location"]
-    employee = admin.put(url, {**data, "is_terminal": False}, content_type=JSON).json()
+    employee = admin_client.put(url, {**data, "is_terminal": False}, content_type=JSON).json()
     assert employee["terminal_location"] is None

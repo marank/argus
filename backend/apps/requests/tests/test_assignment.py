@@ -64,7 +64,7 @@ def test_employees_can_neither_assign_nor_see_it(employee_client, support):
 
 def test_assignment_filters(it_client, support):
     it = User.objects.get(username="it")
-    mine, team_only, other_team, unassigned = AssetRequest.objects.all()[:4]
+    mine, team_only, other_team, unassigned = AssetRequest.objects.order_by("pk")[:4]
     mine.assignee = it
     mine.save()
     team_only.assigned_team = support
@@ -125,7 +125,7 @@ def test_issues_can_be_assigned_and_filtered(it_client, support):
 
 def test_dashboard_counts_the_users_queue(it_client, support):
     it = User.objects.get(username="it")
-    open_requests = AssetRequest.objects.filter(status__in=AssetRequest.OPEN_STATUSES)
+    open_requests = AssetRequest.objects.filter(status__in=AssetRequest.OPEN_STATUSES).order_by("pk")
     first, second = open_requests[:2]
     first.assignee = it
     first.save()

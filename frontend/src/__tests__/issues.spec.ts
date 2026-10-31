@@ -154,16 +154,16 @@ describe('IssueConversation', () => {
     expect(shown[4]).toContain('Someone marked the report as resolved')
   })
 
-  it("puts IT's messages on IT's own side", async () => {
-    await conversation(ISSUE, 'it')
-    expect(mine()).toEqual(['Can you bring it by?'])
-    expect(theirs()).toEqual(['The fan is very loud.', 'Will do on Monday.'])
-  })
+  const REPORTER_SAYS = ['The fan is very loud.', 'Will do on Monday.']
+  const IT_SAYS = ['Can you bring it by?']
 
-  it("puts the reporter's messages on the reporter's own side", async () => {
-    await conversation(ISSUE, 'reporter')
-    expect(mine()).toEqual(['The fan is very loud.', 'Will do on Monday.'])
-    expect(theirs()).toEqual(['Can you bring it by?'])
+  it.each([
+    ['it', IT_SAYS, REPORTER_SAYS],
+    ['reporter', REPORTER_SAYS, IT_SAYS],
+  ] as const)("puts the messages of %s on the viewer's own side", async (viewer, own, other) => {
+    await conversation(ISSUE, viewer)
+    expect(mine()).toEqual(own)
+    expect(theirs()).toEqual(other)
   })
 
   it('names the side of each message', async () => {

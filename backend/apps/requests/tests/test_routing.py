@@ -1,25 +1,16 @@
-from datetime import date, timedelta
+from datetime import timedelta
 from typing import Any
 
 import pytest
 from django.core import mail
+from django.utils import timezone
 
 from apps.accounts.models import Team, User
-from apps.core.models import MailSettings
 from apps.inventory.models import Asset, AssetIssue
 from apps.masterdata.models import AssetModel, Category
 from apps.requests.models import AssetRequest
 
 JSON = "application/json"
-
-
-@pytest.fixture
-def mail_on(demo):
-    settings = MailSettings.load()
-    settings.enabled = True
-    settings.host = "smtp.example.com"
-    settings.from_email = "argus@example.com"
-    settings.save()
 
 
 @pytest.fixture
@@ -32,7 +23,7 @@ def staff(demo) -> dict[str, User]:
 
 
 def submit(client, item: dict[str, Any]) -> dict[str, Any]:
-    start = date.today() + timedelta(days=2)
+    start = timezone.localdate() + timedelta(days=2)
     response = client.post(
         "/api/requests",
         {

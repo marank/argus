@@ -1,4 +1,3 @@
-import { flushPromises } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { usersApi } from '@/api/accounts'
@@ -7,7 +6,7 @@ import { assetModelsApi, locationsApi } from '@/api/masterdata'
 import type { Schemas } from '@/api/types'
 import ConsumableListView from '@/views/inventory/ConsumableListView.vue'
 
-import { button, click } from './dom'
+import { button, chooseMenuEntry, click, menuEntries } from './dom'
 import {
   bodyText,
   categoryRef,
@@ -80,12 +79,7 @@ describe('ConsumableListView', () => {
   /** Opens the row's "⋮" menu and picks `action`. */
   async function rowAction(action: string) {
     await click(titled('Actions')[0]!)
-    const item = [...document.body.querySelectorAll<HTMLElement>('.n-dropdown-option')].find(
-      (el) => el.textContent?.trim() === action,
-    )
-    if (!item) throw new Error(`no row action "${action}"`)
-    item.querySelector<HTMLElement>('.n-dropdown-option-body')!.click()
-    await flushPromises()
+    await chooseMenuEntry(action)
   }
 
   it('lists stock with what is reserved and available', async () => {
@@ -232,9 +226,6 @@ describe('ConsumableListView', () => {
   it('offers read-only viewers no stock movements', async () => {
     await show({ consumables: 'read' })
     await click(titled('Actions')[0]!)
-    const actions = [...document.body.querySelectorAll('.n-dropdown-option')].map((el) =>
-      el.textContent?.trim(),
-    )
-    expect(actions).not.toContain('Book in')
+    expect(menuEntries()).not.toContain('Book in')
   })
 })

@@ -20,13 +20,6 @@ postgres_only = pytest.mark.skipif(
 
 
 @pytest.fixture
-def mail_on(demo):
-    MailSettings.objects.update_or_create(
-        defaults={"enabled": True, "host": "smtp.example.com", "from_email": "argus@example.com"}
-    )
-
-
-@pytest.fixture
 def job_queue(settings):
     """Mails go through the Procrastinate queue, as in production (not the default in tests)."""
     settings.JOB_QUEUE = True

@@ -12,8 +12,8 @@ from apps.masterdata.models import Category
 from apps.requests.models import AssetRequest, AssetRequestStatus, Handover
 from apps.requests.services import workflow
 
+from .flow import laptops, submit
 from .test_handover import SIGNATURE, ready_pickup
-from .test_process_gaps import laptops, submit
 
 JSON = "application/json"
 # Fields of the full request that are IT-internal and have no place on a shared terminal.

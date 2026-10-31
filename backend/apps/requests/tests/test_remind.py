@@ -1,13 +1,12 @@
-from datetime import date, timedelta
+from datetime import timedelta
 
 from django.core import mail
+from django.utils import timezone
 
 from apps.accounts.models import User
-from apps.core.tests.test_notifications import mail_on  # noqa: F401 - fixture
 from apps.requests.models import AssetRequest
 
-from .test_extend import handed_out
-from .test_process_gaps import laptops, prepare
+from .flow import handed_out, laptops, prepare
 
 
 def remind(client, rid):
@@ -15,13 +14,13 @@ def remind(client, rid):
 
 
 def test_remind_mails_the_employee_and_records_it(
-    mail_on,  # noqa: F811
+    mail_on,
     employee_client,
     it_client,
     django_capture_on_commit_callbacks,
 ):
     rid = handed_out(employee_client, it_client)
-    AssetRequest.objects.filter(pk=rid).update(end_date=date.today() - timedelta(days=2))
+    AssetRequest.objects.filter(pk=rid).update(end_date=timezone.localdate() - timedelta(days=2))
     mail.outbox.clear()
     with django_capture_on_commit_callbacks(execute=True):
         response = remind(it_client, rid)
@@ -35,7 +34,7 @@ def test_remind_mails_the_employee_and_records_it(
 
 
 def test_remind_ignores_the_personal_switch(
-    mail_on,  # noqa: F811
+    mail_on,
     employee_client,
     it_client,
     django_capture_on_commit_callbacks,
@@ -51,7 +50,7 @@ def test_remind_ignores_the_personal_switch(
 
 
 def test_remind_can_be_repeated(
-    mail_on,  # noqa: F811
+    mail_on,
     employee_client,
     it_client,
     django_capture_on_commit_callbacks,
@@ -71,19 +70,14 @@ def test_remind_needs_mail(employee_client, it_client):
     assert AssetRequest.objects.get(pk=rid).reminded_at is None
 
 
-def test_remind_needs_an_email_address(mail_on, employee_client, it_client):  # noqa: F811
+def test_remind_needs_an_email_address(mail_on, employee_client, it_client):
     rid = handed_out(employee_client, it_client)
     User.objects.filter(asset_requests__pk=rid).update(email="")
     assert remind(it_client, rid).status_code == 409
 
 
-def test_remind_needs_lent_devices(mail_on, employee_client, it_client):  # noqa: F811
+def test_remind_needs_lent_devices(mail_on, employee_client, it_client):
     rid = prepare(employee_client, it_client, laptops())
     assert remind(it_client, rid).status_code == 409
     rid = handed_out(employee_client, it_client, duration="permanent")
     assert remind(it_client, rid).status_code == 409
-
-
-def test_only_it_reminds(mail_on, employee_client, it_client):  # noqa: F811
-    rid = handed_out(employee_client, it_client)
-    assert remind(employee_client, rid).status_code in (401, 403)

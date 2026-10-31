@@ -82,14 +82,12 @@ describe('top bar', () => {
     }
     const open = () => click(document.body.querySelector('button[aria-label="Notifications"]')!)
 
-    it('shows the number of unread notifications', async () => {
-      await bell(3)
-      expect(badge()).toBe('3')
-    })
-
-    it('shows no number when all are read', async () => {
-      await bell(0)
-      expect(badge()).toBeUndefined()
+    it.each([
+      [3, '3'],
+      [0, undefined],
+    ])('shows %i unread notifications as %s on the bell', async (unread, number) => {
+      await bell(unread)
+      expect(badge()).toBe(number)
     })
 
     it('loads the latest notifications when opened', async () => {

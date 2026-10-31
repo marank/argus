@@ -1,23 +1,14 @@
 import re
 import time
 
-import pytest
 from django.core import mail
 from django.test import Client
 
 from apps.accounts.models import BackupCode, TwoFactor, User
 from apps.accounts.services import two_factor
-from apps.core.models import MailSettings
 
 JSON = "application/json"
 PASSWORD = "argus-demo"
-
-
-@pytest.fixture
-def mail_on(db):
-    MailSettings.objects.update_or_create(
-        defaults={"enabled": True, "host": "smtp.example.com", "from_email": "argus@example.com"}
-    )
 
 
 def login(client: Client, username="employee", password=PASSWORD):
@@ -114,7 +105,7 @@ def test_backup_code_works_once(employee_client):
     client = Client()
     login(client)
     assert verify(client, codes[0]).status_code == 400
-    assert BackupCode.objects.filter(used_at__isnull=True).count() == 9
+    assert BackupCode.objects.filter(used_at__isnull=True).count() == two_factor.BACKUP_CODE_COUNT - 1
 
 
 def test_too_many_wrong_codes_need_the_password_again(employee_client):
