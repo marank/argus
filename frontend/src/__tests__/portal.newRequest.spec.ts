@@ -1,8 +1,14 @@
-import { flushPromises } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
+import { NDialogProvider, NMessageProvider } from 'naive-ui'
+import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { defineComponent, h } from 'vue'
+import { createMemoryHistory, createRouter, RouterView } from 'vue-router'
 
 import { ApiError } from '@/api/client'
 import type { Schemas } from '@/api/types'
+import { i18n } from '@/i18n'
+import { useAuthStore } from '@/stores/auth'
 import NewRequestView from '@/views/portal/NewRequestView.vue'
 
 import { makeUser } from './helpers'
@@ -103,6 +109,24 @@ async function choosePurpose(text: string) {
   await typeInto(field('e.g. training, new hire, stocktaking'), text)
 }
 
+/** Step 1 with a purpose, then on to the selection. */
+async function toSelection(purpose = 'Workshop') {
+  await choosePurpose(purpose)
+  await click(button('On to selection'))
+}
+
+/** The cart button in the header, there in every step. */
+const toCart = () => click(document.body.querySelector<HTMLElement>('.cart-button')!)
+
+/** Shown unless the element or a parent is hidden with v-show. */
+function visible(selector: string) {
+  let element = document.body.querySelector<HTMLElement>(selector)
+  if (!element) return false
+  for (; element; element = element.parentElement)
+    if (element.style.display === 'none') return false
+  return true
+}
+
 describe('NewRequestView', () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['Date'] })
@@ -115,6 +139,149 @@ describe('NewRequestView', () => {
   afterEach(() => {
     unmountPages()
     vi.useRealTimers()
+  })
+
+  describe('steps', () => {
+    it('walks through details, selection and cart one step at a time', async () => {
+      await open()
+      expect(visible('.details-card')).toBe(true)
+      expect(visible('.browser')).toBe(false)
+      expect(visible('.cart')).toBe(false)
+      // A purpose first.
+      expect(button('On to selection').disabled).toBe(true)
+      await choosePurpose('   ')
+      expect(button('On to selection').disabled).toBe(true)
+
+      await toSelection('New hire')
+      expect(visible('.details-card')).toBe(false)
+      expect(visible('.browser')).toBe(true)
+      // Nothing chosen yet: the cart step waits.
+      expect(button('To the cart').disabled).toBe(true)
+      await click(addButtonOf('ThinkPad T14'))
+      expect(button('To the cart').disabled).toBe(false)
+
+      await click(button('To the cart'))
+      expect(visible('.cart')).toBe(true)
+      expect(visible('.browser')).toBe(false)
+      expect(cartLines()).toEqual(['ThinkPad T14'])
+      expect(button('Submit request').disabled).toBe(false)
+    })
+
+    it('goes one step back from the bar, and has no way back in the first step', async () => {
+      await open()
+      expect(hasButton('Back')).toBe(false)
+      await toSelection()
+      await click(button('Back'))
+      expect(visible('.details-card')).toBe(true)
+    })
+
+    it('keeps the cart one tap away, with what it holds', async () => {
+      await open()
+      await click(addButtonOf('ThinkPad T14'))
+      expect(document.body.querySelector('.cart-button')!.textContent).toContain('1')
+      await toCart()
+      expect(visible('.cart')).toBe(true)
+      // What was set in the first step, with the way back to change it.
+      expect(document.body.querySelector('.recap')!.textContent).toContain('Please enter a purpose')
+      await click(button('Edit'))
+      expect(visible('.details-card')).toBe(true)
+    })
+  })
+
+  describe('on a phone', () => {
+    const original = window.matchMedia
+    beforeEach(() => {
+      window.matchMedia = ((query: string) => ({
+        matches: query.includes('max-width'),
+        media: query,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+      })) as unknown as typeof window.matchMedia
+    })
+    afterEach(() => {
+      window.matchMedia = original
+    })
+
+    it('shows the selection as a menu: groups, then one group, back to the groups', async () => {
+      await open()
+      await toSelection()
+      expect(visible('.groups')).toBe(true)
+      expect(visible('.options')).toBe(false)
+
+      await click(button('Headsets'))
+      expect(visible('.groups')).toBe(false)
+      expect(visible('.options')).toBe(true)
+      expect(document.body.querySelector('.head-title')?.textContent).toBe('Headsets')
+
+      // Back closes the group first, then leaves the step.
+      await click(button('Back'))
+      expect(visible('.groups')).toBe(true)
+      await click(button('Back'))
+      expect(visible('.details-card')).toBe(true)
+    })
+  })
+
+  describe('leaving', () => {
+    async function openRouted() {
+      const pinia = createPinia()
+      setActivePinia(pinia)
+      useAuthStore().user = EMPLOYEE
+      const router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          { path: '/', name: 'dashboard', component: { render: () => null } },
+          { path: '/portal/new', name: 'portal-new', component: NewRequestView },
+        ],
+      })
+      await router.push('/portal/new')
+      const wrapper = mount(
+        defineComponent({
+          render: () =>
+            h(NMessageProvider, null, {
+              default: () => h(NDialogProvider, null, { default: () => h(RouterView) }),
+            }),
+        }),
+        { attachTo: document.body, global: { plugins: [i18n, pinia, router] } },
+      )
+      await flushPromises()
+      return { wrapper, router }
+    }
+
+    it('asks before throwing away a request that was not sent', async () => {
+      const { wrapper, router } = await openRouted()
+      // Nothing entered yet: nothing to lose.
+      await router.push('/')
+      expect(router.currentRoute.value.name).toBe('dashboard')
+
+      await router.push('/portal/new')
+      await flushPromises()
+      await click(addButtonOf('ThinkPad T14'))
+      const leaving = router.push('/')
+      await flushPromises()
+      expect(bodyText()).toContain('Really cancel this request?')
+      await click(button('Keep editing'))
+      await leaving
+      expect(router.currentRoute.value.name).toBe('portal-new')
+
+      const again = router.push('/')
+      await flushPromises()
+      await click(button('Yes, cancel'))
+      await again
+      expect(router.currentRoute.value.name).toBe('dashboard')
+      wrapper.unmount()
+    })
+
+    it('cancels from the X with the same question, asked once', async () => {
+      const { wrapper, router } = await openRouted()
+      await choosePurpose('Workshop')
+      await click(button('Cancel request'))
+      expect(bodyText()).toContain('Really cancel this request?')
+      await click(button('Yes, cancel'))
+      await flushPromises()
+      // Asked once: a second question on the way out would have kept the page.
+      expect(router.currentRoute.value.name).toBe('dashboard')
+      wrapper.unmount()
+    })
   })
 
   describe('catalog', () => {
@@ -131,6 +298,7 @@ describe('NewRequestView', () => {
 
     it('offers "any model" only where the group allows it and there is a choice', async () => {
       await open()
+      await toSelection()
       await click(button('Headsets'))
       expect(bodyText()).toContain('Jabra Evolve2')
       expect(bodyText()).not.toContain('any model')
@@ -190,6 +358,7 @@ describe('NewRequestView', () => {
 
     it('offers a free-text request when the search finds nothing', async () => {
       await open()
+      await toSelection()
       await typeInto(field('Search, e.g. headset'), 'beamer')
       expect(bodyText()).toContain('Nothing found for “beamer”.')
       expect(bodyText()).toContain('Item not in the catalog?')
@@ -199,7 +368,7 @@ describe('NewRequestView', () => {
       expect(cartLines()).toEqual(['beamer'])
     })
 
-    it('adds consumables for the employee’s own devices from the quick pick', async () => {
+    it('lists what fits the employee’s own devices as a group of its own, opened first', async () => {
       const printer = {
         id: 'a1',
         inventory_number: 'PRN-0007',
@@ -223,30 +392,36 @@ describe('NewRequestView', () => {
         { asset: printer, consumables: [ref('m-ink', 'HP 305 ink'), ref('m-toner', 'Toner')] },
       ] satisfies Schemas['MyConsumablesOut'][])
       await open()
-      const quickPick = document.body.querySelector('.quick-pick')!
-      expect(quickPick.textContent).toContain('For your devices')
-      expect(quickPick.textContent).toContain('PRN-0007')
-      expect(quickPick.textContent).not.toContain('Toner')
+      await toSelection()
+      const fitting = document.body.querySelector('.group.fitting')!
+      expect(fitting.textContent).toContain('For your devices')
+      // It covers one device and opens first.
+      expect(fitting.textContent).toContain('1')
+      expect(fitting.classList).toContain('active')
+      const content = document.body.querySelector('.browser .main')!.textContent
+      expect(content).toContain('PRN-0007')
+      expect(content).not.toContain('Toner')
 
-      await click(quickPick.querySelector('button.chip')!)
+      await click(addButtonOf('HP 305 ink'))
       expect(cartLines()).toEqual(['HP 305 ink'])
     })
 
     it('does not ask for the quick pick when it is switched off', async () => {
-      const { wrapper } = await mountPage(NewRequestView, {
+      await mountPage(NewRequestView, {
         url: '/portal/new',
         flags: { consumable_quick_pick: false },
       })
       expect(api.myConsumables).not.toHaveBeenCalled()
-      expect(wrapper.find('.quick-pick').exists()).toBe(false)
+      expect(document.body.querySelector('.group.fitting')).toBeNull()
     })
   })
 
   describe('building and submitting a request', () => {
     it('can only be submitted with a purpose and at least one line', async () => {
       await open()
+      await toCart()
       expect(bodyText()).toContain('Pick a category and add what you need.')
-      expect(hasButton('Submit request')).toBe(false)
+      expect(button('Submit request').disabled).toBe(true)
 
       await click(addButtonOf('ThinkPad T14'))
       expect(button('Submit request').disabled).toBe(true)
@@ -274,6 +449,7 @@ describe('NewRequestView', () => {
 
     it('sends a temporary request with models, "any model", free text, quantities and notes', async () => {
       const { router } = await open()
+      await toSelection('Workshop in Munich')
       await click(addButtonOf('Laptop · any model'))
       await click(addButtonOf('USB-C Dock'))
       await click(addButtonOf('USB-C Dock'))
@@ -285,8 +461,8 @@ describe('NewRequestView', () => {
       // A note for the first line.
       await click(document.body.querySelector('.cart .note-link')!)
       await typeInto(field('Note (optional)'), 'With US keyboard')
-      await choosePurpose('Workshop in Munich')
       await typeInto(document.body.querySelector('.cart textarea')!, 'Room 4.12')
+      await click(button('To the cart'))
       await click(button('Submit request'))
 
       expect(api.create).toHaveBeenCalledWith({
@@ -329,6 +505,7 @@ describe('NewRequestView', () => {
       expect(bodyText()).toContain('Needed from')
       await click(addButtonOf('ThinkPad T14'))
       await choosePurpose('Replacement')
+      await toCart()
       await click(button('Submit request'))
       expect(api.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -342,10 +519,11 @@ describe('NewRequestView', () => {
 
     it('sends a request for something not in the catalog at all', async () => {
       await open()
+      await toSelection('Back pain')
       await click(button('Something else'))
       await typeInto(field('Describe the device or item'), 'Standing desk')
       await click(button('Add'))
-      await choosePurpose('Back pain')
+      await toCart()
       await click(button('Submit request'))
       expect(api.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -367,6 +545,7 @@ describe('NewRequestView', () => {
       const { router } = await open()
       await click(addButtonOf('ThinkPad T14'))
       await choosePurpose('Workshop')
+      await toCart()
       await click(button('Submit request'))
 
       expect(bodyText()).toContain('The period is longer than allowed.')
@@ -380,6 +559,7 @@ describe('NewRequestView', () => {
       const { router } = await open({ user: IT_READER })
       await click(addButtonOf('ThinkPad T14'))
       await choosePurpose('Loaner')
+      await toCart()
       await click(button('Submit request'))
       expect(bodyText()).toContain('Request R-2026-0100 submitted')
       expect(router.currentRoute.value.name).toBe('request')
@@ -440,6 +620,7 @@ describe('NewRequestView', () => {
     it('sends the new request as a follow-up of the earlier one', async () => {
       api.get.mockResolvedValue(earlier())
       await open({ url: '/portal/new?from=r-old' })
+      await toCart()
       await click(button('Submit request'))
       expect(api.create).toHaveBeenCalledWith({
         title: 'Trade fair',

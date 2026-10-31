@@ -51,7 +51,9 @@ router.beforeEach(async (to) => {
   return true
 })
 
-router.afterEach((to) => {
+router.afterEach((to, _from, failure) => {
+  // A navigation cancelled on the way (e.g. "keep editing") stays on the page and its title.
+  if (failure) return
   const title = to.meta.title ? i18n.global.t(to.meta.title) : null
   document.title = title ? `${title} · Argus` : 'Argus'
 })

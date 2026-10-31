@@ -38,16 +38,20 @@ const { t } = useI18n()
       </span>
     </div>
     <span v-if="inCart" :key="inCart" class="in-cart mono">
-      <Check :size="13" /> {{ t('requests.new.inCart', { count: inCart }) }}
+      <Check :size="13" />
+      <span class="in-cart-text">{{ t('requests.new.inCart', { count: inCart }) }}</span>
+      <span class="in-cart-count" aria-hidden="true">{{ inCart }}</span>
     </span>
     <NButton
       :type="primary ? 'primary' : 'default'"
       :secondary="!primary"
       size="small"
+      class="add"
+      :aria-label="`${t('common.add')}: ${label}`"
       @click="emit('add')"
     >
       <template #icon><Plus :size="14" /></template>
-      {{ t('common.add') }}
+      <span class="add-label">{{ t('common.add') }}</span>
     </NButton>
   </div>
 </template>
@@ -117,5 +121,32 @@ const { t } = useI18n()
   font-size: 11px;
   color: var(--ar-primary);
   white-space: nowrap;
+}
+.in-cart-count {
+  display: none;
+}
+/*
+ * A narrow column (a phone, or the middle of three on a small screen): a plain plus,
+ * square so it sits in the middle, and a short count, so the name keeps the room.
+ */
+@container catalog (max-width: 480px) {
+  .option {
+    gap: 10px;
+    padding-inline: 10px;
+  }
+  .in-cart-text,
+  .add-label {
+    display: none;
+  }
+  .in-cart-count {
+    display: inline;
+  }
+  .add {
+    width: 32px;
+    padding: 0;
+  }
+  .add :deep(.n-button__icon) {
+    margin: 0;
+  }
 }
 </style>

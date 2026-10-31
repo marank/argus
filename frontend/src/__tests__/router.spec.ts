@@ -177,6 +177,14 @@ describe('router guard', () => {
     await visit('/help')
     expect(document.title).toBe('Argus')
   })
+
+  it('keeps the title when a navigation is cancelled', async () => {
+    await visit('/login')
+    const remove = router.beforeEach(() => false)
+    await router.push('/help')
+    remove()
+    expect(document.title).toBe('Sign in · Argus')
+  })
 })
 
 describe('expired session', () => {

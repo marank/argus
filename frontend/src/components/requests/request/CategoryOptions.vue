@@ -91,6 +91,7 @@ function path(group: Schemas['CatalogCategoryOut']): string {
 <style scoped>
 .options {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
   padding: 18px;
   border: 1px solid var(--ar-border);
@@ -133,5 +134,15 @@ header p {
 .models {
   border: 1px solid var(--ar-border);
   border-radius: 3px;
+}
+@container catalog (max-width: 480px) {
+  .options {
+    gap: 14px;
+    padding: 12px;
+  }
+  .icon {
+    width: 32px;
+    height: 32px;
+  }
 }
 </style>

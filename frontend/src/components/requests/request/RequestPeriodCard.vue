@@ -10,7 +10,11 @@ import FieldLabel from '@/components/common/FieldLabel.vue'
 import type { RequestPeriod } from './types'
 
 /** Duration and dates of the request, above the cart; the catalog's availability follows it. */
-defineProps<{ showsAvailability: boolean }>()
+defineProps<{
+  showsAvailability: boolean
+  /** Only the fields, as part of a card around it (no frame, no title). */
+  plain?: boolean
+}>()
 const period = defineModel<RequestPeriod>({ required: true })
 const { t } = useI18n()
 
@@ -34,8 +38,8 @@ function setPickup(value: number | [number, number] | null) {
 </script>
 
 <template>
-  <section class="period">
-    <header>
+  <section class="period" :class="{ plain }">
+    <header v-if="!plain">
       <CalendarRange :size="16" />
       <h2>{{ t('requests.new.period') }}</h2>
     </header>
@@ -95,6 +99,11 @@ function setPickup(value: number | [number, number] | null) {
   border: 1px solid var(--ar-border);
   border-radius: 3px;
   background: var(--ar-surface);
+}
+.period.plain {
+  padding: 0;
+  border: none;
+  background: none;
 }
 header {
   display: flex;

@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { Check, Plus } from '@lucide/vue'
+import { PackageCheck } from '@lucide/vue'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import type { Schemas } from '@/api/types'
-import type { Id } from '@/types/common'
 
-import { optionKey } from './types'
+import CatalogOptionRow from './CatalogOptionRow.vue'
+import { fittingDevices, optionCounts, optionKey } from './types'
 
 /**
- * Quick pick of consumables that fit the employee's own devices, e.g. the ink
- * cartridges for their printer. Only consumables listed in the catalog are offered.
+ * The catalog's virtual group "For your devices": what fits the employee's own devices,
+ * e.g. the ink cartridges for their printer, listed per device like any other group.
  */
 const props = defineProps<{
   groups: Schemas['MyConsumablesOut'][]
@@ -22,114 +22,91 @@ const emit = defineEmits<{
 }>()
 const { t } = useI18n()
 
-const catalogModels = computed(() => {
-  const byId = new Map<
-    Id,
-    { category: Schemas['CatalogCategoryOut']; model: Schemas['CatalogModelOut'] }
-  >()
-  for (const category of props.catalog) {
-    for (const model of category.models) byId.set(model.id, { category, model })
-  }
-  return byId
-})
-
-const devices = computed(() =>
-  props.groups
-    .map((group) => ({
-      asset: group.asset,
-      options: group.consumables.flatMap((c) => catalogModels.value.get(c.id) ?? []),
-    }))
-    .filter((device) => device.options.length),
-)
+const devices = computed(() => fittingDevices(props.groups, props.catalog))
 </script>
 
 <template>
-  <section v-if="devices.length" class="quick-pick">
-    <div class="eyebrow">{{ t('requests.new.quickPick') }}</div>
-    <div v-for="device in devices" :key="device.asset.id" class="device">
-      <div class="device-name">
-        {{ device.asset.model.full_name }}
-        <span class="mono muted">{{ device.asset.inventory_number }}</span>
+  <div class="options">
+    <header>
+      <span class="icon"><PackageCheck :size="22" :stroke-width="1.5" /></span>
+      <div>
+        <h2>{{ t('requests.new.quickPick') }}</h2>
+        <p class="muted">{{ t('requests.new.quickPickHint') }}</p>
       </div>
-      <div class="chips">
-        <button
+    </header>
+
+    <section v-for="device in devices" :key="device.asset.id" class="group">
+      <div class="eyebrow">
+        {{ device.asset.model.full_name }}
+        <span class="mono">{{ device.asset.inventory_number }}</span>
+      </div>
+      <div class="models">
+        <CatalogOptionRow
           v-for="option in device.options"
           :key="option.model.id"
-          type="button"
-          class="chip"
-          :class="{ added: cartCounts[optionKey(option.category, option.model)] }"
-          :title="t('requests.new.quickPickAdd', { name: option.model.full_name })"
-          @click="emit('add', option.category, option.model)"
-        >
-          <Plus :size="13" />
-          <span>{{ option.model.full_name }}</span>
-          <span
-            v-if="cartCounts[optionKey(option.category, option.model)]"
-            :key="cartCounts[optionKey(option.category, option.model)]"
-            class="count mono"
-          >
-            <Check :size="12" />{{ cartCounts[optionKey(option.category, option.model)] }}
-          </span>
-        </button>
+          :label="option.model.full_name"
+          :counts="optionCounts(option.category, option.model)"
+          :in-cart="cartCounts[optionKey(option.category, option.model)] ?? 0"
+          @add="emit('add', option.category, option.model)"
+        />
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 </template>
 
 <style scoped>
-.quick-pick {
+/* Like a group of the catalog (CategoryOptions). */
+.options {
   display: grid;
-  gap: 10px;
-  padding: 12px 14px;
-  border: 1px solid color-mix(in srgb, var(--ar-primary) 35%, transparent);
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid var(--ar-border);
+  border-radius: 3px;
+  background: var(--ar-surface);
+}
+header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
   border-radius: 3px;
   background: var(--ar-primary-soft);
+  color: var(--ar-primary);
 }
-.device {
-  display: grid;
-  gap: 6px;
-}
-.device-name {
-  font-size: 12.5px;
+h2 {
+  margin: 0;
+  font-size: 16px;
   font-weight: 600;
 }
-.device-name .mono {
+header p {
+  margin: 2px 0 0;
+}
+.group {
+  display: grid;
+  gap: 8px;
+}
+.group + .group {
+  padding-top: 16px;
+  border-top: 1px solid var(--ar-border);
+}
+.eyebrow .mono {
   margin-left: 6px;
-  font-size: 11px;
-  font-weight: 400;
+  text-transform: none;
 }
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+.models {
+  border: 1px solid var(--ar-border);
+  border-radius: 3px;
 }
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border: 1px solid var(--ar-border-strong);
-  border-radius: 999px;
-  background: var(--ar-surface);
-  color: var(--ar-text);
-  font: inherit;
-  font-size: 12.5px;
-  cursor: pointer;
-}
-.chip:hover {
-  border-color: var(--ar-primary);
-  color: var(--ar-primary);
-}
-.chip.added {
-  border-color: var(--ar-primary);
-}
-.count {
-  /* Re-keyed on every change, so the pop plays when something is added. */
-  animation: ar-pop 0.25s ease-out;
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  font-size: 11px;
-  color: var(--ar-primary);
+@container catalog (max-width: 480px) {
+  .options {
+    gap: 14px;
+    padding: 12px;
+  }
 }
 </style>

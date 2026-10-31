@@ -479,6 +479,33 @@ a:hover {
     transform: scale(1.25);
   }
 }
+/*
+ * Steps of a flow on a phone (<Transition name="ar-forward|ar-back|ar-fade">): the new view
+ * comes in a little from the side it lies on, the old one leaves at once.
+ */
+.ar-forward-enter-active,
+.ar-back-enter-active,
+.ar-fade-enter-active {
+  transition:
+    opacity 0.22s ease-out,
+    transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.ar-forward-enter-from {
+  opacity: 0;
+  transform: translateX(24px);
+}
+.ar-back-enter-from {
+  opacity: 0;
+  transform: translateX(-24px);
+}
+.ar-fade-enter-from {
+  opacity: 0;
+}
+.ar-forward-leave-active,
+.ar-back-leave-active,
+.ar-fade-leave-active {
+  display: none;
+}
 /* Site setting "attention animations" off: pulses stand still, feedback motion stays. */
 .no-attention-motion .dot.pulse,
 .no-attention-motion .stat.alert::before,

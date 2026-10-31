@@ -241,6 +241,7 @@ describe('NewRequestView: direct hand-out', () => {
     await click(addMouse)
     await click(addMouse)
     await typeInto(field('e.g. training, new hire, stocktaking'), 'New hire')
+    await click(document.body.querySelector<HTMLElement>('.cart-button')!)
     await click(button('Submit request'))
 
     expect(api.create).not.toHaveBeenCalled()

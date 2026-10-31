@@ -29,4 +29,5 @@ export default {
   themeSystem: 'System',
   language: 'Language',
   collapse: 'Collapse sidebar',
+  menu: 'Menu',
 }

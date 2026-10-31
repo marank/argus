@@ -62,4 +62,16 @@ function add() {
 .row :deep(.n-input) {
   flex: 1;
 }
+/* Phones: the field on its own line, the button below it. */
+@container catalog (max-width: 480px) {
+  .head {
+    flex-wrap: wrap;
+  }
+  .row {
+    flex-wrap: wrap;
+  }
+  .row :deep(.n-input) {
+    flex-basis: 100%;
+  }
+}
 </style>

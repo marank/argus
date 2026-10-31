@@ -29,4 +29,5 @@ export default {
   themeSystem: 'System',
   language: 'Sprache',
   collapse: 'Seitenleiste einklappen',
+  menu: 'Menü',
 }

@@ -1,77 +1,23 @@
 <script setup lang="ts">
-import { MessageSquarePlus, Minus, PackageSearch, Plus, Send, Trash2 } from '@lucide/vue'
-import { NButton, NForm, NFormItem, NInput, NInputNumber } from 'naive-ui'
-import { computed, reactive, ref, watch } from 'vue'
+import { MessageSquarePlus, Minus, PackageSearch, Plus, Trash2 } from '@lucide/vue'
+import { NButton, NInput, NInputNumber } from 'naive-ui'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { usersApi } from '@/api/accounts'
-import type { Schemas } from '@/api/types'
-import EntitySelect from '@/components/common/EntitySelect.vue'
-import FieldLabel from '@/components/common/FieldLabel.vue'
-import { toIsoDate } from '@/composables/useFormat'
-import type { Id } from '@/types/common'
-
-import { periodQuery, type CartLine, type RequestPeriod } from './types'
+import type { CartLine } from './types'
 
 /**
- * The request being assembled: selected devices, then purpose; the period comes from the card above.
+ * What the request holds: the chosen lines and a message to IT. Period and purpose are
+ * set in the first step; the page sends the request.
  * For a direct hand-out (`direct`) the lines are specific devices and stocks.
  */
-const props = defineProps<{
-  period: RequestPeriod
-  busy: boolean
-  canChooseRequester: boolean
-  requesterPlaceholder?: string
-  direct?: boolean
-  /** Prefilled details, e.g. when asking again for an earlier request. */
-  initial?: { title: string; notes: string; requester: Schemas['UserRefOut'] | null } | null
-}>()
+defineProps<{ direct?: boolean }>()
 const lines = defineModel<CartLine[]>('lines', { required: true })
-const emit = defineEmits<{ submit: [data: Schemas['AssetRequestIn']] }>()
+const notes = defineModel<string>('notes', { required: true })
 const { t } = useI18n()
 
-const form = reactive({
-  title: '',
-  notes: '',
-  requester: null as Id | null,
-})
-watch(
-  () => props.initial,
-  (initial) => {
-    if (initial)
-      Object.assign(form, {
-        title: initial.title,
-        notes: initial.notes,
-        requester: initial.requester?.id ?? null,
-      })
-  },
-  { immediate: true },
-)
 const openNote = ref<string | null>(null)
-
 const total = computed(() => lines.value.reduce((sum, line) => sum + line.quantity, 0))
-const canSubmit = computed(() => form.title.trim() && lines.value.length > 0)
-
-function submit() {
-  const { end } = periodQuery(props.period)
-  const first = props.period.duration === 'permanent' ? props.period.start : props.period.range[0]
-  emit('submit', {
-    title: form.title,
-    notes: form.notes,
-    duration: props.period.duration,
-    start_date: toIsoDate(first)!,
-    end_date: end ?? null,
-    requested_pickup_date: toIsoDate(props.period.pickup),
-    requester: form.requester,
-    items: lines.value.map(({ category, asset_model, description, quantity, note }) => ({
-      category: category ?? null,
-      asset_model: asset_model ?? null,
-      description: description ?? '',
-      quantity,
-      note,
-    })),
-  })
-}
 </script>
 
 <template>
@@ -139,40 +85,16 @@ function submit() {
         </li>
       </TransitionGroup>
 
-      <NForm
-        class="details ar-form"
-        label-placement="top"
-        size="medium"
-        :show-feedback="false"
-        @submit.prevent="submit"
-      >
-        <div class="eyebrow">{{ t('requests.new.details') }}</div>
-        <NFormItem>
-          <template #label><FieldLabel :label="t('requests.purpose')" required /></template>
-          <NInput v-model:value="form.title" :placeholder="t('requests.purposePlaceholder')" />
-        </NFormItem>
-        <NFormItem v-if="props.canChooseRequester" :label="t('requests.requestedFor')">
-          <EntitySelect
-            v-model="form.requester"
-            :fetcher="usersApi.list"
-            :params="{ is_active: true, is_terminal: false }"
-            :label="(u) => u.display_name"
-            :initial="(initial?.requester ?? null) as never"
-            :placeholder="requesterPlaceholder"
-          />
-        </NFormItem>
-        <NFormItem :label="t('requests.notes')">
-          <NInput
-            v-model:value="form.notes"
-            type="textarea"
-            :autosize="{ minRows: 2, maxRows: 5 }"
-          />
-        </NFormItem>
-        <NButton type="primary" block attr-type="submit" :disabled="!canSubmit" :loading="busy">
-          <template #icon><Send :size="15" /></template>
-          {{ t('requests.new.submit') }}
-        </NButton>
-      </NForm>
+      <div class="details">
+        <label class="eyebrow" for="request-notes">{{ t('requests.notes') }}</label>
+        <NInput
+          v-model:value="notes"
+          type="textarea"
+          :input-props="{ id: 'request-notes' }"
+          :placeholder="t('requests.new.notesPlaceholder')"
+          :autosize="{ minRows: 2, maxRows: 5 }"
+        />
+      </div>
     </template>
   </aside>
 </template>
@@ -301,10 +223,9 @@ h2 {
   color: var(--ar-warning);
 }
 .details {
+  display: grid;
+  gap: 6px;
   padding-top: 4px;
-}
-.details .eyebrow {
-  margin-bottom: 10px;
 }
 .code {
   color: var(--ar-primary);
