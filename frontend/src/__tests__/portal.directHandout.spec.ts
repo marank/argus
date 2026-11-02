@@ -175,7 +175,7 @@ describe('NewRequestView: direct hand-out', () => {
 
   it('employees cannot hand out directly and go straight to the request', async () => {
     await mountPage(NewRequestView, { url: '/portal/new?mode=direct', user: makeUser() })
-    expect(bodyText()).toContain('Pick a category and add what you need.')
+    expect(bodyText()).toContain('What you choose in the next step shows up here.')
     expect(bodyText()).not.toContain('Direct hand-out')
     expect(hasButton('Change type')).toBe(false)
   })
@@ -241,7 +241,6 @@ describe('NewRequestView: direct hand-out', () => {
     await click(addMouse)
     await click(addMouse)
     await typeInto(field('e.g. training, new hire, stocktaking'), 'New hire')
-    await click(document.body.querySelector<HTMLElement>('.cart-button')!)
     await click(button('Submit request'))
 
     expect(api.create).not.toHaveBeenCalled()

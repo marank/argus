@@ -3,6 +3,7 @@ import { useLive } from '@/composables/useLive'
 import type { Id } from '@/types/common'
 import { RotateCcw, X } from '@lucide/vue'
 import { NAlert, NButton, NCard, NDataTable, NSkeleton, type DataTableColumns } from 'naive-ui'
+import { useMediaQuery } from '@vueuse/core'
 import { computed, h, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -52,6 +53,15 @@ const showReturns = computed(() => {
     (r.duration === 'temporary' && ['handed_out', 'completed'].includes(r.status) && !!r.handover)
   )
 })
+
+/** Still open: the employee can withdraw it (at the end of the page, away from a slip). */
+const cancellable = computed(
+  () =>
+    !!assetRequest.value &&
+    ['pending_approval', 'submitted', 'confirmed', 'ready'].includes(assetRequest.value.status),
+)
+/** A phone lists the items as cards instead of a table four columns wide. */
+const narrow = useMediaQuery('(max-width: 760px)')
 
 async function cancel() {
   if (!(await confirm(t('requests.actions.confirmCancel'), { danger: true }))) return
@@ -117,16 +127,6 @@ const columns: DataTableColumns<Schemas['AssetRequestItemOut']> = [
             :pulse="assetRequest.status === 'ready'" /><OriginTag :origin="assetRequest.origin"
         /></template>
         <template #actions>
-          <NButton
-            v-if="
-              ['pending_approval', 'submitted', 'confirmed', 'ready'].includes(assetRequest.status)
-            "
-            :loading="busy"
-            @click="cancel"
-          >
-            <template #icon><X :size="15" /></template>
-            {{ t('requests.actions.cancel') }}
-          </NButton>
           <RouterLink
             v-if="['rejected', 'cancelled', 'completed'].includes(assetRequest.status)"
             :to="{ name: 'portal-new', query: { from: assetRequest.id } }"
@@ -149,12 +149,46 @@ const columns: DataTableColumns<Schemas['AssetRequestItemOut']> = [
               { number: assetRequest.number },
             )
           }}
+          <br />
+          {{ t('requests.new.submittedNext') }}
         </NAlert>
         <NCard size="small"><RequestSteps :assetRequest="assetRequest" /></NCard>
         <div class="layout">
           <div class="stack">
             <NCard :title="t('requests.items')" size="small">
+              <ul v-if="narrow" class="item-list">
+                <li v-for="item in assetRequest.items" :key="item.id">
+                  <strong>{{ itemLabel(item) }}</strong>
+                  <small v-if="item.note" class="muted">{{ item.note }}</small>
+                  <span class="item-meta">
+                    <span
+                      >{{ t('requests.quantities.requested') }}:
+                      <b class="mono">{{ item.quantity_requested }}</b></span
+                    >
+                    <span
+                      >{{ t('requests.quantities.confirmed') }}:
+                      <b
+                        class="mono"
+                        :class="{
+                          reduced:
+                            item.quantity_confirmed !== null &&
+                            item.quantity_confirmed < item.quantity_requested,
+                        }"
+                        >{{ item.quantity_confirmed ?? '—' }}</b
+                      ></span
+                    >
+                  </span>
+                  <span v-if="item.allocations.length" class="mono muted">
+                    {{
+                      item.allocations
+                        .map((a) => allocationCode(a) || allocationModel(a))
+                        .join(', ')
+                    }}
+                  </span>
+                </li>
+              </ul>
               <NDataTable
+                v-else
                 size="small"
                 :columns="columns"
                 :data="assetRequest.items"
@@ -188,6 +222,13 @@ const columns: DataTableColumns<Schemas['AssetRequestItemOut']> = [
             <ApprovalCard v-if="assetRequest.approval" :assetRequest="assetRequest" />
           </div>
         </div>
+        <!-- Withdrawing is rare and final: a quiet button at the end, asking first. -->
+        <div v-if="cancellable" class="withdraw">
+          <NButton tertiary type="error" :loading="busy" @click="cancel">
+            <template #icon><X :size="15" /></template>
+            {{ t('requests.actions.cancel') }}
+          </NButton>
+        </div>
       </div>
     </template>
   </div>
@@ -210,7 +251,40 @@ const columns: DataTableColumns<Schemas['AssetRequestItemOut']> = [
     order: -1;
   }
 }
-:deep(.reduced) {
+.withdraw {
+  display: flex;
+  justify-content: flex-end;
+}
+.item-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.item-list li {
+  display: grid;
+  gap: 3px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--ar-border);
+}
+.item-list li:first-child {
+  padding-top: 0;
+}
+.item-list li:last-child {
+  border-bottom: none;
+}
+.item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  color: var(--ar-text-muted);
+  font-size: 12px;
+}
+.item-meta b {
+  color: var(--ar-text);
+}
+:deep(.reduced),
+.item-meta b.reduced {
   color: var(--ar-warning);
   font-weight: 600;
 }

@@ -18,6 +18,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{
   add: [category: Schemas['CatalogCategoryOut'], model?: Schemas['CatalogModelOut']]
+  remove: [category: Schemas['CatalogCategoryOut'], model?: Schemas['CatalogModelOut']]
   addFreeText: [text: string, category: Schemas['CatalogCategoryOut']]
 }>()
 const { t } = useI18n()
@@ -60,6 +61,7 @@ function path(group: Schemas['CatalogCategoryOut']): string {
         :counts="optionCounts(group)"
         :in-cart="cartCounts[optionKey(group)] ?? 0"
         @add="emit('add', group)"
+        @remove="emit('remove', group)"
       />
       <template v-if="group.models.length">
         <div v-if="offersAnyModel(group)" class="eyebrow sub">
@@ -74,6 +76,7 @@ function path(group: Schemas['CatalogCategoryOut']): string {
             :counts="optionCounts(group, model)"
             :in-cart="cartCounts[optionKey(group, model)] ?? 0"
             @add="emit('add', group, model)"
+            @remove="emit('remove', group, model)"
           />
         </div>
       </template>

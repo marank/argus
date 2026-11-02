@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Target } from '@lucide/vue'
 import { NInput } from 'naive-ui'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { usersApi } from '@/api/accounts'
@@ -18,9 +19,17 @@ defineProps<{
   initialRequester?: Schemas['UserRefOut'] | null
   /** Only the fields, as part of a card around it (no frame, no title). */
   plain?: boolean
+  /** Going on was tried without a purpose: say so at the field. */
+  missing?: boolean
 }>()
 const details = defineModel<RequestDetails>({ required: true })
+/** Enter in the purpose: the page goes on, as with its button. */
+const emit = defineEmits<{ enter: [] }>()
 const { t } = useI18n()
+
+const purposeInput = ref<InstanceType<typeof NInput> | null>(null)
+/** Puts the cursor into the purpose, e.g. when it is missing. */
+defineExpose({ focus: () => purposeInput.value?.focus() })
 </script>
 
 <template>
@@ -32,7 +41,16 @@ const { t } = useI18n()
     <div class="fields">
       <div class="field">
         <FieldLabel :label="t('requests.purpose')" required />
-        <NInput v-model:value="details.title" :placeholder="t('requests.purposePlaceholder')" />
+        <NInput
+          ref="purposeInput"
+          v-model:value="details.title"
+          :status="missing && !details.title.trim() ? 'error' : undefined"
+          :placeholder="t('requests.purposePlaceholder')"
+          @keydown.enter.prevent="emit('enter')"
+        />
+        <small v-if="missing && !details.title.trim()" class="error">
+          {{ t('requests.new.steps.needPurpose') }}
+        </small>
       </div>
       <div v-if="canChooseRequester" class="field">
         <FieldLabel :label="t('requests.requestedFor')" />
@@ -83,5 +101,10 @@ h2 {
 .field {
   display: grid;
   gap: 4px;
+}
+.error {
+  color: var(--ar-error);
+  font-size: 12px;
+  animation: ar-pop 0.25s ease-out;
 }
 </style>

@@ -4,13 +4,12 @@ import {
   ArrowRight,
   Check,
   ChevronLeft,
+  ChevronRight,
   ClipboardList,
-  X,
   ScanLine,
-  Send,
-  ShoppingCart,
+  X,
 } from '@lucide/vue'
-import { NAlert, NButton, NSkeleton, useMessage } from 'naive-ui'
+import { NAlert, NButton, NDrawer, NSkeleton, useMessage } from 'naive-ui'
 import { useEventListener, useMediaQuery, watchDebounced } from '@vueuse/core'
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -23,7 +22,7 @@ import PageHeader from '@/components/common/PageHeader.vue'
 import CatalogBrowser from '@/components/requests/request/CatalogBrowser.vue'
 import ConsumableQuickPick from '@/components/requests/request/ConsumableQuickPick.vue'
 import DirectPicker from '@/components/requests/request/DirectPicker.vue'
-import RequestCart from '@/components/requests/request/RequestCart.vue'
+import RequestCartPanel from '@/components/requests/request/RequestCartPanel.vue'
 import RequestPeriodCard from '@/components/requests/request/RequestPeriodCard.vue'
 import RequestPurposeCard from '@/components/requests/request/RequestPurposeCard.vue'
 import {
@@ -172,7 +171,7 @@ function prefill(earlier: Schemas['AssetRequestOut']) {
 
 // From the device page: hand out that device, or request its model.
 watch(
-  () => [mode.value, route.query.asset, catalog.value] as const,
+  [mode, () => route.query.asset, catalog],
   async ([current, id, entries]) => {
     if (typeof id !== 'string' || !current || (current === 'request' && !entries)) return
     const asset = await run(() => assetsApi.get(id))
@@ -249,6 +248,14 @@ function add(category: Schemas['CatalogCategoryOut'], model?: Schemas['CatalogMo
   })
 }
 
+/** The minus of an option's stepper: one less, and gone at none. */
+function remove(category: Schemas['CatalogCategoryOut'], model?: Schemas['CatalogModelOut']) {
+  const index = cart.value.findIndex((line) => line.key === optionKey(category, model))
+  if (index < 0) return
+  if (cart.value[index]!.quantity > 1) cart.value[index]!.quantity -= 1
+  else cart.value.splice(index, 1)
+}
+
 function addAsset(asset: Schemas['AssetOut']) {
   const key = `a${asset.id}`
   if (cart.value.some((line) => line.key === key)) return
@@ -308,11 +315,8 @@ function directInput(data: Schemas['AssetRequestIn']): Schemas['DirectRequestIn'
   }
 }
 
-/** Everything a request needs: what it is for and something to ask for. */
-const canSubmit = computed(() => !!details.title.trim() && cart.value.length > 0)
-
 async function submit() {
-  if (!canSubmit.value) return
+  if (!cart.value.length || needsPurpose()) return
   const data = requestInput(period, details, cart.value)
   const assetRequest = await run(() =>
     direct.value
@@ -335,20 +339,37 @@ async function submit() {
 }
 
 /**
- * One step at a time on every screen: period and purpose, then the selection, then the
- * cart. A phone shows the selection as a menu (groups, then one group), wider screens
- * keep the groups left of their content. The header leads back, the bar at the bottom
- * forward, the cart button in the header is always there.
+ * Two steps: details (period and purpose), then the selection. The cart is a panel like a
+ * form drawer, with the send button at its foot: docked right of the catalog where there
+ * is room, a drawer from the right where not, a sheet from below on a phone. A phone shows
+ * the selection as a menu (groups, then one group) and has its buttons at the thumb.
  */
-type Step = 'period' | 'catalog' | 'cart'
-const STEPS: Step[] = ['period', 'catalog', 'cart']
+type Step = 'period' | 'catalog'
+const STEPS: Step[] = ['period', 'catalog']
 const narrow = useMediaQuery('(max-width: 760px)')
+/** Too narrow for catalog and cart side by side. */
+const cramped = useMediaQuery('(max-width: 1099px)')
 const step = ref<Step>('period')
+/**
+ * The selection is an entry of its own in the browser's history: back (a phone's back
+ * gesture too) leads to the details instead of out of the request. Reloaded on it, the
+ * details are gone, so the page starts on them again.
+ */
+if (route.query.step) router.replace({ query: { ...route.query, step: undefined } })
+watch(
+  () => route.query.step,
+  (value) => go(value === 'catalog' ? 'catalog' : 'period'),
+)
+/** Where the page was opened from, to return there on cancel (none when opened directly). */
+const cameFrom = !!window.history.state?.back
 const catalogOpened = ref(false)
+const cartOpen = ref(false)
+watch(cramped, (isCramped) => isCramped || (cartOpen.value = false))
 const cartTotal = computed(() => cart.value.reduce((sum, line) => sum + line.quantity, 0))
 
 const head = ref<HTMLElement | null>(null)
 const catalogPanel = ref<{ selectedName: string } | null>(null)
+const purposeCard = ref<{ focus: () => void } | null>(null)
 
 /** A step comes in from the side it lies on and starts at the top. */
 const motion = ref<'ar-forward' | 'ar-back'>('ar-forward')
@@ -362,20 +383,40 @@ function go(next: Step) {
 /** On a phone an open group sits between: back leads to all groups first. */
 const groupOpen = computed(() => narrow.value && step.value === 'catalog' && catalogOpened.value)
 
-/** One step back (from the bar at the bottom); the first step has none. */
+/** One step back (from a phone's bar): out of the open group first. */
 function back() {
-  if (step.value === 'cart') go('catalog')
   // The catalog keeps the list of groups where it was.
-  else if (groupOpen.value) catalogOpened.value = false
-  else if (step.value === 'catalog') go('period')
+  if (groupOpen.value) catalogOpened.value = false
+  else toDetails()
 }
 
-function forward() {
-  if (step.value === 'period') {
-    catalogOpened.value = false
-    go('catalog')
-  } else if (step.value === 'catalog') go('cart')
-  else submit()
+/** Back to the details: the selection's history entry is left, as with the browser's back. */
+function toDetails() {
+  if (route.query.step === 'catalog') router.back()
+}
+
+/** Set when going on was tried without a purpose: the field says so then. */
+const purposeMissing = ref(false)
+/** Without a purpose: back to it, marked and with the cursor in it, instead of a dead button. */
+function needsPurpose(): boolean {
+  if (details.title.trim()) return false
+  purposeMissing.value = true
+  cartOpen.value = false
+  toDetails()
+  nextTick(() => purposeCard.value?.focus())
+  return true
+}
+
+function toCatalog() {
+  if (needsPurpose()) return
+  catalogOpened.value = false
+  if (route.query.step !== 'catalog') router.push({ query: { ...route.query, step: 'catalog' } })
+}
+
+/** Back to the details from the cart panel. */
+function editDetails() {
+  cartOpen.value = false
+  toDetails()
 }
 
 const stepTitle = computed(() =>
@@ -383,19 +424,17 @@ const stepTitle = computed(() =>
     ? (catalogPanel.value?.selectedName ?? '')
     : t(`requests.new.steps.${step.value}`),
 )
-/** The period as the cart step repeats it: from and to, or from on for good. */
+/** The period as the cart panel repeats it: from and to, or from on for good. */
 const periodText = computed(() =>
   period.duration === 'permanent'
     ? `${date(toIsoDate(period.start))} → ${t('common.permanent')}`
     : `${date(toIsoDate(period.range[0]))} → ${date(toIsoDate(period.range[1]))}`,
 )
-const progress = computed(() => `${((STEPS.indexOf(step.value) + 1) / STEPS.length) * 100}%`)
-/** Each step asks for its part: a purpose, something chosen, then everything to send. */
-const forwardDisabled = computed(
-  () =>
-    (step.value === 'period' && !details.title.trim()) ||
-    (step.value === 'catalog' && !cartTotal.value) ||
-    (step.value === 'cart' && !canSubmit.value),
+/** What the panel repeats from the first step, once that step is done. */
+const cartDetails = computed(() =>
+  step.value === 'catalog'
+    ? { period: periodText.value, purpose: details.title.trim() }
+    : undefined,
 )
 
 /** Something to lose: leaving the page asks first (also reloading or closing the tab). */
@@ -413,11 +452,21 @@ const confirmDiscard = () =>
     positiveText: t('requests.new.cancelDiscard'),
     negativeText: t('requests.new.leaveStay'),
   })
-onBeforeRouteLeave(() => (dirty.value ? confirmDiscard() : true))
-// Switching between request and direct hand-out starts over as well.
-onBeforeRouteUpdate((to, from) =>
-  dirty.value && to.query.mode !== from.query.mode ? confirmDiscard() : true,
-)
+/** Back with the cart open (a phone's back gesture) closes the cart first. */
+function closesCart(): boolean {
+  if (!cartOpen.value) return false
+  cartOpen.value = false
+  return true
+}
+onBeforeRouteLeave(() => {
+  if (closesCart()) return false
+  return dirty.value ? confirmDiscard() : true
+})
+onBeforeRouteUpdate((to, from) => {
+  // Switching between request and direct hand-out starts over as well.
+  if (to.query.mode !== from.query.mode) return dirty.value ? confirmDiscard() : true
+  return to.query.step === from.query.step || !closesCart()
+})
 /**
  * The X in the header: leave the request, back where one came from (or to the dashboard
  * when the page was opened directly). With something entered it asks first, once.
@@ -427,7 +476,8 @@ async function cancel() {
     if (!(await confirmDiscard())) return
     discarded.value = true
   }
-  if (window.history.state?.back) router.back()
+  // On the selection its own history entry lies in between.
+  if (cameFrom) router.go(route.query.step === 'catalog' ? -2 : -1)
   else router.push({ name: 'dashboard' })
 }
 
@@ -473,21 +523,38 @@ const header = computed(() =>
     </template>
 
     <template v-else>
-      <!-- One step at a time. The header only ever leads back, the bar below forward. -->
+      <!-- Where one is and the ways out; the cart where it is not docked. -->
       <header ref="head" class="wizard-head">
         <div class="head-titles">
-          <span class="eyebrow">{{
-            t(narrow ? 'requests.new.steps.ofShort' : 'requests.new.steps.of', {
-              title: header.title,
-              n: STEPS.indexOf(step) + 1,
-              total: STEPS.length,
-            })
+          <span v-if="narrow" class="eyebrow">{{
+            t('requests.new.steps.ofShort', { n: STEPS.indexOf(step) + 1, total: STEPS.length })
           }}</span>
+          <!-- The steps as a trail: the first one stays one click away. -->
+          <nav v-else class="eyebrow crumbs" :aria-label="header.title">
+            <span>{{ header.title }}</span>
+            <template v-for="(s, index) in STEPS" :key="s">
+              <ChevronRight :size="12" />
+              <button
+                type="button"
+                class="crumb"
+                :class="{ active: s === step }"
+                :aria-current="s === step ? 'step' : undefined"
+                @click="s === 'period' ? editDetails() : toCatalog()"
+              >
+                {{ index + 1 }} · {{ t(`requests.new.steps.${s}`) }}
+              </button>
+            </template>
+          </nav>
           <Transition name="ar-fade" mode="out-in">
             <strong :key="stepTitle" class="head-title">{{ stepTitle }}</strong>
           </Transition>
         </div>
         <span class="head-side end">
+          <!-- Docked, the selection has no bar below: back to the details up here. -->
+          <NButton v-if="!cramped && step === 'catalog'" class="head-back" @click="toDetails">
+            <template #icon><ChevronLeft :size="16" /></template>
+            {{ t('common.back') }}
+          </NButton>
           <NButton
             v-if="canDirect"
             quaternary
@@ -496,19 +563,6 @@ const header = computed(() =>
             @click="choose(null)"
           >
             <template #icon><ArrowLeftRight :size="16" /></template>
-          </NButton>
-          <!-- The cart is always one tap away. -->
-          <NButton
-            :type="step === 'cart' ? 'primary' : 'default'"
-            :secondary="step === 'cart'"
-            :quaternary="step !== 'cart'"
-            class="cart-button"
-            :aria-label="t('requests.new.steps.cart')"
-            @click="go('cart')"
-          >
-            <template #icon><ShoppingCart :size="18" /></template>
-            <span class="cart-label">{{ t('requests.new.steps.cart') }}</span>
-            <span v-if="cartTotal" :key="cartTotal" class="cart-count mono">{{ cartTotal }}</span>
           </NButton>
           <!-- Leaves the request; asks first when something would be lost. -->
           <NButton
@@ -522,126 +576,146 @@ const header = computed(() =>
             <template #icon><X :size="20" /></template>
           </NButton>
         </span>
-        <span class="progress" :style="{ width: progress }" />
       </header>
       <NAlert v-if="previous" type="info" :bordered="false" class="again">
         {{ t('requests.again.prefilled', { number: previous.number }) }}
       </NAlert>
 
-      <div class="steps-body">
-        <!-- 1 · Period and purpose -->
-        <Transition :name="motion">
-          <div v-show="step === 'period'" class="step-panel narrow-panel first-step">
-            <!-- One card for everything the request needs besides its lines. -->
-            <section class="details-card">
-              <header>
-                <ClipboardList :size="16" />
-                <h2>{{ t('requests.new.steps.period') }}</h2>
-              </header>
-              <RequestPeriodCard
-                v-model="period"
-                plain
-                :shows-availability="auth.can('requests')"
-              />
-              <RequestPurposeCard
-                v-model="details"
-                plain
-                :can-choose-requester="canDirect"
-                :requester-placeholder="auth.user?.display_name"
-                :initial-requester="initialRequester"
-              />
-            </section>
-          </div>
-        </Transition>
-
-        <!-- 2 · Selection: groups and their content (a menu on a phone) -->
-        <Transition :name="motion">
-          <div v-show="step === 'catalog'" class="step-panel">
-            <NSkeleton v-if="!catalog" height="320px" />
-            <CatalogBrowser
-              v-else
-              ref="catalogPanel"
-              v-model:opened="catalogOpened"
-              :catalog="catalog"
-              :cart-counts="cartCounts"
-              :direct="direct"
-              :fitting="fitting"
-              @add="add"
-              @add-free-text="addFreeText"
-            >
-              <template #fitting>
-                <ConsumableQuickPick
-                  :groups="myConsumables"
-                  :catalog="catalog"
-                  :cart-counts="cartCounts"
-                  @add="add"
+      <div class="steps-body" :class="{ docked: !cramped }">
+        <div class="steps-main">
+          <!-- 1 · Period and purpose, with the way on right below the fields -->
+          <Transition :name="motion">
+            <div v-show="step === 'period'" class="step-panel first-step">
+              <section class="details-card">
+                <header>
+                  <ClipboardList :size="16" />
+                  <h2>{{ t('requests.new.steps.period') }}</h2>
+                </header>
+                <!-- What for first: that is what people think of, before dates. -->
+                <RequestPurposeCard
+                  ref="purposeCard"
+                  v-model="details"
+                  plain
+                  :missing="purposeMissing"
+                  :can-choose-requester="canDirect"
+                  :requester-placeholder="auth.user?.display_name"
+                  :initial-requester="initialRequester"
+                  @enter="toCatalog"
                 />
-              </template>
-              <template #direct="{ category }">
-                <DirectPicker
-                  :category="category"
-                  :cart-counts="cartCounts"
-                  @add-asset="addAsset"
-                  @add-consumable="addConsumable"
+                <RequestPeriodCard
+                  v-model="period"
+                  plain
+                  :shows-availability="auth.can('requests')"
                 />
-              </template>
-            </CatalogBrowser>
-          </div>
-        </Transition>
+                <footer class="details-foot">
+                  <NButton
+                    type="primary"
+                    icon-placement="right"
+                    class="next-button"
+                    @click="toCatalog"
+                  >
+                    {{ t('requests.new.steps.to.catalog') }}
+                    <template #icon><ArrowRight :size="16" /></template>
+                  </NButton>
+                </footer>
+              </section>
+            </div>
+          </Transition>
 
-        <!-- 3 · Cart: what was chosen, a message to IT, and what was set in step 1 -->
-        <Transition :name="motion">
-          <div v-show="step === 'cart'" class="step-panel narrow-panel">
-            <section class="recap">
-              <dl>
-                <div>
-                  <dt class="eyebrow">{{ t('requests.period') }}</dt>
-                  <dd class="mono">{{ periodText }}</dd>
-                </div>
-                <div>
-                  <dt class="eyebrow">{{ t('requests.purpose') }}</dt>
-                  <dd :class="{ missing: !details.title.trim() }">
-                    {{ details.title.trim() || t('requests.new.steps.needPurpose') }}
-                  </dd>
-                </div>
-              </dl>
-              <NButton text type="primary" @click="go('period')">{{ t('common.edit') }}</NButton>
-            </section>
-            <RequestCart
-              :key="mode"
-              v-model:lines="cart"
-              v-model:notes="details.notes"
-              :direct="direct"
-            />
-          </div>
-        </Transition>
+          <!-- 2 · Selection: groups and their content (a menu on a phone) -->
+          <Transition :name="motion">
+            <div v-show="step === 'catalog'" class="step-panel">
+              <NSkeleton v-if="!catalog" height="320px" />
+              <CatalogBrowser
+                v-else
+                ref="catalogPanel"
+                v-model:opened="catalogOpened"
+                :catalog="catalog"
+                :cart-counts="cartCounts"
+                :direct="direct"
+                :fitting="fitting"
+                @add="add"
+                @remove="remove"
+                @add-free-text="addFreeText"
+              >
+                <template #fitting>
+                  <ConsumableQuickPick
+                    :groups="myConsumables"
+                    :catalog="catalog"
+                    :cart-counts="cartCounts"
+                    @add="add"
+                    @remove="remove"
+                  />
+                </template>
+                <template #direct="{ category }">
+                  <DirectPicker
+                    :category="category"
+                    :cart-counts="cartCounts"
+                    @add-asset="addAsset"
+                    @add-consumable="addConsumable"
+                  />
+                </template>
+              </CatalogBrowser>
+            </div>
+          </Transition>
+        </div>
+
+        <!-- Room enough: the cart stays in view next to the catalog. -->
+        <aside v-if="!cramped" class="cart-dock">
+          <RequestCartPanel
+            :key="mode"
+            v-model:lines="cart"
+            v-model:notes="details.notes"
+            :direct="direct"
+            :details="cartDetails"
+            :busy="busy"
+            @submit="submit"
+            @edit="editDetails"
+          />
+        </aside>
       </div>
 
-      <!-- Always the one way forward, at the bottom edge; on the last step it sends. -->
-      <div class="next-bar">
-        <Transition name="ar-fade">
-          <NButton v-if="step !== 'period'" class="back-button" @click="back">
-            <template #icon><ChevronLeft :size="16" /></template>
-            {{ t('common.back') }}
-          </NButton>
-        </Transition>
+      <NDrawer
+        v-if="cramped"
+        v-model:show="cartOpen"
+        :placement="narrow ? 'bottom' : 'right'"
+        :width="420"
+        height="88%"
+        class="cart-drawer"
+        :class="{ sheet: narrow }"
+      >
+        <RequestCartPanel
+          :key="mode"
+          v-model:lines="cart"
+          v-model:notes="details.notes"
+          :direct="direct"
+          :details="cartDetails"
+          :busy="busy"
+          closable
+          @submit="submit"
+          @edit="editDetails"
+          @close="cartOpen = false"
+        />
+      </NDrawer>
+
+      <!--
+        Without the docked cart the way on must still be in plain sight: one step back, and
+        the cart with the send button. At the thumb on a phone.
+      -->
+      <div v-if="cramped && step === 'catalog'" class="next-bar">
+        <NButton class="back-button" @click="back">
+          <template #icon><ChevronLeft :size="16" /></template>
+          {{ t('common.back') }}
+        </NButton>
         <NButton
-          type="primary"
-          :disabled="forwardDisabled"
-          :loading="step === 'cart' && busy"
+          :type="cartTotal ? 'primary' : 'default'"
           icon-placement="right"
-          class="next-button"
-          @click="forward"
+          class="next-button cart-bar-button"
+          @click="cartOpen = true"
         >
-          {{
-            step === 'cart'
-              ? t('requests.new.submit')
-              : t(`requests.new.steps.to.${step === 'period' ? 'catalog' : 'cart'}`)
-          }}
-          <template #icon>
-            <Send v-if="step === 'cart'" :size="16" />
-            <ArrowRight v-else :size="16" />
-          </template>
+          <span v-if="cartTotal" :key="cartTotal" class="cart-count mono">{{ cartTotal }}</span>
+          {{ t('requests.new.review') }}
+          <template #icon><ArrowRight :size="16" /></template>
         </NButton>
       </div>
     </template>
@@ -771,8 +845,8 @@ const header = computed(() =>
   }
 }
 /*
- * The steps fill the content area: header on top, the step in between, the bar at the
- * bottom edge. Header and bar stay in view while a long step scrolls.
+ * The steps fill the content area: header on top, the step below, the cart docked on the
+ * right where there is room. The header stays in view while a long step scrolls.
  */
 .page.flow {
   /* What sticks below the header (the catalog's groups) keeps clear of it. */
@@ -783,7 +857,7 @@ const header = computed(() =>
   padding-top: 0;
   padding-bottom: 0;
 }
-/* Stays on top while a step scrolls: back, where one is, how far along, the cart. */
+/* Stays on top while a step scrolls: where one is and the ways back and out. */
 .wizard-head {
   position: sticky;
   top: 0;
@@ -805,11 +879,43 @@ const header = computed(() =>
 .head-side.end {
   justify-content: flex-end;
 }
+.head-back {
+  margin-right: 8px;
+}
 /* A fixed height: while one title fades out and the next in, the header keeps its size. */
 .head-titles {
   display: grid;
   grid-template-rows: 16px 24px;
   min-width: 0;
+}
+/* The steps as a trail; the current one in the accent colour. */
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.crumbs svg {
+  flex: none;
+  color: var(--ar-text-subtle);
+}
+.crumb {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+.crumb:hover {
+  color: var(--ar-primary);
+}
+.crumb.active {
+  color: var(--ar-primary);
+  cursor: default;
 }
 .head-title {
   max-width: 100%;
@@ -820,21 +926,11 @@ const header = computed(() =>
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* Progress along the bottom edge of the header. */
-.progress {
-  position: absolute;
-  left: 0;
-  bottom: -1px;
-  height: 2px;
-  background: var(--ar-primary);
-  transition: width 0.3s ease;
-}
 .cart-count {
   display: inline-grid;
   place-items: center;
   min-width: 20px;
   height: 20px;
-  margin-left: 6px;
   padding: 0 6px;
   border-radius: 10px;
   background: var(--ar-primary);
@@ -851,21 +947,36 @@ const header = computed(() =>
   flex: 1;
   padding: 18px 0 24px;
 }
+/* Catalog and cart side by side; the cart keeps to the window while the catalog scrolls. */
+.steps-body.docked {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  align-items: start;
+}
+.steps-main {
+  min-width: 0;
+}
+.cart-dock {
+  position: sticky;
+  top: calc(var(--sticky-top) + 16px);
+  height: calc(100vh - var(--ar-header-height) - var(--sticky-top) - 40px);
+  max-height: 720px;
+  overflow: hidden;
+  border: 1px solid var(--ar-border);
+  border-radius: 3px;
+  background: var(--ar-surface);
+}
 .step-panel {
   display: grid;
   gap: 14px;
   align-content: start;
 }
-/* Period and cart need no width of their own: a calm column in the middle. */
-.narrow-panel {
-  width: 100%;
-  max-width: 760px;
-  margin-inline: auto;
-}
-/* Period and purpose side by side where they fit, one above the other where not. */
 /* A form of a handful of fields: as wide as reads well, centred. */
 .first-step {
+  width: 100%;
   max-width: 560px;
+  margin-inline: auto;
 }
 .details-card {
   display: grid;
@@ -887,32 +998,14 @@ const header = computed(() =>
   font-size: 14px;
   font-weight: 600;
 }
-/* Step 3 repeats what step 1 set, with the way back to change it. */
-.recap {
+/* The way on right below the fields, where the eye already is. */
+.details-foot {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 14px 18px;
-  border: 1px solid var(--ar-border);
-  border-radius: 3px;
-  background: var(--ar-surface);
+  justify-content: flex-end;
+  padding-top: 14px;
+  border-top: 1px solid var(--ar-border);
 }
-.recap dl {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  flex: 1;
-  gap: 10px 20px;
-  margin: 0;
-}
-.recap dd {
-  margin: 2px 0 0;
-  overflow-wrap: anywhere;
-}
-.recap dd.missing {
-  color: var(--ar-warning);
-}
-/* The one way forward, at the bottom edge of the content; clear of a phone's home indicator. */
+/* Below the content, in view while it scrolls; clear of a phone's home indicator. */
 .next-bar {
   position: sticky;
   bottom: 0;
@@ -928,31 +1021,36 @@ const header = computed(() =>
 .back-button {
   height: 42px;
 }
-/* Forward always sits on the right, with or without a way back. */
 .next-button {
-  flex: none;
+  min-width: 200px;
+  height: 38px;
+}
+/* Back on the left, on to sending on the right. */
+.next-bar .next-button {
   margin-left: auto;
-  min-width: 220px;
   height: 42px;
+}
+.cart-bar-button .cart-count {
+  margin-right: 8px;
+  background: var(--ar-on-primary);
+  color: var(--ar-primary);
+}
+/* On a phone the cart comes up from below as a sheet (teleported: no scoped attribute). */
+:global(.cart-drawer.sheet) {
+  border-radius: 12px 12px 0 0;
 }
 @media (max-width: 760px) {
   .page.flow {
     padding-inline: 16px;
   }
-  /* The count says enough on a phone. */
-  .cart-label {
-    display: none;
-  }
-  .cart-count {
-    margin-left: 0;
-  }
   /* At the thumb: forward takes the width that back leaves. */
-  .next-button {
+  .next-bar .next-button {
     flex: 1;
     min-width: 0;
   }
-  .recap {
-    padding: 12px 14px;
+  .details-foot .next-button {
+    width: 100%;
+    height: 42px;
   }
 }
 </style>

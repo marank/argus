@@ -34,6 +34,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{
   add: [category: Schemas['CatalogCategoryOut'], model?: Schemas['CatalogModelOut']]
+  remove: [category: Schemas['CatalogCategoryOut'], model?: Schemas['CatalogModelOut']]
   addFreeText: [text: string, category?: Schemas['CatalogCategoryOut']]
 }>()
 const { t } = useI18n()
@@ -221,6 +222,7 @@ const results = computed<CatalogOption[]>(() => {
               :counts="optionCounts(option.category, option.model)"
               :in-cart="cartCounts[option.key] ?? 0"
               @add="emit('add', option.category, option.model)"
+              @remove="emit('remove', option.category, option.model)"
             />
           </section>
           <CustomRequestCard
@@ -242,6 +244,7 @@ const results = computed<CatalogOption[]>(() => {
             :children="descendantsOf(selected.id)"
             :cart-counts="cartCounts"
             @add="(category, model) => emit('add', category, model)"
+            @remove="(category, model) => emit('remove', category, model)"
             @add-free-text="(text, category) => emit('addFreeText', text, category)"
           />
         </template>

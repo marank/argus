@@ -11,7 +11,7 @@ import { isPast } from '@/utils/requests'
 /** Who asked for what and when: requester, period and the messages exchanged. */
 const props = defineProps<{ assetRequest: Schemas['AssetRequestOut'] }>()
 const { t } = useI18n()
-const { date, weekday, enumLabel } = useFormat()
+const { date, dateWithWeekday, enumLabel } = useFormat()
 
 const period = computed(() => {
   const r = props.assetRequest
@@ -63,7 +63,7 @@ const entries = computed<DetailEntry[]>(() => {
           {
             label: t('requests.requestedPickup'),
             value:
-              weekday(r.requested_pickup_date) +
+              dateWithWeekday(r.requested_pickup_date) +
               (wishPassed.value ? ` · ${t('requests.datePassed')}` : ''),
             mono: true,
             warning: wishPassed.value,

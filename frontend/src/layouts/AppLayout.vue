@@ -12,7 +12,7 @@ import {
 } from 'naive-ui'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter, type RouteLocationNormalizedLoaded } from 'vue-router'
 
 import BrandMark from '@/components/common/BrandMark.vue'
 
@@ -37,6 +37,17 @@ const small = breakpoints.smaller('wide')
 const phone = breakpoints.smaller('phone')
 const menuOpen = ref(false)
 const route = useRoute()
+const router = useRouter()
+/**
+ * Every address gets the page built anew, except for a step within it (`?step=`): that is
+ * history inside the page, so the browser's back leads to the step before, not out of it.
+ */
+function viewKey(at: RouteLocationNormalizedLoaded): string {
+  if (!('step' in at.query)) return at.fullPath
+  const { step, ...query } = at.query
+  void step
+  return router.resolve({ path: at.path, query, hash: at.hash }).fullPath
+}
 watch(
   () => route.fullPath,
   () => (menuOpen.value = false),
@@ -89,7 +100,7 @@ function toggleSidebar() {
       <NLayoutContent class="content" :native-scrollbar="false">
         <div class="grid-bg" />
         <RouterView v-slot="{ Component, route }">
-          <component :is="Component" :key="route.fullPath" />
+          <component :is="Component" :key="viewKey(route)" />
         </RouterView>
       </NLayoutContent>
     </NLayout>

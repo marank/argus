@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { Check, Plus } from '@lucide/vue'
+import { Minus, Plus } from '@lucide/vue'
 import { NButton } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
 import type { Schemas } from '@/api/types'
 
-/** A single requestable option with an add button and the quantity already in the request. */
+/**
+ * A single requestable option: an add button, and once it is in the request a stepper
+ * with the quantity, so it can be changed right here.
+ */
 defineProps<{
   label: string
   hint?: string
@@ -13,7 +16,7 @@ defineProps<{
   inCart: number
   primary?: boolean
 }>()
-const emit = defineEmits<{ add: [] }>()
+const emit = defineEmits<{ add: []; remove: [] }>()
 const { t } = useI18n()
 </script>
 
@@ -37,16 +40,38 @@ const { t } = useI18n()
         </span>
       </span>
     </div>
-    <span v-if="inCart" :key="inCart" class="in-cart mono">
-      <Check :size="13" />
-      <span class="in-cart-text">{{ t('requests.new.inCart', { count: inCart }) }}</span>
-      <span class="in-cart-count" aria-hidden="true">{{ inCart }}</span>
-    </span>
+    <div v-if="inCart" class="stepper">
+      <NButton
+        secondary
+        size="small"
+        class="less"
+        :aria-label="t('requests.new.oneLess', { label })"
+        @click="emit('remove')"
+      >
+        <template #icon><Minus :size="14" /></template>
+      </NButton>
+      <span
+        :key="inCart"
+        class="in-cart mono"
+        :title="t('requests.new.inCart', { count: inCart })"
+        >{{ inCart }}</span
+      >
+      <NButton
+        secondary
+        size="small"
+        class="add"
+        :aria-label="`${t('common.add')}: ${label}`"
+        @click="emit('add')"
+      >
+        <template #icon><Plus :size="14" /></template>
+      </NButton>
+    </div>
     <NButton
+      v-else
       :type="primary ? 'primary' : 'default'"
       :secondary="!primary"
       size="small"
-      class="add"
+      class="add first"
       :aria-label="`${t('common.add')}: ${label}`"
       @click="emit('add')"
     >
@@ -112,18 +137,29 @@ const { t } = useI18n()
   border-radius: 50%;
   background: currentColor;
 }
-.in-cart {
-  /* Re-keyed on every change, so the pop plays when something is added. */
-  animation: ar-pop 0.25s ease-out;
-  display: inline-flex;
+/* Minus, count, plus: as wide as the add button it replaces, so the row does not jump. */
+.stepper {
+  display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  color: var(--ar-primary);
-  white-space: nowrap;
+  flex: none;
+  border-radius: 3px;
+  background: var(--ar-primary-soft);
 }
-.in-cart-count {
-  display: none;
+.stepper .n-button {
+  width: 30px;
+  padding: 0;
+}
+.stepper :deep(.n-button__icon) {
+  margin: 0;
+}
+.in-cart {
+  /* Re-keyed on every change, so the pop plays when the quantity changes. */
+  animation: ar-pop 0.25s ease-out;
+  min-width: 28px;
+  color: var(--ar-primary);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
 }
 /*
  * A narrow column (a phone, or the middle of three on a small screen): a plain plus,
@@ -134,18 +170,14 @@ const { t } = useI18n()
     gap: 10px;
     padding-inline: 10px;
   }
-  .in-cart-text,
   .add-label {
     display: none;
   }
-  .in-cart-count {
-    display: inline;
-  }
-  .add {
+  .add.first {
     width: 32px;
     padding: 0;
   }
-  .add :deep(.n-button__icon) {
+  .add.first :deep(.n-button__icon) {
     margin: 0;
   }
 }

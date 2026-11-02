@@ -1,35 +1,35 @@
 <script setup lang="ts">
-import { MessageSquarePlus, Minus, PackageSearch, Plus, Trash2 } from '@lucide/vue'
+import { MessageSquare, MessageSquarePlus, Minus, PackageSearch, Plus, Trash2 } from '@lucide/vue'
 import { NButton, NInput, NInputNumber } from 'naive-ui'
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import type { CartLine } from './types'
 
 /**
- * What the request holds: the chosen lines and a message to IT. Period and purpose are
- * set in the first step; the page sends the request.
+ * What the request holds: the chosen lines and a message to IT, inside the cart panel
+ * (which has the title, the details and the send button).
  * For a direct hand-out (`direct`) the lines are specific devices and stocks.
  */
-defineProps<{ direct?: boolean }>()
+defineProps<{
+  direct?: boolean
+  /** What an empty cart says instead of the default, e.g. before the selection step. */
+  emptyText?: string
+}>()
 const lines = defineModel<CartLine[]>('lines', { required: true })
 const notes = defineModel<string>('notes', { required: true })
 const { t } = useI18n()
 
 const openNote = ref<string | null>(null)
-const total = computed(() => lines.value.reduce((sum, line) => sum + line.quantity, 0))
 </script>
 
 <template>
-  <aside class="cart">
-    <header>
-      <h2>{{ t('requests.new.cart') }}</h2>
-      <span v-if="total" :key="total" class="mono badge">{{ total }}</span>
-    </header>
-
+  <div class="cart">
     <div v-if="!lines.length" class="empty">
       <PackageSearch :size="30" :stroke-width="1.3" />
-      <p>{{ direct ? t('requests.direct.cartEmpty') : t('requests.new.cartEmpty') }}</p>
+      <p>
+        {{ emptyText ?? (direct ? t('requests.direct.cartEmpty') : t('requests.new.cartEmpty')) }}
+      </p>
     </div>
 
     <template v-else>
@@ -48,7 +48,8 @@ const total = computed(() => lines.value.reduce((sum, line) => sum + line.quanti
                 class="note-link"
                 @click="openNote = openNote === line.key ? null : line.key"
               >
-                {{ line.note || t('requests.new.addNote') }}
+                <MessageSquare :size="12" />
+                <span>{{ line.note || t('requests.new.addNote') }}</span>
               </button>
             </div>
             <NInputNumber
@@ -96,7 +97,7 @@ const total = computed(() => lines.value.reduce((sum, line) => sum + line.quanti
         />
       </div>
     </template>
-  </aside>
+  </div>
 </template>
 
 <style scoped>
@@ -118,43 +119,12 @@ const total = computed(() => lines.value.reduce((sum, line) => sum + line.quanti
 .cart {
   display: grid;
   gap: 14px;
-  padding: 16px 18px 18px;
-  border: 1px solid var(--ar-border);
-  border-radius: 3px;
-  background: var(--ar-surface);
-}
-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-h2 {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-}
-.badge {
-  /* Centered digits; re-keyed on change so the count pops. */
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  border-radius: 10px;
-  line-height: 1;
-  animation: ar-pop 0.25s ease-out;
-  background: var(--ar-primary);
-  color: var(--ar-on-primary);
-  font-size: 11px;
-  font-weight: 700;
-  text-align: center;
 }
 .empty {
   display: grid;
   justify-items: center;
   gap: 8px;
-  padding: 24px 8px;
+  padding: 32px 8px;
   color: var(--ar-text-subtle);
   text-align: center;
 }
@@ -197,21 +167,33 @@ h2 {
   color: var(--ar-text-muted);
   font-size: 11.5px;
 }
+/* A link that looks like one: icon, accent colour, underline on hover. */
 .note-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  justify-self: start;
+  max-width: 100%;
+  margin-top: 2px;
   padding: 0;
   border: 0;
   background: none;
-  color: var(--ar-text-subtle);
+  color: var(--ar-primary);
   font: inherit;
-  font-size: 11.5px;
+  font-size: 12px;
   text-align: left;
   cursor: pointer;
+}
+.note-link svg {
+  flex: none;
+}
+.note-link span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.note-link:hover {
-  color: var(--ar-primary);
+.note-link:hover span {
+  text-decoration: underline;
 }
 .qty {
   width: 104px;

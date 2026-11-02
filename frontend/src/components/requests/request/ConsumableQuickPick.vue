@@ -19,6 +19,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{
   add: [category: Schemas['CatalogCategoryOut'], model: Schemas['CatalogModelOut']]
+  remove: [category: Schemas['CatalogCategoryOut'], model: Schemas['CatalogModelOut']]
 }>()
 const { t } = useI18n()
 
@@ -48,6 +49,7 @@ const devices = computed(() => fittingDevices(props.groups, props.catalog))
           :counts="optionCounts(option.category, option.model)"
           :in-cart="cartCounts[optionKey(option.category, option.model)] ?? 0"
           @add="emit('add', option.category, option.model)"
+          @remove="emit('remove', option.category, option.model)"
         />
       </div>
     </section>
