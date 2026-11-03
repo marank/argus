@@ -1,6 +1,6 @@
 import type { GlobalThemeOverrides } from 'naive-ui'
 
-import { darkPalette, lightPalette, type Palette } from './palette'
+import { darkPalette, lightPalette, retroPalette, solarizedPalette, type Palette } from './palette'
 
 const fontFamily = "'IBM Plex Sans Variable', 'IBM Plex Sans', system-ui, sans-serif"
 const fontFamilyMono = "'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace"
@@ -79,6 +79,12 @@ function build(p: Palette): GlobalThemeOverrides {
       buttonTextColorActive: p.primary,
       buttonBorderColorActive: p.primary,
     },
+    // Page numbers like the segmented choices; disabled arrows only outlined, not a light box.
+    Pagination: {
+      itemColorActive: p.primarySoft,
+      itemColorActiveHover: p.primarySoft,
+      itemColorDisabled: 'transparent',
+    },
     // Quiet scrollbars: in the border colour, a little stronger on hover.
     Scrollbar: { color: p.borderStrong, colorHover: p.textSubtle },
     Input: { border: `1px solid ${p.borderStrong}` },
@@ -95,5 +101,50 @@ function build(p: Palette): GlobalThemeOverrides {
   }
 }
 
+/*
+ * Naive's light theme paints a number of surfaces in fixed white or cool grey (`baseColor` for
+ * segmented buttons, checkboxes and tabs; tags, rails, disabled inputs, switch knobs …), which
+ * stand out on the tinted Solarized surfaces. Solarized builds on the light theme, so it
+ * replaces them with its own tones.
+ */
+function tinted(p: Palette): GlobalThemeOverrides {
+  return {
+    common: {
+      baseColor: p.surface,
+      tagColor: p.surfaceSunken,
+      codeColor: p.surfaceSunken,
+      tabColor: p.surfaceSunken,
+      actionColor: p.surfaceSunken,
+      // Highlighted options in selects and dropdowns: a tint of the text colour, so it shows
+      // on any surface (popovers are as light as the cards).
+      hoverColor: 'rgba(7, 54, 66, 0.07)',
+      pressedColor: 'rgba(7, 54, 66, 0.11)',
+      inputColorDisabled: p.surfaceSunken,
+      railColor: p.borderStrong,
+      textColorDisabled: p.textSubtle,
+      placeholderColor: p.textSubtle,
+      placeholderColorDisabled: p.borderStrong,
+      iconColor: p.textSubtle,
+      iconColorHover: p.textMuted,
+      iconColorPressed: p.text,
+      iconColorDisabled: p.borderStrong,
+      clearColor: p.textSubtle,
+      clearColorHover: p.textMuted,
+      clearColorPressed: p.text,
+    },
+    Switch: { buttonColor: p.surface },
+    Slider: { handleColor: p.surface },
+  }
+}
+
+const solarized = build(solarizedPalette)
+const solarizedTint = tinted(solarizedPalette)
+
 export const lightOverrides = build(lightPalette)
 export const darkOverrides = build(darkPalette)
+export const retroOverrides = build(retroPalette)
+export const solarizedOverrides: GlobalThemeOverrides = {
+  ...solarized,
+  ...solarizedTint,
+  common: { ...solarized.common, ...solarizedTint.common },
+}

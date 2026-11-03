@@ -5,8 +5,10 @@ import { authApi, isChallenge } from '@/api/auth'
 import { ApiError } from '@/api/client'
 import { setLocale } from '@/i18n'
 import type { Schemas } from '@/api/types'
+import { useTheme, type ThemeMode } from '@/theme/useTheme'
 
 export const useAuthStore = defineStore('auth', () => {
+  const { mode: themeMode } = useTheme()
   const user = ref<Schemas['CurrentUserOut'] | null>(null)
   const checked = ref(false)
   /** Why the last session ended, for the notice on the login page; reset by the next sign-in. */
@@ -31,6 +33,7 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = current
     if (current) {
       setLocale(current.language)
+      themeMode.value = current.theme
       endReason.value = null
     }
   }
@@ -92,6 +95,12 @@ export const useAuthStore = defineStore('auth', () => {
     if (user.value) user.value = await authApi.updatePreferences({ language })
   }
 
+  /** Shows the theme at once and keeps it in the profile, so it follows the user to other devices. */
+  async function changeTheme(theme: ThemeMode) {
+    themeMode.value = theme
+    if (user.value) user.value = await authApi.updatePreferences({ theme })
+  }
+
   return {
     user,
     checked,
@@ -108,6 +117,7 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     expire,
     changeLanguage,
+    changeTheme,
     changeNotifications,
     changeDashboard,
     clear: () => (user.value = null),

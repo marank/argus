@@ -22,7 +22,11 @@ export const authApi = {
     data: Partial<
       Pick<
         Schemas['CurrentUserOut'],
-        'language' | 'notification_settings' | 'app_notification_settings' | 'dashboard_settings'
+        | 'language'
+        | 'theme'
+        | 'notification_settings'
+        | 'app_notification_settings'
+        | 'dashboard_settings'
       >
     >,
   ) => http.patch<Schemas['CurrentUserOut']>('/auth/me', data),

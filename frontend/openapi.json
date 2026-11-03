@@ -4764,6 +4764,9 @@
               }
             ]
           },
+          "theme": {
+            "$ref": "#/components/schemas/Theme"
+          },
           "two_factor": {
             "anyOf": [
               {
@@ -4802,6 +4805,7 @@
           "teams",
           "permissions",
           "language",
+          "theme",
           "notification_settings",
           "app_notification_settings",
           "dashboard_settings",
@@ -9760,6 +9764,16 @@
               }
             ],
             "title": "Notification Settings"
+          },
+          "theme": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Theme"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "title": "PreferencesIn",
@@ -11970,6 +11984,17 @@
         ],
         "title": "TestMailIn",
         "type": "object"
+      },
+      "Theme": {
+        "enum": [
+          "system",
+          "light",
+          "dark",
+          "solarized",
+          "retro"
+        ],
+        "title": "Theme",
+        "type": "string"
       },
       "Tracking": {
         "enum": [

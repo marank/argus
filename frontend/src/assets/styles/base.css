@@ -5,16 +5,29 @@
   --ar-font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
   --ar-sidebar-width: 232px;
   --ar-header-height: 52px;
-  /* Chart series in fixed order (Solarized blue and orange), colour-blind safe on the light surface. */
+  /* Chart series in fixed order, checked for colour-blind separation on the light surface. */
+  --ar-series-1: #2a78d6;
+  --ar-series-2: #eb6834;
+  color-scheme: light;
+}
+
+:root[data-theme='solarized'] {
+  /* Solarized blue and orange, the same blue/orange pair in the scheme's own tones. */
   --ar-series-1: #268bd2;
   --ar-series-2: #cb4b16;
-  color-scheme: light;
 }
 
 :root[data-theme='dark'] {
   /* The same hues stepped for the dark surface. */
   --ar-series-1: #3987e5;
   --ar-series-2: #d95926;
+  color-scheme: dark;
+}
+
+:root[data-theme='retro'] {
+  /* Neon sky and amber from the retro accents, apart enough for colour-blind readers. */
+  --ar-series-1: #5cc8ff;
+  --ar-series-2: #ffa64d;
   color-scheme: dark;
 }
 

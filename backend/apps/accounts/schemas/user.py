@@ -83,6 +83,7 @@ class CurrentUserOut(UserOut):
     # Area → "read" or "write" from the user's roles (everything for administrators).
     permissions: dict[ResourceKey, PermissionLevel]
     language: User.Language
+    theme: User.Theme
     # Notifications the user switched off, by email and in the app.
     notification_settings: dict[NotificationEvent, bool]
     app_notification_settings: dict[NotificationEvent, bool]
@@ -126,6 +127,7 @@ class UserIn(Schema):
 
 class PreferencesIn(Schema):
     language: User.Language | None = None
+    theme: User.Theme | None = None
     # Notifications the user switches off ({event: false}), by email and in the app.
     notification_settings: dict[str, bool] | None = None
     app_notification_settings: dict[str, bool] | None = None

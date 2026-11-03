@@ -1,22 +1,13 @@
 <script setup lang="ts">
-import {
-  Bell,
-  ChevronDown,
-  Languages,
-  LogOut,
-  Monitor,
-  Moon,
-  Settings,
-  ShieldCheck,
-  Sun,
-} from '@lucide/vue'
+import { Bell, ChevronDown, Languages, LogOut, Palette, Settings, ShieldCheck } from '@lucide/vue'
 import { NButton, NDropdown, type DropdownOption } from 'naive-ui'
 import { computed, h, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import { useAuthStore } from '@/stores/auth'
-import { useTheme, type ThemeMode } from '@/theme/useTheme'
+import { THEME_ICONS } from '@/theme/icons'
+import { THEME_GROUPS, useTheme, type ThemeMode } from '@/theme/useTheme'
 
 const { t, locale } = useI18n()
 const auth = useAuthStore()
@@ -31,17 +22,15 @@ const options = computed<DropdownOption[]>(() => [
     type: 'group',
     key: 'theme',
     label: t('nav.theme'),
-    children: (
-      [
-        ['light', 'nav.themeLight', Sun],
-        ['dark', 'nav.themeDark', Moon],
-        ['system', 'nav.themeSystem', Monitor],
-      ] as [ThemeMode, string, Component][]
-    ).map(([value, label, component]) => ({
-      key: `theme:${value}`,
-      label: t(label) + check(mode.value === value),
-      icon: icon(component),
-    })),
+    // System, light and dark themes, each set apart by a line as on the appearance page.
+    children: THEME_GROUPS.flatMap(({ key, modes }, index) => [
+      ...(index ? [{ type: 'divider', key: `theme-${key}` }] : []),
+      ...modes.map((value) => ({
+        key: `theme:${value}`,
+        label: t(`nav.themes.${value}`) + check(mode.value === value),
+        icon: icon(THEME_ICONS[value]),
+      })),
+    ]),
   },
   { type: 'divider', key: 'd1' },
   {
@@ -54,6 +43,7 @@ const options = computed<DropdownOption[]>(() => [
     ],
   },
   { type: 'divider', key: 'd2' },
+  { key: 'appearance', label: t('profile.appearance.title'), icon: icon(Palette) },
   { key: 'notifications', label: t('profile.notifications.title'), icon: icon(Bell) },
   { key: 'security', label: t('profile.security.title'), icon: icon(ShieldCheck) },
   ...(auth.isItStaff ? [{ key: 'admin', label: t('nav.admin'), icon: icon(Settings) }] : []),
@@ -62,9 +52,10 @@ const options = computed<DropdownOption[]>(() => [
 
 async function onSelect(key: string) {
   const [kind, value] = key.split(':')
-  if (kind === 'theme') mode.value = value as ThemeMode
+  if (kind === 'theme') await auth.changeTheme(value as ThemeMode)
   else if (kind === 'lang') await auth.changeLanguage(value as 'en' | 'de')
   else if (kind === 'admin') window.open('/admin/', '_blank')
+  else if (kind === 'appearance') router.push({ name: 'profile-appearance' })
   else if (kind === 'notifications') router.push({ name: 'profile-notifications' })
   else if (kind === 'security') router.push({ name: 'profile-security' })
   else if (kind === 'logout') {

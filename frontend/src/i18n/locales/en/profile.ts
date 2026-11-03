@@ -1,4 +1,11 @@
 export default {
+  appearance: {
+    title: 'Appearance',
+    subtitle: 'How Argus looks for you. Saved in your profile, so it applies on every device.',
+    theme: 'Colour theme',
+    themeDescription: 'System follows the light or dark setting of your device.',
+    groups: { system: 'System', light: 'Light themes', dark: 'Dark themes' },
+  },
   notifications: {
     title: 'Notifications',
     subtitle: 'Choose which notifications you get in the app and by email to {email}.',

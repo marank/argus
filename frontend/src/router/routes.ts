@@ -102,6 +102,12 @@ export const routes: RouteRecordRaw[] = [
         meta: { approver: true, title: 'nav.approvals' },
       },
       {
+        path: 'profile/appearance',
+        name: 'profile-appearance',
+        component: () => import('@/views/profile/AppearanceSettingsView.vue'),
+        meta: { title: 'profile.appearance.title' },
+      },
+      {
         path: 'profile/notifications',
         name: 'profile-notifications',
         component: () => import('@/views/profile/NotificationSettingsView.vue'),

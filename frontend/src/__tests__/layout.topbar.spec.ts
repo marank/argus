@@ -7,6 +7,7 @@ import GlobalScan from '@/components/layout/GlobalScan.vue'
 import NotificationBell from '@/components/layout/NotificationBell.vue'
 import UserMenu from '@/components/layout/UserMenu.vue'
 import { setLocale } from '@/i18n'
+import { useTheme } from '@/theme/useTheme'
 
 import { makeUser } from './helpers'
 import { click, typeInto } from './dom'
@@ -300,6 +301,22 @@ describe('top bar', () => {
       await click(option('Deutsch')!)
       expect(api.updatePreferences).toHaveBeenCalledWith({ language: 'de' })
       expect(document.documentElement.lang).toBe('de')
+    })
+
+    it('switches the theme, Solarized included, and stores it with the user', async () => {
+      api.updatePreferences.mockResolvedValue(makeUser({ theme: 'solarized' }))
+      await menu()
+      expect(option('System')?.textContent).toContain('✓')
+      await click(option('Solarized')!)
+      expect(api.updatePreferences).toHaveBeenCalledWith({ theme: 'solarized' })
+      expect(document.documentElement.dataset.theme).toBe('solarized')
+      useTheme().mode.value = 'system'
+    })
+
+    it('leads to the appearance settings', async () => {
+      const { router } = await menu()
+      await click(option('Appearance')!)
+      expect(router.currentRoute.value.name).toBe('profile-appearance')
     })
 
     it('signs out and goes to the login page', async () => {

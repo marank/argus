@@ -1,5 +1,6 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { nextTick } from 'vue'
 
 import { ApiError } from '@/api/client'
 import { i18n } from '@/i18n'
@@ -8,6 +9,7 @@ import { useFeaturesStore } from '@/stores/features'
 import { useLiveStore, type LiveEvent } from '@/stores/live'
 import { useMenuCountsStore } from '@/stores/menuCounts'
 import { useNotificationsStore } from '@/stores/notifications'
+import { useTheme } from '@/theme/useTheme'
 
 import { DEFAULT_RULES, FakeEventSource, makeSiteSettings, makeUser } from './helpers'
 
@@ -164,6 +166,21 @@ describe('auth store', () => {
     expect(i18n.global.locale.value).toBe('de')
     expect(api.updatePreferences).toHaveBeenCalledWith({ language: 'de' })
     expect(auth.user?.language).toBe('de')
+  })
+
+  it('takes the theme from the profile and saves a new choice there', async () => {
+    const { mode } = useTheme()
+    api.me.mockResolvedValue(makeUser({ theme: 'dark' }))
+    const auth = useAuthStore()
+    await auth.fetchCurrentUser()
+    expect(mode.value).toBe('dark')
+
+    api.updatePreferences.mockResolvedValue(makeUser({ theme: 'solarized' }))
+    await auth.changeTheme('solarized')
+    expect(api.updatePreferences).toHaveBeenCalledWith({ theme: 'solarized' })
+    await nextTick()
+    expect(document.documentElement.dataset.theme).toBe('solarized')
+    mode.value = 'system'
   })
 
   it('only switches the language locally when signed out', async () => {

@@ -24,9 +24,33 @@ export interface Palette {
   grid: string
 }
 
+export const lightPalette: Palette = {
+  bg: '#f3f5f7',
+  surface: '#ffffff',
+  surfaceRaised: '#ffffff',
+  surfaceSunken: '#eef1f4',
+  border: '#dbe1e7',
+  borderStrong: '#c3ccd5',
+  text: '#0f1720',
+  textMuted: '#5b6877',
+  textSubtle: '#8794a3',
+  primary: '#0e7490',
+  primaryHover: '#0b8aa9',
+  primaryPressed: '#0a5c72',
+  primarySoft: 'rgba(14, 116, 144, 0.09)',
+  onPrimary: '#ffffff',
+  success: '#15803d',
+  warning: '#b45309',
+  error: '#c2410c',
+  info: '#1d4ed8',
+  violet: '#7c3aed',
+  pink: '#be185d',
+  grid: 'rgba(15, 23, 32, 0.035)',
+}
+
 // Solarized Light: base3/base2 surfaces, base02/base01/base1 text and the Solarized accents.
 // The primary is Solarized cyan one step darker, so button labels stay legible.
-export const lightPalette: Palette = {
+export const solarizedPalette: Palette = {
   bg: '#eee8d5',
   surface: '#fdf6e3',
   surfaceRaised: '#fdf6e3',
@@ -72,4 +96,30 @@ export const darkPalette: Palette = {
   violet: '#a78bfa',
   pink: '#f472b6',
   grid: 'rgba(223, 230, 238, 0.03)',
+}
+
+// Retro: dark espresso browns with warm cream text, lit by soft neon accents (amber as the
+// primary, mint, sky, magenta), a little toned down so they glow without glaring.
+export const retroPalette: Palette = {
+  bg: '#16100c',
+  surface: '#1f1711',
+  surfaceRaised: '#271d15',
+  surfaceSunken: '#1a130e',
+  border: '#3a2c20',
+  borderStrong: '#4f3d2c',
+  text: '#f2e3cc',
+  textMuted: '#b8a084',
+  textSubtle: '#7f6b56',
+  primary: '#ffa64d',
+  primaryHover: '#ffbb73',
+  primaryPressed: '#e88a2e',
+  primarySoft: 'rgba(255, 166, 77, 0.13)',
+  onPrimary: '#1f1209',
+  success: '#5ee8a8',
+  warning: '#ffd75e',
+  error: '#ff5f7e',
+  info: '#5cc8ff',
+  violet: '#c08cff',
+  pink: '#ff6ec7',
+  grid: 'rgba(242, 227, 204, 0.03)',
 }

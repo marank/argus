@@ -4092,6 +4092,7 @@ export interface components {
        */
       teams: components['schemas']['RefOut'][]
       terminal_location: components['schemas']['LocationRefOut'] | null
+      theme: components['schemas']['Theme']
       two_factor: components['schemas']['TwoFactorMethod'] | null
       /** Username */
       username: string
@@ -6051,6 +6052,7 @@ export interface components {
       notification_settings?: {
         [key: string]: boolean
       } | null
+      theme?: components['schemas']['Theme'] | null
     }
     /** PreviewOut */
     PreviewOut: {
@@ -6957,6 +6959,11 @@ export interface components {
       /** To */
       to: string
     }
+    /**
+     * Theme
+     * @enum {string}
+     */
+    Theme: 'system' | 'light' | 'dark' | 'solarized' | 'retro'
     /**
      * Tracking
      * @enum {string}

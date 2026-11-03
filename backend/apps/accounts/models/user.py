@@ -32,6 +32,13 @@ class User(AbstractUser):
         ENGLISH = "en", _("English")
         GERMAN = "de", _("German")
 
+    class Theme(models.TextChoices):
+        SYSTEM = "system", _("System")
+        LIGHT = "light", _("Light")
+        DARK = "dark", _("Dark")
+        SOLARIZED = "solarized", _("Solarized")
+        RETRO = "retro", _("Retro")
+
     id = models.UUIDField(_("ID"), primary_key=True, default=uuid.uuid7, editable=False)
     department = models.ForeignKey(
         "accounts.Department",
@@ -73,6 +80,8 @@ class User(AbstractUser):
     language = models.CharField(
         _("language"), max_length=5, choices=Language.choices, default=Language.GERMAN
     )
+    # Colour theme of the app; "system" follows the device's light or dark setting.
+    theme = models.CharField(_("theme"), max_length=10, choices=Theme.choices, default=Theme.SYSTEM)
     # Notifications the user switched off: {event: false}; missing means on.
     notification_settings = models.JSONField(_("email notifications"), default=dict, blank=True)
     app_notification_settings = models.JSONField(_("in-app notifications"), default=dict, blank=True)

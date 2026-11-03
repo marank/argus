@@ -1,4 +1,12 @@
 export default {
+  appearance: {
+    title: 'Darstellung',
+    subtitle:
+      'Wie Argus für Sie aussieht. Wird in Ihrem Profil gespeichert und gilt auf jedem Gerät.',
+    theme: 'Farbschema',
+    themeDescription: 'System folgt der hellen oder dunklen Einstellung Ihres Geräts.',
+    groups: { system: 'System', light: 'Helle Themes', dark: 'Dunkle Themes' },
+  },
   notifications: {
     title: 'Benachrichtigungen',
     subtitle:

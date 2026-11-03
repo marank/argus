@@ -13,6 +13,7 @@ export function makeUser(overrides: Partial<CurrentUser> = {}): CurrentUser {
     username: 'jdoe',
     display_name: 'Jane Doe',
     language: 'en',
+    theme: 'system',
     is_it_staff: false,
     is_superuser: false,
     is_terminal: false,

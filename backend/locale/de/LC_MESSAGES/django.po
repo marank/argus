@@ -454,6 +454,30 @@ msgstr "Englisch"
 msgid "German"
 msgstr "Deutsch"
 
+#: apps/accounts/models/user.py
+msgid "System"
+msgstr "System"
+
+#: apps/accounts/models/user.py
+msgid "Light"
+msgstr "Hell"
+
+#: apps/accounts/models/user.py
+msgid "Dark"
+msgstr "Dunkel"
+
+#: apps/accounts/models/user.py
+msgid "Solarized"
+msgstr "Solarized"
+
+#: apps/accounts/models/user.py
+msgid "Retro"
+msgstr "Retro"
+
+#: apps/accounts/models/user.py
+msgid "theme"
+msgstr "Farbschema"
+
 #: apps/accounts/models/user.py:29 apps/core/models/base.py:10
 msgid "ID"
 msgstr "ID"
