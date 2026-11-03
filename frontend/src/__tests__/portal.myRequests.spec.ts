@@ -64,12 +64,12 @@ describe('MyRequestsView', () => {
     ]
   }
 
-  const rowLabels = () =>
-    [...document.body.querySelectorAll('.row-label')].map((l) =>
-      l.childNodes[0]?.textContent?.trim(),
-    )
-  const cardTitles = () =>
-    [...document.body.querySelectorAll('.cards .card strong')].map((c) => c.textContent)
+  const titles = (selector: string) =>
+    [...document.body.querySelectorAll(`${selector} .title`)].map((t) => t.textContent?.trim())
+  const todoLine = (title: string) =>
+    [...document.body.querySelectorAll('.todo')].find(
+      (l) => l.querySelector('.title')?.textContent === title,
+    )!
 
   it('loads only the employee’s own requests', async () => {
     api.list.mockResolvedValue(page([]))
@@ -78,60 +78,51 @@ describe('MyRequestsView', () => {
     expect(bodyText()).toContain('No requests yet.')
   })
 
-  it('groups running requests by status with what is ready for pickup first', async () => {
+  it('puts first what the employee has to do: overdue returns, then pickups', async () => {
     api.list.mockResolvedValue(page(scenario()))
     await mountPage(MyRequestsView)
-    expect(rowLabels()).toEqual([
-      'Ready for pickup',
-      'Handed out',
-      'Submitted',
-      'Awaiting approval',
-    ])
-    expect(cardTitles()).toEqual(['Workshop', 'Trade fair', 'Headset', 'Monitor'])
+    expect(titles('.todo')).toEqual(['Trade fair', 'Workshop'])
+    expect(todoLine('Trade fair').querySelector('.action')!.textContent).toBe('Bring back')
+    expect(todoLine('Trade fair').querySelector('.todo-text')!.textContent).toBe(
+      'Return overdue since 09/30/2026.',
+    )
+    expect(todoLine('Workshop').querySelector('.action')!.textContent).toBe('Pick up')
+    expect(todoLine('Workshop').querySelector('.todo-text')!.textContent).toBe(
+      'Waiting for you at IT.',
+    )
   })
 
-  it('says for each running request what happens next', async () => {
+  it('lists the rest in progress below, what comes next first, with its status', async () => {
     api.list.mockResolvedValue(page(scenario()))
     await mountPage(MyRequestsView)
-    const next = (title: string) =>
-      [...document.body.querySelectorAll('.card')]
-        .find((c) => c.querySelector('strong')?.textContent === title)!
-        .querySelector('.next')!.textContent
-    expect(next('Workshop')).toBe('Ready for pickup')
-    expect(next('Headset')).toBe('Waiting for IT to confirm.')
-    expect(next('Monitor')).toBe('Waiting for your department to approve.')
-    expect(next('Trade fair')).toBe('Return overdue since 09/30/2026.')
+    const lines = [...document.body.querySelectorAll('.line:not(.todo):not(.closed-line)')]
+    expect(lines.map((l) => l.querySelector('.title')?.textContent)).toEqual(['Headset', 'Monitor'])
+    expect(lines[0]!.textContent).toContain('Submitted')
+    expect(lines[1]!.textContent).toContain('Awaiting approval')
   })
 
-  it('lists closed requests apart from the running ones', async () => {
+  it('folds the closed requests away until asked for', async () => {
     api.list.mockResolvedValue(page(scenario()))
     await mountPage(MyRequestsView)
-    const closed = document.body.querySelector('.closed')!.textContent
+    expect(document.body.querySelector('.closed-line')).toBeNull()
+    await click(document.body.querySelector<HTMLElement>('.toggle')!)
+    const closed = document.body.querySelector('.closed-line')!.textContent
     expect(closed).toContain('Old laptop')
     expect(closed).toContain('Completed')
-    expect(cardTitles()).not.toContain('Old laptop')
-  })
-
-  it('sorts running requests by date when asked and remembers the choice', async () => {
-    api.list.mockResolvedValue(page(scenario()))
-    await mountPage(MyRequestsView)
-    await click(document.body.querySelector<HTMLInputElement>('input[value="date"]')!)
-    expect(rowLabels()).toEqual([])
-    expect(cardTitles()).toEqual(['Headset', 'Workshop', 'Monitor', 'Trade fair'])
-    expect(localStorage.getItem('argus.my-requests-sort')).toBe('date')
   })
 
   it('says when nothing is running', async () => {
     api.list.mockResolvedValue(page([requestListItem({ status: 'cancelled' })]))
     await mountPage(MyRequestsView)
     expect(bodyText()).toContain('No request is in progress right now.')
+    expect(document.body.querySelector('.todo')).toBeNull()
   })
 
   it('links each request to its page', async () => {
     api.list.mockResolvedValue(page(scenario()))
     await mountPage(MyRequestsView)
-    const link = document.body.querySelector<HTMLAnchorElement>('.cards .card')!
-    expect(link.getAttribute('href')).toBe('/portal/requests/r-ready')
+    const link = document.body.querySelector<HTMLAnchorElement>('.line')!
+    expect(link.getAttribute('href')).toBe('/portal/requests/r-late')
   })
 })
 
