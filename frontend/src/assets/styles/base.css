@@ -5,9 +5,9 @@
   --ar-font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
   --ar-sidebar-width: 232px;
   --ar-header-height: 52px;
-  /* Chart series in fixed order, checked for colour-blind separation on the light surface. */
-  --ar-series-1: #2a78d6;
-  --ar-series-2: #eb6834;
+  /* Chart series in fixed order (Solarized blue and orange), colour-blind safe on the light surface. */
+  --ar-series-1: #268bd2;
+  --ar-series-2: #cb4b16;
   color-scheme: light;
 }
 

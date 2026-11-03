@@ -24,28 +24,30 @@ export interface Palette {
   grid: string
 }
 
+// Solarized Light: base3/base2 surfaces, base02/base01/base1 text and the Solarized accents.
+// The primary is Solarized cyan one step darker, so button labels stay legible.
 export const lightPalette: Palette = {
-  bg: '#f3f5f7',
-  surface: '#ffffff',
-  surfaceRaised: '#ffffff',
-  surfaceSunken: '#eef1f4',
-  border: '#dbe1e7',
-  borderStrong: '#c3ccd5',
-  text: '#0f1720',
-  textMuted: '#5b6877',
-  textSubtle: '#8794a3',
-  primary: '#0e7490',
-  primaryHover: '#0b8aa9',
-  primaryPressed: '#0a5c72',
-  primarySoft: 'rgba(14, 116, 144, 0.09)',
-  onPrimary: '#ffffff',
-  success: '#15803d',
-  warning: '#b45309',
-  error: '#c2410c',
-  info: '#1d4ed8',
-  violet: '#7c3aed',
-  pink: '#be185d',
-  grid: 'rgba(15, 23, 32, 0.035)',
+  bg: '#eee8d5',
+  surface: '#fdf6e3',
+  surfaceRaised: '#fdf6e3',
+  surfaceSunken: '#f5efdc',
+  border: '#e2dbc5',
+  borderStrong: '#d3cbb3',
+  text: '#073642',
+  textMuted: '#586e75',
+  textSubtle: '#93a1a1',
+  primary: '#1f8a82',
+  primaryHover: '#2aa198',
+  primaryPressed: '#19716b',
+  primarySoft: 'rgba(42, 161, 152, 0.11)',
+  onPrimary: '#fdf6e3',
+  success: '#859900',
+  warning: '#b58900',
+  error: '#dc322f',
+  info: '#268bd2',
+  violet: '#6c71c4',
+  pink: '#d33682',
+  grid: 'rgba(7, 54, 66, 0.04)',
 }
 
 export const darkPalette: Palette = {
