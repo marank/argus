@@ -4,10 +4,7 @@ import { NButton } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
 import type { Schemas } from '@/api/types'
 
-/**
- * A single requestable option: an add button, and once it is in the request a stepper
- * with the quantity, so it can be changed right here.
- */
+/** A single requestable option with a stepper for its quantity in the request (0 = not in it). */
 defineProps<{
   label: string
   hint?: string
@@ -40,11 +37,12 @@ const { t } = useI18n()
         </span>
       </span>
     </div>
-    <div v-if="inCart" class="stepper">
+    <div class="stepper" :class="{ empty: !inCart }">
       <NButton
         secondary
         size="small"
         class="less"
+        :disabled="!inCart"
         :aria-label="t('requests.new.oneLess', { label })"
         @click="emit('remove')"
       >
@@ -57,6 +55,7 @@ const { t } = useI18n()
         >{{ inCart }}</span
       >
       <NButton
+        :type="primary && !inCart ? 'primary' : 'default'"
         secondary
         size="small"
         class="add"
@@ -66,18 +65,6 @@ const { t } = useI18n()
         <template #icon><Plus :size="14" /></template>
       </NButton>
     </div>
-    <NButton
-      v-else
-      :type="primary ? 'primary' : 'default'"
-      :secondary="!primary"
-      size="small"
-      class="add first"
-      :aria-label="`${t('common.add')}: ${label}`"
-      @click="emit('add')"
-    >
-      <template #icon><Plus :size="14" /></template>
-      <span class="add-label">{{ t('common.add') }}</span>
-    </NButton>
   </div>
 </template>
 
@@ -137,13 +124,16 @@ const { t } = useI18n()
   border-radius: 50%;
   background: currentColor;
 }
-/* Minus, count, plus: as wide as the add button it replaces, so the row does not jump. */
+/* Minus, count, plus: always the same width, room for a two-digit count. */
 .stepper {
   display: flex;
   align-items: center;
   flex: none;
   border-radius: 3px;
   background: var(--ar-primary-soft);
+}
+.stepper.empty {
+  background: var(--ar-surface-sunken);
 }
 .stepper .n-button {
   width: 30px;
@@ -155,30 +145,22 @@ const { t } = useI18n()
 .in-cart {
   /* Re-keyed on every change, so the pop plays when the quantity changes. */
   animation: ar-pop 0.25s ease-out;
-  min-width: 28px;
+  min-width: 4ch;
   color: var(--ar-primary);
   font-size: 13px;
   font-weight: 700;
   text-align: center;
 }
-/*
- * A narrow column (a phone, or the middle of three on a small screen): a plain plus,
- * square so it sits in the middle, and a short count, so the name keeps the room.
- */
+.empty .in-cart {
+  animation: none;
+  color: var(--ar-text-subtle);
+  font-weight: 500;
+}
+/* A narrow column (a phone, or the middle of three on a small screen): less padding. */
 @container catalog (max-width: 480px) {
   .option {
     gap: 10px;
     padding-inline: 10px;
-  }
-  .add-label {
-    display: none;
-  }
-  .add.first {
-    width: 32px;
-    padding: 0;
-  }
-  .add.first :deep(.n-button__icon) {
-    margin: 0;
   }
 }
 </style>

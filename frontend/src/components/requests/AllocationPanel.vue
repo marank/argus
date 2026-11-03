@@ -343,10 +343,15 @@ async function remove(allocationId: Id) {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+/* Right-aligned as a column: the count and what is free below it end at the same edge. */
 .counts {
   font-size: 15px;
   font-weight: 600;
+  text-align: right;
   white-space: nowrap;
+}
+.counts > .muted {
+  margin-left: 3px;
 }
 .done {
   color: var(--ar-success);

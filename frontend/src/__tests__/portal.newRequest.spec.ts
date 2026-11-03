@@ -226,6 +226,7 @@ describe('NewRequestView', () => {
   describe('stepper', () => {
     it('counts an option up and down right in the catalog', async () => {
       await open()
+      expect(optionRow('MacBook Air').querySelector('.in-cart')?.textContent).toBe('0')
       await click(addButtonOf('MacBook Air'))
       await click(addButtonOf('MacBook Air'))
       const count = () => optionRow('MacBook Air').querySelector('.in-cart')?.textContent
@@ -234,10 +235,13 @@ describe('NewRequestView', () => {
 
       await click(optionRow('MacBook Air').querySelector<HTMLElement>('.less')!)
       expect(count()).toBe('1')
-      // At none the line goes and the row offers "Add" again.
+      // At none the line goes; the stepper stays, at 0 with nothing to take away.
       await click(optionRow('MacBook Air').querySelector<HTMLElement>('.less')!)
       expect(cartLines()).toEqual([])
-      expect(optionRow('MacBook Air').textContent).toContain('Add')
+      expect(count()).toBe('0')
+      expect(optionRow('MacBook Air').querySelector<HTMLButtonElement>('.less')!.disabled).toBe(
+        true,
+      )
     })
   })
 
