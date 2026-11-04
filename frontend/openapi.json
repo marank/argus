@@ -2790,6 +2790,18 @@
             ],
             "title": "Pickup At"
           },
+          "requested_pickup_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested Pickup Date"
+          },
           "requester": {
             "$ref": "#/components/schemas/UserRefOut"
           },
@@ -2831,6 +2843,7 @@
           "handover_mode",
           "is_overdue",
           "pickup_at",
+          "requested_pickup_date",
           "item_count",
           "unit_count",
           "summary",
@@ -3213,6 +3226,7 @@
           "handover_mode",
           "is_overdue",
           "pickup_at",
+          "requested_pickup_date",
           "item_count",
           "unit_count",
           "summary",
@@ -3220,7 +3234,6 @@
           "assigned_team",
           "assignee",
           "notes",
-          "requested_pickup_date",
           "skip_device_check",
           "pickup_location",
           "it_comment",

@@ -26,6 +26,7 @@ import { useAssigned } from '@/composables/useAssigned'
 import { useList } from '@/composables/useList'
 import { useAuthStore } from '@/stores/auth'
 import { ASSET_REQUEST_STATUSES } from '@/types/requests'
+import { isPast } from '@/utils/requests'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -60,6 +61,14 @@ watch(scope, (value) => {
 })
 
 watch(assigned, (value) => (list.filters.assigned = assignedParam(value)))
+
+/** Before the handout the employee's preferred pickup day still matters. */
+const WISH_STATUSES = new Set<Schemas['AssetRequestStatus']>([
+  'pending_approval',
+  'submitted',
+  'confirmed',
+  'ready',
+])
 
 const statusOptions = computed(() =>
   ASSET_REQUEST_STATUSES.map((s) => ({ value: s, label: enumLabel('requestStatus', s) })),
@@ -132,7 +141,22 @@ const columns = computed<DataTableColumns<Schemas['AssetRequestListOut']>>(() =>
     title: t('requests.pickupAt'),
     sorter: true,
     width: 160,
-    render: (r) => h('span', { class: 'mono nowrap' }, r.pickup_at ? weekday(r.pickup_at) : '—'),
+    render: (r) => {
+      if (r.pickup_at) return h('span', { class: 'mono nowrap' }, weekday(r.pickup_at))
+      // No appointment yet: the employee's preferred day, marked as a wish in a quiet second line.
+      if (r.requested_pickup_date && WISH_STATUSES.has(r.status)) {
+        const wish = t('requests.wishLabel')
+        return h('div', [
+          h('div', { class: 'mono nowrap' }, weekday(r.requested_pickup_date)),
+          h(
+            'small',
+            { class: 'muted wish nowrap' },
+            isPast(r.requested_pickup_date) ? `${wish} · ${t('requests.datePassed')}` : wish,
+          ),
+        ])
+      }
+      return h('span', { class: 'mono' }, '—')
+    },
   },
 ])
 </script>

@@ -249,6 +249,7 @@ export function requestListItem(
     unit_count: rest.unit_count,
     origin: rest.origin,
     pickup_at: rest.pickup_at,
+    requested_pickup_date: rest.requested_pickup_date,
     requester: rest.requester,
     ...overrides,
   }

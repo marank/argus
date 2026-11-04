@@ -44,6 +44,7 @@ function row(overrides: Partial<Row> = {}): Row {
     number,
     origin,
     pickup_at,
+    requested_pickup_date,
     requester,
     start_date,
     status,
@@ -66,6 +67,7 @@ function row(overrides: Partial<Row> = {}): Row {
     number,
     origin,
     pickup_at,
+    requested_pickup_date,
     requester,
     start_date,
     status,
@@ -171,6 +173,37 @@ describe('RequestListView', () => {
     api.list.mockResolvedValue({ items: [row({ is_overdue: true })], count: 1 })
     const { wrapper } = await list()
     expect(wrapper.find('tbody .overdue').text()).toBe('11/02/2026 → 11/06/2026')
+  })
+
+  it('shows the preferred pickup day, marked as such, until IT sets an appointment', async () => {
+    api.list.mockResolvedValue({
+      items: [
+        row({ status: 'submitted', pickup_at: null, requested_pickup_date: '2099-11-05' }),
+        row({
+          id: 'r2',
+          status: 'submitted',
+          pickup_at: null,
+          requested_pickup_date: '2000-01-03',
+        }),
+        row({
+          id: 'r3',
+          status: 'completed',
+          pickup_at: null,
+          requested_pickup_date: '2099-11-05',
+        }),
+      ],
+      count: 3,
+    })
+    const { wrapper } = await list()
+    const cells = wrapper.findAll('tbody tr').map((r) => r.findAll('td').at(-1)!)
+    // The date stays in the first line; the second only marks it as a wish.
+    expect(cells[0]!.find('.mono').text()).toMatch(/\d/)
+    expect(cells[0]!.find('.wish').text()).toBe('Preferred')
+    expect(cells[0]!.find('.wish').text()).not.toContain('passed')
+    expect(cells[1]!.find('.wish').text()).toContain('· passed')
+    // After the handout the wish no longer matters.
+    expect(cells[2]!.find('.wish').exists()).toBe(false)
+    expect(cells[2]!.text()).toBe('—')
   })
 
   it('opens a request from its row', async () => {

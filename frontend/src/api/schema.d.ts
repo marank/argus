@@ -3353,6 +3353,8 @@ export interface components {
       origin: components['schemas']['Origin']
       /** Pickup At */
       pickup_at: string | null
+      /** Requested Pickup Date */
+      requested_pickup_date: string | null
       requester: components['schemas']['UserRefOut']
       /**
        * Start Date

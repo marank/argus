@@ -15,6 +15,7 @@ export default {
   requestedFor: 'Anforderung für Mitarbeiter',
   wishHint: 'Wunsch des Mitarbeiters: {date}',
   requestedPickup: 'Abholwunsch',
+  wishLabel: 'Wunsch',
   pickupAt: 'Abholung',
   datePassed: 'verstrichen',
   pickupLocation: 'Abholort',

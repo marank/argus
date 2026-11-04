@@ -113,6 +113,8 @@ class AssetRequestListOut(Schema):
     handover_mode: AssetRequest.HandoverMode
     is_overdue: bool
     pickup_at: datetime | None
+    # The employee's preferred day; shown while IT has not set an appointment yet.
+    requested_pickup_date: date | None
     item_count: int = 0
     unit_count: int = 0
     summary: str = ""

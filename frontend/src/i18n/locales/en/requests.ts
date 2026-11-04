@@ -15,6 +15,7 @@ export default {
   requestedFor: 'Request for employee',
   wishHint: 'Employee’s preference: {date}',
   requestedPickup: 'Preferred pickup',
+  wishLabel: 'Preferred',
   pickupAt: 'Pickup',
   datePassed: 'passed',
   pickupLocation: 'Pickup location',
