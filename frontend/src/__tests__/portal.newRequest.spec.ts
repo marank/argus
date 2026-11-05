@@ -382,7 +382,7 @@ describe('NewRequestView', () => {
       // Accessory groups appear inside their parent, not as their own tile.
       expect(groups).toEqual(['Laptops', 'Headsets', 'Ink', 'Software', 'Something else'])
       expect(bodyText()).toContain('Laptop · any model')
-      expect(bodyText()).toContain('Accessories: Laptop accessories')
+      expect(bodyText()).toContain('Accessories')
       expect(bodyText()).toContain('USB-C Dock')
     })
 
@@ -394,6 +394,33 @@ describe('NewRequestView', () => {
       expect(bodyText()).not.toContain('any model')
       await click(button('Ink'))
       expect(bodyText()).not.toContain('any model')
+    })
+
+    it('collects accessories in one block, compatible ones from other groups included', async () => {
+      const t14 = { ...T14, accessories: [INK.id] }
+      api.catalog.mockResolvedValue([
+        catalogCategory({ id: 'c-laptops', name: 'Laptops', models: [t14, AIR] }),
+        catalogCategory({ id: 'c-docks', name: 'Docks', parent_id: 'c-laptops', models: [DOCK] }),
+        catalogCategory({
+          id: 'c-ink',
+          name: 'Ink',
+          allow_any_model: false,
+          holds_accessories: true,
+          models: [INK],
+        }),
+      ])
+      await open()
+      const block = document.body.querySelector('.accessories')!
+      expect(block.textContent).toContain('Accessories')
+      const row = (label: string) => addButtonOf(label).closest('.option')!.textContent
+      // A group with a single option names it in the hint instead of a heading.
+      expect(block.querySelector('.sub-heading')).toBeNull()
+      expect(row('USB-C Dock')).toContain('Docks')
+      // Compatible with only one of the laptops: the hint says which.
+      expect(row('HP 305 ink')).toContain('Fits ThinkPad T14')
+      await toSelection()
+      await click(button('Ink'))
+      expect(row('HP 305 ink')).toContain('Fits ThinkPad T14')
     })
 
     it('does not tell employees how many devices are free', async () => {

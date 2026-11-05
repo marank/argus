@@ -1,19 +1,27 @@
 <script setup lang="ts">
+import { Plug } from '@lucide/vue'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import type { Schemas } from '@/api/types'
+import type { Id } from '@/types/common'
 import { categoryIcon } from '@/utils/icons'
 import { anyModelLabel } from '@/utils/requests'
 
 import CatalogOptionRow from './CatalogOptionRow.vue'
 import FreeTextOption from './FreeTextOption.vue'
-import { offersAnyModel, optionKey, optionCounts } from './types'
+import { offersAnyModel, optionKey, optionCounts, type CatalogOption } from './types'
 
-/** Options of one device group: "any device" first, then specific models, then accessories. */
+/**
+ * Options of one device group: "any device" first, then the specific models, then one block
+ * with the accessories: the subcategories' options and the models of accessory categories
+ * compatible with the group's models.
+ */
 const props = defineProps<{
   category: Schemas['CatalogCategoryOut']
   children: Schemas['CatalogCategoryOut'][]
+  /** The whole catalog, to find the compatible accessories in other categories. */
+  catalog: Schemas['CatalogCategoryOut'][]
   cartCounts: Record<string, number>
 }>()
 const emit = defineEmits<{
@@ -23,11 +31,39 @@ const emit = defineEmits<{
 }>()
 const { t } = useI18n()
 
-const groups = computed(() => [props.category, ...props.children])
+/** Every model of the catalog with its category. */
+const byModel = computed(() => {
+  const map = new Map<
+    Id,
+    { category: Schemas['CatalogCategoryOut']; model: Schemas['CatalogModelOut'] }
+  >()
+  for (const category of props.catalog) {
+    for (const model of category.models) map.set(model.id, { category, model })
+  }
+  return map
+})
+
+/** The devices an accessory fits, e.g. on the page of an accessory category. */
+const fitsAll = computed(() => {
+  const map = new Map<Id, string[]>()
+  for (const { model } of byModel.value.values()) {
+    for (const id of model.accessories) map.set(id, [...(map.get(id) ?? []), model.full_name])
+  }
+  return map
+})
+
+function hint(...parts: (string | undefined)[]): string | undefined {
+  return parts.filter(Boolean).join(' · ') || undefined
+}
+
+function modelHint(model: Schemas['CatalogModelOut']): string | undefined {
+  const fits = props.category.holds_accessories ? fitsAll.value.get(model.id) : undefined
+  return hint(model.description, fits && t('requests.new.fitsTo', { models: fits.join(', ') }))
+}
 
 /** Below the first level, the way down from the group: "Scanner accessories / Cradles". */
 function path(group: Schemas['CatalogCategoryOut']): string {
-  const byId = new Map(groups.value.map((g) => [g.id, g]))
+  const byId = new Map(props.catalog.map((g) => [g.id, g]))
   const names = [group.name]
   let parent = group.parent_id ? byId.get(group.parent_id) : undefined
   while (parent && parent.id !== props.category.id) {
@@ -35,6 +71,58 @@ function path(group: Schemas['CatalogCategoryOut']): string {
     parent = parent.parent_id ? byId.get(parent.parent_id) : undefined
   }
   return names.join(' / ')
+}
+
+interface AccessoryOption extends CatalogOption {
+  /** Models of this group the accessory is compatible with. */
+  fits: string[]
+}
+interface AccessoryGroup {
+  category: Schemas['CatalogCategoryOut']
+  options: AccessoryOption[]
+}
+
+/**
+ * The accessories, grouped by their category in catalog order. A group gets a heading only
+ * when it has more than one option; a single option names its group in the hint instead.
+ */
+const accessories = computed<AccessoryGroup[]>(() => {
+  const options = new Map<string, AccessoryOption>()
+  const add = (category: Schemas['CatalogCategoryOut'], model?: Schemas['CatalogModelOut']) => {
+    const key = optionKey(category, model)
+    if (!options.has(key)) options.set(key, { key, category, model, fits: [] })
+    return options.get(key)!
+  }
+  for (const device of props.category.models) {
+    for (const id of device.accessories) {
+      const entry = byModel.value.get(id)
+      if (entry) add(entry.category, entry.model).fits.push(device.full_name)
+    }
+  }
+  for (const group of props.children) {
+    if (offersAnyModel(group)) add(group)
+    for (const model of group.models) add(group, model)
+  }
+  const order = new Map(props.catalog.map((c, index) => [c.id, index]))
+  const groups = new Map<Id, AccessoryGroup>()
+  for (const option of options.values()) {
+    const group = groups.get(option.category.id) ?? { category: option.category, options: [] }
+    group.options.push(option)
+    groups.set(option.category.id, group)
+  }
+  return [...groups.values()].sort(
+    (a, b) => (order.get(a.category.id) ?? 0) - (order.get(b.category.id) ?? 0),
+  )
+})
+
+function accessoryHint(group: AccessoryGroup, option: AccessoryOption): string | undefined {
+  // Fitting every model of the group goes without saying.
+  const narrows = option.fits.length && option.fits.length < props.category.models.length
+  return hint(
+    group.options.length === 1 ? path(group.category) : undefined,
+    option.model?.description,
+    narrows ? t('requests.new.fitsTo', { models: option.fits.join(', ') }) : undefined,
+  )
 }
 </script>
 
@@ -50,36 +138,52 @@ function path(group: Schemas['CatalogCategoryOut']): string {
       </div>
     </header>
 
-    <section v-for="group in groups" :key="group.id" class="group">
-      <div v-if="group.id !== category.id" class="eyebrow">
-        {{ t('requests.new.accessories', { name: path(group) }) }}
-      </div>
+    <section v-if="offersAnyModel(category) || category.models.length" class="group">
       <CatalogOptionRow
-        v-if="offersAnyModel(group)"
+        v-if="offersAnyModel(category)"
         primary
-        :label="anyModelLabel(group)"
-        :counts="optionCounts(group)"
-        :in-cart="cartCounts[optionKey(group)] ?? 0"
-        @add="emit('add', group)"
-        @remove="emit('remove', group)"
+        :label="anyModelLabel(category)"
+        :counts="optionCounts(category)"
+        :in-cart="cartCounts[optionKey(category)] ?? 0"
+        @add="emit('add', category)"
+        @remove="emit('remove', category)"
       />
-      <template v-if="group.models.length">
-        <div v-if="offersAnyModel(group)" class="eyebrow sub">
+      <template v-if="category.models.length">
+        <div v-if="offersAnyModel(category)" class="eyebrow sub">
           {{ t('requests.new.specificModel') }}
         </div>
         <div class="models">
           <CatalogOptionRow
-            v-for="model in group.models"
+            v-for="model in category.models"
             :key="model.id"
             :label="model.full_name"
-            :hint="model.description"
-            :counts="optionCounts(group, model)"
-            :in-cart="cartCounts[optionKey(group, model)] ?? 0"
-            @add="emit('add', group, model)"
-            @remove="emit('remove', group, model)"
+            :hint="modelHint(model)"
+            :counts="optionCounts(category, model)"
+            :in-cart="cartCounts[optionKey(category, model)] ?? 0"
+            @add="emit('add', category, model)"
+            @remove="emit('remove', category, model)"
           />
         </div>
       </template>
+    </section>
+
+    <section v-if="accessories.length" class="accessories">
+      <h3><Plug :size="15" :stroke-width="1.75" />{{ t('requests.new.accessories') }}</h3>
+      <div class="models">
+        <template v-for="group in accessories" :key="group.category.id">
+          <div v-if="group.options.length > 1" class="sub-heading">{{ path(group.category) }}</div>
+          <CatalogOptionRow
+            v-for="option in group.options"
+            :key="option.key"
+            :label="option.model ? option.model.full_name : anyModelLabel(option.category)"
+            :hint="accessoryHint(group, option)"
+            :counts="optionCounts(option.category, option.model)"
+            :in-cart="cartCounts[option.key] ?? 0"
+            @add="emit('add', option.category, option.model)"
+            @remove="emit('remove', option.category, option.model)"
+          />
+        </template>
+      </div>
     </section>
 
     <FreeTextOption
@@ -127,16 +231,43 @@ header p {
   display: grid;
   gap: 8px;
 }
-.group + .group {
-  padding-top: 16px;
-  border-top: 1px solid var(--ar-border);
-}
 .sub {
   margin-top: 6px;
 }
 .models {
   border: 1px solid var(--ar-border);
   border-radius: 3px;
+  background: var(--ar-surface);
+}
+/* Accessories as one block of their own, set off from the devices. */
+.accessories {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 3px;
+  background: var(--ar-surface-sunken);
+}
+h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--ar-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.sub-heading {
+  padding: 8px 12px 2px;
+  color: var(--ar-text-subtle);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.sub-heading:not(:first-child) {
+  border-top: 1px solid var(--ar-border);
+}
+/* The heading is the top of its group: no line between it and its first option. */
+.models :deep(.option:has(+ .sub-heading)) {
+  border-bottom: none;
 }
 @container catalog (max-width: 480px) {
   .options {
@@ -146,6 +277,9 @@ header p {
   .icon {
     width: 32px;
     height: 32px;
+  }
+  .accessories {
+    padding: 8px;
   }
 }
 </style>

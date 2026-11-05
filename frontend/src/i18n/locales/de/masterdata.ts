@@ -175,6 +175,9 @@ export default {
     allowAnyModel: '„Beliebiges Modell“ anforderbar',
     allowAnyModelHelp:
       'Mitarbeiter dürfen ein „beliebiges Modell“ dieser Kategorie anfordern, z. B. ein Ladekabel, wenn der Typ egal ist; die IT wählt das Modell bei der Zuweisung. Deaktivieren, wenn Mitarbeiter ein bestimmtes Modell wählen müssen.',
+    isAccessory: 'Zubehör',
+    isAccessoryHelp:
+      'Zubehör, Ersatzteile oder Verbrauchsmaterial. Im Portal erscheinen die Modelle zusätzlich bei den Geräten, mit denen sie kompatibel sind (Feld „Kompatibel mit“ am Modell). Gilt auch für Unterkategorien.',
     terminal: 'Abholterminal',
     terminalHelp:
       'Gemeinsames Konto für das Touch-Terminal; Zugriff nur auf vorbereitete Abholungen.',

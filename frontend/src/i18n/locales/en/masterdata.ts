@@ -174,6 +174,9 @@ export default {
     allowAnyModel: '“Any model” requestable',
     allowAnyModelHelp:
       'Employees may request “any model” of this category, e.g. a charging cable when the type does not matter; IT picks the model when assigning. Turn off where employees have to choose a specific model.',
+    isAccessory: 'Accessories',
+    isAccessoryHelp:
+      'Accessories, spare parts or consumables. In the portal the models also appear with the devices they are compatible with (“Compatible with” on the model). Applies to subcategories as well.',
     terminal: 'Pickup terminal',
     terminalHelp: 'Shared account for the touch terminal; access to prepared pickups only.',
     terminalLocation: 'Terminal site',

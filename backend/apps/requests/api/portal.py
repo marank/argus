@@ -98,6 +98,21 @@ def _set_counts(target: AssetModel | Category, counts: Counts | None) -> None:
     target.reserved = counts.reserved if counts else None
 
 
+def _accessory_category_ids() -> set[UUID]:
+    """Categories marked as accessories and all categories below them."""
+    rows = list(Category.objects.values_list("pk", "parent_id", "is_accessory"))
+    children: dict[UUID, list[UUID]] = {}
+    for pk, parent_id, _ in rows:
+        if parent_id:
+            children.setdefault(parent_id, []).append(pk)
+    ids: set[UUID] = set()
+    frontier = [pk for pk, _, is_accessory in rows if is_accessory]
+    while frontier:
+        ids.update(frontier)
+        frontier = [child for pk in frontier for child in children.get(pk, []) if child not in ids]
+    return ids
+
+
 @router.get("/catalog", response=list[CatalogCategoryOut])
 def catalog(
     request: AuthedRequest, start: date | None = None, end: date | None = None, permanent: bool = False
@@ -117,14 +132,34 @@ def catalog(
         # Software can be switched off as a request option in the site settings.
         categories = categories.exclude(kind=CategoryKind.SOFTWARE)
         models = models.exclude(tracking=AssetModel.Tracking.LICENSE)
+    accessory_categories = _accessory_category_ids()
+    offered = {model.pk: model for model in models.select_related("manufacturer")}
+    compatible: dict[UUID, set[UUID]] = {}
+    for model_id, other_id in AssetModel.compatible_with.through.objects.filter(
+        from_assetmodel_id__in=offered
+    ).values_list("from_assetmodel_id", "to_assetmodel_id"):
+        compatible.setdefault(model_id, set()).add(other_id)
+
     models_by_category: dict[UUID, list[AssetModel]] = {}
-    for model in models.select_related("manufacturer"):
+    for model in offered.values():
         _set_counts(model, model_counts.get(model.pk, Counts()) if show_availability else None)
+        # The link is mutual; the accessory categories say which side is the accessory.
+        fitting = (
+            []
+            if model.category_id in accessory_categories
+            else [
+                offered[pk]
+                for pk in compatible.get(model.pk, set())
+                if pk in offered and offered[pk].category_id in accessory_categories
+            ]
+        )
+        model.accessories = [m.pk for m in sorted(fitting, key=lambda m: m.full_name.lower())]
         models_by_category.setdefault(model.category_id, []).append(model)
 
     result: list[Category] = []
     for category in categories:
         _set_counts(category, category_counts.get(category.pk, Counts()) if show_availability else None)
+        category.in_accessory_tree = category.pk in accessory_categories
         category.models = models_by_category.get(category.pk, [])
         result.append(category)
     return result

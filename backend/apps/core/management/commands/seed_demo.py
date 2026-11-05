@@ -213,6 +213,7 @@ class Command(BaseCommand):
                 )
             categories[code] = Category.objects.create(
                 allow_any_model=code not in ("mde-accessories", "consumables", *SOFTWARE_CATEGORIES),
+                is_accessory=code in ("mde-accessories", "consumables"),
                 kind=CategoryKind.SOFTWARE if code in SOFTWARE_CATEGORIES else CategoryKind.HARDWARE,
                 code=code,
                 name=name,
@@ -612,6 +613,7 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:
             number_sequence=sequence,
             parent=categories.get(parent) if parent else None,
             allow_any_model=kind == "hardware" and code != "laptop-accessories",
+            is_accessory=code == "laptop-accessories",
             sort_order=start + index * 10,
         )
     for maker, name, category, tracking, price, warranty in EXTRA_MODELS:

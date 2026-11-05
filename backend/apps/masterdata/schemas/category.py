@@ -22,8 +22,11 @@ class CategoryOut(Schema):
     is_requestable: bool
     allow_any_model: bool
     requires_approval: bool
+    is_accessory: bool
     # Whether requests need approval, here or because of a category above.
     needs_approval: bool
+    # Whether it holds accessories, here or because of a category above.
+    holds_accessories: bool
     sort_order: int
     path: list[str]
     # IT-internal: empty for employees.
@@ -38,6 +41,10 @@ class CategoryOut(Schema):
     @staticmethod
     def resolve_needs_approval(obj: Category) -> bool:
         return obj.needs_approval()
+
+    @staticmethod
+    def resolve_holds_accessories(obj: Category) -> bool:
+        return obj.holds_accessories()
 
     @staticmethod
     def resolve_effective_team(obj: Category, context: dict[str, Any] | None) -> Team | None:
@@ -62,5 +69,6 @@ class CategoryIn(Schema):
     is_requestable: bool = True
     allow_any_model: bool = True
     requires_approval: bool = False
+    is_accessory: bool = False
     team: UUID | None = None
     sort_order: int = 0

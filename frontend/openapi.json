@@ -3740,6 +3740,10 @@
             "title": "Description",
             "type": "string"
           },
+          "holds_accessories": {
+            "title": "Holds Accessories",
+            "type": "boolean"
+          },
           "icon": {
             "title": "Icon",
             "type": "string"
@@ -3801,6 +3805,7 @@
           "description",
           "parent_id",
           "allow_any_model",
+          "holds_accessories",
           "available",
           "reserved",
           "models"
@@ -3810,6 +3815,14 @@
       },
       "CatalogModelOut": {
         "properties": {
+          "accessories": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Accessories",
+            "type": "array"
+          },
           "available": {
             "anyOf": [
               {
@@ -3860,7 +3873,8 @@
           "tracking",
           "description",
           "available",
-          "reserved"
+          "reserved",
+          "accessories"
         ],
         "title": "CatalogModelOut",
         "type": "object"
@@ -3926,6 +3940,11 @@
             "default": "",
             "title": "Icon",
             "type": "string"
+          },
+          "is_accessory": {
+            "default": false,
+            "title": "Is Accessory",
+            "type": "boolean"
           },
           "is_requestable": {
             "default": true,
@@ -4034,6 +4053,10 @@
               }
             ]
           },
+          "holds_accessories": {
+            "title": "Holds Accessories",
+            "type": "boolean"
+          },
           "icon": {
             "title": "Icon",
             "type": "string"
@@ -4042,6 +4065,10 @@
             "format": "uuid",
             "title": "Id",
             "type": "string"
+          },
+          "is_accessory": {
+            "title": "Is Accessory",
+            "type": "boolean"
           },
           "is_requestable": {
             "title": "Is Requestable",
@@ -4121,7 +4148,9 @@
           "is_requestable",
           "allow_any_model",
           "requires_approval",
+          "is_accessory",
           "needs_approval",
+          "holds_accessories",
           "sort_order",
           "path",
           "team",

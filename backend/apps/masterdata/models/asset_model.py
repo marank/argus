@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -139,3 +140,4 @@ class AssetModel(TimeStampedModel):
     # so the names shadow nothing in the class body.
     available: int | None
     reserved: int | None
+    accessories: list[UUID]

@@ -2,7 +2,7 @@ from uuid import UUID
 
 from apps.core.schemas.base import Schema
 from apps.inventory.schemas.asset_issue import OwnIssueOut
-from apps.masterdata.models import AssetModel, CategoryKind
+from apps.masterdata.models import AssetModel, Category, CategoryKind
 from apps.masterdata.schemas.refs import AssetModelRefOut
 
 
@@ -15,6 +15,8 @@ class CatalogModelOut(Schema):
     # Only filled for IT staff; employees do not see pool sizes.
     available: int | None
     reserved: int | None
+    # Compatible models from accessory categories, for a device (not an accessory itself).
+    accessories: list[UUID]
 
 
 class CatalogCategoryOut(Schema):
@@ -27,10 +29,17 @@ class CatalogCategoryOut(Schema):
     description: str
     parent_id: UUID | None
     allow_any_model: bool
+    # Marked as accessories, here or in a category above.
+    holds_accessories: bool
     # Own models only (not subcategories), including requests for "any" device.
     available: int | None
     reserved: int | None
     models: list[CatalogModelOut]
+
+    @staticmethod
+    def resolve_holds_accessories(obj: Category) -> bool:
+        # Worked out for the whole tree at once by the catalog endpoint.
+        return obj.in_accessory_tree
 
 
 class CountsOut(Schema):

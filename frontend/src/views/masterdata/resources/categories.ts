@@ -178,6 +178,12 @@ export default defineResource<Schemas['CategoryOut']>({
           type: 'switch',
           help: 'masterdata.fields.requiresApprovalHelp',
         },
+        {
+          key: 'is_accessory',
+          label: 'masterdata.fields.isAccessory',
+          type: 'switch',
+          help: 'masterdata.fields.isAccessoryHelp',
+        },
         { key: 'sort_order', label: 'masterdata.fields.sortOrder', type: 'number', min: 0 },
       ],
     },
@@ -195,6 +201,7 @@ export default defineResource<Schemas['CategoryOut']>({
     is_requestable: true,
     allow_any_model: true,
     requires_approval: false,
+    is_accessory: false,
     sort_order: 0,
   }),
   toForm: (c) => ({
@@ -210,6 +217,7 @@ export default defineResource<Schemas['CategoryOut']>({
     is_requestable: c.is_requestable,
     allow_any_model: c.allow_any_model,
     requires_approval: c.requires_approval,
+    is_accessory: c.is_accessory,
     sort_order: c.sort_order,
   }),
 })

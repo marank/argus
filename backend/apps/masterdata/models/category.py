@@ -88,6 +88,14 @@ class Category(TimeStampedModel):
             "Applies to the subcategories as well."
         ),
     )
+    is_accessory = models.BooleanField(
+        _("accessories"),
+        default=False,
+        help_text=_(
+            "Holds accessories, spare parts or consumables. In the employee portal its models "
+            "appear with the devices they are compatible with. Applies to the subcategories as well."
+        ),
+    )
     sort_order = models.PositiveIntegerField(_("sort order"), default=0)
 
     class Meta:
@@ -177,6 +185,10 @@ class Category(TimeStampedModel):
         """Whether this category or one above it requires the department's approval."""
         return any(node.requires_approval for node in [self, *self.ancestors()])
 
+    def holds_accessories(self) -> bool:
+        """Whether this category or one above it is marked as holding accessories."""
+        return any(node.is_accessory for node in [self, *self.ancestors()])
+
     def effective_team(self) -> Team | None:
         """The responsible team, inherited from the nearest parent that names one."""
         for node in [self, *self.ancestors()]:
@@ -189,3 +201,4 @@ class Category(TimeStampedModel):
     models: list[AssetModel]
     available: int | None
     reserved: int | None
+    in_accessory_tree: bool

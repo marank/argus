@@ -3674,6 +3674,8 @@ export interface components {
       code: string
       /** Description */
       description: string
+      /** Holds Accessories */
+      holds_accessories: boolean
       /** Icon */
       icon: string
       /**
@@ -3695,6 +3697,8 @@ export interface components {
     }
     /** CatalogModelOut */
     CatalogModelOut: {
+      /** Accessories */
+      accessories: string[]
       /** Available */
       available: number | null
       /** Description */
@@ -3744,6 +3748,11 @@ export interface components {
        */
       icon: string
       /**
+       * Is Accessory
+       * @default false
+       */
+      is_accessory: boolean
+      /**
        * Is Requestable
        * @default true
        */
@@ -3788,6 +3797,8 @@ export interface components {
       /** Description */
       description: string
       effective_team: components['schemas']['TeamRefOut'] | null
+      /** Holds Accessories */
+      holds_accessories: boolean
       /** Icon */
       icon: string
       /**
@@ -3795,6 +3806,8 @@ export interface components {
        * Format: uuid
        */
       id: string
+      /** Is Accessory */
+      is_accessory: boolean
       /** Is Requestable */
       is_requestable: boolean
       /** Item Name */

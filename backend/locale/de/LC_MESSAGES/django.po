@@ -1905,6 +1905,20 @@ msgstr ""
 "Anforderungen müssen zuerst von der Abteilung des Mitarbeiters genehmigt "
 "werden. Gilt auch für Unterkategorien."
 
+#: apps/masterdata/models/category.py:93
+msgid "accessories"
+msgstr "Zubehör"
+
+#: apps/masterdata/models/category.py:96
+msgid ""
+"Holds accessories, spare parts or consumables. In the employee portal its "
+"models appear with the devices they are compatible with. Applies to the "
+"subcategories as well."
+msgstr ""
+"Enthält Zubehör, Ersatzteile oder Verbrauchsmaterial. Im Mitarbeiterportal "
+"erscheinen die Modelle bei den Geräten, mit denen sie kompatibel sind. Gilt "
+"auch für Unterkategorien."
+
 #: apps/masterdata/models/category.py:82
 msgid "categories"
 msgstr "Kategorien"

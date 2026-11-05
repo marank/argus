@@ -14,9 +14,10 @@ class CategoryAdmin(admin.ModelAdmin[Category]):
         "is_requestable",
         "allow_any_model",
         "requires_approval",
+        "is_accessory",
         "sort_order",
     ]
-    list_filter = ["is_requestable", "allow_any_model", "requires_approval", "parent"]
+    list_filter = ["is_requestable", "allow_any_model", "requires_approval", "is_accessory", "parent"]
     list_editable = ["sort_order"]
     search_fields = ["name", "code"]
     list_select_related = ["parent", "number_sequence", "team"]

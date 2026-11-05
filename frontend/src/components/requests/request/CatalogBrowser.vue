@@ -242,6 +242,7 @@ const results = computed<CatalogOption[]>(() => {
             v-if="selected"
             :category="selected"
             :children="descendantsOf(selected.id)"
+            :catalog="catalog"
             :cart-counts="cartCounts"
             @add="(category, model) => emit('add', category, model)"
             @remove="(category, model) => emit('remove', category, model)"

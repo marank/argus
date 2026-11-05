@@ -122,6 +122,7 @@ export function catalogModel(
     tracking: 'serialized',
     available: null,
     reserved: null,
+    accessories: [],
     ...overrides,
   }
 }
@@ -138,6 +139,7 @@ export function catalogCategory(
     kind: 'hardware',
     parent_id: null,
     allow_any_model: true,
+    holds_accessories: false,
     models: [],
     available: null,
     reserved: null,
