@@ -5,6 +5,7 @@ from typing import Literal, TypedDict
 from django.db.models import Q
 
 from apps.inventory.models import Asset
+from apps.inventory.services.mac_address import normalize_mac_address
 from apps.masterdata.models import AssetModel
 
 
@@ -25,7 +26,7 @@ def lookup_code(code: str) -> LookupResult:
             Q(inventory_number__iexact=code)
             | Q(serial_number__iexact=code)
             | Q(imei=code)
-            | Q(mac_address__iexact=code)
+            | Q(mac_address=normalize_mac_address(code))
             | Q(identifier__iexact=code)
             | Q(installed_components__serial_number__iexact=code)
         )

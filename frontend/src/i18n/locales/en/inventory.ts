@@ -42,6 +42,9 @@ export default {
     purchase: 'Purchase & warranty',
   },
   since: 'since {date}',
+  allOfModel: 'All devices of this model',
+  support: 'Support',
+  supportSite: 'Support website',
   unassign: 'Take back',
   createRequest: 'Create request',
   quickAssign: {

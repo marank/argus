@@ -43,6 +43,9 @@ export default {
     purchase: 'Kauf & Garantie',
   },
   since: 'seit {date}',
+  allOfModel: 'Alle Geräte dieses Modells',
+  support: 'Support',
+  supportSite: 'Support-Website',
   unassign: 'Zurücknehmen',
   createRequest: 'Anforderung erstellen',
   quickAssign: {

@@ -84,10 +84,34 @@ const identification = computed<DetailEntry[]>(() => {
     { label: t('inventory.fields.imei'), value: a.imei, mono: true },
     { label: t('inventory.fields.macAddress'), value: a.mac_address, mono: true },
     { label: t('inventory.fields.hostname'), value: a.hostname, mono: true },
-    { label: t('inventory.fields.manufacturer'), value: a.manufacturer.name },
-    { label: t('inventory.fields.category'), value: a.category.name },
     { label: t('inventory.fields.parent'), slot: 'parent' },
     { label: t('inventory.fields.components'), slot: 'components' },
+  ]
+})
+
+/** A phone number as a link the phone or softphone dials. */
+const telLink = (phone: string) => `tel:${phone.replace(/[^\d+]/g, '')}`
+
+/** The model and its manufacturer, with where to get support. */
+const modelInfo = computed<DetailEntry[]>(() => {
+  const m = asset.value!.model_detail
+  const maker = asset.value!.manufacturer_contact
+  return [
+    { label: t('inventory.fields.manufacturer'), slot: 'manufacturer' },
+    { label: t('inventory.fields.category'), value: asset.value!.category.name },
+    { label: t('masterdata.fields.designation'), value: m.designation, mono: true },
+    { label: t('masterdata.fields.partNumber'), value: m.part_number, mono: true },
+    { label: t('masterdata.fields.ean'), value: m.ean, mono: true },
+    { label: t('masterdata.fields.warrantyMonths'), value: m.warranty_months, mono: true },
+    ...(maker.support_url || maker.support_phone
+      ? [{ label: t('inventory.support'), slot: 'support' }]
+      : []),
+    ...(m.description
+      ? [{ label: t('common.description'), value: m.description, wide: true }]
+      : []),
+    ...(m.specifications
+      ? [{ label: t('masterdata.fields.specifications'), slot: 'specifications', wide: true }]
+      : []),
   ]
 })
 
@@ -158,7 +182,10 @@ async function removeEvent(event: Schemas['AssetEventOut']) {
   <div class="page">
     <NSkeleton v-if="!asset" height="240px" />
     <template v-else>
-      <PageHeader :title="asset.model.full_name">
+      <PageHeader
+        :title="asset.model.full_name"
+        :back="{ label: t('inventory.assets'), to: { name: 'assets' } }"
+      >
         <template #eyebrow>
           <span class="mono id">{{ asset.inventory_number }}</span>
         </template>
@@ -258,6 +285,45 @@ async function removeEvent(event: Schemas['AssetEventOut']) {
               </DetailGrid>
             </div>
           </NCard>
+          <NCard :title="t('inventory.fields.model')" size="small">
+            <template #header-extra>
+              <RouterLink :to="{ name: 'assets', query: { model: asset.model.id } }" class="small">
+                {{ t('inventory.allOfModel') }}
+              </RouterLink>
+            </template>
+            <DetailGrid :entries="modelInfo">
+              <template #manufacturer>
+                <a
+                  v-if="asset.manufacturer_contact.website"
+                  :href="asset.manufacturer_contact.website"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >{{ asset.manufacturer_contact.name }}</a
+                >
+                <span v-else>{{ asset.manufacturer_contact.name }}</span>
+              </template>
+              <template #support>
+                <span class="support">
+                  <a
+                    v-if="asset.manufacturer_contact.support_url"
+                    :href="asset.manufacturer_contact.support_url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >{{ t('inventory.supportSite') }}</a
+                  >
+                  <a
+                    v-if="asset.manufacturer_contact.support_phone"
+                    :href="telLink(asset.manufacturer_contact.support_phone)"
+                    class="mono"
+                    >{{ asset.manufacturer_contact.support_phone }}</a
+                  >
+                </span>
+              </template>
+              <template #specifications>
+                <span class="specs">{{ asset.model_detail.specifications }}</span>
+              </template>
+            </DetailGrid>
+          </NCard>
           <NCard :title="t('inventory.sections.usage')" size="small"
             ><DetailGrid :entries="usage"
           /></NCard>
@@ -340,6 +406,14 @@ async function removeEvent(event: Schemas['AssetEventOut']) {
 </template>
 
 <style scoped>
+.support {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+.specs {
+  white-space: pre-line;
+}
 .id {
   font-size: 12px;
   color: var(--ar-primary);

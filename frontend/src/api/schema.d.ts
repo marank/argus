@@ -2724,9 +2724,11 @@ export interface components {
       /** Mac Address */
       mac_address: string
       manufacturer: components['schemas']['RefOut']
+      manufacturer_contact: components['schemas']['ManufacturerContactOut']
       model: components['schemas']['AssetModelRefOut']
       /** Model Consumables */
       model_consumables: components['schemas']['AssetModelRefOut'][]
+      model_detail: components['schemas']['AssetModelDetailOut']
       /** Notes */
       notes: string
       /** Open Issues */
@@ -3064,6 +3066,33 @@ export interface components {
       reference: string
       /** Valid Until */
       valid_until: string | null
+    }
+    /**
+     * AssetModelDetailOut
+     * @description What the device page tells about the model.
+     */
+    AssetModelDetailOut: {
+      /** Description */
+      description: string
+      /** Designation */
+      designation: string
+      /** Ean */
+      ean: string
+      /** Full Name */
+      full_name: string
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /** Name */
+      name: string
+      /** Part Number */
+      part_number: string
+      /** Specifications */
+      specifications: string
+      /** Warranty Months */
+      warranty_months: number
     }
     /** AssetModelFilter */
     AssetModelFilter: {
@@ -5554,6 +5583,25 @@ export interface components {
       security: components['schemas']['Security']
       /** Username */
       username: string
+    }
+    /**
+     * ManufacturerContactOut
+     * @description The manufacturer with where to find it and its support.
+     */
+    ManufacturerContactOut: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /** Name */
+      name: string
+      /** Support Phone */
+      support_phone: string
+      /** Support Url */
+      support_url: string
+      /** Website */
+      website: string
     }
     /** ManufacturerFilter */
     ManufacturerFilter: {

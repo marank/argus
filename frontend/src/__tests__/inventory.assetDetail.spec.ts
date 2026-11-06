@@ -81,6 +81,32 @@ describe('AssetDetailView', () => {
     expect(history().textContent).toContain('Created')
   })
 
+  it('tells about the model and where to get support', async () => {
+    await show()
+    const text = bodyText()
+    expect(text).toContain('N012L5450')
+    expect(text).toContain('36')
+    const links = [...document.body.querySelectorAll<HTMLAnchorElement>('a')]
+    expect(links.find((a) => a.textContent?.trim() === 'Dell')!.href).toBe('https://www.dell.com/')
+    expect(links.find((a) => a.textContent?.trim() === 'Support website')!.href).toBe(
+      'https://www.dell.com/support',
+    )
+    expect(links.find((a) => a.textContent?.includes('+49'))!.getAttribute('href')).toBe(
+      'tel:+493012345678',
+    )
+    const all = links.find((a) => a.textContent?.trim() === 'All devices of this model')!
+    expect(all.getAttribute('href')).toContain('model=m1')
+  })
+
+  it('leads back to the device list', async () => {
+    const { router } = await show()
+    const back = [...document.body.querySelectorAll<HTMLAnchorElement>('a.back')][0]!
+    expect(back.textContent).toContain('Devices')
+    back.click()
+    await flushPromises()
+    expect(router.currentRoute.value.name).toBe('assets')
+  })
+
   it('offers a request or a quick assignment for a device in stock', async () => {
     const { router } = await show()
     expect(hasButton('Quick assignment')).toBe(true)

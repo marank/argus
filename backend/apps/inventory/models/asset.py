@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, Any
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -48,7 +49,18 @@ class Asset(TimeStampedModel):
         ),
     )
     imei = models.CharField(_("IMEI"), max_length=20, blank=True)
-    mac_address = models.CharField(_("MAC address"), max_length=17, blank=True)
+    mac_address = models.CharField(
+        _("MAC address"),
+        max_length=17,
+        blank=True,
+        # Stored as six pairs with colons; the asset service brings other spellings into this form.
+        validators=[
+            RegexValidator(
+                r"^([0-9A-F]{2}:){5}[0-9A-F]{2}$",
+                _("Enter a MAC address of twelve hex digits, e.g. AA:BB:CC:DD:EE:FF."),
+            )
+        ],
+    )
     hostname = models.CharField(_("hostname"), max_length=63, blank=True)
 
     status = models.CharField(

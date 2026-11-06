@@ -19,6 +19,7 @@ from apps.inventory.models import (
 )
 from apps.inventory.services.consumables import move_consumable
 from apps.inventory.services.events import log_event
+from apps.inventory.services.mac_address import normalize_mac_address
 from apps.masterdata.models import AssetModel, ComponentType
 
 if TYPE_CHECKING:
@@ -27,6 +28,8 @@ if TYPE_CHECKING:
 
 def _apply(asset: Asset, data: dict[str, Any]) -> None:
     for name, value in data.items():
+        if name == "mac_address":
+            value = normalize_mac_address(value)
         field = asset._meta.get_field(name)
         setattr(asset, f"{name}_id" if field.is_relation else name, value)
 

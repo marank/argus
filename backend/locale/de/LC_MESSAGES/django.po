@@ -1091,6 +1091,10 @@ msgstr "IMEI"
 msgid "MAC address"
 msgstr "MAC-Adresse"
 
+#: apps/inventory/models/asset.py
+msgid "Enter a MAC address of twelve hex digits, e.g. AA:BB:CC:DD:EE:FF."
+msgstr "Geben Sie eine MAC-Adresse aus zwölf Hex-Ziffern ein, z. B. AA:BB:CC:DD:EE:FF."
+
 #: apps/inventory/models/asset.py:36
 msgid "hostname"
 msgstr "Hostname"

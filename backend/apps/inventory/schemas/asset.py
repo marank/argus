@@ -79,7 +79,33 @@ class AssetComponentIn(Schema):
     installed_on: date | None = None
 
 
+class AssetModelDetailOut(Schema):
+    """What the device page tells about the model."""
+
+    id: UUID
+    name: str
+    designation: str
+    full_name: str
+    part_number: str
+    ean: str
+    warranty_months: int
+    description: str
+    specifications: str
+
+
+class ManufacturerContactOut(Schema):
+    """The manufacturer with where to find it and its support."""
+
+    id: UUID
+    name: str
+    website: str
+    support_url: str
+    support_phone: str
+
+
 class AssetDetailOut(AssetOut):
+    model_detail: AssetModelDetailOut = Field(..., alias="model")
+    manufacturer_contact: ManufacturerContactOut = Field(..., alias="model.manufacturer")
     components: list[AssetParentOut]
     # The tracked parts fitted now, e.g. the battery (see ComponentType).
     installed_components: list[AssetComponentOut]

@@ -672,6 +672,9 @@
           "manufacturer": {
             "$ref": "#/components/schemas/RefOut"
           },
+          "manufacturer_contact": {
+            "$ref": "#/components/schemas/ManufacturerContactOut"
+          },
           "model": {
             "$ref": "#/components/schemas/AssetModelRefOut"
           },
@@ -681,6 +684,9 @@
             },
             "title": "Model Consumables",
             "type": "array"
+          },
+          "model_detail": {
+            "$ref": "#/components/schemas/AssetModelDetailOut"
           },
           "notes": {
             "title": "Notes",
@@ -797,6 +803,8 @@
           "created_at",
           "updated_at",
           "reserved_for",
+          "model_detail",
+          "manufacturer_contact",
           "components",
           "installed_components",
           "asset_request",
@@ -1785,6 +1793,61 @@
           "valid_until"
         ],
         "title": "AssetLicenseOut",
+        "type": "object"
+      },
+      "AssetModelDetailOut": {
+        "description": "What the device page tells about the model.",
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "designation": {
+            "title": "Designation",
+            "type": "string"
+          },
+          "ean": {
+            "title": "Ean",
+            "type": "string"
+          },
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "part_number": {
+            "title": "Part Number",
+            "type": "string"
+          },
+          "specifications": {
+            "title": "Specifications",
+            "type": "string"
+          },
+          "warranty_months": {
+            "title": "Warranty Months",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "designation",
+          "full_name",
+          "part_number",
+          "ean",
+          "warranty_months",
+          "description",
+          "specifications"
+        ],
+        "title": "AssetModelDetailOut",
         "type": "object"
       },
       "AssetModelFilter": {
@@ -8592,6 +8655,41 @@
           "app_url"
         ],
         "title": "MailSettingsOut",
+        "type": "object"
+      },
+      "ManufacturerContactOut": {
+        "description": "The manufacturer with where to find it and its support.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "support_phone": {
+            "title": "Support Phone",
+            "type": "string"
+          },
+          "support_url": {
+            "title": "Support Url",
+            "type": "string"
+          },
+          "website": {
+            "title": "Website",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "website",
+          "support_url",
+          "support_phone"
+        ],
+        "title": "ManufacturerContactOut",
         "type": "object"
       },
       "ManufacturerFilter": {

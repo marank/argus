@@ -27,6 +27,7 @@ import { useAction } from '@/composables/useAction'
 import { useFieldErrors } from '@/composables/useFieldErrors'
 import { fromIsoDate, toIsoDate, useFormat } from '@/composables/useFormat'
 import { useFeaturesStore } from '@/stores/features'
+import { formatMacAddress } from '@/utils/macAddress'
 import { modelLabel } from '@/utils/models'
 import type { Id } from '@/types/common'
 import { ASSET_CONDITIONS, ASSET_STATUSES } from '@/types/inventory'
@@ -239,7 +240,8 @@ async function save() {
               <NInput
                 v-model:value="form.mac_address"
                 class="mono-input"
-                placeholder="00:00:00:00:00:00"
+                placeholder="AA:BB:CC:DD:EE:FF"
+                @blur="form.mac_address = formatMacAddress(form.mac_address)"
               />
             </NFormItemGi>
             <NFormItemGi
