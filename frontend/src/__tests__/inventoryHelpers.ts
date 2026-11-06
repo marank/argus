@@ -305,12 +305,56 @@ export const titled = (title: string, within: ParentNode = document.body) => [
   ...within.querySelectorAll<HTMLButtonElement>(`button[title="${title}"]`),
 ]
 
-/** Ticks (or unticks) the checkbox with this label. */
-export async function check(label: string) {
-  const box = [...document.body.querySelectorAll<HTMLElement>('.n-checkbox')].find(
+/** Picks a grouping from the grouping menu of a table toolbar. */
+export async function groupBy(label: string) {
+  const button = document.body.querySelectorAll<HTMLButtonElement>('.table-toolbar .toolbar button')
+  const trigger = [...button].find((b) => b.querySelector('.lucide-group'))
+  if (!trigger) throw new Error('no grouping menu')
+  trigger.click()
+  await flushPromises()
+  const option = [...document.body.querySelectorAll<HTMLElement>('.n-base-select-option')].find(
     (el) => el.textContent?.trim() === label,
   )
-  if (!box) throw new Error(`no checkbox "${label}"`)
-  box.click()
+  if (!option) throw new Error(`no grouping "${label}"`)
+  option.click()
+  await flushPromises()
+}
+
+/** Removes the active filter whose chip starts with this label. */
+export async function clearChip(label: string) {
+  const chip = [...document.body.querySelectorAll<HTMLElement>('.filter-chips .n-tag')].find(
+    (el) => el.querySelector('.chip-label')?.textContent?.trim() === label,
+  )
+  if (!chip) throw new Error(`no filter chip "${label}"`)
+  chip.querySelector<HTMLElement>('.n-tag__close, .n-base-close')!.click()
+  await flushPromises()
+}
+
+/**
+ * Adds a line to the filter panel of a table toolbar and picks the field `label` (as the
+ * field menu shows it, e.g. "Purchase date (from)"). Opens the panel first if needed.
+ */
+export async function addFilter(wrapper: VueWrapper, label: string) {
+  const panel = document.body.querySelector<HTMLElement>('.filter-panel')
+  if (!panel || panel.style.display === 'none') {
+    const toggle = [
+      ...document.body.querySelectorAll<HTMLButtonElement>('.table-toolbar .toolbar button'),
+    ].find((b) => b.querySelector('.lucide-list-filter'))
+    if (!toggle) throw new Error('no filter button')
+    toggle.click()
+    await flushPromises()
+  }
+  const fields = () =>
+    wrapper.findAllComponents(NSelect).filter((s) => s.element.closest?.('.rule-field'))
+  let field = fields().find((s) => s.props('value') === null)
+  if (!field) {
+    document.body.querySelector<HTMLButtonElement>('.rule-add button')!.click()
+    await flushPromises()
+    field = fields().find((s) => s.props('value') === null)
+  }
+  const options = (field!.props('options') ?? []) as { value: string; label: string }[]
+  const option = options.find((o) => o.label === label)
+  if (!option) throw new Error(`no filter field "${label}" in ${options.map((o) => o.label)}`)
+  field!.vm.$emit('update:value', option.value)
   await flushPromises()
 }

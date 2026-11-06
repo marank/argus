@@ -53,6 +53,12 @@ ORDERING_FIELDS = (
     "model__name",
     "location__name",
     "assigned_to__last_name",
+    # Ties broken by the record, so the rows of a grouping stay together.
+    "model__manufacturer__name",
+    "model_id",
+    "location_id",
+    "assigned_to__first_name",
+    "assigned_to_id",
     "warranty_until",
     "purchase_date",
     "created_at",
@@ -61,20 +67,23 @@ ORDERING_FIELDS = (
 
 class AssetFilter(FilterSchema):
     status: Annotated[list[str] | None, FilterLookup("status__in")] = None
-    model: Annotated[UUID | None, FilterLookup("model_id")] = None
-    manufacturer: Annotated[UUID | None, FilterLookup("model__manufacturer_id")] = None
-    location: Annotated[UUID | None, FilterLookup("location_id")] = None
-    assigned_to: Annotated[UUID | None, FilterLookup("assigned_to_id")] = None
+    model: Annotated[list[UUID] | None, FilterLookup("model_id__in")] = None
+    manufacturer: Annotated[list[UUID] | None, FilterLookup("model__manufacturer_id__in")] = None
+    location: Annotated[list[UUID] | None, FilterLookup("location_id__in")] = None
+    assigned_to: Annotated[list[UUID] | None, FilterLookup("assigned_to_id__in")] = None
     is_loanable: bool | None = None
     tracking: Annotated[str | None, FilterLookup("model__tracking")] = None
-    warranty_before: Annotated[date | None, FilterLookup("warranty_until__lt")] = None
-    warranty_until: Annotated[date | None, FilterLookup("warranty_until")] = None
-    category: UUID | None = None
+    warranty_from: Annotated[date | None, FilterLookup("warranty_until__gte")] = None
+    warranty_until: Annotated[date | None, FilterLookup("warranty_until__lte")] = None
+    supplier: Annotated[list[UUID] | None, FilterLookup("supplier_id__in")] = None
+    purchase_from: Annotated[date | None, FilterLookup("purchase_date__gte")] = None
+    purchase_until: Annotated[date | None, FilterLookup("purchase_date__lte")] = None
+    category: list[UUID] | None = None
 
-    def filter_category(self, value: UUID | None) -> Q:
+    def filter_category(self, value: list[UUID] | None) -> Q:
         if not value:
             return Q()
-        return Q(model__category_id__in=get_object_or_404(Category, pk=value).descendant_ids())
+        return Q(model__category_id__in=Category.descendant_ids_of(value))
 
 
 def asset_queryset() -> QuerySet[Asset]:

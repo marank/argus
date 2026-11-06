@@ -34,14 +34,18 @@ export default defineResource<Schemas['UserOut']>({
   key: 'users',
   permission: 'users',
   // Sections per department.
-  groupBy: {
-    ordering: 'department__sort_order,department__name',
-    key: (u) => u.department?.id ?? 'none',
-    label: (u) => [
-      h(Building2, { size: 14 }),
-      u.department?.name ?? i18n.global.t('masterdata.noDepartment'),
-    ],
-  },
+  groupings: [
+    {
+      key: 'department',
+      label: 'masterdata.fields.department',
+      ordering: 'department__sort_order,department__name',
+      rowKey: (u) => u.department?.id ?? 'none',
+      rowLabel: (u) => [
+        h(Building2, { size: 14 }),
+        u.department?.name ?? i18n.global.t('masterdata.noDepartment'),
+      ],
+    },
+  ],
   api: usersApi,
   ordering: 'last_name',
   title: (u) => u.display_name,
@@ -83,6 +87,49 @@ export default defineResource<Schemas['UserOut']>({
       visible: () => useAuthStore().isItStaff,
     },
     { key: 'is_active', label: 'common.active', width: 80, render: (u) => bool(u.is_active) },
+    // Further columns to show from the column settings.
+    {
+      key: 'username',
+      label: 'masterdata.fields.username',
+      hidden: true,
+      width: 150,
+      render: (u) => mono(u.username),
+    },
+    {
+      key: 'first_name',
+      label: 'masterdata.fields.firstName',
+      hidden: true,
+      width: 140,
+      render: (u) => text(u.first_name),
+    },
+    {
+      key: 'last_name',
+      label: 'masterdata.fields.lastName',
+      hidden: true,
+      width: 140,
+      render: (u) => text(u.last_name),
+    },
+    {
+      key: 'phone',
+      label: 'masterdata.fields.phone',
+      hidden: true,
+      width: 150,
+      render: (u) => text(u.phone),
+    },
+    {
+      key: 'job_title',
+      label: 'masterdata.fields.jobTitle',
+      hidden: true,
+      width: 180,
+      render: (u) => text(u.job_title),
+    },
+    {
+      key: 'teams',
+      label: 'masterdata.resources.teams',
+      hidden: true,
+      width: 180,
+      render: (u) => text(u.teams.map((team) => team.name).join(', ')),
+    },
   ],
   filters: [
     {

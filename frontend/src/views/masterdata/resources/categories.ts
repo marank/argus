@@ -19,14 +19,18 @@ export default defineResource<Schemas['CategoryOut']>({
   // Each category followed by its subcategories.
   ordering: 'tree_position',
   // Hardware first, then software (alphabetical order of the stored values).
-  groupBy: {
-    ordering: 'kind',
-    key: (c) => c.kind,
-    label: (c) => [
-      h(c.kind === 'software' ? AppWindow : Cpu, { size: 14 }),
-      t(`enums.categoryKind.${c.kind}`),
-    ],
-  },
+  groupings: [
+    {
+      key: 'kind',
+      label: 'masterdata.fields.kind',
+      ordering: 'kind',
+      rowKey: (c) => c.kind,
+      rowLabel: (c) => [
+        h(c.kind === 'software' ? AppWindow : Cpu, { size: 14 }),
+        t(`enums.categoryKind.${c.kind}`),
+      ],
+    },
+  ],
   tree: {
     ordering: 'tree_position',
     parent: (c) => c.parent?.id,
@@ -43,6 +47,7 @@ export default defineResource<Schemas['CategoryOut']>({
     { key: 'code', label: 'common.code', sorter: 'code', width: 160, render: (c) => mono(c.code) },
     {
       key: 'number_sequence',
+      hidden: true,
       label: 'masterdata.fields.numberSequence',
       width: 200,
       render: (c) => c.number_sequence?.name ?? '—',
@@ -75,10 +80,33 @@ export default defineResource<Schemas['CategoryOut']>({
     },
     {
       key: 'sort_order',
+      hidden: true,
       label: 'masterdata.fields.sortOrder',
       sorter: 'sort_order',
       width: 110,
       render: (c) => mono(c.sort_order),
+    },
+    // Further columns to show from the column settings.
+    {
+      key: 'kind',
+      label: 'masterdata.fields.kind',
+      hidden: true,
+      width: 110,
+      render: (c) => t(`enums.categoryKind.${c.kind}`),
+    },
+    {
+      key: 'item_name',
+      label: 'masterdata.fields.itemName',
+      hidden: true,
+      width: 150,
+      render: (c) => c.item_name || '—',
+    },
+    {
+      key: 'identifier_label',
+      label: 'masterdata.fields.identifierLabel',
+      hidden: true,
+      width: 170,
+      render: (c) => c.identifier_label || '—',
     },
   ],
   filters: [

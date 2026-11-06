@@ -52,15 +52,15 @@ def _employee(pk: UUID) -> User:
 
 class AssetRequestFilter(FilterSchema):
     status: Annotated[list[str] | None, FilterLookup("status__in")] = None
-    requester: Annotated[UUID | None, FilterLookup("requester_id")] = None
-    department: Annotated[UUID | None, FilterLookup("requester__department_id")] = None
-    duration: str | None = None
+    requester: Annotated[list[UUID] | None, FilterLookup("requester_id__in")] = None
+    department: Annotated[list[UUID] | None, FilterLookup("requester__department_id__in")] = None
+    duration: Annotated[list[str] | None, FilterLookup("duration__in")] = None
     start_from: Annotated[date | None, FilterLookup("start_date__gte")] = None
     start_until: Annotated[date | None, FilterLookup("start_date__lte")] = None
     overdue: bool | None = None
     open: bool | None = None
     team: Annotated[list[UUID] | None, FilterLookup("assigned_team_id__in")] = None
-    assignee: Annotated[UUID | None, FilterLookup("assignee_id")] = None
+    assignee: Annotated[list[UUID] | None, FilterLookup("assignee_id__in")] = None
     origin: str | None = None
 
     def filter_overdue(self, value: bool | None) -> Q:
@@ -99,7 +99,20 @@ def list_asset_requests(
     return order(
         queryset,
         ordering,
-        ("number", "created_at", "start_date", "end_date", "pickup_at", "status"),
+        (
+            "number",
+            "created_at",
+            "start_date",
+            "end_date",
+            "pickup_at",
+            "status",
+            # Groupings
+            "duration",
+            "requester__department__name",
+            "requester__department_id",
+            "assigned_team__name",
+            "assigned_team_id",
+        ),
     )
 
 

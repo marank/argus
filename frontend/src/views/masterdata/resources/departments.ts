@@ -54,6 +54,7 @@ export default defineResource<Schemas['DepartmentOut']>({
     },
     {
       key: 'sort_order',
+      hidden: true,
       label: 'masterdata.fields.sortOrder',
       sorter: 'sort_order',
       width: 110,

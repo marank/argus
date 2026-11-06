@@ -24,11 +24,22 @@ export default defineResource<Schemas['AssetModelOut']>({
   key: 'models',
   permission: 'models',
   // Sections per category, hardware before software.
-  groupBy: {
-    ordering: 'category__kind,category__sort_order,category__name',
-    key: (m) => m.category.id,
-    label: (m) => [h(categoryIcon(m.category.icon), { size: 14 }), m.category.name],
-  },
+  groupings: [
+    {
+      key: 'category',
+      label: 'masterdata.fields.category',
+      ordering: 'category__kind,category__sort_order,category__name',
+      rowKey: (m) => m.category.id,
+      rowLabel: (m) => [h(categoryIcon(m.category.icon), { size: 14 }), m.category.name],
+    },
+    {
+      key: 'manufacturer',
+      label: 'masterdata.fields.manufacturer',
+      ordering: 'manufacturer__name',
+      rowKey: (m) => m.manufacturer.id,
+      rowLabel: (m) => m.manufacturer.name,
+    },
+  ],
   api: assetModelsApi,
   ordering: 'manufacturer__name',
   title: modelLabel,
@@ -69,6 +80,7 @@ export default defineResource<Schemas['AssetModelOut']>({
     },
     {
       key: 'number_sequence',
+      hidden: true,
       label: 'masterdata.fields.numberSequence',
       width: 170,
       render: (m) =>
@@ -80,6 +92,7 @@ export default defineResource<Schemas['AssetModelOut']>({
     },
     {
       key: 'team',
+      hidden: true,
       label: 'masterdata.fields.responsibleTeam',
       width: 160,
       render: (m) =>
@@ -102,9 +115,16 @@ export default defineResource<Schemas['AssetModelOut']>({
       width: 150,
       render: (m) => mono(m.part_number),
     },
-    { key: 'ean', label: 'masterdata.fields.ean', width: 150, render: (m) => mono(m.ean) },
+    {
+      key: 'ean',
+      hidden: true,
+      label: 'masterdata.fields.ean',
+      width: 150,
+      render: (m) => mono(m.ean),
+    },
     {
       key: 'list_price',
+      hidden: true,
       label: 'masterdata.fields.listPrice',
       width: 110,
       render: (m) => mono(m.list_price ? n(Number(m.list_price), 'currency') : null),
@@ -116,6 +136,35 @@ export default defineResource<Schemas['AssetModelOut']>({
       render: (m) => bool(m.is_requestable),
     },
     { key: 'is_active', label: 'common.active', width: 80, render: (m) => bool(m.is_active) },
+    // Further columns to show from the column settings.
+    {
+      key: 'manufacturer',
+      label: 'masterdata.fields.manufacturer',
+      hidden: true,
+      width: 150,
+      render: (m) => m.manufacturer.name,
+    },
+    {
+      key: 'designation',
+      label: 'masterdata.fields.designation',
+      hidden: true,
+      width: 170,
+      render: (m) => mono(m.designation),
+    },
+    {
+      key: 'default_supplier',
+      label: 'masterdata.fields.defaultSupplier',
+      hidden: true,
+      width: 170,
+      render: (m) => m.default_supplier?.name ?? '—',
+    },
+    {
+      key: 'warranty_months',
+      label: 'masterdata.fields.warrantyMonths',
+      hidden: true,
+      width: 140,
+      render: (m) => mono(m.warranty_months),
+    },
   ],
   filters: [
     {

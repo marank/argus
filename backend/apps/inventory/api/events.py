@@ -9,7 +9,7 @@ from ninja.pagination import paginate
 
 from apps.accounts.permissions import ResourceKey
 from apps.core.api.pagination import Pagination
-from apps.core.api.querying import search
+from apps.core.api.querying import order, search
 from apps.core.api.security import AuthedRequest, permission_auth
 from apps.inventory.models import Asset, AssetEvent
 from apps.inventory.schemas.asset_event import AssetEventIn, AssetEventOut, AssetEventWithAssetOut
@@ -20,10 +20,23 @@ router = Router(tags=["asset events"], auth=permission_auth(ResourceKey.ASSETS))
 
 class EventFilter(FilterSchema):
     kind: Annotated[list[str] | None, FilterLookup("kind__in")] = None
-    model: Annotated[UUID | None, FilterLookup("asset__model_id")] = None
+    model: Annotated[list[UUID] | None, FilterLookup("asset__model_id__in")] = None
     category: Annotated[UUID | None, FilterLookup("asset__model__category_id")] = None
     since: Annotated[date | None, FilterLookup("occurred_at__date__gte")] = None
     until: Annotated[date | None, FilterLookup("occurred_at__date__lte")] = None
+
+
+EVENT_ORDERING_FIELDS = (
+    "occurred_at",
+    "created_at",
+    "kind",
+    "cost",
+    "asset__inventory_number",
+    "asset__model__name",
+    "asset__model_id",
+    "performed_by__last_name",
+    "performed_by_id",
+)
 
 
 def event_queryset() -> QuerySet[AssetEvent]:
@@ -35,11 +48,14 @@ def event_queryset() -> QuerySet[AssetEvent]:
 @router.get("/events", response=list[AssetEventWithAssetOut])
 @paginate(Pagination)
 def list_events(
-    request: AuthedRequest, filters: Query[EventFilter], q: str | None = None
+    request: AuthedRequest,
+    filters: Query[EventFilter],
+    q: str | None = None,
+    ordering: str | None = None,
 ) -> QuerySet[AssetEvent]:
     """Life cycle log across all devices, e.g. every battery replacement in 2026."""
     queryset = filters.filter(event_queryset())
-    return search(
+    queryset = search(
         queryset,
         q,
         (
@@ -51,6 +67,7 @@ def list_events(
             "component_serial",
         ),
     )
+    return order(queryset, ordering, EVENT_ORDERING_FIELDS)
 
 
 @router.get("/assets/{uuid:pk}/events", response=list[AssetEventOut])

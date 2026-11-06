@@ -1,53 +1,104 @@
 <script setup lang="ts">
-import { NDataTable, NInput, NSelect, type DataTableColumns } from 'naive-ui'
 import { computed, h, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRouter } from 'vue-router'
 
 import { teamsApi, usersApi } from '@/api/accounts'
-import { issuesApi } from '@/api/inventory'
+import { assetsApi, issuesApi } from '@/api/inventory'
 import type { Schemas } from '@/api/types'
 import AssignedTabs from '@/components/common/AssignedTabs.vue'
 import { assignmentCell } from '@/components/common/assignmentCell'
-import CheckField from '@/components/common/CheckField.vue'
-import EntitySelect from '@/components/common/EntitySelect.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
+import ListTable from '@/components/table/ListTable.vue'
+import TableToolbar from '@/components/table/TableToolbar.vue'
+import type { TableColumn, TableFilter, TableGrouping } from '@/components/table/types'
 import { useAssigned } from '@/composables/useAssigned'
 import { useFormat } from '@/composables/useFormat'
 import { useList } from '@/composables/useList'
-import { ISSUE_KINDS } from '@/types/inventory'
+import { useTableView } from '@/composables/useTableView'
+import { ISSUE_KINDS, ISSUE_STATUSES } from '@/types/inventory'
 
 /** Problems employees reported for their devices; each opens its page with the conversation. */
+type Issue = Schemas['AssetIssueOut']
+
 const { t } = useI18n()
 const router = useRouter()
 const { date, enumLabel } = useFormat()
 
 const OPEN: Schemas['AssetIssueStatus'][] = ['open', 'in_progress']
 const { assigned, param: assignedParam } = useAssigned('issues')
-const list = useList(issuesApi.list, {
-  live: ['issue'],
-  ordering: '-created_at',
-  filters: {
-    status: [...OPEN],
-    kind: null,
-    assigned: assignedParam(assigned.value),
-    team: [],
-    assignee: null,
+
+const filters = computed<TableFilter[]>(() => [
+  {
+    key: 'asset',
+    label: t('inventory.issues.device'),
+    type: 'entity',
+    fetcher: assetsApi.list,
+    display: (a: Schemas['AssetOut']) => `${a.inventory_number} · ${a.model.full_name}`,
   },
-})
-onMounted(list.load)
-watch(assigned, (value) => (list.filters.assigned = assignedParam(value)))
+  {
+    key: 'status',
+    label: t('common.status'),
+    type: 'select',
+    options: ISSUE_STATUSES.map((s) => ({ value: s, label: enumLabel('issueStatus', s) })),
+  },
+  {
+    key: 'kind',
+    label: t('inventory.issues.kind'),
+    type: 'select',
+    options: ISSUE_KINDS.map((k) => ({ value: k, label: enumLabel('issueKind', k) })),
+  },
+  {
+    key: 'team',
+    label: t('common.assignment.team'),
+    type: 'entity',
+    fetcher: teamsApi.list,
+    display: (team: Schemas['TeamOut']) => team.name,
+  },
+  {
+    key: 'assignee',
+    label: t('common.assignment.assignee'),
+    type: 'entity',
+    fetcher: usersApi.list,
+    params: { is_staff: true },
+    display: (user: Schemas['UserOut']) => user.display_name,
+  },
+  {
+    key: 'reported',
+    label: t('inventory.issues.reportedAt'),
+    type: 'daterange',
+    from: 'reported_from',
+    until: 'reported_until',
+  },
+])
 
-const onlyOpen = computed({
-  get: () => (list.filters.status as string[]).length > 0,
-  set: (value: boolean) => (list.filters.status = value ? [...OPEN] : []),
-})
-const kindOptions = computed(() =>
-  ISSUE_KINDS.map((k) => ({ value: k, label: enumLabel('issueKind', k) })),
-)
+const groupings = (): TableGrouping<Issue>[] => [
+  {
+    key: 'status',
+    label: t('common.status'),
+    ordering: 'status',
+    rowKey: (i) => i.status,
+    rowLabel: (i) => h(StatusTag, { group: 'issueStatus', value: i.status }),
+  },
+  {
+    key: 'kind',
+    label: t('inventory.issues.kind'),
+    ordering: 'kind',
+    rowKey: (i) => i.kind,
+    rowLabel: (i) => enumLabel('issueKind', i.kind),
+  },
+  {
+    key: 'team',
+    label: t('common.assignment.team'),
+    ordering: 'assigned_team__name,assigned_team_id',
+    rowKey: (i) => i.assigned_team?.id ?? '',
+    rowLabel: (i) =>
+      i.assigned_team?.name ?? h('span', { class: 'muted' }, t('common.assignment.noTeam')),
+  },
+]
 
-const columns = computed<DataTableColumns<Schemas['AssetIssueOut']>>(() => [
+const columns = computed<TableColumn<Issue>[]>(() => [
   {
     key: 'status',
     title: t('common.status'),
@@ -79,6 +130,7 @@ const columns = computed<DataTableColumns<Schemas['AssetIssueOut']>>(() => [
   {
     key: 'kind',
     title: t('inventory.issues.kind'),
+    sorter: true,
     width: 170,
     render: (i) => enumLabel('issueKind', i.kind),
   },
@@ -107,64 +159,74 @@ const columns = computed<DataTableColumns<Schemas['AssetIssueOut']>>(() => [
     width: 120,
     render: (i) => h('span', { class: 'mono' }, date(i.created_at)),
   },
+  // Further columns to show from the column settings.
+  {
+    key: 'model',
+    title: t('inventory.fields.model'),
+    hidden: true,
+    width: 200,
+    ellipsis: { tooltip: true },
+    render: (i) => i.asset.model.full_name,
+  },
+  {
+    key: 'device_user',
+    title: t('inventory.fields.assignedTo'),
+    hidden: true,
+    width: 160,
+    render: (i) => i.asset.assigned_to?.display_name ?? '—',
+  },
+  {
+    key: 'handled_by',
+    title: t('inventory.issues.detail.handledBy'),
+    hidden: true,
+    width: 160,
+    render: (i) => i.handled_by?.display_name ?? '—',
+  },
+  {
+    key: 'resolved_at',
+    title: t('inventory.issues.detail.resolvedAt'),
+    hidden: true,
+    width: 120,
+    render: (i) => h('span', { class: 'mono' }, date(i.resolved_at)),
+  },
 ])
+
+const view = useTableView<Issue>({
+  id: 'issues',
+  columns: (): TableColumn<Issue>[] => columns.value,
+  rows: (): Issue[] => list.rows.value,
+  groupings,
+})
+
+const list = useList(issuesApi.list, {
+  live: ['issue'],
+  ordering: '-created_at',
+  groupOrdering: view.groupOrdering,
+  filters: {
+    status: [...OPEN],
+    asset: [],
+    kind: [],
+    assigned: assignedParam(assigned.value),
+    team: [],
+    assignee: [],
+    reported_from: null,
+    reported_until: null,
+  },
+})
+onMounted(list.load)
+watch(assigned, (value) => (list.filters.assigned = assignedParam(value)))
+
+const openIssue = (i: Issue) => router.push({ name: 'issue', params: { id: i.id } })
 </script>
 
 <template>
   <div class="page">
     <PageHeader :title="t('inventory.issues.title')" :subtitle="t('inventory.issues.subtitle')" />
     <div class="stack">
-      <div class="toolbar">
-        <AssignedTabs v-model="assigned" />
-        <NInput
-          v-model:value="list.search.value"
-          class="grow"
-          :placeholder="t('common.search')"
-          clearable
-        />
-        <NSelect
-          v-model:value="list.filters.kind as string | null"
-          :options="kindOptions"
-          :placeholder="t('inventory.issues.kind')"
-          clearable
-          style="width: 200px"
-        />
-        <EntitySelect
-          v-model="list.filters.team as string[]"
-          :fetcher="teamsApi.list"
-          :label="(team: Schemas['TeamOut']) => team.name"
-          multiple
-          max-tag-count="responsive"
-          :placeholder="t('common.assignment.team')"
-          style="width: 180px"
-        />
-        <EntitySelect
-          v-model="list.filters.assignee as string | null"
-          :fetcher="usersApi.list"
-          :params="{ is_staff: true }"
-          :label="(user: Schemas['UserOut']) => user.display_name"
-          :placeholder="t('common.assignment.assignee')"
-          style="width: 180px"
-        />
-        <CheckField v-model="onlyOpen" :label="t('inventory.issues.onlyOpen')" />
-      </div>
-      <NDataTable
-        class="clickable-rows"
-        remote
-        size="small"
-        :columns="columns"
-        :data="list.rows.value"
-        :loading="list.loading.value"
-        :pagination="list.pagination.value"
-        :row-key="(i: Schemas['AssetIssueOut']) => i.id"
-        :row-props="
-          (i: Schemas['AssetIssueOut']) => ({
-            onClick: () => router.push({ name: 'issue', params: { id: i.id } }),
-          })
-        "
-        :scroll-x="1160"
-        @update:sorter="list.onSort"
-      />
+      <TableToolbar v-model:search="list.search.value" :list="list" :filters="filters" :view="view">
+        <template #prefix><AssignedTabs v-model="assigned" /></template>
+      </TableToolbar>
+      <ListTable :view="view" :list="list" @row-click="openIssue" />
     </div>
   </div>
 </template>

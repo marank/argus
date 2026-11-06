@@ -2865,23 +2865,29 @@ export interface components {
     /** AssetFilter */
     AssetFilter: {
       /** Assigned To */
-      assigned_to?: string | null
+      assigned_to?: string[] | null
       /** Category */
-      category?: string | null
+      category?: string[] | null
       /** Is Loanable */
       is_loanable?: boolean | null
       /** Location */
-      location?: string | null
+      location?: string[] | null
       /** Manufacturer */
-      manufacturer?: string | null
+      manufacturer?: string[] | null
       /** Model */
-      model?: string | null
+      model?: string[] | null
+      /** Purchase From */
+      purchase_from?: string | null
+      /** Purchase Until */
+      purchase_until?: string | null
       /** Status */
       status?: string[] | null
+      /** Supplier */
+      supplier?: string[] | null
       /** Tracking */
       tracking?: string | null
-      /** Warranty Before */
-      warranty_before?: string | null
+      /** Warranty From */
+      warranty_from?: string | null
       /** Warranty Until */
       warranty_until?: string | null
     }
@@ -3062,7 +3068,7 @@ export interface components {
     /** AssetModelFilter */
     AssetModelFilter: {
       /** Category */
-      category?: string | null
+      category?: string[] | null
       /** Ean */
       ean?: string | null
       /** Is Active */
@@ -3070,7 +3076,7 @@ export interface components {
       /** Is Requestable */
       is_requestable?: boolean | null
       /** Manufacturer */
-      manufacturer?: string | null
+      manufacturer?: string[] | null
       /** Numbered */
       numbered?: boolean | null
       /** Tracking */
@@ -3297,11 +3303,11 @@ export interface components {
     /** AssetRequestFilter */
     AssetRequestFilter: {
       /** Assignee */
-      assignee?: string | null
+      assignee?: string[] | null
       /** Department */
-      department?: string | null
+      department?: string[] | null
       /** Duration */
-      duration?: string | null
+      duration?: string[] | null
       /** Open */
       open?: boolean | null
       /** Origin */
@@ -3309,7 +3315,7 @@ export interface components {
       /** Overdue */
       overdue?: boolean | null
       /** Requester */
-      requester?: string | null
+      requester?: string[] | null
       /** Start From */
       start_from?: string | null
       /** Start Until */
@@ -3803,7 +3809,7 @@ export interface components {
       /** Is Requestable */
       is_requestable?: boolean | null
       /** Kind */
-      kind?: string | null
+      kind?: string[] | null
       /** Parent */
       parent?: string | null
     }
@@ -4026,11 +4032,11 @@ export interface components {
       /** Below Minimum */
       below_minimum?: boolean | null
       /** Category */
-      category?: string | null
+      category?: string[] | null
       /** Location */
-      location?: string | null
+      location?: string[] | null
       /** Model */
-      model?: string | null
+      model?: string[] | null
     }
     /** ConsumableIn */
     ConsumableIn: {
@@ -4480,7 +4486,7 @@ export interface components {
       /** Kind */
       kind?: string[] | null
       /** Model */
-      model?: string | null
+      model?: string[] | null
       /** Since */
       since?: string | null
       /** Until */
@@ -4799,11 +4805,15 @@ export interface components {
     /** IssueFilter */
     IssueFilter: {
       /** Asset */
-      asset?: string | null
+      asset?: string[] | null
       /** Assignee */
-      assignee?: string | null
+      assignee?: string[] | null
       /** Kind */
-      kind?: string | null
+      kind?: string[] | null
+      /** Reported From */
+      reported_from?: string | null
+      /** Reported Until */
+      reported_until?: string | null
       /** Status */
       status?: string[] | null
       /** Team */
@@ -5229,17 +5239,19 @@ export interface components {
     /** LicenseFilter */
     LicenseFilter: {
       /** Asset */
-      asset?: string | null
+      asset?: string[] | null
       /** Assign To */
-      assign_to?: string | null
+      assign_to?: string[] | null
       /** Category */
-      category?: string | null
-      /** Expires Before */
-      expires_before?: string | null
+      category?: string[] | null
+      /** Expires From */
+      expires_from?: string | null
+      /** Expires Until */
+      expires_until?: string | null
       /** Model */
-      model?: string | null
+      model?: string[] | null
       /** User */
-      user?: string | null
+      user?: string[] | null
     }
     /** LicenseIn */
     LicenseIn: {
@@ -5380,7 +5392,7 @@ export interface components {
       /** Is Pickup Point */
       is_pickup_point?: boolean | null
       /** Kind */
-      kind?: string | null
+      kind?: string[] | null
       /** Parent */
       parent?: string | null
     }
@@ -5888,10 +5900,18 @@ export interface components {
     OrderFilter: {
       /** Asset Request */
       asset_request?: string | null
+      /** Expected From */
+      expected_from?: string | null
+      /** Expected Until */
+      expected_until?: string | null
+      /** Ordered From */
+      ordered_from?: string | null
+      /** Ordered Until */
+      ordered_until?: string | null
       /** Status */
       status?: string[] | null
       /** Supplier */
-      supplier?: string | null
+      supplier?: string[] | null
     }
     /**
      * Origin
@@ -7230,7 +7250,7 @@ export interface components {
     /** UserFilter */
     UserFilter: {
       /** Department */
-      department?: string | null
+      department?: string[] | null
       /** Is Active */
       is_active?: boolean | null
       /** Is Staff */
@@ -7786,7 +7806,7 @@ export interface operations {
   user_list: {
     parameters: {
       query?: {
-        department?: string | null
+        department?: string[] | null
         is_active?: boolean | null
         is_staff?: boolean | null
         is_terminal?: boolean | null
@@ -8599,15 +8619,18 @@ export interface operations {
     parameters: {
       query?: {
         status?: string[] | null
-        model?: string | null
-        manufacturer?: string | null
-        location?: string | null
-        assigned_to?: string | null
+        model?: string[] | null
+        manufacturer?: string[] | null
+        location?: string[] | null
+        assigned_to?: string[] | null
         is_loanable?: boolean | null
         tracking?: string | null
-        warranty_before?: string | null
+        warranty_from?: string | null
         warranty_until?: string | null
-        category?: string | null
+        supplier?: string[] | null
+        purchase_from?: string | null
+        purchase_until?: string | null
+        category?: string[] | null
         q?: string | null
         ordering?: string | null
         page?: number
@@ -8870,9 +8893,9 @@ export interface operations {
   apps_inventory_api_consumables_list_consumables: {
     parameters: {
       query?: {
-        model?: string | null
-        category?: string | null
-        location?: string | null
+        model?: string[] | null
+        category?: string[] | null
+        location?: string[] | null
         below_minimum?: boolean | null
         q?: string | null
         ordering?: string | null
@@ -9020,11 +9043,12 @@ export interface operations {
     parameters: {
       query?: {
         kind?: string[] | null
-        model?: string | null
+        model?: string[] | null
         category?: string | null
         since?: string | null
         until?: string | null
         q?: string | null
+        ordering?: string | null
         page?: number
         page_size?: number | null
       }
@@ -9069,10 +9093,12 @@ export interface operations {
     parameters: {
       query?: {
         status?: string[] | null
-        asset?: string | null
-        kind?: string | null
+        asset?: string[] | null
+        kind?: string[] | null
         team?: string[] | null
-        assignee?: string | null
+        assignee?: string[] | null
+        reported_from?: string | null
+        reported_until?: string | null
         q?: string | null
         ordering?: string | null
         assigned?: ('me' | 'my_teams' | 'nobody') | null
@@ -9199,12 +9225,13 @@ export interface operations {
   apps_inventory_api_licenses_list_licenses: {
     parameters: {
       query?: {
-        model?: string | null
-        assign_to?: string | null
-        user?: string | null
-        asset?: string | null
-        expires_before?: string | null
-        category?: string | null
+        model?: string[] | null
+        assign_to?: string[] | null
+        user?: string[] | null
+        asset?: string[] | null
+        expires_from?: string | null
+        expires_until?: string | null
+        category?: string[] | null
         q?: string | null
         ordering?: string | null
         page?: number
@@ -9395,7 +9422,7 @@ export interface operations {
       query?: {
         parent?: string | null
         is_requestable?: boolean | null
-        kind?: string | null
+        kind?: string[] | null
         q?: string | null
         ordering?: string | null
         page?: number
@@ -9632,7 +9659,7 @@ export interface operations {
     parameters: {
       query?: {
         parent?: string | null
-        kind?: string | null
+        kind?: string[] | null
         is_pickup_point?: boolean | null
         q?: string | null
         ordering?: string | null
@@ -9869,8 +9896,8 @@ export interface operations {
   assetmodel_list: {
     parameters: {
       query?: {
-        manufacturer?: string | null
-        category?: string | null
+        manufacturer?: string[] | null
+        category?: string[] | null
         tracking?: string | null
         ean?: string | null
         is_active?: boolean | null
@@ -10652,7 +10679,11 @@ export interface operations {
     parameters: {
       query?: {
         status?: string[] | null
-        supplier?: string | null
+        supplier?: string[] | null
+        ordered_from?: string | null
+        ordered_until?: string | null
+        expected_from?: string | null
+        expected_until?: string | null
         asset_request?: string | null
         q?: string | null
         ordering?: string | null
@@ -10846,15 +10877,15 @@ export interface operations {
     parameters: {
       query?: {
         status?: string[] | null
-        requester?: string | null
-        department?: string | null
-        duration?: string | null
+        requester?: string[] | null
+        department?: string[] | null
+        duration?: string[] | null
         start_from?: string | null
         start_until?: string | null
         overdue?: boolean | null
         open?: boolean | null
         team?: string[] | null
-        assignee?: string | null
+        assignee?: string[] | null
         origin?: string | null
         q?: string | null
         ordering?: string | null

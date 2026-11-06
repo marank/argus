@@ -1,18 +1,20 @@
 <script setup lang="ts">
 import { Pencil, Plus, Trash2 } from '@lucide/vue'
 import { useStorage } from '@vueuse/core'
-import { NButton, NDataTable, NInput, NSelect, type DataTableColumns } from 'naive-ui'
+import { NButton } from 'naive-ui'
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import CheckField from '@/components/common/CheckField.vue'
-import EntitySelect from '@/components/common/EntitySelect.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
+import ListTable from '@/components/table/ListTable.vue'
+import TableToolbar from '@/components/table/TableToolbar.vue'
+import type { TableColumn, TableFilter, TableGrouping } from '@/components/table/types'
 import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
 import { useFormat } from '@/composables/useFormat'
-import { isGroupRow, useGroupedRows, withGroupHeaders } from '@/composables/useGroupedRows'
 import { useList } from '@/composables/useList'
+import { useTableView } from '@/composables/useTableView'
 import { useTreeRows } from '@/composables/useTreeRows'
 import { useAuthStore } from '@/stores/auth'
 
@@ -36,21 +38,6 @@ const { run } = useAction()
 /** Tree view, where the resource offers one; remembered per table. */
 const treeView = useStorage(`argus.tree.${props.resource.key}`, true)
 const treeActive = computed(() => !!props.resource.tree && treeView.value)
-
-const list = useList(props.resource.api.list, {
-  ordering: props.resource.ordering,
-  // The tree keeps each record below its parent (within its group); column sorting is off.
-  groupOrdering: () =>
-    [props.resource.groupBy?.ordering, treeActive.value ? props.resource.tree?.ordering : null]
-      .filter(Boolean)
-      .join(',') || undefined,
-  filters: Object.fromEntries((props.resource.filters ?? []).map((f) => [f.key, null])),
-})
-onMounted(list.load)
-watch(treeActive, () => {
-  list.ordering.value = props.resource.ordering ?? ''
-  list.reload()
-})
 
 const editing = ref<any | null>(null)
 /** A new record builds on this one (see `derive` of the resource). */
@@ -78,29 +65,40 @@ async function remove(row: any) {
     list.load()
 }
 
-const FLEX_MIN_WIDTH = 180
+const filters = computed<TableFilter[]>(() =>
+  (props.resource.filters ?? []).map((filter): TableFilter => {
+    const base = { key: filter.key, label: t(filter.label) }
+    if (filter.type === 'boolean') return { ...base, type: 'boolean' }
+    if (filter.type === 'enum')
+      return {
+        ...base,
+        type: 'select',
+        options: (filter.values ?? []).map((v) => ({
+          value: v,
+          label: enumLabel(filter.group!, v),
+        })),
+      }
+    return { ...base, type: 'entity', fetcher: filter.fetcher!, display: filter.display! }
+  }),
+)
 
-const tree = useTreeRows<any>({
-  rows: () => list.rows.value,
-  parent: (row) => props.resource.tree!.parent(row),
-  group: props.resource.groupBy ? (row) => props.resource.groupBy!.key(row) : undefined,
-  enabled: () => treeActive.value,
-  // While searching, every hit shows.
-  collapsible: () => !list.search.value,
-  storageKey: `argus.tree.collapsed.${props.resource.key}`,
-})
+const groupings = (): TableGrouping<any>[] =>
+  (props.resource.groupings ?? []).map((g) => ({ ...g, label: t(g.label) }))
 
-const baseColumns = computed<DataTableColumns<any>>(() => [
-  ...props.resource.columns.filter(isVisible).map((column, index) => {
+const columns = computed<TableColumn<any>[]>(() => [
+  ...props.resource.columns.filter(isVisible).map((column, index): TableColumn<any> => {
     const render = column.render ?? ((row: any) => row[column.key] ?? '—')
     const treeColumn = treeActive.value && index === 0
     return {
       key: column.sorter ?? column.key,
       title: t(column.label),
       sorter: column.sorter && !treeActive.value ? true : undefined,
+      // The first column names the record; the tree view indents it.
+      hideable: index === 0 ? false : undefined,
+      hidden: column.hidden,
       width: column.width,
       // Columns without a fixed width share the rest but never collapse.
-      minWidth: column.width ? undefined : FLEX_MIN_WIDTH,
+      minWidth: column.width ? undefined : 180,
       // The tree cell cuts its text itself; a tooltip would repeat the tree lines.
       ellipsis: treeColumn ? false : { tooltip: true },
       className: treeColumn ? 'tree-cell' : undefined,
@@ -159,33 +157,40 @@ const baseColumns = computed<DataTableColumns<any>>(() => [
   },
 ])
 
-/** Wide enough for every column; narrower screens scroll the table sideways. */
-const scrollX = computed(() =>
-  baseColumns.value.reduce(
-    (sum, column) => sum + Number(('width' in column && column.width) || FLEX_MIN_WIDTH),
-    0,
-  ),
-)
-
-const columns = computed(() =>
-  props.resource.groupBy ? withGroupHeaders(baseColumns.value) : baseColumns.value,
-)
-const grouping = useGroupedRows<any>({
-  rows: () => list.rows.value,
-  key: (row) => props.resource.groupBy!.key(row),
-  label: (row) => props.resource.groupBy!.label(row),
-  enabled: () => !!props.resource.groupBy,
-  visible: (row) => tree.isShown(row),
-  storageKey: `argus.groups.${props.resource.key}`,
+const view = useTableView<any>({
+  id: props.resource.key,
+  columns: () => columns.value,
+  rows: (): any[] => list.rows.value,
+  groupings,
+  defaultGrouping: props.resource.groupings?.[0]?.key,
+  visible: (row): boolean => tree.isShown(row),
+  rowClass: (row): string => tree.rowClass(row),
 })
 
-const rowClass = (row: any) =>
-  [grouping.rowClass(row), isGroupRow(row) ? '' : tree.rowClass(row)].filter(Boolean).join(' ')
+const list = useList(props.resource.api.list, {
+  ordering: props.resource.ordering,
+  // The tree keeps each record below its parent (within its group); column sorting is off.
+  groupOrdering: (): string | undefined =>
+    [view.groupOrdering(), treeActive.value ? props.resource.tree?.ordering : null]
+      .filter(Boolean)
+      .join(',') || undefined,
+  filters: Object.fromEntries(
+    (props.resource.filters ?? []).map((f) => [f.key, f.type === 'boolean' ? null : []]),
+  ),
+})
+onMounted(list.load)
+// Before the reload that the new group ordering starts: drop the column sort.
+watch(treeActive, () => (list.ordering.value = props.resource.ordering ?? ''), { flush: 'sync' })
 
-const boolOptions = computed(() => [
-  { value: 'true', label: t('common.yes') },
-  { value: 'false', label: t('common.no') },
-])
+const tree = useTreeRows<any>({
+  rows: (): any[] => list.rows.value,
+  parent: (row) => props.resource.tree!.parent(row),
+  group: (row): string => view.grouping.value?.rowKey(row) ?? '',
+  enabled: () => treeActive.value,
+  // While searching, every hit shows.
+  collapsible: () => !list.search.value,
+  storageKey: `argus.tree.collapsed.${props.resource.key}`,
+})
 </script>
 
 <template>
@@ -199,59 +204,11 @@ const boolOptions = computed(() => [
       </template>
     </PageHeader>
     <div class="stack">
-      <div class="toolbar">
-        <NInput
-          v-model:value="list.search.value"
-          class="grow"
-          :placeholder="t('common.search')"
-          clearable
-        />
-        <template v-for="filter in resource.filters ?? []" :key="filter.key">
-          <NSelect
-            v-if="filter.type === 'boolean'"
-            v-model:value="list.filters[filter.key] as string | null"
-            :options="boolOptions"
-            :placeholder="t(filter.label)"
-            clearable
-            style="width: 170px"
-          />
-          <NSelect
-            v-else-if="filter.type === 'enum'"
-            v-model:value="list.filters[filter.key] as string | null"
-            :options="
-              (filter.values ?? []).map((v) => ({ value: v, label: enumLabel(filter.group!, v) }))
-            "
-            :placeholder="t(filter.label)"
-            clearable
-            style="width: 170px"
-          />
-          <EntitySelect
-            v-else
-            v-model="list.filters[filter.key] as string | null"
-            :fetcher="filter.fetcher!"
-            :label="filter.display!"
-            :placeholder="t(filter.label)"
-            style="width: 200px"
-          />
-        </template>
+      <TableToolbar v-model:search="list.search.value" :list="list" :filters="filters" :view="view">
         <CheckField v-if="resource.tree" v-model="treeView" :label="t('masterdata.treeView')" />
-      </div>
+      </TableToolbar>
       <!-- Rebuilt on switching the tree view, which drops the sort state of the headers. -->
-      <NDataTable
-        :key="String(treeActive)"
-        class="clickable-rows"
-        remote
-        size="small"
-        :columns="columns"
-        :data="grouping.rows.value"
-        :loading="list.loading.value"
-        :pagination="list.pagination.value"
-        :row-key="(row: any) => row.id"
-        :row-props="(row: any) => grouping.rowProps(row, edit)"
-        :row-class-name="rowClass"
-        :scroll-x="scrollX"
-        @update:sorter="list.onSort"
-      />
+      <ListTable :key="String(treeActive)" :view="view" :list="list" @row-click="edit" />
     </div>
     <CrudFormDrawer
       v-model:show="showForm"

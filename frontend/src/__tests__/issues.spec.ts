@@ -13,7 +13,7 @@ import IssueListView from '@/views/inventory/IssueListView.vue'
 import { button, click, hasButton } from './dom'
 import {
   bodyText,
-  check,
+  clearChip,
   locationRef,
   modelRef,
   mountPage,
@@ -365,13 +365,13 @@ describe('IssueListView', () => {
     return result
   }
 
-  it('shows open reports by default and all once unticked', async () => {
+  it('shows open reports by default and all once the status chip is cleared', async () => {
     const list = vi.spyOn(issuesApi, 'list').mockResolvedValue(page([]))
     await show()
     expect(list).toHaveBeenCalledWith(
       expect.objectContaining({ status: ['open', 'in_progress'], ordering: '-created_at' }),
     )
-    await check('Open only')
+    await clearChip('Status')
     expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ status: [] }))
   })
 

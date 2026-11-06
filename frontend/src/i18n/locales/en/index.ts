@@ -12,6 +12,7 @@ import procurement from './procurement'
 import profile from './profile'
 import requests from './requests'
 import settings from './settings'
+import table from './table'
 import terminal from './terminal'
 
 export default {
@@ -29,5 +30,6 @@ export default {
   profile,
   requests,
   settings,
+  table,
   terminal,
 }

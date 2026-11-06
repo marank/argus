@@ -6,6 +6,8 @@ export default {
   purposePlaceholder: 'e.g. training, new hire, stocktaking',
   notes: 'Message',
   duration: 'Duration',
+  itemCount: 'Items',
+  unitCount: 'Units',
   period: 'Period',
   startDate: 'Needed from',
   endDate: 'Needed until',

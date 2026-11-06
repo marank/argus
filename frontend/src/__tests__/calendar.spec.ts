@@ -220,7 +220,7 @@ describe('calendar entries', () => {
     [
       'the devices whose warranty ends that day',
       entry('warranty', { link: { name: 'assets', warranty_until: '2026-11-30' } }),
-      '/inventory/assets?warranty_until=2026-11-30',
+      '/inventory/assets?warranty_from=2026-11-30&warranty_until=2026-11-30',
     ],
     ['nowhere without a link', entry('pickup'), null],
   ])('lead to %s', (_what, value, path) => {

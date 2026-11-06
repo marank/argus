@@ -95,6 +95,7 @@ export default {
     sortOrder: 'Sort order',
     departmentSortHelp: 'Sorted ascending, then by name.',
     kind: 'Kind',
+    site: 'Site',
     pickupPoint: 'Pickup point',
     manufacturer: 'Manufacturer',
     category: 'Category',

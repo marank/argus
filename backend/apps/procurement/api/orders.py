@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Annotated
 from uuid import UUID
 
@@ -25,7 +26,11 @@ router = Router(tags=["procurement"], auth=permission_auth(ResourceKey.PROCUREME
 
 class OrderFilter(FilterSchema):
     status: Annotated[list[str] | None, FilterLookup("status__in")] = None
-    supplier: Annotated[UUID | None, FilterLookup("supplier_id")] = None
+    supplier: Annotated[list[UUID] | None, FilterLookup("supplier_id__in")] = None
+    ordered_from: Annotated[date | None, FilterLookup("order_date__gte")] = None
+    ordered_until: Annotated[date | None, FilterLookup("order_date__lte")] = None
+    expected_from: Annotated[date | None, FilterLookup("expected_date__gte")] = None
+    expected_until: Annotated[date | None, FilterLookup("expected_date__lte")] = None
     asset_request: Annotated[UUID | None, FilterLookup("lines__asset_request_item__asset_request_id")] = None
 
 
@@ -60,7 +65,11 @@ def list_orders(
             "lines__asset_model__name",
         ),
     )
-    return order(queryset, ordering, ("number", "created_at", "order_date", "expected_date", "status"))
+    return order(
+        queryset,
+        ordering,
+        ("number", "created_at", "order_date", "expected_date", "status", "supplier__name", "supplier_id"),
+    )
 
 
 @router.get("/{uuid:pk}", response=PurchaseOrderOut)

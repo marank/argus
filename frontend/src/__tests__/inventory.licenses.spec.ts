@@ -7,6 +7,7 @@ import { ApiError } from '@/api/client'
 import { assetsApi, licensesApi } from '@/api/inventory'
 import { assetModelsApi } from '@/api/masterdata'
 import type { Schemas } from '@/api/types'
+import DateRangeInput from '@/components/table/DateRangeInput.vue'
 import LicenseFormDrawer from '@/components/inventory/LicenseFormDrawer.vue'
 import LicenseDetailView from '@/views/inventory/LicenseDetailView.vue'
 import LicenseListView from '@/views/inventory/LicenseListView.vue'
@@ -15,7 +16,7 @@ import { button, click, hasButton } from './dom'
 import {
   bodyText,
   categoryRef,
-  check,
+  addFilter,
   choose,
   field,
   makeAsset,
@@ -352,18 +353,22 @@ describe('licenses', () => {
 
     it('filters to licenses ending within the warning period', async () => {
       const fetch = vi.spyOn(licensesApi, 'list').mockResolvedValue(page([]))
-      await list()
-      expect(fetch).toHaveBeenLastCalledWith(expect.objectContaining({ expires_before: null }))
-      await check('Expires within 60 days')
+      const { wrapper } = await list()
+      expect(fetch).toHaveBeenLastCalledWith(expect.objectContaining({ expires_until: null }))
+      await addFilter(wrapper, 'Valid until')
+      const range = wrapper.findComponent(DateRangeInput).find('input')
+      await range.setValue('..29.12.26')
+      await range.trigger('blur')
+      await flushPromises()
       expect(fetch).toHaveBeenLastCalledWith(
-        expect.objectContaining({ expires_before: '2026-12-29' }),
+        expect.objectContaining({ expires_from: null, expires_until: '2026-12-29' }),
       )
     })
 
     it('starts filtered when coming from the dashboard', async () => {
       const fetch = vi.spyOn(licensesApi, 'list').mockResolvedValue(page([]))
       await list('/licenses?expiring=1')
-      expect(fetch).toHaveBeenCalledWith(expect.objectContaining({ expires_before: '2026-12-29' }))
+      expect(fetch).toHaveBeenCalledWith(expect.objectContaining({ expires_until: '2026-12-29' }))
     })
 
     it('opens a license from its row', async () => {

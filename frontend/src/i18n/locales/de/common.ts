@@ -44,6 +44,7 @@ export default {
   total: 'Summe',
   active: 'Aktiv',
   createdAt: 'Angelegt',
+  updatedAt: 'Geändert',
   records: '{count} Einträge',
   filters: 'Filter',
   scan: 'Scannen',

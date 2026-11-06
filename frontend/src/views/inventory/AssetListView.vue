@@ -2,78 +2,59 @@
 import type { Id } from '@/types/common'
 import { modelLabel } from '@/utils/models'
 import { Layers, Plus, ScanBarcode } from '@lucide/vue'
-import { NButton, NDataTable, NInput, NSelect, type DataTableColumns } from 'naive-ui'
-import { useStorage } from '@vueuse/core'
-import { computed, h, onMounted, ref, watch } from 'vue'
+import { NButton } from 'naive-ui'
+import { computed, h, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
 import { usersApi } from '@/api/accounts'
 import { assetsApi } from '@/api/inventory'
-import { assetModelsApi, categoriesApi, locationsApi } from '@/api/masterdata'
+import {
+  assetModelsApi,
+  categoriesApi,
+  locationsApi,
+  manufacturersApi,
+  suppliersApi,
+} from '@/api/masterdata'
 import type { Schemas } from '@/api/types'
-import CheckField from '@/components/common/CheckField.vue'
-import EntitySelect from '@/components/common/EntitySelect.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import AssetFormDrawer from '@/components/inventory/AssetFormDrawer.vue'
 import BulkCreateModal from '@/components/inventory/BulkCreateModal.vue'
 import SeriesCreateModal from '@/components/inventory/SeriesCreateModal.vue'
+import ListTable from '@/components/table/ListTable.vue'
+import TableToolbar from '@/components/table/TableToolbar.vue'
+import type { TableColumn, TableFilter, TableGrouping } from '@/components/table/types'
 import { useFormat } from '@/composables/useFormat'
-import { useGroupedRows, withGroupHeaders } from '@/composables/useGroupedRows'
 import { useList } from '@/composables/useList'
+import { useTableView } from '@/composables/useTableView'
 import { ASSET_STATUSES } from '@/types/inventory'
 import { categoryIcon } from '@/utils/icons'
 import { useAuthStore } from '@/stores/auth'
+
+type Asset = Schemas['AssetOut']
 
 const { t } = useI18n()
 // Without the right to change assets, the page is for viewing only.
 const canWrite = computed(() => useAuthStore().can('assets', 'write'))
 const route = useRoute()
 const router = useRouter()
-const { date, enumLabel } = useFormat()
+const { date, enumLabel, money } = useFormat()
+/** Codes and numbers in the mono font; empty ones as a dash. */
+const mono = (value: string | null | undefined) => h('span', { class: 'mono' }, value || '—')
 
-const queryId = (key: string) => (route.query[key] ? String(route.query[key]) : null)
+// Links (dashboard, calendar, model page) preset filters; they show as filters that can be cleared.
+const queryIds = (key: string) => [route.query[key] ?? []].flat().map(String)
+const queryDate = (key: string) => (route.query[key] ? String(route.query[key]) : null)
 
-/** Sections per category; the server sorts by category first. */
-const grouped = useStorage('argus.assets-grouped', true)
-
-const list = useList(assetsApi.list, {
-  live: ['asset'],
-  ordering: 'inventory_number',
-  groupOrdering: () =>
-    grouped.value ? 'model__category__sort_order,model__category__name' : undefined,
-  filters: {
-    status: route.query.status ? [String(route.query.status)] : [],
-    category: queryId('category'),
-    model: queryId('model'),
-    location: null,
-    assigned_to: null,
-    is_loanable: null,
-    warranty_until: route.query.warranty_until ? String(route.query.warranty_until) : null,
-  },
-})
-onMounted(list.load)
-watch(grouped, list.reload)
-
-const showForm = ref(false)
-const showBulk = ref(false)
-const showSeries = ref(false)
-const statusOptions = computed(() =>
-  ASSET_STATUSES.map((s) => ({ value: s, label: enumLabel('assetStatus', s) })),
-)
-const loanableOnly = computed({
-  get: () => list.filters.is_loanable === true,
-  set: (value: boolean) => (list.filters.is_loanable = value ? true : null),
-})
-
-const baseColumns = computed<DataTableColumns<Schemas['AssetOut']>>(() => [
+const columns = computed<TableColumn<Asset>[]>(() => [
   {
     key: 'inventory_number',
     title: t('inventory.fields.inventoryNumber'),
     sorter: true,
     width: 130,
     fixed: 'left',
+    hideable: false,
     render: (a) => h('span', { class: 'mono strong' }, a.inventory_number),
   },
   {
@@ -96,6 +77,7 @@ const baseColumns = computed<DataTableColumns<Schemas['AssetOut']>>(() => [
   },
   {
     key: 'identifier',
+    hidden: true,
     title: t('inventory.fields.identifier'),
     sorter: true,
     width: 170,
@@ -145,19 +127,262 @@ const baseColumns = computed<DataTableColumns<Schemas['AssetOut']>>(() => [
     width: 120,
     render: (a) => h('span', { class: 'mono' }, date(a.warranty_until)),
   },
+  // Further columns to show from the column settings.
+  {
+    key: 'manufacturer',
+    title: t('inventory.fields.manufacturer'),
+    hidden: true,
+    width: 150,
+    render: (a) => a.manufacturer.name,
+  },
+  {
+    key: 'model__category__name',
+    title: t('inventory.fields.category'),
+    sorter: true,
+    hidden: true,
+    width: 150,
+    render: (a) => a.category.name,
+  },
+  {
+    key: 'condition',
+    title: t('inventory.fields.condition'),
+    hidden: true,
+    width: 110,
+    render: (a) => enumLabel('condition', a.condition),
+  },
+  {
+    key: 'hostname',
+    title: t('inventory.fields.hostname'),
+    hidden: true,
+    width: 150,
+    render: (a) => mono(a.hostname),
+  },
+  {
+    key: 'imei',
+    title: t('inventory.fields.imei'),
+    hidden: true,
+    width: 160,
+    render: (a) => mono(a.imei),
+  },
+  {
+    key: 'mac_address',
+    title: t('inventory.fields.macAddress'),
+    hidden: true,
+    width: 160,
+    render: (a) => mono(a.mac_address),
+  },
+  {
+    key: 'parent',
+    title: t('inventory.fields.parent'),
+    hidden: true,
+    width: 130,
+    render: (a) => mono(a.parent?.inventory_number),
+  },
+  {
+    key: 'assigned_since',
+    title: t('inventory.fields.assignedSince'),
+    hidden: true,
+    width: 120,
+    render: (a) => mono(date(a.assigned_since)),
+  },
+  {
+    key: 'is_loanable',
+    title: t('inventory.fields.loanable'),
+    hidden: true,
+    width: 110,
+    render: (a) => (a.is_loanable ? t('common.yes') : '—'),
+  },
+  {
+    key: 'supplier',
+    title: t('inventory.fields.supplier'),
+    hidden: true,
+    width: 160,
+    render: (a) => a.supplier?.name ?? '—',
+  },
+  {
+    key: 'purchase_date',
+    title: t('inventory.fields.purchaseDate'),
+    sorter: true,
+    hidden: true,
+    width: 120,
+    render: (a) => mono(date(a.purchase_date)),
+  },
+  {
+    key: 'purchase_price',
+    title: t('inventory.fields.purchasePrice'),
+    hidden: true,
+    width: 120,
+    align: 'right',
+    render: (a) => mono(money(a.purchase_price)),
+  },
+  {
+    key: 'notes',
+    title: t('common.notes'),
+    hidden: true,
+    width: 220,
+    ellipsis: { tooltip: true },
+    render: (a) => a.notes || '—',
+  },
+  {
+    key: 'created_at',
+    title: t('common.createdAt'),
+    sorter: true,
+    hidden: true,
+    width: 120,
+    render: (a) => mono(date(a.created_at)),
+  },
+  {
+    key: 'updated_at',
+    title: t('common.updatedAt'),
+    hidden: true,
+    width: 120,
+    render: (a) => mono(date(a.updated_at)),
+  },
 ])
 
-const columns = computed(() =>
-  grouped.value ? withGroupHeaders(baseColumns.value) : baseColumns.value,
-)
-const grouping = useGroupedRows<Schemas['AssetOut']>({
-  rows: () => list.rows.value,
-  key: (a) => a.category.id,
-  label: (a) => [h(categoryIcon(a.category.icon), { size: 14 }), a.category.name],
-  enabled: () => grouped.value,
-  storageKey: 'argus.groups.assets',
+const without = (field: string) =>
+  h('span', { class: 'muted' }, t('table.without', { name: field }))
+
+const groupings = (): TableGrouping<Asset>[] => [
+  {
+    key: 'category',
+    label: t('inventory.fields.category'),
+    ordering: 'model__category__sort_order,model__category__name',
+    rowKey: (a) => a.category.id,
+    rowLabel: (a) => [h(categoryIcon(a.category.icon), { size: 14 }), a.category.name],
+  },
+  {
+    key: 'status',
+    label: t('common.status'),
+    ordering: 'status',
+    rowKey: (a) => a.status,
+    rowLabel: (a) => h(StatusTag, { group: 'assetStatus', value: a.status }),
+  },
+  {
+    key: 'model',
+    label: t('inventory.fields.model'),
+    ordering: 'model__manufacturer__name,model__name,model_id',
+    rowKey: (a) => a.model.id,
+    rowLabel: (a) => [h(categoryIcon(a.category.icon), { size: 14 }), a.model.full_name],
+  },
+  {
+    key: 'location',
+    label: t('inventory.fields.location'),
+    ordering: 'location__name,location_id',
+    rowKey: (a) => a.location?.id ?? '',
+    rowLabel: (a) => a.location?.full_name ?? without(t('inventory.fields.location')),
+  },
+  {
+    key: 'assigned_to',
+    label: t('inventory.fields.assignedTo'),
+    ordering: 'assigned_to__last_name,assigned_to__first_name,assigned_to_id',
+    rowKey: (a) => a.assigned_to?.id ?? '',
+    rowLabel: (a) => a.assigned_to?.display_name ?? without(t('inventory.fields.assignedTo')),
+  },
+]
+
+const filters = computed<TableFilter[]>(() => [
+  {
+    key: 'status',
+    label: t('common.status'),
+    type: 'select',
+    options: ASSET_STATUSES.map((s) => ({ value: s, label: enumLabel('assetStatus', s) })),
+  },
+  {
+    key: 'category',
+    label: t('inventory.fields.category'),
+    type: 'entity',
+    fetcher: categoriesApi.list,
+    params: { kind: 'hardware' },
+    display: (c: Schemas['CategoryOut']) => c.path.join(' / '),
+  },
+  {
+    key: 'model',
+    label: t('inventory.fields.model'),
+    type: 'entity',
+    fetcher: assetModelsApi.list,
+    params: { tracking: 'serialized' },
+    display: modelLabel,
+  },
+  {
+    key: 'location',
+    label: t('inventory.fields.location'),
+    type: 'entity',
+    fetcher: locationsApi.list,
+    display: (l: Schemas['LocationOut']) => l.full_name,
+  },
+  {
+    key: 'assigned_to',
+    label: t('inventory.fields.assignedTo'),
+    type: 'entity',
+    fetcher: usersApi.list,
+    display: (u: Schemas['UserOut']) => u.display_name,
+  },
+  {
+    key: 'manufacturer',
+    label: t('inventory.fields.manufacturer'),
+    type: 'entity',
+    fetcher: manufacturersApi.list,
+    display: (m: Schemas['ManufacturerOut']) => m.name,
+  },
+  {
+    key: 'supplier',
+    label: t('inventory.fields.supplier'),
+    type: 'entity',
+    fetcher: suppliersApi.list,
+    display: (s: Schemas['SupplierOut']) => s.name,
+  },
+  { key: 'is_loanable', label: t('inventory.fields.loanable'), type: 'toggle', on: () => true },
+  {
+    key: 'purchase_date',
+    label: t('inventory.fields.purchaseDate'),
+    type: 'daterange',
+    from: 'purchase_from',
+    until: 'purchase_until',
+  },
+  {
+    key: 'warranty',
+    label: t('inventory.fields.warrantyUntil'),
+    type: 'daterange',
+    from: 'warranty_from',
+    until: 'warranty_until',
+  },
+])
+
+const view = useTableView<Asset>({
+  id: 'assets',
+  columns: (): TableColumn<Asset>[] => columns.value,
+  rows: (): Asset[] => list.rows.value,
+  groupings,
+  defaultGrouping: 'category',
 })
-const openAsset = (a: Schemas['AssetOut']) => router.push({ name: 'asset', params: { id: a.id } })
+
+const list = useList(assetsApi.list, {
+  live: ['asset'],
+  ordering: 'inventory_number',
+  groupOrdering: view.groupOrdering,
+  filters: {
+    status: queryIds('status'),
+    category: queryIds('category'),
+    model: queryIds('model'),
+    location: [],
+    assigned_to: [],
+    manufacturer: [],
+    supplier: [],
+    is_loanable: null,
+    warranty_from: queryDate('warranty_from'),
+    warranty_until: queryDate('warranty_until'),
+    purchase_from: null,
+    purchase_until: null,
+  },
+})
+onMounted(list.load)
+
+const showForm = ref(false)
+const showBulk = ref(false)
+const showSeries = ref(false)
+
+const openAsset = (a: Asset) => router.push({ name: 'asset', params: { id: a.id } })
 
 function onSaved(asset: { id: Id }) {
   router.push({ name: 'asset', params: { id: asset.id } })
@@ -184,70 +409,13 @@ function onSaved(asset: { id: Id }) {
     </PageHeader>
 
     <div class="stack">
-      <div class="toolbar">
-        <NInput
-          v-model:value="list.search.value"
-          class="grow"
-          :placeholder="t('common.search')"
-          clearable
-        />
-        <NSelect
-          v-model:value="list.filters.status as string[]"
-          :options="statusOptions"
-          multiple
-          clearable
-          :placeholder="t('common.status')"
-          style="width: 220px"
-          max-tag-count="responsive"
-        />
-        <EntitySelect
-          v-model="list.filters.category as string | null"
-          :fetcher="categoriesApi.list"
-          :params="{ kind: 'hardware' }"
-          :label="(c) => c.path.join(' / ')"
-          :placeholder="t('inventory.fields.category')"
-          style="width: 200px"
-        />
-        <EntitySelect
-          v-model="list.filters.model as string | null"
-          :fetcher="assetModelsApi.list"
-          :params="{ tracking: 'serialized' }"
-          :label="modelLabel"
-          :placeholder="t('inventory.fields.model')"
-          style="width: 220px"
-        />
-        <EntitySelect
-          v-model="list.filters.location as string | null"
-          :fetcher="locationsApi.list"
-          :label="(l) => l.full_name"
-          :placeholder="t('inventory.fields.location')"
-          style="width: 190px"
-        />
-        <EntitySelect
-          v-model="list.filters.assigned_to as string | null"
-          :fetcher="usersApi.list"
-          :label="(u) => u.display_name"
-          :placeholder="t('inventory.fields.assignedTo')"
-          style="width: 180px"
-        />
-        <CheckField v-model="loanableOnly" :label="t('inventory.fields.loanable')" />
-        <CheckField v-model="grouped" :label="t('inventory.groupByCategory')" />
-      </div>
-
-      <NDataTable
-        class="clickable-rows"
-        remote
-        size="small"
-        :columns="columns"
-        :data="grouping.rows.value"
-        :loading="list.loading.value"
-        :pagination="list.pagination.value"
-        :row-key="(a: Schemas['AssetOut']) => a.id"
-        :row-props="(a: Schemas['AssetOut']) => grouping.rowProps(a, openAsset)"
-        :row-class-name="grouping.rowClass"
-        :scroll-x="1270"
-        @update:sorter="list.onSort"
+      <TableToolbar
+        v-model:search="list.search.value"
+        :list="list"
+        :filters="filters"
+        :view="view"
       />
+      <ListTable :view="view" :list="list" @row-click="openAsset" />
     </div>
 
     <AssetFormDrawer v-model:show="showForm" @saved="onSaved" />

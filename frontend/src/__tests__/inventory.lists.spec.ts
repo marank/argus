@@ -5,14 +5,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { assetsApi, eventsApi } from '@/api/inventory'
 import { assetModelsApi } from '@/api/masterdata'
 import type { Schemas } from '@/api/types'
-import DateField from '@/components/common/DateField.vue'
+import DateRangeInput from '@/components/table/DateRangeInput.vue'
 import AssetListView from '@/views/inventory/AssetListView.vue'
 import EventLogView from '@/views/inventory/EventLogView.vue'
 
 import { click, hasButton } from './dom'
 import {
+  addFilter,
   bodyText,
-  check,
+  groupBy,
   makeAsset,
   makeModel,
   modelRef,
@@ -68,7 +69,7 @@ describe('inventory lists', () => {
 
     it('sorts by inventory number alone without grouping', async () => {
       await show(AssetListView, { permissions: { assets: 'write' } })
-      await check('Group by category')
+      await groupBy('No grouping')
       expect(assetsApi.list).toHaveBeenLastCalledWith(
         expect.objectContaining({ ordering: 'inventory_number' }),
       )
@@ -84,6 +85,7 @@ describe('inventory lists', () => {
     it('filters by model', async () => {
       vi.mocked(assetModelsApi.list).mockResolvedValue(page([makeModel()]))
       const { wrapper } = await show(AssetListView)
+      await addFilter(wrapper, 'Model')
       expect(assetModelsApi.list).toHaveBeenCalledWith(
         expect.objectContaining({ tracking: 'serialized' }),
       )
@@ -199,12 +201,10 @@ describe('inventory lists', () => {
     it('narrows the log to a period', async () => {
       const list = vi.spyOn(eventsApi, 'list').mockResolvedValue(page([]))
       const { wrapper } = await show(EventLogView)
-      wrapper
-        .findComponent(DateField)
-        .vm.$emit('update:value', [
-          new Date('2026-09-01T00:00:00').getTime(),
-          new Date('2026-09-30T00:00:00').getTime(),
-        ])
+      await addFilter(wrapper, 'Date')
+      const range = wrapper.findComponent(DateRangeInput).find('input')
+      await range.setValue('1.9.26..30.9.26')
+      await range.trigger('blur')
       await flushPromises()
       expect(list).toHaveBeenLastCalledWith(
         expect.objectContaining({ since: '2026-09-01', until: '2026-09-30', page: 1 }),

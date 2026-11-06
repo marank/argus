@@ -27,6 +27,22 @@ export default defineResource<Schemas['SupplierOut']>({
     { key: 'email', label: 'masterdata.fields.email', render: (s) => text(s.email) },
     { key: 'phone', label: 'masterdata.fields.phone', width: 160, render: (s) => text(s.phone) },
     { key: 'is_active', label: 'common.active', width: 90, render: (s) => bool(s.is_active) },
+    // Further columns to show from the column settings.
+    {
+      key: 'website',
+      label: 'masterdata.fields.website',
+      hidden: true,
+      width: 200,
+      render: (s) => text(s.website),
+    },
+    {
+      key: 'address',
+      label: 'masterdata.fields.address',
+      hidden: true,
+      width: 220,
+      render: (s) => text(s.address),
+    },
+    { key: 'notes', label: 'common.notes', hidden: true, render: (s) => text(s.notes) },
   ],
   filters: [{ key: 'is_active', label: 'common.active', type: 'boolean' }],
   sections: [

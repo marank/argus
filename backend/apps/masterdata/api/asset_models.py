@@ -11,8 +11,8 @@ from apps.masterdata.schemas.asset_model import AssetModelIn, AssetModelOut
 
 
 class AssetModelFilter(FilterSchema):
-    manufacturer: Annotated[UUID | None, FilterLookup("manufacturer_id")] = None
-    category: Annotated[UUID | None, FilterLookup("category_id")] = None
+    manufacturer: Annotated[list[UUID] | None, FilterLookup("manufacturer_id__in")] = None
+    category: Annotated[list[UUID] | None, FilterLookup("category_id__in")] = None
     tracking: str | None = None
     ean: str | None = None
     is_active: bool | None = None

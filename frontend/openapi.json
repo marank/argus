@@ -1122,8 +1122,11 @@
           "assigned_to": {
             "anyOf": [
               {
-                "format": "uuid",
-                "type": "string"
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -1134,8 +1137,11 @@
           "category": {
             "anyOf": [
               {
-                "format": "uuid",
-                "type": "string"
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -1157,8 +1163,11 @@
           "location": {
             "anyOf": [
               {
-                "format": "uuid",
-                "type": "string"
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -1169,8 +1178,11 @@
           "manufacturer": {
             "anyOf": [
               {
-                "format": "uuid",
-                "type": "string"
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -1181,14 +1193,41 @@
           "model": {
             "anyOf": [
               {
-                "format": "uuid",
-                "type": "string"
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
               }
             ],
             "title": "Model"
+          },
+          "purchase_from": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase From"
+          },
+          "purchase_until": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Until"
           },
           "status": {
             "anyOf": [
@@ -1204,6 +1243,21 @@
             ],
             "title": "Status"
           },
+          "supplier": {
+            "anyOf": [
+              {
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier"
+          },
           "tracking": {
             "anyOf": [
               {
@@ -1215,7 +1269,7 @@
             ],
             "title": "Tracking"
           },
-          "warranty_before": {
+          "warranty_from": {
             "anyOf": [
               {
                 "format": "date",
@@ -1225,7 +1279,7 @@
                 "type": "null"
               }
             ],
-            "title": "Warranty Before"
+            "title": "Warranty From"
           },
           "warranty_until": {
             "anyOf": [
@@ -1738,8 +1792,11 @@
           "category": {
             "anyOf": [
               {
-                "format": "uuid",
-                "type": "string"
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -1783,8 +1840,11 @@
           "manufacturer": {
             "anyOf": [
               {
-                "format": "uuid",
-                "type": "string"
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -2491,8 +2551,11 @@
           "assignee": {
             "anyOf": [
               {
-                "format": "uuid",
-                "type": "string"
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -2503,8 +2566,11 @@
           "department": {
             "anyOf": [
               {
-                "format": "uuid",
-                "type": "string"
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -2515,7 +2581,10 @@
           "duration": {
             "anyOf": [
               {
-                "type": "string"
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -2559,8 +2628,11 @@
           "requester": {
             "anyOf": [
               {
-                "format": "uuid",
-                "type": "string"
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -4058,7 +4130,10 @@
           "kind": {
             "anyOf": [
               {
-                "type": "string"
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -4582,8 +4657,11 @@
           "category": {
             "anyOf": [
               {
-                "format": "uuid",
-                "type": "string"
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -4594,8 +4672,11 @@
           "location": {
             "anyOf": [
               {
-                "format": "uuid",
-                "type": "string"
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -4606,8 +4687,11 @@
           "model": {
             "anyOf": [
               {
-                "format": "uuid",
-                "type": "string"
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -5713,8 +5797,11 @@
           "model": {
             "anyOf": [
               {
-                "format": "uuid",
-                "type": "string"
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -6535,8 +6622,11 @@
           "asset": {
             "anyOf": [
               {
-                "format": "uuid",
-                "type": "string"
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -6547,8 +6637,11 @@
           "assignee": {
             "anyOf": [
               {
-                "format": "uuid",
-                "type": "string"
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -6559,13 +6652,40 @@
           "kind": {
             "anyOf": [
               {
-                "type": "string"
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
               }
             ],
             "title": "Kind"
+          },
+          "reported_from": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reported From"
+          },
+          "reported_until": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reported Until"
           },
           "status": {
             "anyOf": [
@@ -7635,8 +7755,11 @@
           "asset": {
             "anyOf": [
               {
-                "format": "uuid",
-                "type": "string"
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -7647,7 +7770,10 @@
           "assign_to": {
             "anyOf": [
               {
-                "type": "string"
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -7658,8 +7784,11 @@
           "category": {
             "anyOf": [
               {
-                "format": "uuid",
-                "type": "string"
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -7667,7 +7796,7 @@
             ],
             "title": "Category"
           },
-          "expires_before": {
+          "expires_from": {
             "anyOf": [
               {
                 "format": "date",
@@ -7677,13 +7806,28 @@
                 "type": "null"
               }
             ],
-            "title": "Expires Before"
+            "title": "Expires From"
+          },
+          "expires_until": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires Until"
           },
           "model": {
             "anyOf": [
               {
-                "format": "uuid",
-                "type": "string"
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -7694,8 +7838,11 @@
           "user": {
             "anyOf": [
               {
-                "format": "uuid",
-                "type": "string"
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -8090,7 +8237,10 @@
           "kind": {
             "anyOf": [
               {
-                "type": "string"
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -9240,6 +9390,54 @@
             ],
             "title": "Asset Request"
           },
+          "expected_from": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected From"
+          },
+          "expected_until": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Until"
+          },
+          "ordered_from": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ordered From"
+          },
+          "ordered_until": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ordered Until"
+          },
           "status": {
             "anyOf": [
               {
@@ -9257,8 +9455,11 @@
           "supplier": {
             "anyOf": [
               {
-                "format": "uuid",
-                "type": "string"
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -12559,8 +12760,11 @@
           "department": {
             "anyOf": [
               {
-                "format": "uuid",
-                "type": "string"
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
@@ -13832,8 +14036,11 @@
             "schema": {
               "anyOf": [
                 {
-                  "format": "uuid",
-                  "type": "string"
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -15268,8 +15475,11 @@
             "schema": {
               "anyOf": [
                 {
-                  "format": "uuid",
-                  "type": "string"
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -15285,8 +15495,11 @@
             "schema": {
               "anyOf": [
                 {
-                  "format": "uuid",
-                  "type": "string"
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -15302,8 +15515,11 @@
             "schema": {
               "anyOf": [
                 {
-                  "format": "uuid",
-                  "type": "string"
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -15319,8 +15535,11 @@
             "schema": {
               "anyOf": [
                 {
-                  "format": "uuid",
-                  "type": "string"
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -15363,7 +15582,7 @@
           },
           {
             "in": "query",
-            "name": "warranty_before",
+            "name": "warranty_from",
             "required": false,
             "schema": {
               "anyOf": [
@@ -15375,7 +15594,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Warranty Before"
+              "title": "Warranty From"
             }
           },
           {
@@ -15397,13 +15616,70 @@
           },
           {
             "in": "query",
+            "name": "supplier",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Supplier"
+            }
+          },
+          {
+            "in": "query",
+            "name": "purchase_from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Purchase From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "purchase_until",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Purchase Until"
+            }
+          },
+          {
+            "in": "query",
             "name": "category",
             "required": false,
             "schema": {
               "anyOf": [
                 {
-                  "format": "uuid",
-                  "type": "string"
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -15925,8 +16201,11 @@
             "schema": {
               "anyOf": [
                 {
-                  "format": "uuid",
-                  "type": "string"
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -15942,8 +16221,11 @@
             "schema": {
               "anyOf": [
                 {
-                  "format": "uuid",
-                  "type": "string"
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -15959,8 +16241,11 @@
             "schema": {
               "anyOf": [
                 {
-                  "format": "uuid",
-                  "type": "string"
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -16310,8 +16595,11 @@
             "schema": {
               "anyOf": [
                 {
-                  "format": "uuid",
-                  "type": "string"
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -16385,6 +16673,22 @@
                 }
               ],
               "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ordering",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ordering"
             }
           },
           {
@@ -16501,8 +16805,11 @@
             "schema": {
               "anyOf": [
                 {
-                  "format": "uuid",
-                  "type": "string"
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -16518,7 +16825,10 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -16554,14 +16864,51 @@
             "schema": {
               "anyOf": [
                 {
-                  "format": "uuid",
-                  "type": "string"
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
                 }
               ],
               "title": "Assignee"
+            }
+          },
+          {
+            "in": "query",
+            "name": "reported_from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Reported From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "reported_until",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Reported Until"
             }
           },
           {
@@ -16861,8 +17208,11 @@
             "schema": {
               "anyOf": [
                 {
-                  "format": "uuid",
-                  "type": "string"
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -16878,7 +17228,10 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -16894,8 +17247,11 @@
             "schema": {
               "anyOf": [
                 {
-                  "format": "uuid",
-                  "type": "string"
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -16911,8 +17267,11 @@
             "schema": {
               "anyOf": [
                 {
-                  "format": "uuid",
-                  "type": "string"
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -16923,7 +17282,7 @@
           },
           {
             "in": "query",
-            "name": "expires_before",
+            "name": "expires_from",
             "required": false,
             "schema": {
               "anyOf": [
@@ -16935,7 +17294,24 @@
                   "type": "null"
                 }
               ],
-              "title": "Expires Before"
+              "title": "Expires From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "expires_until",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Expires Until"
             }
           },
           {
@@ -16945,8 +17321,11 @@
             "schema": {
               "anyOf": [
                 {
-                  "format": "uuid",
-                  "type": "string"
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -17365,7 +17744,10 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -17887,7 +18269,10 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -18407,8 +18792,11 @@
             "schema": {
               "anyOf": [
                 {
-                  "format": "uuid",
-                  "type": "string"
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -18424,8 +18812,11 @@
             "schema": {
               "anyOf": [
                 {
-                  "format": "uuid",
-                  "type": "string"
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -20069,14 +20460,85 @@
             "schema": {
               "anyOf": [
                 {
-                  "format": "uuid",
-                  "type": "string"
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
                 }
               ],
               "title": "Supplier"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ordered_from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ordered From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ordered_until",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ordered Until"
+            }
+          },
+          {
+            "in": "query",
+            "name": "expected_from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Expected From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "expected_until",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Expected Until"
             }
           },
           {
@@ -20493,8 +20955,11 @@
             "schema": {
               "anyOf": [
                 {
-                  "format": "uuid",
-                  "type": "string"
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -20510,8 +20975,11 @@
             "schema": {
               "anyOf": [
                 {
-                  "format": "uuid",
-                  "type": "string"
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -20527,7 +20995,10 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -20629,8 +21100,11 @@
             "schema": {
               "anyOf": [
                 {
-                  "format": "uuid",
-                  "type": "string"
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
                 },
                 {
                   "type": "null"

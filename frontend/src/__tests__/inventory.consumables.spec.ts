@@ -10,7 +10,7 @@ import { button, chooseMenuEntry, click, menuEntries } from './dom'
 import {
   bodyText,
   categoryRef,
-  check,
+  addFilter,
   choose,
   hasField,
   locationRef,
@@ -184,8 +184,7 @@ describe('ConsumableListView', () => {
     expect(button('Save').disabled).toBe(true)
     await pick(wrapper, assetModelsApi.list, 'm5')
     expect(button('Save').disabled).toBe(true)
-    // The second location picker: the first filters the list.
-    await pick(wrapper, locationsApi.list, 'l1', 1)
+    await pick(wrapper, locationsApi.list, 'l1')
     await type('Minimum', '4')
     await click('Save')
     expect(create).toHaveBeenCalledWith({ model: 'm5', location: 'l1', min_quantity: 4 })
@@ -201,11 +200,11 @@ describe('ConsumableListView', () => {
   })
 
   it('narrows the list to items below their minimum', async () => {
-    await show()
+    const { wrapper } = await show()
     expect(consumablesApi.list).toHaveBeenLastCalledWith(
       expect.objectContaining({ below_minimum: null }),
     )
-    await check('Only below minimum')
+    await addFilter(wrapper, 'Only below minimum')
     expect(consumablesApi.list).toHaveBeenLastCalledWith(
       expect.objectContaining({ below_minimum: true }),
     )

@@ -44,13 +44,18 @@ export function useGroupedRows<T extends object>(options: {
     const last = new WeakSet<object>()
     let header = null as GroupRow | null
     let previous = null as T | null
+    // A group can show twice while rows sorted for another grouping are still there;
+    // the row keys must stay unique all the same.
+    const seen = new Map<string, number>()
     for (const row of source) {
       const key = options.key(row)
       if (key !== header?.key) {
         if (previous) last.add(previous)
+        const n = seen.get(key) ?? 0
+        seen.set(key, n + 1)
         header = {
           __group: true,
-          id: `group:${key}`,
+          id: n ? `group:${key}:${n}` : `group:${key}`,
           key,
           label: options.label(row),
           count: 0,

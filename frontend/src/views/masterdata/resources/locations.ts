@@ -14,11 +14,15 @@ export default defineResource<Schemas['LocationOut']>({
   key: 'locations',
   permission: 'locations',
   // Sections per site (the top-level location).
-  groupBy: {
-    ordering: 'site',
-    key: (l) => siteOf(l),
-    label: (l) => [h(MapPin, { size: 14 }), siteOf(l)],
-  },
+  groupings: [
+    {
+      key: 'site',
+      label: 'masterdata.fields.site',
+      ordering: 'site',
+      rowKey: (l) => siteOf(l),
+      rowLabel: (l) => [h(MapPin, { size: 14 }), siteOf(l)],
+    },
+  ],
   api: locationsApi,
   ordering: 'name',
   title: (l) => l.full_name,
@@ -37,6 +41,13 @@ export default defineResource<Schemas['LocationOut']>({
       label: 'masterdata.fields.pickupPoint',
       width: 120,
       render: (l) => bool(l.is_pickup_point),
+    },
+    // Further columns to show from the column settings.
+    {
+      key: 'description',
+      label: 'common.description',
+      hidden: true,
+      render: (l) => l.description || '—',
     },
   ],
   filters: [

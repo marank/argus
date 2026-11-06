@@ -131,6 +131,12 @@ a:hover {
   flex: 1 1 220px;
 }
 
+/* The sorted column keeps the background of the others; the arrow in its header says enough. */
+.n-data-table.n-data-table {
+  --n-merged-th-color-sorting: var(--n-merged-th-color);
+  --n-merged-td-color-sorting: var(--n-merged-td-color);
+}
+
 .clickable-rows tbody tr {
   cursor: pointer;
 }

@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -177,11 +178,17 @@ class Category(TimeStampedModel):
 
     def descendant_ids(self) -> set[UUID]:
         """IDs of this category and all categories below it."""
+        return Category.descendant_ids_of([self.pk])
+
+    @classmethod
+    def descendant_ids_of(cls, roots: Iterable[UUID]) -> set[UUID]:
+        """IDs of the given categories and all categories below them."""
         # One query for the whole (small) tree instead of one per level.
         children: dict[UUID, list[UUID]] = {}
         for pk, parent_id in Category.objects.filter(parent__isnull=False).values_list("pk", "parent_id"):
             children.setdefault(parent_id, []).append(pk)
-        ids, frontier = {self.pk}, [self.pk]
+        ids = set(roots)
+        frontier = list(ids)
         while frontier:
             frontier = [pk for parent in frontier for pk in children.get(parent, []) if pk not in ids]
             ids.update(frontier)

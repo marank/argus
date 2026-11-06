@@ -31,3 +31,9 @@ export const ISSUE_KINDS = allValues<Schemas['AssetIssueKind']>({
   lost: true,
   other: true,
 })
+
+export const ISSUE_STATUSES = allValues<Schemas['AssetIssueStatus']>({
+  open: true,
+  in_progress: true,
+  resolved: true,
+})

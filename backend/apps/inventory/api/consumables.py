@@ -24,9 +24,9 @@ router = Router(tags=["consumables"], auth=permission_auth(ResourceKey.CONSUMABL
 
 
 class ConsumableFilter(FilterSchema):
-    model: Annotated[UUID | None, FilterLookup("model_id")] = None
-    category: Annotated[UUID | None, FilterLookup("model__category_id")] = None
-    location: Annotated[UUID | None, FilterLookup("location_id")] = None
+    model: Annotated[list[UUID] | None, FilterLookup("model_id__in")] = None
+    category: Annotated[list[UUID] | None, FilterLookup("model__category_id__in")] = None
+    location: Annotated[list[UUID] | None, FilterLookup("location_id__in")] = None
     below_minimum: bool | None = None
 
     def filter_below_minimum(self, value: bool | None) -> Q:
@@ -56,7 +56,19 @@ def list_consumables(
             "model__part_number",
         ),
     )
-    return order(queryset, ordering, ("model__name", "location__name", "quantity"))
+    return order(
+        queryset,
+        ordering,
+        (
+            "model__name",
+            "location__name",
+            "quantity",
+            # Groupings
+            "model__category__sort_order",
+            "model__category__name",
+            "location_id",
+        ),
+    )
 
 
 @router.post("", response={201: ConsumableOut})

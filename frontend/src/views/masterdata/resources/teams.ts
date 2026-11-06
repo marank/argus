@@ -29,12 +29,14 @@ export default defineResource<Schemas['TeamOut']>({
     },
     {
       key: 'ldap_group_dn',
+      hidden: true,
       label: 'masterdata.fields.ldapGroup',
       render: (t) => mono(t.ldap_group_dn),
       visible: ldapEnabled,
     },
     {
       key: 'sort_order',
+      hidden: true,
       label: 'masterdata.fields.sortOrder',
       sorter: 'sort_order',
       width: 110,

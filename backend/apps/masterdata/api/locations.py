@@ -22,7 +22,7 @@ def location_queryset() -> QuerySet[Location]:
 
 class LocationFilter(FilterSchema):
     parent: Annotated[UUID | None, FilterLookup("parent_id")] = None
-    kind: str | None = None
+    kind: Annotated[list[str] | None, FilterLookup("kind__in")] = None
     is_pickup_point: bool | None = None
 
 

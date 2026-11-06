@@ -29,7 +29,11 @@ const props = withDefaults(
 )
 
 const model = defineModel<Id | Id[] | null>({ default: null })
-const emit = defineEmits<{ select: [item: T | null] }>()
+const emit = defineEmits<{
+  select: [item: T | null]
+  /** Labels of the selected records, as far as they are known (e.g. for filter chips). */
+  labels: [labels: string[]]
+}>()
 
 const items = ref<T[]>([]) as { value: T[] }
 const loading = ref(false)
@@ -89,6 +93,21 @@ watch(
   () => load(),
 )
 onMounted(() => load())
+
+watch(
+  [model, options],
+  () => {
+    const selected = Array.isArray(model.value) ? model.value : model.value ? [model.value] : []
+    emit(
+      'labels',
+      selected.flatMap((id) => {
+        const option = options.value.find((o) => o.value === id)
+        return option ? [String(option.label)] : []
+      }),
+    )
+  },
+  { immediate: true },
+)
 
 /** Selected items of a multiple select as soft, round chips instead of bordered boxes. */
 const renderTag: SelectRenderTag = ({ option, handleClose }) =>

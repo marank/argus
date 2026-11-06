@@ -64,7 +64,8 @@ export function entryLabel(entry: Schemas['CalendarEntryOut'], t: Translate): st
 /** Where an entry leads: its request, order or license, or the devices whose warranty ends. */
 export function entryRoute(entry: Schemas['CalendarEntryOut']): RouteLocationRaw | null {
   const { name, id, warranty_until } = entry.link
-  if (name === 'assets') return { name: 'assets', query: { warranty_until } }
+  if (name === 'assets')
+    return { name: 'assets', query: { warranty_from: warranty_until, warranty_until } }
   if (name && id) return { name, params: { id } }
   return null
 }

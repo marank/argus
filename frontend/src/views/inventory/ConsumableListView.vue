@@ -5,7 +5,6 @@ import {
   NDataTable,
   NDrawer,
   NDrawerContent,
-  NInput,
   NProgress,
   type DataTableColumns,
 } from 'naive-ui'
@@ -14,17 +13,21 @@ import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
 import { consumablesApi } from '@/api/inventory'
-import { categoriesApi, locationsApi } from '@/api/masterdata'
+import { assetModelsApi, categoriesApi, locationsApi } from '@/api/masterdata'
 import type { Schemas } from '@/api/types'
-import CheckField from '@/components/common/CheckField.vue'
-import EntitySelect from '@/components/common/EntitySelect.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import RowMenu from '@/components/common/RowMenu.vue'
 import ConsumableModal from '@/components/inventory/ConsumableModal.vue'
 import ConsumableMoveModal from '@/components/inventory/ConsumableMoveModal.vue'
+import ListTable from '@/components/table/ListTable.vue'
+import TableToolbar from '@/components/table/TableToolbar.vue'
+import type { TableColumn, TableFilter, TableGrouping } from '@/components/table/types'
 import { useFormat } from '@/composables/useFormat'
 import { useList } from '@/composables/useList'
+import { useTableView } from '@/composables/useTableView'
 import { useAuthStore } from '@/stores/auth'
+import { categoryIcon } from '@/utils/icons'
+import { modelLabel } from '@/utils/models'
 
 const { t } = useI18n()
 // Without the right to change consumables, the page is for viewing only.
@@ -32,21 +35,75 @@ const canWrite = computed(() => useAuthStore().can('consumables', 'write'))
 const route = useRoute()
 const { dateTime, enumLabel } = useFormat()
 
+type Consumable = Schemas['ConsumableOut']
+
+const filters = computed<TableFilter[]>(() => [
+  {
+    key: 'model',
+    label: t('inventory.consumables.item'),
+    type: 'entity',
+    fetcher: assetModelsApi.list,
+    params: { tracking: 'bulk' },
+    display: modelLabel,
+  },
+  {
+    key: 'category',
+    label: t('inventory.fields.category'),
+    type: 'entity',
+    fetcher: categoriesApi.list,
+    display: (c: Schemas['CategoryOut']) => c.name,
+  },
+  {
+    key: 'location',
+    label: t('inventory.fields.location'),
+    type: 'entity',
+    fetcher: locationsApi.list,
+    display: (l: Schemas['LocationOut']) => l.full_name,
+  },
+  {
+    key: 'below_minimum',
+    label: t('inventory.consumables.onlyBelowMinimum'),
+    type: 'toggle',
+    on: () => true,
+  },
+])
+
+const groupings = (): TableGrouping<Consumable>[] => [
+  {
+    key: 'category',
+    label: t('inventory.fields.category'),
+    ordering: 'model__category__sort_order,model__category__name',
+    rowKey: (s) => s.category.id,
+    rowLabel: (s) => [h(categoryIcon(s.category.icon), { size: 14 }), s.category.name],
+  },
+  {
+    key: 'location',
+    label: t('inventory.fields.location'),
+    ordering: 'location__name,location_id',
+    rowKey: (s) => s.location.id,
+    rowLabel: (s) => s.location.full_name,
+  },
+]
+
+const view = useTableView<Consumable>({
+  id: 'consumables',
+  columns: (): TableColumn<Consumable>[] => columns.value,
+  rows: (): Consumable[] => list.rows.value,
+  groupings,
+})
+
 const list = useList(consumablesApi.list, {
   live: ['consumable'],
   ordering: 'model__name',
+  groupOrdering: view.groupOrdering,
   filters: {
     below_minimum: route.query.below_minimum ? true : null,
-    category: null,
-    location: null,
+    model: [],
+    category: [],
+    location: [],
   },
 })
 onMounted(list.load)
-
-const belowOnly = computed({
-  get: () => list.filters.below_minimum === true,
-  set: (value: boolean) => (list.filters.below_minimum = value ? true : null),
-})
 
 const selected = ref<Schemas['ConsumableOut'] | null>(null)
 const moveDirection = ref<'in' | 'out' | 'adjust'>('in')
@@ -78,11 +135,12 @@ function onRowAction(item: Schemas['ConsumableOut'], key: string) {
   else if (key === 'edit') openItem(item)
 }
 
-const columns = computed<DataTableColumns<Schemas['ConsumableOut']>>(() => [
+const columns = computed<TableColumn<Consumable>[]>(() => [
   {
     key: 'model__name',
     title: t('inventory.consumables.item'),
     sorter: true,
+    hideable: false,
     minWidth: 240,
     render: (s) =>
       h('div', [h('div', s.model.full_name), h('small', { class: 'muted' }, s.category.name)]),
@@ -135,6 +193,21 @@ const columns = computed<DataTableColumns<Schemas['ConsumableOut']>>(() => [
     width: 100,
     align: 'right',
     render: (s) => h('span', { class: 'mono muted' }, s.min_quantity),
+  },
+  // Further columns to show from the column settings.
+  {
+    key: 'category',
+    title: t('inventory.fields.category'),
+    hidden: true,
+    width: 160,
+    render: (s) => s.category.name,
+  },
+  {
+    key: 'below_minimum',
+    title: t('inventory.consumables.belowMinimum'),
+    hidden: true,
+    width: 140,
+    render: (s) => (s.is_below_minimum ? h('span', { class: 'low' }, t('common.yes')) : '—'),
   },
   {
     key: 'actions',
@@ -210,40 +283,13 @@ const movementColumns = computed<DataTableColumns<Schemas['ConsumableMovementOut
       </template>
     </PageHeader>
     <div class="stack">
-      <div class="toolbar">
-        <NInput
-          v-model:value="list.search.value"
-          class="grow"
-          :placeholder="t('common.search')"
-          clearable
-        />
-        <EntitySelect
-          v-model="list.filters.category as string | null"
-          :fetcher="categoriesApi.list"
-          :label="(c) => c.name"
-          :placeholder="t('inventory.fields.category')"
-          style="width: 200px"
-        />
-        <EntitySelect
-          v-model="list.filters.location as string | null"
-          :fetcher="locationsApi.list"
-          :label="(l) => l.full_name"
-          :placeholder="t('inventory.fields.location')"
-          style="width: 200px"
-        />
-        <CheckField v-model="belowOnly" :label="t('inventory.consumables.onlyBelowMinimum')" />
-      </div>
-      <NDataTable
-        remote
-        size="small"
-        :columns="columns"
-        :data="list.rows.value"
-        :loading="list.loading.value"
-        :pagination="list.pagination.value"
-        :row-key="(s: Schemas['ConsumableOut']) => s.id"
-        :scroll-x="1100"
-        @update:sorter="list.onSort"
+      <TableToolbar
+        v-model:search="list.search.value"
+        :list="list"
+        :filters="filters"
+        :view="view"
       />
+      <ListTable :view="view" :list="list" />
     </div>
 
     <ConsumableMoveModal

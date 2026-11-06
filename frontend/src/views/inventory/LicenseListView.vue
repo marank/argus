@@ -1,21 +1,23 @@
 <script setup lang="ts">
 import { Plus } from '@lucide/vue'
-import { NButton, NDataTable, NInput, NSelect, NTag, type DataTableColumns } from 'naive-ui'
+import { NButton, NTag } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
-import { licensesApi } from '@/api/inventory'
+import { usersApi } from '@/api/accounts'
+import { assetsApi, licensesApi } from '@/api/inventory'
 import { categoriesApi } from '@/api/masterdata'
 import type { Schemas } from '@/api/types'
-import CheckField from '@/components/common/CheckField.vue'
-import EntitySelect from '@/components/common/EntitySelect.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import LicenseFormDrawer from '@/components/inventory/LicenseFormDrawer.vue'
 import SeatUsage from '@/components/inventory/SeatUsage.vue'
+import ListTable from '@/components/table/ListTable.vue'
+import TableToolbar from '@/components/table/TableToolbar.vue'
+import type { TableColumn, TableFilter, TableGrouping } from '@/components/table/types'
 import { toIsoDate, useFormat } from '@/composables/useFormat'
-import { useGroupedRows, withGroupHeaders } from '@/composables/useGroupedRows'
 import { useList } from '@/composables/useList'
+import { useTableView } from '@/composables/useTableView'
 import type { Id } from '@/types/common'
 import { categoryIcon } from '@/utils/icons'
 import { useFeaturesStore } from '@/stores/features'
@@ -27,35 +29,108 @@ const canWrite = computed(() => useAuthStore().can('licenses', 'write'))
 const features = useFeaturesStore()
 const router = useRouter()
 const route = useRoute()
-const { date, enumLabel } = useFormat()
+const { date, enumLabel, money } = useFormat()
 
 /** "Ends soon": within the license warning period from the site settings. */
 const soonDate = () => toIsoDate(Date.now() + features.rules.license_warning_days * 86_400_000)
 
+type License = Schemas['LicenseOut']
+
+const filters = computed<TableFilter[]>(() => [
+  {
+    key: 'category',
+    label: t('inventory.fields.category'),
+    type: 'entity',
+    fetcher: categoriesApi.list,
+    params: { kind: 'software' },
+    display: (c: Schemas['CategoryOut']) => c.path.join(' / '),
+  },
+  {
+    key: 'assign_to',
+    label: t('inventory.licenses.assignTo'),
+    type: 'select',
+    options: (['user', 'device'] as const).map((v) => ({
+      value: v,
+      label: enumLabel('licenseAssignTo', v),
+    })),
+  },
+  {
+    key: 'user',
+    label: t('inventory.fields.assignedTo'),
+    type: 'entity',
+    fetcher: usersApi.list,
+    display: (u: Schemas['UserOut']) => u.display_name,
+  },
+  {
+    key: 'asset',
+    label: t('inventory.issues.device'),
+    type: 'entity',
+    fetcher: assetsApi.list,
+    display: (a: Schemas['AssetOut']) => `${a.inventory_number} · ${a.model.full_name}`,
+  },
+  {
+    key: 'valid_until',
+    label: t('inventory.licenses.validUntil'),
+    type: 'daterange',
+    from: 'expires_from',
+    until: 'expires_until',
+  },
+])
+
+const groupings = (): TableGrouping<License>[] => [
+  {
+    key: 'category',
+    label: t('inventory.fields.category'),
+    ordering: 'model__category__sort_order,model__category__name',
+    rowKey: (l) => l.category.id,
+    rowLabel: (l) => [h(categoryIcon(l.category.icon), { size: 14 }), l.category.name],
+  },
+  {
+    key: 'assign_to',
+    label: t('inventory.licenses.assignTo'),
+    ordering: 'assign_to',
+    rowKey: (l) => l.assign_to,
+    rowLabel: (l) => enumLabel('licenseAssignTo', l.assign_to),
+  },
+  {
+    key: 'supplier',
+    label: t('inventory.fields.supplier'),
+    ordering: 'supplier__name,supplier_id',
+    rowKey: (l) => l.supplier?.id ?? '',
+    rowLabel: (l) =>
+      l.supplier?.name ??
+      h('span', { class: 'muted' }, t('table.without', { name: t('inventory.fields.supplier') })),
+  },
+]
+
+const view = useTableView<License>({
+  id: 'licenses',
+  columns: (): TableColumn<License>[] => columns.value,
+  rows: (): License[] => list.rows.value,
+  groupings,
+  defaultGrouping: 'category',
+})
+
 const list = useList(licensesApi.list, {
   live: ['license'],
   ordering: 'model__name',
-  groupOrdering: () => 'model__category__sort_order,model__category__name',
+  groupOrdering: view.groupOrdering,
   filters: {
-    category: null,
-    assign_to: null,
+    category: [],
+    assign_to: [],
+    user: [],
+    asset: [],
+    expires_from: null,
     // The dashboard tile links here with ?expiring=1.
-    expires_before: route.query.expiring ? soonDate() : null,
+    expires_until: route.query.expiring ? soonDate() : null,
   },
 })
 onMounted(list.load)
 
 const showForm = ref(false)
 // Most digits of the seat numbers on this page, so the seat column lines up without spare room.
-const seatDigits = computed(() =>
+const seatDigits = computed<number>(() =>
   Math.max(1, ...list.rows.value.map((l) => String(Math.max(l.seats, l.seats_used)).length)),
-)
-const expiringOnly = computed({
-  get: () => !!list.filters.expires_before,
-  set: (value: boolean) => (list.filters.expires_before = value ? soonDate() : null),
-})
-const assignToOptions = computed(() =>
-  (['user', 'device'] as const).map((v) => ({ value: v, label: enumLabel('licenseAssignTo', v) })),
 )
 
 function validity(l: Schemas['LicenseOut']) {
@@ -75,55 +150,119 @@ function validity(l: Schemas['LicenseOut']) {
   ])
 }
 
-const columns = computed(() =>
-  withGroupHeaders<Schemas['LicenseOut']>([
-    {
-      key: 'model__name',
-      title: t('inventory.licenses.software'),
-      sorter: true,
-      minWidth: 260,
-      render: (l) =>
-        h('div', [
-          h('div', { class: 'strong' }, l.model.full_name),
-          l.reference ? h('small', { class: 'muted' }, l.reference) : null,
-        ]),
-    },
-    {
-      key: 'used_seats',
-      title: t('inventory.licenses.seats'),
-      sorter: true,
-      width: 190,
-      render: (l) => h(SeatUsage, { used: l.seats_used, seats: l.seats, digits: seatDigits.value }),
-    },
-    {
-      key: 'assign_to',
-      title: t('inventory.licenses.assignTo'),
-      width: 140,
-      render: (l) => enumLabel('licenseAssignTo', l.assign_to),
-    },
-    {
-      key: 'valid_until',
-      title: t('inventory.licenses.validUntil'),
-      sorter: true,
-      width: 200,
-      render: validity,
-    },
-    {
-      key: 'supplier',
-      title: t('inventory.fields.supplier'),
-      width: 170,
-      ellipsis: { tooltip: true },
-      render: (l) => l.supplier?.name ?? '—',
-    },
-  ] as DataTableColumns<Schemas['LicenseOut']>),
-)
-
-const grouping = useGroupedRows<Schemas['LicenseOut']>({
-  rows: () => list.rows.value,
-  key: (l) => l.category.id,
-  label: (l) => [h(categoryIcon(l.category.icon), { size: 14 }), l.category.name],
-  storageKey: 'argus.groups.licenses',
-})
+const columns = computed<TableColumn<License>[]>(() => [
+  {
+    key: 'model__name',
+    title: t('inventory.licenses.software'),
+    sorter: true,
+    hideable: false,
+    minWidth: 260,
+    render: (l) =>
+      h('div', [
+        h('div', { class: 'strong' }, l.model.full_name),
+        l.reference ? h('small', { class: 'muted' }, l.reference) : null,
+      ]),
+  },
+  {
+    key: 'used_seats',
+    title: t('inventory.licenses.seats'),
+    sorter: true,
+    width: 190,
+    render: (l) => h(SeatUsage, { used: l.seats_used, seats: l.seats, digits: seatDigits.value }),
+  },
+  {
+    key: 'assign_to',
+    title: t('inventory.licenses.assignTo'),
+    width: 140,
+    render: (l) => enumLabel('licenseAssignTo', l.assign_to),
+  },
+  {
+    key: 'valid_until',
+    title: t('inventory.licenses.validUntil'),
+    sorter: true,
+    width: 200,
+    render: validity,
+  },
+  {
+    key: 'supplier',
+    hidden: true,
+    title: t('inventory.fields.supplier'),
+    width: 170,
+    ellipsis: { tooltip: true },
+    render: (l) => l.supplier?.name ?? '—',
+  },
+  // Further columns to show from the column settings.
+  {
+    key: 'manufacturer',
+    title: t('inventory.fields.manufacturer'),
+    hidden: true,
+    width: 150,
+    render: (l) => l.manufacturer.name,
+  },
+  {
+    key: 'model__category__name',
+    title: t('inventory.fields.category'),
+    sorter: true,
+    hidden: true,
+    width: 160,
+    render: (l) => l.category.name,
+  },
+  {
+    key: 'reference',
+    title: t('inventory.licenses.reference'),
+    sorter: true,
+    hidden: true,
+    width: 180,
+    ellipsis: { tooltip: true },
+    render: (l) => l.reference || '—',
+  },
+  {
+    key: 'license_key',
+    title: t('inventory.licenses.licenseKey'),
+    hidden: true,
+    width: 220,
+    ellipsis: { tooltip: true },
+    render: (l) => h('span', { class: 'mono' }, l.license_key || '—'),
+  },
+  {
+    key: 'valid_from',
+    title: t('inventory.licenses.validFrom'),
+    hidden: true,
+    width: 120,
+    render: (l) => h('span', { class: 'mono' }, date(l.valid_from)),
+  },
+  {
+    key: 'purchase_date',
+    title: t('inventory.fields.purchaseDate'),
+    hidden: true,
+    width: 120,
+    render: (l) => h('span', { class: 'mono' }, date(l.purchase_date)),
+  },
+  {
+    key: 'purchase_price',
+    title: t('inventory.fields.purchasePrice'),
+    hidden: true,
+    width: 120,
+    align: 'right',
+    render: (l) => h('span', { class: 'mono' }, money(l.purchase_price)),
+  },
+  {
+    key: 'notes',
+    title: t('common.notes'),
+    hidden: true,
+    width: 220,
+    ellipsis: { tooltip: true },
+    render: (l) => l.notes || '—',
+  },
+  {
+    key: 'created_at',
+    title: t('common.createdAt'),
+    sorter: true,
+    hidden: true,
+    width: 120,
+    render: (l) => h('span', { class: 'mono' }, date(l.created_at)),
+  },
+])
 
 function open(id: Id) {
   router.push({ name: 'license', params: { id } })
@@ -141,44 +280,13 @@ function open(id: Id) {
       </template>
     </PageHeader>
     <div class="stack">
-      <div class="toolbar">
-        <NInput
-          v-model:value="list.search.value"
-          class="grow"
-          :placeholder="t('common.search')"
-          clearable
-        />
-        <EntitySelect
-          v-model="list.filters.category as string | null"
-          :fetcher="categoriesApi.list"
-          :params="{ kind: 'software' }"
-          :label="(c) => c.path.join(' / ')"
-          :placeholder="t('inventory.fields.category')"
-          style="width: 220px"
-        />
-        <NSelect
-          v-model:value="list.filters.assign_to as string | null"
-          :options="assignToOptions"
-          :placeholder="t('inventory.licenses.assignTo')"
-          clearable
-          style="width: 170px"
-        />
-        <CheckField v-model="expiringOnly" :label="t('inventory.licenses.onlyExpiring')" />
-      </div>
-      <NDataTable
-        class="clickable-rows"
-        remote
-        size="small"
-        :columns="columns"
-        :data="grouping.rows.value"
-        :loading="list.loading.value"
-        :pagination="list.pagination.value"
-        :row-key="(row: Schemas['LicenseOut']) => row.id"
-        :row-props="(row: Schemas['LicenseOut']) => grouping.rowProps(row, (l) => open(l.id))"
-        :row-class-name="grouping.rowClass"
-        :scroll-x="960"
-        @update:sorter="list.onSort"
+      <TableToolbar
+        v-model:search="list.search.value"
+        :list="list"
+        :filters="filters"
+        :view="view"
       />
+      <ListTable :view="view" :list="list" @row-click="(l: License) => open(l.id)" />
     </div>
     <LicenseFormDrawer v-model:show="showForm" @saved="(l) => open(l.id)" />
   </div>

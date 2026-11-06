@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class UserFilter(FilterSchema):
-    department: Annotated[UUID | None, FilterLookup("department_id")] = None
+    department: Annotated[list[UUID] | None, FilterLookup("department_id__in")] = None
     is_active: bool | None = None
     is_staff: bool | None = None
     is_terminal: bool | None = None

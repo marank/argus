@@ -13,7 +13,7 @@ from apps.masterdata.schemas.category import CategoryIn, CategoryOut
 class CategoryFilter(FilterSchema):
     parent: Annotated[UUID | None, FilterLookup("parent_id")] = None
     is_requestable: bool | None = None
-    kind: str | None = None
+    kind: Annotated[list[str] | None, FilterLookup("kind__in")] = None
 
 
 def category_queryset() -> QuerySet[Category]:

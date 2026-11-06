@@ -6,6 +6,8 @@ export default {
   purposePlaceholder: 'z. B. Schulung, neuer Mitarbeiter, Inventur',
   notes: 'Mitteilung',
   duration: 'Dauer',
+  itemCount: 'Positionen',
+  unitCount: 'Stück',
   period: 'Zeitraum',
   startDate: 'Benötigt ab',
   endDate: 'Benötigt bis',

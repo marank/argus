@@ -96,6 +96,7 @@ export default {
     sortOrder: 'Sortierung',
     departmentSortHelp: 'Aufsteigend sortiert, bei gleichem Wert nach Name.',
     kind: 'Art',
+    site: 'Hauptstandort',
     pickupPoint: 'Abholort',
     manufacturer: 'Hersteller',
     category: 'Kategorie',

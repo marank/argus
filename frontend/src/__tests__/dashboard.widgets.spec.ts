@@ -260,6 +260,13 @@ describe('dashboard widgets', () => {
   })
 
   describe('upcoming hand-outs', () => {
+    // The hand-out days below are fixed; seen from this day the first is still ahead.
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['Date'] })
+      vi.setSystemTime(new Date(2026, 9, 30, 12))
+    })
+    afterEach(() => vi.useRealTimers())
+
     const row: Schemas['UpcomingOut'] = {
       id: ID(7),
       number: 'REQ-2026-00007',

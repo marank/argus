@@ -68,6 +68,8 @@ export function useList<T>(
 
   watch(search, debouncedReload)
   watch(filters, reload, { deep: true })
+  // A new grouping sorts the rows anew.
+  if (options.groupOrdering) watch(options.groupOrdering, reload)
   if (options.live) useLive(options.live, refresh)
 
   const pagination = computed<PaginationProps>(() => ({
@@ -87,6 +89,11 @@ export function useList<T>(
     },
   }))
 
+  /** Sets one filter; for components that get the list as a prop. */
+  function setFilter(key: string, value: unknown) {
+    filters[key] = value
+  }
+
   function onSort(state: DataTableSortState | DataTableSortState[] | null) {
     const sorter = Array.isArray(state) ? state[0] : state
     if (!sorter || !sorter.order) ordering.value = options.ordering ?? ''
@@ -94,5 +101,17 @@ export function useList<T>(
     reload()
   }
 
-  return { rows, count, loading, search, filters, ordering, pagination, load, reload, onSort }
+  return {
+    rows,
+    count,
+    loading,
+    search,
+    filters,
+    setFilter,
+    ordering,
+    pagination,
+    load,
+    reload,
+    onSort,
+  }
 }

@@ -37,22 +37,27 @@ ORDERING_FIELDS = (
     "seats",
     "used_seats",
     "valid_until",
+    # Groupings
+    "assign_to",
+    "supplier__name",
+    "supplier_id",
     "created_at",
 )
 
 
 class LicenseFilter(FilterSchema):
-    model: Annotated[UUID | None, FilterLookup("model_id")] = None
-    assign_to: str | None = None
-    user: Annotated[UUID | None, FilterLookup("assignments__user_id")] = None
-    asset: Annotated[UUID | None, FilterLookup("assignments__asset_id")] = None
-    expires_before: Annotated[date | None, FilterLookup("valid_until__lt")] = None
-    category: UUID | None = None
+    model: Annotated[list[UUID] | None, FilterLookup("model_id__in")] = None
+    assign_to: Annotated[list[str] | None, FilterLookup("assign_to__in")] = None
+    user: Annotated[list[UUID] | None, FilterLookup("assignments__user_id__in")] = None
+    asset: Annotated[list[UUID] | None, FilterLookup("assignments__asset_id__in")] = None
+    expires_from: Annotated[date | None, FilterLookup("valid_until__gte")] = None
+    expires_until: Annotated[date | None, FilterLookup("valid_until__lte")] = None
+    category: list[UUID] | None = None
 
-    def filter_category(self, value: UUID | None) -> Q:
+    def filter_category(self, value: list[UUID] | None) -> Q:
         if not value:
             return Q()
-        return Q(model__category_id__in=get_object_or_404(Category, pk=value).descendant_ids())
+        return Q(model__category_id__in=Category.descendant_ids_of(value))
 
 
 def license_queryset() -> QuerySet[License]:

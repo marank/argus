@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Annotated
 from uuid import UUID
 
@@ -28,10 +29,12 @@ router = Router(tags=["issues"], auth=permission_auth(ResourceKey.ISSUES))
 
 class IssueFilter(FilterSchema):
     status: Annotated[list[str] | None, FilterLookup("status__in")] = None
-    asset: Annotated[UUID | None, FilterLookup("asset_id")] = None
-    kind: str | None = None
+    asset: Annotated[list[UUID] | None, FilterLookup("asset_id__in")] = None
+    kind: Annotated[list[str] | None, FilterLookup("kind__in")] = None
     team: Annotated[list[UUID] | None, FilterLookup("assigned_team_id__in")] = None
-    assignee: Annotated[UUID | None, FilterLookup("assignee_id")] = None
+    assignee: Annotated[list[UUID] | None, FilterLookup("assignee_id__in")] = None
+    reported_from: Annotated[date | None, FilterLookup("created_at__date__gte")] = None
+    reported_until: Annotated[date | None, FilterLookup("created_at__date__lte")] = None
 
 
 def issue_queryset() -> QuerySet[AssetIssue]:
@@ -66,7 +69,19 @@ def list_issues(
             "reported_by__last_name",
         ),
     )
-    return order(queryset, ordering, ("created_at", "status", "kind", "asset__inventory_number"))
+    return order(
+        queryset,
+        ordering,
+        (
+            "created_at",
+            "status",
+            "kind",
+            "asset__inventory_number",
+            # Groupings
+            "assigned_team__name",
+            "assigned_team_id",
+        ),
+    )
 
 
 def issue_detail(issues: QuerySet[AssetIssue], pk: UUID) -> AssetIssue:

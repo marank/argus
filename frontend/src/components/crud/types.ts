@@ -69,6 +69,8 @@ export interface ColumnDef<T> {
   render?: (row: T) => VNodeChild
   /** Show the column only while this returns true. */
   visible?: () => boolean
+  /** Hidden until shown in the column settings. */
+  hidden?: boolean
 }
 
 export interface FilterDef {
@@ -91,8 +93,18 @@ export interface ResourceDef<T extends { id: Id }> {
     remove: (id: Id) => Promise<true>
   }
   ordering?: string
-  /** Show the rows in sections; the server sorts by the group's ordering first. */
-  groupBy?: { ordering: string; key: (row: T) => string; label: (row: T) => VNodeChild }
+  /**
+   * Ways to show the rows in sections, chosen in the toolbar; the first is the default.
+   * The server sorts by the grouping's ordering first.
+   */
+  groupings?: {
+    key: string
+    /** i18n key of the name in the grouping menu. */
+    label: string
+    ordering: string
+    rowKey: (row: T) => string
+    rowLabel: (row: T) => VNodeChild
+  }[]
   /**
    * Offer a tree view of hierarchical records: the first column indents each record below
    * its parent and shows `label` instead (the column's own content, e.g. the path, stays

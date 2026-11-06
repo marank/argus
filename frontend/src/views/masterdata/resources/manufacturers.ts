@@ -19,6 +19,15 @@ export default defineResource<Schemas['ManufacturerOut']>({
       render: (m) => text(m.support_phone),
     },
     { key: 'is_active', label: 'common.active', width: 90, render: (m) => bool(m.is_active) },
+    // Further columns to show from the column settings.
+    {
+      key: 'support_url',
+      label: 'masterdata.fields.supportUrl',
+      hidden: true,
+      width: 200,
+      render: (m) => text(m.support_url),
+    },
+    { key: 'notes', label: 'common.notes', hidden: true, render: (m) => text(m.notes) },
   ],
   filters: [{ key: 'is_active', label: 'common.active', type: 'boolean' }],
   sections: [

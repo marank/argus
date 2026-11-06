@@ -1,0 +1,21 @@
+export default {
+  grouping: 'Grouping',
+  noGrouping: 'No grouping',
+  columns: 'Columns',
+  columnsHint: 'Drag to reorder. Drag a column edge in the table header to change its width.',
+  density: 'Row height',
+  compact: 'Compact',
+  comfortable: 'Comfortable',
+  resetView: 'Reset view',
+  clearFilters: 'Clear filters',
+  without: 'Without {name}',
+  is: 'is',
+  chooseField: 'Choose a field',
+  enterValue: 'Enter a value.',
+  removeFilter: 'Remove condition',
+  addCondition: 'Add condition',
+  dateRangePlaceholder: '0611..2311',
+  dateRangeHelp:
+    'Days as 0611..2311 or 06.11.26..23.11.26; 0611.. from that day on, ..2311 up to that day.',
+  dateRangeInvalid: 'This date or range cannot be read.',
+}
