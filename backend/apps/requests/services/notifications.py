@@ -2,6 +2,7 @@
 
 from datetime import date
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from django.utils import formats, timezone
 from django.utils.translation import gettext as _
@@ -12,6 +13,11 @@ from apps.requests.models import AssetRequest, AssetRequestStatus
 
 if TYPE_CHECKING:
     from apps.accounts.models import User
+
+
+def _involved(asset_request: AssetRequest) -> list[UUID]:
+    """Who needs no notice of a new request: the requester and whoever recorded it for them."""
+    return [pk for pk in (asset_request.requester_id, asset_request.created_by_id) if pk]
 
 
 def _items(asset_request: AssetRequest) -> str:
@@ -44,7 +50,7 @@ def request_submitted(asset_request: AssetRequest) -> None:
 
     notify(
         NotificationEvent.REQUEST_SUBMITTED,
-        responsible_staff(asset_request).exclude(pk=asset_request.requester_id),
+        responsible_staff(asset_request).exclude(pk__in=_involved(asset_request)),
         render,
         path=f"/requests/{asset_request.pk}",
     )
@@ -64,7 +70,7 @@ def approval_requested(asset_request: AssetRequest) -> None:
 
     notify(
         NotificationEvent.APPROVAL_REQUESTED,
-        asset_request.approvers().exclude(pk=asset_request.requester_id),
+        asset_request.approvers().exclude(pk__in=_involved(asset_request)),
         render,
         path=f"/portal/approvals/{asset_request.pk}",
     )

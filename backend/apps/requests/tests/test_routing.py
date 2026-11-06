@@ -138,3 +138,31 @@ def test_assignee_hears_of_it_but_not_when_taking_it_themselves(
         it_client.post(url, {"assignee": str(staff["nav"].pk)}, content_type=JSON)
         it_client.post(url, {"assignee": str(staff["it"].pk)}, content_type=JSON)
     assert mail.outbox == []
+
+
+def test_whoever_records_a_request_for_someone_else_hears_nothing_of_it(
+    mail_on, staff, it_client, django_capture_on_commit_callbacks
+):
+    from apps.core.models import Notification
+
+    team = Team.objects.create(name="Support", is_default=True)
+    team.members.add(staff["it"], staff["nav"])
+    laptops = Category.objects.get(code="laptops")
+    employee = User.objects.get(username="employee")
+    start = timezone.localdate() + timedelta(days=2)
+    with django_capture_on_commit_callbacks(execute=True):
+        response = it_client.post(
+            "/api/requests",
+            {
+                "title": "For a colleague",
+                "duration": "permanent",
+                "start_date": start.isoformat(),
+                "requester": str(employee.pk),
+                "items": [{"quantity": 1, "category": str(laptops.pk)}],
+            },
+            content_type=JSON,
+        )
+    assert response.status_code == 201, response.content
+    assert {a for m in mail.outbox for a in m.to} == {"nav@example.com"}
+    about = Notification.objects.filter(path=f"/requests/{response.json()['id']}")
+    assert [n.recipient for n in about] == [staff["nav"]]
