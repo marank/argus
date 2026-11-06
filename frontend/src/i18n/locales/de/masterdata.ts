@@ -2,6 +2,11 @@ export default {
   title: 'Stammdaten',
   noDepartment: 'Ohne Abteilung',
   treeView: 'Als Baum',
+  createSuccessor: 'Nachfolger anlegen',
+  takeOver:
+    'Angaben von {name} übernehmen? Übernommen werden: {fields}. Name, Bezeichnung, Artikelnummer und EAN tragen Sie selbst ein.',
+  takeOverYes: 'Übernehmen',
+  takeOverNo: 'Nicht übernehmen',
   noAccess: 'Ihre Rollen erlauben keinen Zugriff auf diesen Bereich.',
   roles: {
     permissions: 'Rechte',
@@ -35,6 +40,7 @@ export default {
     manufacturers: 'Hersteller',
     suppliers: 'Lieferanten',
     categories: 'Kategorien',
+    componentTypes: 'Komponenten',
     models: 'Modelle',
     locations: 'Standorte',
     departments: 'Abteilungen',
@@ -47,6 +53,7 @@ export default {
     manufacturers: 'Hersteller',
     suppliers: 'Lieferant',
     categories: 'Kategorie',
+    componentTypes: 'Komponente',
     models: 'Modell',
     locations: 'Standort',
     departments: 'Abteilung',
@@ -167,14 +174,22 @@ export default {
       'Bezeichnung für ein einzelnes Stück, z. B. „Laptop“. Wird im Portal als „Laptop · beliebiges Modell“ angezeigt.',
     categoryKindHelp: 'Unterkategorien haben denselben Typ wie ihre übergeordnete Kategorie.',
     compatibleWithHelp: 'Zubehör, Ersatzteile und Verbrauchsmaterial, die zu diesem Modell passen.',
+    predecessor: 'Nachfolger von',
+    predecessorHelp:
+      'Das Modell, das durch dieses ersetzt wird. Beim Auswählen bietet das Formular an, Hersteller, Kategorie, Nummernserie, Zubehör und weitere Angaben zu übernehmen.',
     pickupPointHelp: 'Wird bei der Abholplanung angeboten.',
     itStaffHelp: 'Zugang zum IT-Bereich. Welche Bereiche, legen die Rollen fest.',
     sequenceCodeHelp:
       'Optional, zum Wiederfinden. System-Serien behalten ihr Kürzel: Argus vergibt darüber Inventar-, Anforderungs- und Bestellnummern.',
     systemSequence: 'System',
-    allowAnyModel: '„Beliebiges Modell“ anforderbar',
-    allowAnyModelHelp:
-      'Mitarbeiter dürfen ein „beliebiges Modell“ dieser Kategorie anfordern, z. B. ein Ladekabel, wenn der Typ egal ist; die IT wählt das Modell bei der Zuweisung. Deaktivieren, wenn Mitarbeiter ein bestimmtes Modell wählen müssen.',
+    modelChoice: 'Auswahl im Portal',
+    modelChoiceHelp:
+      'Beliebiges Modell: Die IT wählt das Modell bei der Ausgabe, z. B. ein Ladekabel, wenn der Typ egal ist. „Nur beliebiges Modell“, wenn Mitarbeiter kein Modell selbst wählen sollen (z. B. MDEs); „Nur bestimmtes Modell“, wenn der Typ entscheidet (z. B. Toner).',
+    identifierLabel: 'Name der Kennung',
+    identifierLabelHelp:
+      'Wie die Kennung der Geräte in dieser Kategorie heißt, z. B. „CN“ oder „MTM“. Das Geräteformular zeigt sie so an. Gilt nicht für Unterkategorien.',
+    componentCategoriesHelp:
+      'Geräte dieser Kategorien und ihrer Unterkategorien haben dieses Teil: Im Geräteformular lassen sich Seriennummer und Einbaudatum erfassen, im Servicebuch der Tausch.',
     isAccessory: 'Zubehör',
     isAccessoryHelp:
       'Zubehör, Ersatzteile oder Verbrauchsmaterial. Im Portal erscheinen die Modelle zusätzlich bei den Geräten, mit denen sie kompatibel sind (Feld „Kompatibel mit“ am Modell). Gilt auch für Unterkategorien.',

@@ -8,7 +8,7 @@ import { bool, inherited, mono, ownOrInherited, path, withIcon } from '@/compone
 import { defineResource } from '@/components/crud/types'
 import { numberSequenceHints } from '@/components/masterdata/numberSequenceHints'
 import { i18n } from '@/i18n'
-import { CATEGORY_KINDS } from '@/types/masterdata'
+import { CATEGORY_KINDS, MODEL_CHOICES } from '@/types/masterdata'
 
 const { t } = i18n.global
 
@@ -109,6 +109,12 @@ export default defineResource<Schemas['CategoryOut']>({
           help: 'masterdata.fields.itemNameHelp',
         },
         {
+          key: 'identifier_label',
+          label: 'masterdata.fields.identifierLabel',
+          type: 'text',
+          help: 'masterdata.fields.identifierLabelHelp',
+        },
+        {
           key: 'kind',
           label: 'masterdata.fields.categoryKind',
           type: 'enum',
@@ -167,10 +173,14 @@ export default defineResource<Schemas['CategoryOut']>({
       fields: [
         { key: 'is_requestable', label: 'masterdata.fields.requestable', type: 'switch' },
         {
-          key: 'allow_any_model',
-          label: 'masterdata.fields.allowAnyModel',
-          type: 'switch',
-          help: 'masterdata.fields.allowAnyModelHelp',
+          key: 'model_choice',
+          label: 'masterdata.fields.modelChoice',
+          type: 'enum',
+          group: 'modelChoice',
+          values: MODEL_CHOICES,
+          required: true,
+          span: 2,
+          help: 'masterdata.fields.modelChoiceHelp',
         },
         {
           key: 'requires_approval',
@@ -191,6 +201,7 @@ export default defineResource<Schemas['CategoryOut']>({
   defaults: () => ({
     name: '',
     item_name: '',
+    identifier_label: '',
     kind: 'hardware',
     code: '',
     parent: null,
@@ -199,7 +210,7 @@ export default defineResource<Schemas['CategoryOut']>({
     number_sequence: null,
     team: null,
     is_requestable: true,
-    allow_any_model: true,
+    model_choice: 'any_or_specific',
     requires_approval: false,
     is_accessory: false,
     sort_order: 0,
@@ -207,6 +218,7 @@ export default defineResource<Schemas['CategoryOut']>({
   toForm: (c) => ({
     name: c.name,
     item_name: c.item_name,
+    identifier_label: c.identifier_label,
     kind: c.kind,
     code: c.code,
     parent: c.parent?.id ?? null,
@@ -215,7 +227,7 @@ export default defineResource<Schemas['CategoryOut']>({
     number_sequence: c.number_sequence?.id ?? null,
     team: c.team?.id ?? null,
     is_requestable: c.is_requestable,
-    allow_any_model: c.allow_any_model,
+    model_choice: c.model_choice,
     requires_approval: c.requires_approval,
     is_accessory: c.is_accessory,
     sort_order: c.sort_order,

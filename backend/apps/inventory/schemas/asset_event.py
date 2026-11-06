@@ -6,6 +6,7 @@ from django.utils import timezone
 from ninja import Field
 
 from apps.accounts.schemas import UserRefOut
+from apps.core.schemas import RefOut
 from apps.core.schemas.base import Schema
 from apps.inventory.models import AssetEventKind
 
@@ -24,6 +25,8 @@ class AssetEventOut(Schema):
     description: str
     component: str
     component_serial: str
+    component_type: RefOut | None
+    previous_serial: str
     cost: Decimal | None
     performed_by: UserRefOut | None
     related_user: UserRefOut | None
@@ -45,5 +48,7 @@ class AssetEventIn(Schema):
     description: str = ""
     component: str = ""
     component_serial: str = ""
+    # For "component replaced": the tracked part; the device gets component_serial.
+    component_type: UUID | None = None
     cost: Decimal | None = None
     consume: ConsumeIn | None = None

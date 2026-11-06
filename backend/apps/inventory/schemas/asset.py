@@ -8,7 +8,7 @@ from ninja import Field
 from apps.accounts.schemas import UserRefOut
 from apps.core.schemas import RefOut
 from apps.core.schemas.base import Schema
-from apps.inventory.models import Asset, AssetIssue, AssetStatus, LicenseAssignment
+from apps.inventory.models import Asset, AssetComponent, AssetIssue, AssetStatus, LicenseAssignment
 from apps.inventory.schemas.asset_issue import OwnIssueOut
 from apps.inventory.schemas.license import AssetLicenseOut
 from apps.masterdata.models import AssetModel
@@ -26,6 +26,7 @@ class AssetOut(Schema):
     category: CategoryRefOut = Field(..., alias="model.category")
     manufacturer: RefOut = Field(..., alias="model.manufacturer")
     serial_number: str
+    identifier: str
     imei: str
     mac_address: str
     hostname: str
@@ -66,8 +67,22 @@ class AssetParentOut(Schema):
     inventory_number: str
 
 
+class AssetComponentOut(Schema):
+    component_type: RefOut
+    serial_number: str
+    installed_on: date | None
+
+
+class AssetComponentIn(Schema):
+    component_type: UUID
+    serial_number: str = ""
+    installed_on: date | None = None
+
+
 class AssetDetailOut(AssetOut):
     components: list[AssetParentOut]
+    # The tracked parts fitted now, e.g. the battery (see ComponentType).
+    installed_components: list[AssetComponentOut]
     asset_request: ActiveAssetRequestOut | None = None
     # Assigned to this device directly; ``model_consumables`` come from its model.
     consumables: list[AssetModelRefOut]
@@ -94,6 +109,10 @@ class AssetDetailOut(AssetOut):
         )
 
     @staticmethod
+    def resolve_installed_components(obj: Asset) -> list[AssetComponent]:
+        return list(obj.installed_components.select_related("component_type"))
+
+    @staticmethod
     def resolve_components(obj: Asset) -> list[Asset]:
         return list(obj.components.all())
 
@@ -118,6 +137,7 @@ class AssetIn(Schema):
     model: UUID
     inventory_number: str = ""
     serial_number: str = ""
+    identifier: str = ""
     imei: str = ""
     mac_address: str = ""
     hostname: str = ""
@@ -132,6 +152,8 @@ class AssetIn(Schema):
     purchase_price: Decimal | None = None
     warranty_until: date | None = None
     consumables: list[UUID] = []
+    # None leaves the fitted parts as they are; a list sets them (see services.assets).
+    installed_components: list[AssetComponentIn] | None = None
     notes: str = ""
 
 

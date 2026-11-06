@@ -12,13 +12,13 @@ class CategoryAdmin(admin.ModelAdmin[Category]):
         "number_sequence",
         "team",
         "is_requestable",
-        "allow_any_model",
+        "model_choice",
         "requires_approval",
         "is_accessory",
         "sort_order",
     ]
-    list_filter = ["is_requestable", "allow_any_model", "requires_approval", "is_accessory", "parent"]
+    list_filter = ["is_requestable", "model_choice", "requires_approval", "is_accessory", "parent"]
     list_editable = ["sort_order"]
-    search_fields = ["name", "code"]
+    search_fields = ["name", "code", "identifier_label"]
     list_select_related = ["parent", "number_sequence", "team"]
     autocomplete_fields = ["parent", "number_sequence", "team"]

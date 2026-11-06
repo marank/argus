@@ -21,7 +21,14 @@ from apps.core.api.security import employee_auth, it_staff_auth, superuser_auth
 from apps.core.exceptions import BusinessError
 from apps.dashboard.api import calendar, overview, widgets
 from apps.inventory.api import router as inventory_router
-from apps.masterdata.api import asset_models, categories, locations, manufacturers, suppliers
+from apps.masterdata.api import (
+    asset_models,
+    categories,
+    component_types,
+    locations,
+    manufacturers,
+    suppliers,
+)
 from apps.procurement.api import router as procurement_router
 from apps.requests.api import router as requests_router
 
@@ -52,6 +59,7 @@ api.add_router("/notifications", notifications.router)
 api.add_router("/masterdata/manufacturers", manufacturers.router)
 api.add_router("/masterdata/suppliers", suppliers.router)
 api.add_router("/masterdata/categories", categories.router)
+api.add_router("/masterdata/component-types", component_types.router)
 api.add_router("/masterdata/locations", locations.router)
 api.add_router("/masterdata/models", asset_models.router)
 api.add_router("/masterdata/number-sequences", number_sequences.router)

@@ -9,10 +9,17 @@ from django.utils.translation import gettext as _
 from apps.accounts.models import User
 from apps.core.exceptions import BusinessError
 from apps.core.models import NumberSequence
-from apps.inventory.models import Asset, AssetEvent, AssetEventKind, AssetStatus, ConsumableMovement
+from apps.inventory.models import (
+    Asset,
+    AssetComponent,
+    AssetEvent,
+    AssetEventKind,
+    AssetStatus,
+    ConsumableMovement,
+)
 from apps.inventory.services.consumables import move_consumable
 from apps.inventory.services.events import log_event
-from apps.masterdata.models import AssetModel
+from apps.masterdata.models import AssetModel, ComponentType
 
 if TYPE_CHECKING:
     from apps.requests.models import AssetRequestAllocation
@@ -34,10 +41,48 @@ def _set_consumables(asset: Asset, model_ids: list[UUID] | None) -> None:
     asset.consumables.set(found)
 
 
+def _component_type(asset: Asset, type_id: UUID) -> ComponentType:
+    """The part kind, if devices of the asset's category have it."""
+    found = ComponentType.for_category(asset.model.category).filter(pk=type_id).first()
+    if found is None:
+        raise BusinessError(
+            _("Devices of the category %(category)s have no part of this kind.")
+            % {"category": asset.model.category.name}
+        )
+    return found
+
+
+def _set_components(asset: Asset, entries: list[dict[str, Any]] | None) -> None:
+    """Record the parts fitted now; ``None`` leaves them unchanged.
+
+    The list stands for all tracked parts: kinds left out or without serial number and date
+    are removed. A different serial number here corrects the record; a replacement goes
+    through the service book (``record_event``), which keeps the previous one.
+    """
+    if entries is None:
+        return
+    keep: set[UUID] = set()
+    for entry in entries:
+        component_type = _component_type(asset, entry["component_type"])
+        if component_type.pk in keep:
+            raise BusinessError(_("Each kind of part can be fitted only once."))
+        serial, installed_on = entry.get("serial_number", "").strip(), entry.get("installed_on")
+        if not serial and not installed_on:
+            continue
+        AssetComponent.objects.update_or_create(
+            asset=asset,
+            component_type=component_type,
+            defaults={"serial_number": serial, "installed_on": installed_on},
+        )
+        keep.add(component_type.pk)
+    asset.installed_components.exclude(component_type__in=keep).delete()
+
+
 @transaction.atomic
 def create_asset(data: dict[str, Any], user: User) -> Asset:
     data = dict(data)
     consumables = data.pop("consumables", None)
+    components = data.pop("installed_components", None)
     asset = Asset()
     _apply(asset, data)
     if asset.assigned_to_id:
@@ -46,6 +91,7 @@ def create_asset(data: dict[str, Any], user: User) -> Asset:
     asset.full_clean(exclude=["inventory_number"])
     asset.save()
     _set_consumables(asset, consumables)
+    _set_components(asset, components)
     log_event(asset, AssetEventKind.CREATED, user)
     if asset.assigned_to_id:
         log_event(asset, AssetEventKind.ASSIGNED, user, related_user_id=asset.assigned_to_id)
@@ -94,6 +140,7 @@ def update_asset(asset: Asset, data: dict[str, Any], user: User) -> Asset:
         _sync_asset_request(asset, user)
     previous_status, previous_user = asset.status, asset.assigned_to_id
     consumables = data.pop("consumables", None)
+    components = data.pop("installed_components", None)
     _apply(asset, data)
 
     if asset.assigned_to_id != previous_user:
@@ -118,6 +165,7 @@ def update_asset(asset: Asset, data: dict[str, Any], user: User) -> Asset:
     asset.full_clean()
     asset.save()
     _set_consumables(asset, consumables)
+    _set_components(asset, components)
     return asset
 
 
@@ -165,18 +213,36 @@ def create_series(common: dict[str, Any], count: int, user: User) -> list[Asset]
     return [create_asset(common, user) for _ in range(count)]
 
 
-@transaction.atomic
 class Consumption(TypedDict):
     consumable_id: UUID
     quantity: int
 
 
+def _replace_component(asset: Asset, data: dict[str, Any]) -> None:
+    """A tracked part was replaced: the device gets the new one, the event keeps the old serial."""
+    component_type = _component_type(asset, data.pop("component_type"))
+    part, _created = AssetComponent.objects.get_or_create(asset=asset, component_type=component_type)
+    data["component_type_id"] = component_type.pk
+    data["previous_serial"] = part.serial_number
+    part.serial_number = data.get("component_serial", "").strip()
+    occurred_at = data.get("occurred_at") or timezone.now()
+    part.installed_on = timezone.localdate(occurred_at)
+    part.save()
+
+
+@transaction.atomic
 def record_event(
     asset: Asset, data: dict[str, Any], user: User, consume: Consumption | None = None
 ) -> AssetEvent:
     """Record a manual event, optionally booking the used consumable out."""
     if data["kind"] not in AssetEvent.MANUAL_KINDS:
         raise BusinessError(_("This kind of event is recorded automatically."))
+    data = dict(data)
+    if data.get("component_type") and data["kind"] == AssetEventKind.COMPONENT_REPLACED:
+        _replace_component(asset, data)
+    else:
+        # Only a replacement changes a tracked part.
+        data.pop("component_type", None)
     event = log_event(asset, user=user, **data)
     if consume:
         from apps.inventory.models import Consumable

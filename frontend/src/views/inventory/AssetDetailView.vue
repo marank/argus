@@ -63,6 +63,24 @@ const identification = computed<DetailEntry[]>(() => {
   const a = asset.value!
   return [
     { label: t('inventory.fields.serialNumber'), value: a.serial_number, mono: true },
+    {
+      label: a.category.identifier_label
+        ? `${t('inventory.fields.identifier')} (${a.category.identifier_label})`
+        : t('inventory.fields.identifier'),
+      value: a.identifier,
+      mono: true,
+    },
+    // The tracked parts fitted now, e.g. the battery, with the day it went in.
+    ...a.installed_components.map((c) => ({
+      label: c.component_type.name,
+      value: [
+        c.serial_number,
+        c.installed_on && t('inventory.since', { date: date(c.installed_on) }),
+      ]
+        .filter(Boolean)
+        .join(' · '),
+      mono: true,
+    })),
     { label: t('inventory.fields.imei'), value: a.imei, mono: true },
     { label: t('inventory.fields.macAddress'), value: a.mac_address, mono: true },
     { label: t('inventory.fields.hostname'), value: a.hostname, mono: true },
@@ -284,7 +302,13 @@ async function removeEvent(event: Schemas['AssetEventOut']) {
       </div>
 
       <AssetFormDrawer v-model:show="showForm" :asset="asset" @saved="load" />
-      <AssetEventModal v-model:show="showEvent" :asset-id="asset.id" @saved="load" />
+      <AssetEventModal
+        v-model:show="showEvent"
+        :asset-id="asset.id"
+        :category-id="asset.category.id"
+        :installed="asset.installed_components"
+        @saved="load"
+      />
       <QuickAssignModal v-model:show="showQuickAssign" :asset-id="asset.id" @saved="load" />
       <NModal
         v-model:show="showAssign"

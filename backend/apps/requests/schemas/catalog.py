@@ -2,7 +2,7 @@ from uuid import UUID
 
 from apps.core.schemas.base import Schema
 from apps.inventory.schemas.asset_issue import OwnIssueOut
-from apps.masterdata.models import AssetModel, Category, CategoryKind
+from apps.masterdata.models import AssetModel, Category, CategoryKind, ModelChoice
 from apps.masterdata.schemas.refs import AssetModelRefOut
 
 
@@ -28,7 +28,7 @@ class CatalogCategoryOut(Schema):
     icon: str
     description: str
     parent_id: UUID | None
-    allow_any_model: bool
+    model_choice: ModelChoice
     # Marked as accessories, here or in a category above.
     holds_accessories: bool
     # Own models only (not subcategories), including requests for "any" device.

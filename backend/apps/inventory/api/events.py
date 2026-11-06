@@ -28,7 +28,7 @@ class EventFilter(FilterSchema):
 
 def event_queryset() -> QuerySet[AssetEvent]:
     return AssetEvent.objects.select_related(
-        "performed_by", "related_user", "asset_request", "asset__model__manufacturer"
+        "performed_by", "related_user", "asset_request", "asset__model__manufacturer", "component_type"
     )
 
 
@@ -40,7 +40,16 @@ def list_events(
     """Life cycle log across all devices, e.g. every battery replacement in 2026."""
     queryset = filters.filter(event_queryset())
     return search(
-        queryset, q, ("asset__inventory_number", "asset__serial_number", "description", "component")
+        queryset,
+        q,
+        (
+            "asset__inventory_number",
+            "asset__serial_number",
+            "description",
+            "component",
+            "component_type__name",
+            "component_serial",
+        ),
     )
 
 

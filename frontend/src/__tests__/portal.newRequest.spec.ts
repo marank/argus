@@ -65,10 +65,11 @@ function catalog(): Schemas['CatalogCategoryOut'][] {
       id: 'c-docks',
       name: 'Laptop accessories',
       parent_id: 'c-laptops',
+      holds_accessories: true,
       models: [DOCK],
     }),
     catalogCategory({ id: 'c-headsets', name: 'Headsets', models: [JABRA] }),
-    catalogCategory({ id: 'c-ink', name: 'Ink', allow_any_model: false, models: [INK] }),
+    catalogCategory({ id: 'c-ink', name: 'Ink', model_choice: 'specific_only', models: [INK] }),
     catalogCategory({ id: 'c-software', name: 'Software', kind: 'software', models: [VISIO] }),
   ]
 }
@@ -400,11 +401,17 @@ describe('NewRequestView', () => {
       const t14 = { ...T14, accessories: [INK.id] }
       api.catalog.mockResolvedValue([
         catalogCategory({ id: 'c-laptops', name: 'Laptops', models: [t14, AIR] }),
-        catalogCategory({ id: 'c-docks', name: 'Docks', parent_id: 'c-laptops', models: [DOCK] }),
+        catalogCategory({
+          id: 'c-docks',
+          name: 'Docks',
+          parent_id: 'c-laptops',
+          holds_accessories: true,
+          models: [DOCK],
+        }),
         catalogCategory({
           id: 'c-ink',
           name: 'Ink',
-          allow_any_model: false,
+          model_choice: 'specific_only',
           holds_accessories: true,
           models: [INK],
         }),
@@ -421,6 +428,35 @@ describe('NewRequestView', () => {
       await toSelection()
       await click(button('Ink'))
       expect(row('HP 305 ink')).toContain('Fits ThinkPad T14')
+    })
+
+    it('shows unmarked subcategories as groups of their own, not as accessories', async () => {
+      api.catalog.mockResolvedValue([
+        catalogCategory({ id: 'c-laptops', name: 'Laptops', models: [T14] }),
+        catalogCategory({ id: 'c-14', name: '14 inch', parent_id: 'c-laptops', models: [AIR] }),
+      ])
+      await open()
+      expect(document.body.querySelector('.accessories')).toBeNull()
+      expect(addButtonOf('MacBook Air').closest('.option')!.textContent).toContain('14 inch')
+    })
+
+    it('offers only "any model" where IT picks the model', async () => {
+      api.catalog.mockResolvedValue([
+        catalogCategory({
+          id: 'c-mde',
+          name: 'Scanners',
+          item_name: 'Scanner',
+          model_choice: 'any_only',
+          models: [catalogModel({ id: 'm-ht60', full_name: 'Handtec HT60' })],
+        }),
+      ])
+      await open()
+      expect(bodyText()).toContain('Scanner · any model')
+      expect(bodyText()).not.toContain('Handtec HT60')
+      // Searching for the model finds the group instead.
+      await typeInto(document.body.querySelector<HTMLInputElement>('.search input')!, 'HT60')
+      expect(bodyText()).toContain('Scanner · any model')
+      expect(bodyText()).not.toContain('Handtec HT60')
     })
 
     it('does not tell employees how many devices are free', async () => {
@@ -707,6 +743,7 @@ describe('NewRequestView', () => {
             asset_model: null,
             category: {
               id: 'c-laptops',
+              identifier_label: '',
               name: 'Laptops',
               item_name: 'Laptop',
               code: 'NB',

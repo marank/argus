@@ -4,6 +4,7 @@ import {
   CalendarDays,
   ClipboardCheck,
   Building2,
+  Cpu,
   ClipboardList,
   Factory,
   FolderTree,
@@ -212,6 +213,13 @@ export const NAVIGATION: NavSection[] = [
         label: 'masterdata.resources.categories',
         icon: FolderTree,
         to: { name: 'masterdata', params: { resource: 'categories' } },
+      },
+      {
+        key: 'md-componentTypes',
+        permission: 'categories',
+        label: 'masterdata.resources.componentTypes',
+        icon: Cpu,
+        to: { name: 'masterdata', params: { resource: 'componentTypes' } },
       },
       {
         key: 'md-manufacturers',

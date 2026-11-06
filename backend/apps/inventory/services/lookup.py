@@ -1,4 +1,4 @@
-"""Resolve a scanned code (inventory number, serial number, IMEI or EAN)."""
+"""Resolve a scanned code (inventory number, serial number, identifier, IMEI, part or EAN)."""
 
 from typing import Literal, TypedDict
 
@@ -20,12 +20,16 @@ def lookup_code(code: str) -> LookupResult:
         return {"kind": "none", "assets": [], "models": []}
 
     assets = list(
-        Asset.objects.select_related("model__manufacturer", "model__category", "assigned_to").filter(
+        Asset.objects.select_related("model__manufacturer", "model__category", "assigned_to")
+        .filter(
             Q(inventory_number__iexact=code)
             | Q(serial_number__iexact=code)
             | Q(imei=code)
             | Q(mac_address__iexact=code)
-        )[:20]
+            | Q(identifier__iexact=code)
+            | Q(installed_components__serial_number__iexact=code)
+        )
+        .distinct()[:20]
     )
     models = list(
         AssetModel.objects.select_related("manufacturer", "category").filter(

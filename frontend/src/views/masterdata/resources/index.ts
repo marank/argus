@@ -1,6 +1,7 @@
 import type { ResourceDef } from '@/components/crud/types'
 
 import categories from './categories'
+import componentTypes from './componentTypes'
 import departments from './departments'
 import locations from './locations'
 import manufacturers from './manufacturers'
@@ -15,6 +16,7 @@ import users from './users'
 export const RESOURCES: Record<string, ResourceDef<any>> = {
   models,
   categories,
+  componentTypes,
   manufacturers,
   suppliers,
   locations,

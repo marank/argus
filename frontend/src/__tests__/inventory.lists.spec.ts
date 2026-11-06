@@ -145,11 +145,13 @@ describe('inventory lists', () => {
     ): Schemas['AssetEventWithAssetOut'] {
       return {
         id: 'e1',
-        kind: 'battery_replaced',
+        kind: 'component_replaced',
         occurred_at: '2026-10-01T09:00:00Z',
         description: '',
         component: 'Battery 54 Wh',
         component_serial: '',
+        component_type: null,
+        previous_serial: '',
         cost: '89.50',
         asset_request: null,
         performed_by: userRef('Ian Tech', 'u9'),
@@ -164,7 +166,7 @@ describe('inventory lists', () => {
       await show(EventLogView)
       expect(list).toHaveBeenCalledWith(
         expect.objectContaining({
-          kind: ['battery_replaced', 'component_replaced', 'repair', 'maintenance', 'inspection'],
+          kind: ['component_replaced', 'repair', 'maintenance', 'inspection'],
         }),
       )
     })
@@ -185,7 +187,7 @@ describe('inventory lists', () => {
       await show(EventLogView)
       const [service, handOut] = rows().map((tr) => tr.textContent ?? '')
       expect(service).toContain('NB-0042')
-      expect(service).toContain('Battery replaced')
+      expect(service).toContain('Component replaced')
       expect(service).toContain('Battery 54 Wh')
       expect(service).toContain('89.50')
       expect(service).toContain('Ian Tech')

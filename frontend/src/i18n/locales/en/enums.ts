@@ -15,7 +15,6 @@ export default {
     assigned: 'Handed out',
     returned: 'Returned',
     reserved: 'Reserved',
-    battery_replaced: 'Battery replaced',
     component_replaced: 'Component replaced',
     repair: 'Repair',
     maintenance: 'Maintenance',
@@ -61,6 +60,11 @@ export default {
     license: 'Software license',
   },
   categoryKind: { hardware: 'Hardware', software: 'Software' },
+  modelChoice: {
+    any_or_specific: 'Any or a specific model',
+    any_only: 'Any model only',
+    specific_only: 'A specific model only',
+  },
   departmentIcon: {
     building: 'Building',
     briefcase: 'Management',

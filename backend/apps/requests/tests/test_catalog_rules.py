@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from apps.accounts.models import User
 from apps.core.models import SiteSettings
-from apps.masterdata.models import AssetModel, Category, CategoryKind
+from apps.masterdata.models import AssetModel, Category, CategoryKind, ModelChoice
 
 JSON = "application/json"
 
@@ -82,3 +82,25 @@ def test_unknown_or_inactive_requester_is_refused_with_a_message(it_client):
         response = it_client.post("/api/requests", data, content_type=JSON)
         assert response.status_code == 409, response.content
         assert "active employee" in response.json()["detail"]
+
+
+def test_where_it_picks_the_model_employees_request_any(employee_client, it_client):
+    mde = Category.objects.get(code="mde")
+    mde.model_choice = ModelChoice.ANY_ONLY
+    mde.save()
+    sx58 = AssetModel.objects.get(name="SX58")
+    response = request(employee_client, {"asset_model": str(sx58.pk)})
+    assert response.status_code == 409
+    assert "IT picks the model" in response.json()["detail"]
+    assert request(employee_client, {"category": str(mde.pk)}).status_code == 201
+    catalog = {c["code"]: c for c in employee_client.get("/api/portal/catalog").json()}
+    assert catalog["mde"]["model_choice"] == "any_only"
+
+
+def test_where_the_type_matters_a_model_is_needed(employee_client):
+    mde = Category.objects.get(code="mde")
+    mde.model_choice = ModelChoice.SPECIFIC_ONLY
+    mde.save()
+    response = request(employee_client, {"category": str(mde.pk)})
+    assert response.status_code == 409
+    assert "choose a specific model" in response.json()["detail"]

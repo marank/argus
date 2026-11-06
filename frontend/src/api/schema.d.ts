@@ -1169,6 +1169,43 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/masterdata/component-types': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Items */
+    get: operations['componenttype_list']
+    put?: never
+    /** Create Item */
+    post: operations['componenttype_create']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/masterdata/component-types/{pk}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Item */
+    get: operations['componenttype_get']
+    /** Update Item */
+    put: operations['componenttype_update']
+    post?: never
+    /** Delete Item */
+    delete: operations['componenttype_delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/masterdata/locations': {
     parameters: {
       query?: never
@@ -2624,6 +2661,29 @@ export interface components {
       /** Serial Number */
       serial_number: string
     }
+    /** AssetComponentIn */
+    AssetComponentIn: {
+      /**
+       * Component Type
+       * Format: uuid
+       */
+      component_type: string
+      /** Installed On */
+      installed_on?: string | null
+      /**
+       * Serial Number
+       * @default
+       */
+      serial_number: string
+    }
+    /** AssetComponentOut */
+    AssetComponentOut: {
+      component_type: components['schemas']['RefOut']
+      /** Installed On */
+      installed_on: string | null
+      /** Serial Number */
+      serial_number: string
+    }
     /** AssetDetailOut */
     AssetDetailOut: {
       asset_request: components['schemas']['ActiveAssetRequestOut'] | null
@@ -2648,8 +2708,12 @@ export interface components {
        * Format: uuid
        */
       id: string
+      /** Identifier */
+      identifier: string
       /** Imei */
       imei: string
+      /** Installed Components */
+      installed_components: components['schemas']['AssetComponentOut'][]
       /** Inventory Number */
       inventory_number: string
       /** Is Loanable */
@@ -2697,6 +2761,8 @@ export interface components {
        * @default
        */
       component_serial: string
+      /** Component Type */
+      component_type?: string | null
       consume?: components['schemas']['ConsumeIn'] | null
       /** Cost */
       cost?: number | string | null
@@ -2722,7 +2788,6 @@ export interface components {
       | 'assigned'
       | 'returned'
       | 'reserved'
-      | 'battery_replaced'
       | 'component_replaced'
       | 'repair'
       | 'maintenance'
@@ -2737,6 +2802,7 @@ export interface components {
       component: string
       /** Component Serial */
       component_serial: string
+      component_type: components['schemas']['RefOut'] | null
       /** Cost */
       cost: string | null
       /** Description */
@@ -2753,6 +2819,8 @@ export interface components {
        */
       occurred_at: string
       performed_by: components['schemas']['UserRefOut'] | null
+      /** Previous Serial */
+      previous_serial: string
       related_user: components['schemas']['UserRefOut'] | null
     }
     /** AssetEventRequestOut */
@@ -2773,6 +2841,7 @@ export interface components {
       component: string
       /** Component Serial */
       component_serial: string
+      component_type: components['schemas']['RefOut'] | null
       /** Cost */
       cost: string | null
       /** Description */
@@ -2789,6 +2858,8 @@ export interface components {
        */
       occurred_at: string
       performed_by: components['schemas']['UserRefOut'] | null
+      /** Previous Serial */
+      previous_serial: string
       related_user: components['schemas']['UserRefOut'] | null
     }
     /** AssetFilter */
@@ -2831,10 +2902,17 @@ export interface components {
        */
       hostname: string
       /**
+       * Identifier
+       * @default
+       */
+      identifier: string
+      /**
        * Imei
        * @default
        */
       imei: string
+      /** Installed Components */
+      installed_components?: components['schemas']['AssetComponentIn'][] | null
       /**
        * Inventory Number
        * @default
@@ -3050,6 +3128,8 @@ export interface components {
        * @default
        */
       part_number: string
+      /** Predecessor */
+      predecessor?: string | null
       /**
        * Specifications
        * @default
@@ -3098,6 +3178,7 @@ export interface components {
       number_sequence: components['schemas']['RefOut'] | null
       /** Part Number */
       part_number: string
+      predecessor: components['schemas']['AssetModelRefOut'] | null
       /** Specifications */
       specifications: string
       team: components['schemas']['TeamRefOut'] | null
@@ -3139,6 +3220,8 @@ export interface components {
        * Format: uuid
        */
       id: string
+      /** Identifier */
+      identifier: string
       /** Imei */
       imei: string
       /** Inventory Number */
@@ -3666,8 +3749,6 @@ export interface components {
     }
     /** CatalogCategoryOut */
     CatalogCategoryOut: {
-      /** Allow Any Model */
-      allow_any_model: boolean
       /** Available */
       available: number | null
       /** Code */
@@ -3686,6 +3767,7 @@ export interface components {
       /** Item Name */
       item_name: string
       kind: components['schemas']['CategoryKind']
+      model_choice: components['schemas']['ModelChoice']
       /** Models */
       models: components['schemas']['CatalogModelOut'][]
       /** Name */
@@ -3728,11 +3810,6 @@ export interface components {
     /** CategoryIn */
     CategoryIn: {
       /**
-       * Allow Any Model
-       * @default true
-       */
-      allow_any_model: boolean
-      /**
        * Code
        * @default
        */
@@ -3747,6 +3824,11 @@ export interface components {
        * @default
        */
       icon: string
+      /**
+       * Identifier Label
+       * @default
+       */
+      identifier_label: string
       /**
        * Is Accessory
        * @default false
@@ -3764,6 +3846,8 @@ export interface components {
       item_name: string
       /** @default hardware */
       kind: components['schemas']['CategoryKind']
+      /** @default any_or_specific */
+      model_choice: components['schemas']['ModelChoice']
       /** Name */
       name: string
       /** Number Sequence */
@@ -3790,8 +3874,6 @@ export interface components {
     CategoryKind: 'hardware' | 'software'
     /** CategoryOut */
     CategoryOut: {
-      /** Allow Any Model */
-      allow_any_model: boolean
       /** Code */
       code: string
       /** Description */
@@ -3806,6 +3888,8 @@ export interface components {
        * Format: uuid
        */
       id: string
+      /** Identifier Label */
+      identifier_label: string
       /** Is Accessory */
       is_accessory: boolean
       /** Is Requestable */
@@ -3813,6 +3897,7 @@ export interface components {
       /** Item Name */
       item_name: string
       kind: components['schemas']['CategoryKind']
+      model_choice: components['schemas']['ModelChoice']
       /** Name */
       name: string
       /** Needs Approval */
@@ -3838,6 +3923,8 @@ export interface components {
        * Format: uuid
        */
       id: string
+      /** Identifier Label */
+      identifier_label: string
       /** Item Name */
       item_name: string
       kind: components['schemas']['CategoryKind']
@@ -3848,6 +3935,40 @@ export interface components {
     CodeIn: {
       /** Code */
       code: string
+    }
+    /** ComponentTypeFilter */
+    ComponentTypeFilter: {
+      /** Category */
+      category?: string | null
+    }
+    /** ComponentTypeIn */
+    ComponentTypeIn: {
+      /**
+       * Categories
+       * @default []
+       */
+      categories: string[]
+      /** Name */
+      name: string
+      /**
+       * Sort Order
+       * @default 0
+       */
+      sort_order: number
+    }
+    /** ComponentTypeOut */
+    ComponentTypeOut: {
+      /** Categories */
+      categories: components['schemas']['RefOut'][]
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /** Name */
+      name: string
+      /** Sort Order */
+      sort_order: number
     }
     /**
      * Condition
@@ -5504,6 +5625,12 @@ export interface components {
       requests: number
     }
     /**
+     * ModelChoice
+     * @description What employees choose from a category in the portal.
+     * @enum {string}
+     */
+    ModelChoice: 'any_or_specific' | 'any_only' | 'specific_only'
+    /**
      * ModuleKey
      * @enum {string}
      */
@@ -5923,6 +6050,13 @@ export interface components {
       count: number
       /** Items */
       items: components['schemas']['CategoryOut'][]
+    }
+    /** PagedComponentTypeOut */
+    PagedComponentTypeOut: {
+      /** Count */
+      count: number
+      /** Items */
+      items: components['schemas']['ComponentTypeOut'][]
     }
     /** PagedConsumableOut */
     PagedConsumableOut: {
@@ -9357,6 +9491,124 @@ export interface operations {
     }
   }
   category_delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        pk: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  componenttype_list: {
+    parameters: {
+      query?: {
+        category?: string | null
+        q?: string | null
+        ordering?: string | null
+        page?: number
+        page_size?: number | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PagedComponentTypeOut']
+        }
+      }
+    }
+  }
+  componenttype_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ComponentTypeIn']
+      }
+    }
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ComponentTypeOut']
+        }
+      }
+    }
+  }
+  componenttype_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        pk: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ComponentTypeOut']
+        }
+      }
+    }
+  }
+  componenttype_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        pk: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ComponentTypeIn']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ComponentTypeOut']
+        }
+      }
+    }
+  }
+  componenttype_delete: {
     parameters: {
       query?: never
       header?: never

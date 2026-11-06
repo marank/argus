@@ -4,6 +4,7 @@ import { reactive, type Component } from 'vue'
 
 import { usersApi } from '@/api/accounts'
 import { assetsApi, consumablesApi } from '@/api/inventory'
+import { componentTypesApi } from '@/api/masterdata'
 import { requestsApi } from '@/api/requests'
 import type { Schemas } from '@/api/types'
 import AssetEventModal from '@/components/inventory/AssetEventModal.vue'
@@ -47,11 +48,16 @@ describe('modals on the device page', () => {
 
   async function open(
     component: Component,
-    options: { flags?: Record<string, boolean>; loanDays?: number } = {},
+    options: {
+      flags?: Record<string, boolean>
+      loanDays?: number
+      props?: Record<string, unknown>
+    } = {},
   ) {
     const state = reactive({
       show: false,
       assetId: 'a1',
+      ...options.props,
       'onUpdate:show': (value: boolean) => (state.show = value),
       onSaved: vi.fn<(saved: unknown) => void>(),
     })
@@ -142,7 +148,6 @@ describe('modals on the device page', () => {
     it('offers only the kinds a technician records by hand', async () => {
       const { wrapper } = await open(AssetEventModal)
       expect(optionsBeside(wrapper, 'Repair')).toEqual([
-        'Battery replaced',
         'Component replaced',
         'Repair',
         'Maintenance',
@@ -172,16 +177,53 @@ describe('modals on the device page', () => {
       await click('Save')
 
       expect(addEvent).toHaveBeenCalledWith('a1', {
-        kind: 'battery_replaced',
+        kind: 'component_replaced',
         occurred_at: NOW.toISOString(),
         description: 'Swollen battery',
         component: 'Battery 54 Wh',
+        component_type: null,
         component_serial: 'BAT-77',
         cost: '89.50',
         consume: null,
       })
       expect(state.onSaved).toHaveBeenCalledOnce()
       expect(state.show).toBe(false)
+    })
+
+    it('replaces a tracked part of the device with a new serial number', async () => {
+      vi.spyOn(componentTypesApi, 'list').mockResolvedValue(
+        page([{ id: 'ct1', name: 'Battery', categories: [], sort_order: 0 }]),
+      )
+      const addEvent = vi
+        .spyOn(assetsApi, 'addEvent')
+        .mockResolvedValue({ id: 'e1' } as Schemas['AssetEventOut'])
+      await open(AssetEventModal, {
+        props: {
+          categoryId: 'c1',
+          installed: [
+            {
+              component_type: { id: 'ct1', name: 'Battery' },
+              serial_number: 'OLD-1',
+              installed_on: null,
+            },
+          ],
+        },
+      })
+      expect(componentTypesApi.list).toHaveBeenCalledWith({ category: 'c1', page_size: 50 })
+      // The part comes preselected; the free text is not needed then.
+      expect(hasField('Other component')).toBe(false)
+      expect(document.body.textContent).toContain('Previously: OLD-1')
+      await type('New serial number', 'NEW-2')
+      await click('Save')
+      expect(addEvent).toHaveBeenCalledWith(
+        'a1',
+        expect.objectContaining({
+          kind: 'component_replaced',
+          component_type: 'ct1',
+          component: '',
+          component_serial: 'NEW-2',
+        }),
+      )
     })
 
     it('books the consumable used for the service', async () => {

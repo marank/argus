@@ -18,7 +18,6 @@ export const ASSET_CONDITIONS = allValues<Schemas['Condition']>({
 
 /** Kinds a technician records by hand; the others are written by workflows. */
 export const MANUAL_EVENT_KINDS: Schemas['AssetEventKind'][] = [
-  'battery_replaced',
   'component_replaced',
   'repair',
   'maintenance',

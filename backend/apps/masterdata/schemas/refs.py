@@ -25,3 +25,4 @@ class CategoryRefOut(Schema):
     item_name: str
     code: str
     icon: str
+    identifier_label: str

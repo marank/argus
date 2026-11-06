@@ -53,10 +53,19 @@ watch(treeActive, () => {
 })
 
 const editing = ref<any | null>(null)
+/** A new record builds on this one (see `derive` of the resource). */
+const source = ref<any | null>(null)
 const showForm = ref(false)
 
 function edit(row: any | null) {
   editing.value = row
+  source.value = null
+  showForm.value = true
+}
+
+function derive(row: any) {
+  editing.value = null
+  source.value = row
   showForm.value = true
 }
 
@@ -104,12 +113,25 @@ const baseColumns = computed<DataTableColumns<any>>(() => [
   {
     key: '_actions',
     title: '',
-    width: readonly.value ? 0 : 84,
+    width: readonly.value ? 0 : props.resource.derive ? 112 : 84,
     align: 'right' as const,
     render: (row: any) =>
       readonly.value
         ? null
         : h('div', { class: 'row row-actions', style: 'justify-content:flex-end' }, [
+            props.resource.derive
+              ? h(
+                  NButton,
+                  {
+                    quaternary: true,
+                    size: 'tiny',
+                    title: t(props.resource.derive.label),
+                    'aria-label': t(props.resource.derive.label),
+                    onClick: (e: Event) => (e.stopPropagation(), derive(row)),
+                  },
+                  { icon: () => h(props.resource.derive!.icon, { size: 13 }) },
+                )
+              : null,
             h(
               NButton,
               {
@@ -235,6 +257,7 @@ const boolOptions = computed(() => [
       v-model:show="showForm"
       :resource="resource"
       :row="editing"
+      :source="source"
       :readonly="readonly"
       @saved="list.load"
     />

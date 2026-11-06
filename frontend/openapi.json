@@ -496,6 +496,67 @@
         "title": "AssetCandidateOut",
         "type": "object"
       },
+      "AssetComponentIn": {
+        "properties": {
+          "component_type": {
+            "format": "uuid",
+            "title": "Component Type",
+            "type": "string"
+          },
+          "installed_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Installed On"
+          },
+          "serial_number": {
+            "default": "",
+            "title": "Serial Number",
+            "type": "string"
+          }
+        },
+        "required": [
+          "component_type"
+        ],
+        "title": "AssetComponentIn",
+        "type": "object"
+      },
+      "AssetComponentOut": {
+        "properties": {
+          "component_type": {
+            "$ref": "#/components/schemas/RefOut"
+          },
+          "installed_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Installed On"
+          },
+          "serial_number": {
+            "title": "Serial Number",
+            "type": "string"
+          }
+        },
+        "required": [
+          "component_type",
+          "serial_number",
+          "installed_on"
+        ],
+        "title": "AssetComponentOut",
+        "type": "object"
+      },
       "AssetDetailOut": {
         "properties": {
           "asset_request": {
@@ -564,9 +625,20 @@
             "title": "Id",
             "type": "string"
           },
+          "identifier": {
+            "title": "Identifier",
+            "type": "string"
+          },
           "imei": {
             "title": "Imei",
             "type": "string"
+          },
+          "installed_components": {
+            "items": {
+              "$ref": "#/components/schemas/AssetComponentOut"
+            },
+            "title": "Installed Components",
+            "type": "array"
           },
           "inventory_number": {
             "title": "Inventory Number",
@@ -706,6 +778,7 @@
           "category",
           "manufacturer",
           "serial_number",
+          "identifier",
           "imei",
           "mac_address",
           "hostname",
@@ -725,6 +798,7 @@
           "updated_at",
           "reserved_for",
           "components",
+          "installed_components",
           "asset_request",
           "consumables",
           "model_consumables",
@@ -745,6 +819,18 @@
             "default": "",
             "title": "Component Serial",
             "type": "string"
+          },
+          "component_type": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Component Type"
           },
           "consume": {
             "anyOf": [
@@ -797,7 +883,6 @@
           "assigned",
           "returned",
           "reserved",
-          "battery_replaced",
           "component_replaced",
           "repair",
           "maintenance",
@@ -828,6 +913,16 @@
           "component_serial": {
             "title": "Component Serial",
             "type": "string"
+          },
+          "component_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "cost": {
             "anyOf": [
@@ -867,6 +962,10 @@
               }
             ]
           },
+          "previous_serial": {
+            "title": "Previous Serial",
+            "type": "string"
+          },
           "related_user": {
             "anyOf": [
               {
@@ -885,6 +984,8 @@
           "description",
           "component",
           "component_serial",
+          "component_type",
+          "previous_serial",
           "cost",
           "performed_by",
           "related_user",
@@ -935,6 +1036,16 @@
             "title": "Component Serial",
             "type": "string"
           },
+          "component_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "cost": {
             "anyOf": [
               {
@@ -973,6 +1084,10 @@
               }
             ]
           },
+          "previous_serial": {
+            "title": "Previous Serial",
+            "type": "string"
+          },
           "related_user": {
             "anyOf": [
               {
@@ -991,6 +1106,8 @@
           "description",
           "component",
           "component_serial",
+          "component_type",
+          "previous_serial",
           "cost",
           "performed_by",
           "related_user",
@@ -1162,10 +1279,29 @@
             "title": "Hostname",
             "type": "string"
           },
+          "identifier": {
+            "default": "",
+            "title": "Identifier",
+            "type": "string"
+          },
           "imei": {
             "default": "",
             "title": "Imei",
             "type": "string"
+          },
+          "installed_components": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/AssetComponentIn"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Installed Components"
           },
           "inventory_number": {
             "default": "",
@@ -1774,6 +1910,18 @@
             "title": "Part Number",
             "type": "string"
           },
+          "predecessor": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predecessor"
+          },
           "specifications": {
             "default": "",
             "title": "Specifications",
@@ -1918,6 +2066,16 @@
             "title": "Part Number",
             "type": "string"
           },
+          "predecessor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AssetModelRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "specifications": {
             "title": "Specifications",
             "type": "string"
@@ -1956,6 +2114,7 @@
           "list_price",
           "warranty_months",
           "compatible_with",
+          "predecessor",
           "number_sequence",
           "effective_number_sequence",
           "is_requestable",
@@ -2041,6 +2200,10 @@
           "id": {
             "format": "uuid",
             "title": "Id",
+            "type": "string"
+          },
+          "identifier": {
+            "title": "Identifier",
             "type": "string"
           },
           "imei": {
@@ -2164,6 +2327,7 @@
           "category",
           "manufacturer",
           "serial_number",
+          "identifier",
           "imei",
           "mac_address",
           "hostname",
@@ -3717,10 +3881,6 @@
       },
       "CatalogCategoryOut": {
         "properties": {
-          "allow_any_model": {
-            "title": "Allow Any Model",
-            "type": "boolean"
-          },
           "available": {
             "anyOf": [
               {
@@ -3759,6 +3919,9 @@
           },
           "kind": {
             "$ref": "#/components/schemas/CategoryKind"
+          },
+          "model_choice": {
+            "$ref": "#/components/schemas/ModelChoice"
           },
           "models": {
             "items": {
@@ -3804,7 +3967,7 @@
           "icon",
           "description",
           "parent_id",
-          "allow_any_model",
+          "model_choice",
           "holds_accessories",
           "available",
           "reserved",
@@ -3921,11 +4084,6 @@
       },
       "CategoryIn": {
         "properties": {
-          "allow_any_model": {
-            "default": true,
-            "title": "Allow Any Model",
-            "type": "boolean"
-          },
           "code": {
             "default": "",
             "title": "Code",
@@ -3939,6 +4097,11 @@
           "icon": {
             "default": "",
             "title": "Icon",
+            "type": "string"
+          },
+          "identifier_label": {
+            "default": "",
+            "title": "Identifier Label",
             "type": "string"
           },
           "is_accessory": {
@@ -3963,6 +4126,14 @@
               }
             ],
             "default": "hardware"
+          },
+          "model_choice": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ModelChoice"
+              }
+            ],
+            "default": "any_or_specific"
           },
           "name": {
             "title": "Name",
@@ -4031,10 +4202,6 @@
       },
       "CategoryOut": {
         "properties": {
-          "allow_any_model": {
-            "title": "Allow Any Model",
-            "type": "boolean"
-          },
           "code": {
             "title": "Code",
             "type": "string"
@@ -4066,6 +4233,10 @@
             "title": "Id",
             "type": "string"
           },
+          "identifier_label": {
+            "title": "Identifier Label",
+            "type": "string"
+          },
           "is_accessory": {
             "title": "Is Accessory",
             "type": "boolean"
@@ -4080,6 +4251,9 @@
           },
           "kind": {
             "$ref": "#/components/schemas/CategoryKind"
+          },
+          "model_choice": {
+            "$ref": "#/components/schemas/ModelChoice"
           },
           "name": {
             "title": "Name",
@@ -4141,12 +4315,13 @@
           "kind",
           "item_name",
           "code",
+          "identifier_label",
           "parent",
           "description",
           "icon",
           "number_sequence",
           "is_requestable",
-          "allow_any_model",
+          "model_choice",
           "requires_approval",
           "is_accessory",
           "needs_approval",
@@ -4174,6 +4349,10 @@
             "title": "Id",
             "type": "string"
           },
+          "identifier_label": {
+            "title": "Identifier Label",
+            "type": "string"
+          },
           "item_name": {
             "title": "Item Name",
             "type": "string"
@@ -4192,7 +4371,8 @@
           "kind",
           "item_name",
           "code",
-          "icon"
+          "icon",
+          "identifier_label"
         ],
         "title": "CategoryRefOut",
         "type": "object"
@@ -4208,6 +4388,83 @@
           "code"
         ],
         "title": "CodeIn",
+        "type": "object"
+      },
+      "ComponentTypeFilter": {
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          }
+        },
+        "title": "ComponentTypeFilter",
+        "type": "object"
+      },
+      "ComponentTypeIn": {
+        "properties": {
+          "categories": {
+            "default": [],
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Categories",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "sort_order": {
+            "default": 0,
+            "title": "Sort Order",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ComponentTypeIn",
+        "type": "object"
+      },
+      "ComponentTypeOut": {
+        "properties": {
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/RefOut"
+            },
+            "title": "Categories",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "sort_order": {
+            "title": "Sort Order",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "categories",
+          "sort_order"
+        ],
+        "title": "ComponentTypeOut",
         "type": "object"
       },
       "Condition": {
@@ -8350,6 +8607,16 @@
         "title": "MenuCountsOut",
         "type": "object"
       },
+      "ModelChoice": {
+        "description": "What employees choose from a category in the portal.",
+        "enum": [
+          "any_or_specific",
+          "any_only",
+          "specific_only"
+        ],
+        "title": "ModelChoice",
+        "type": "string"
+      },
       "ModuleKey": {
         "enum": [
           "consumables",
@@ -9397,6 +9664,27 @@
           "count"
         ],
         "title": "PagedCategoryOut",
+        "type": "object"
+      },
+      "PagedComponentTypeOut": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ComponentTypeOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items",
+          "count"
+        ],
+        "title": "PagedComponentTypeOut",
         "type": "object"
       },
       "PagedConsumableOut": {
@@ -17315,6 +17603,259 @@
         "summary": "Update Item",
         "tags": [
           "categories"
+        ]
+      }
+    },
+    "/api/masterdata/component-types": {
+      "get": {
+        "operationId": "componenttype_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ordering",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ordering"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedComponentTypeOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "ITStaffAuth": []
+          }
+        ],
+        "summary": "List Items",
+        "tags": [
+          "component types"
+        ]
+      },
+      "post": {
+        "operationId": "componenttype_create",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComponentTypeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComponentTypeOut"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "PermissionAuth": []
+          }
+        ],
+        "summary": "Create Item",
+        "tags": [
+          "component types"
+        ]
+      }
+    },
+    "/api/masterdata/component-types/{pk}": {
+      "delete": {
+        "operationId": "componenttype_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pk",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Pk",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "PermissionAuth": []
+          }
+        ],
+        "summary": "Delete Item",
+        "tags": [
+          "component types"
+        ]
+      },
+      "get": {
+        "operationId": "componenttype_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pk",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Pk",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComponentTypeOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "ITStaffAuth": []
+          }
+        ],
+        "summary": "Get Item",
+        "tags": [
+          "component types"
+        ]
+      },
+      "put": {
+        "operationId": "componenttype_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pk",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Pk",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComponentTypeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComponentTypeOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "PermissionAuth": []
+          }
+        ],
+        "summary": "Update Item",
+        "tags": [
+          "component types"
         ]
       }
     },

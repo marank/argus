@@ -53,6 +53,7 @@ router = build_crud_router(
             "default_supplier",
             "team",
             "number_sequence",
+            "predecessor__manufacturer",
         ).prefetch_related("compatible_with__manufacturer"),
     ),
     tags=["asset models"],

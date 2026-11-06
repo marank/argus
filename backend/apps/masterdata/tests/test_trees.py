@@ -52,7 +52,7 @@ def test_categories_and_locations_can_be_created_through_the_api(admin_client):
         "number_sequence": None,
         "team": str(team.pk),
         "is_requestable": True,
-        "allow_any_model": True,
+        "model_choice": "any_or_specific",
         "requires_approval": False,
         "sort_order": 0,
     }

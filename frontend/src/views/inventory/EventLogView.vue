@@ -19,7 +19,6 @@ const { t } = useI18n()
 const { dateTime, enumLabel, money } = useFormat()
 
 const ALL_KINDS = allValues<Schemas['AssetEventKind']>({
-  battery_replaced: true,
   component_replaced: true,
   repair: true,
   maintenance: true,
@@ -37,7 +36,7 @@ const ALL_KINDS = allValues<Schemas['AssetEventKind']>({
 const list = useList(eventsApi.list, {
   live: ['asset'],
   filters: {
-    kind: ['battery_replaced', 'component_replaced', 'repair', 'maintenance', 'inspection'],
+    kind: ['component_replaced', 'repair', 'maintenance', 'inspection'],
     model: null,
     since: null,
     until: null,
@@ -86,7 +85,7 @@ const columns = computed<DataTableColumns<Schemas['AssetEventWithAssetOut']>>(()
     key: 'component',
     title: t('inventory.event.component'),
     width: 170,
-    render: (e) => e.component || '—',
+    render: (e) => e.component_type?.name || e.component || '—',
   },
   {
     key: 'description',

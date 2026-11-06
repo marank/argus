@@ -41,9 +41,11 @@ from apps.masterdata.models import (
     AssetModel,
     Category,
     CategoryKind,
+    ComponentType,
     Location,
     LocationKind,
     Manufacturer,
+    ModelChoice,
     Supplier,
 )
 from apps.procurement.models import PurchaseOrder
@@ -128,6 +130,7 @@ class DemoBase(TypedDict):
     it: User
     categories: dict[str, Category]
     models: dict[str, AssetModel]
+    battery: ComponentType
     storage: Location
     warehouse: Location
     hq: Location
@@ -212,7 +215,11 @@ class Command(BaseCommand):
                     padding=4,
                 )
             categories[code] = Category.objects.create(
-                allow_any_model=code not in ("mde-accessories", "consumables", *SOFTWARE_CATEGORIES),
+                model_choice=(
+                    ModelChoice.SPECIFIC_ONLY
+                    if code in ("mde-accessories", "consumables", *SOFTWARE_CATEGORIES)
+                    else ModelChoice.ANY_OR_SPECIFIC
+                ),
                 is_accessory=code in ("mde-accessories", "consumables"),
                 kind=CategoryKind.SOFTWARE if code in SOFTWARE_CATEGORIES else CategoryKind.HARDWARE,
                 code=code,
@@ -223,6 +230,14 @@ class Command(BaseCommand):
                 parent=categories[parent] if parent else None,
                 sort_order=index * 10,
             )
+
+        # What the further number on the label is called, and the battery as a tracked part.
+        categories["mde"].identifier_label = "CN"
+        categories["mde"].save()
+        categories["laptops"].identifier_label = "MTM"
+        categories["laptops"].save()
+        battery = ComponentType.objects.create(name="Battery")
+        battery.categories.add(categories["mde"], categories["laptops"])
 
         models: dict[str, AssetModel] = {}
         for maker, name, category, tracking, ean, price in MODELS:
@@ -316,13 +331,30 @@ class Command(BaseCommand):
             license_service.assign_license(m365, it, user_id=person.pk)
         license_service.assign_license(acrobat, it, user_id=sales.pk)
         license_service.assign_license(autocad, it, asset_id=created["Precision 3680 Tower"][0].pk)
-        for mde in created["SX58"][:3]:
+        for index, mde in enumerate(created["SX58"]):
+            mde.identifier = "SX58-STD-0001"
+            mde.save()
+            asset_service.update_asset(
+                mde,
+                {
+                    "installed_components": [
+                        {
+                            "component_type": battery.pk,
+                            "serial_number": f"BTRY-SX5X-{4100 + index}",
+                            "installed_on": today - timedelta(days=400),
+                        }
+                    ]
+                },
+                it,
+            )
+        for index, mde in enumerate(created["SX58"][:3]):
             asset_service.record_event(
                 mde,
                 {
-                    "kind": AssetEventKind.BATTERY_REPLACED,
+                    "kind": AssetEventKind.COMPONENT_REPLACED,
                     "description": "Battery no longer held a full shift.",
-                    "component": "Battery 4680 mAh",
+                    "component_type": battery.pk,
+                    "component_serial": f"BTRY-SX5X-{5200 + index}",
                     "occurred_at": timezone.now() - timedelta(days=12),
                 },
                 it,
@@ -403,6 +435,7 @@ class Command(BaseCommand):
             "it": it,
             "categories": categories,
             "models": models,
+            "battery": battery,
             "storage": storage,
             "warehouse": warehouse,
             "hq": hq,
@@ -612,7 +645,11 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:
             item_name=singular,
             number_sequence=sequence,
             parent=categories.get(parent) if parent else None,
-            allow_any_model=kind == "hardware" and code != "laptop-accessories",
+            model_choice=(
+                ModelChoice.ANY_OR_SPECIFIC
+                if kind == "hardware" and code != "laptop-accessories"
+                else ModelChoice.SPECIFIC_ONLY
+            ),
             is_accessory=code == "laptop-accessories",
             sort_order=start + index * 10,
         )
@@ -726,7 +763,6 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:
 
     # Service history spread over the last year.
     history = [
-        (AssetEventKind.BATTERY_REPLACED, "Battery replaced after swelling.", "Battery 57 Wh", "120.00"),
         (AssetEventKind.INSPECTION, "Annual electrical safety inspection (DGUV V3) passed.", "", None),
         (AssetEventKind.MAINTENANCE, "Firmware and BIOS updated.", "", None),
         (AssetEventKind.COMPONENT_REPLACED, "Display replaced after a crack.", "Display panel", "245.00"),
@@ -741,6 +777,19 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:
                 "description": description,
                 "component": component,
                 "cost": cost,
+                "occurred_at": now - timedelta(days=rng.randint(5, 330)),
+            },
+            it,
+        )
+    for index, laptop in enumerate(laptops[:6]):
+        asset_service.record_event(
+            laptop,
+            {
+                "kind": AssetEventKind.COMPONENT_REPLACED,
+                "description": "Battery replaced after swelling.",
+                "component_type": base["battery"].pk,
+                "component_serial": f"5B10W51{830 + index}",
+                "cost": "120.00",
                 "occurred_at": now - timedelta(days=rng.randint(5, 330)),
             },
             it,

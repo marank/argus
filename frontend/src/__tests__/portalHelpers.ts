@@ -138,7 +138,7 @@ export function catalogCategory(
     item_name: '',
     kind: 'hardware',
     parent_id: null,
-    allow_any_model: true,
+    model_choice: 'any_or_specific',
     holds_accessories: false,
     models: [],
     available: null,

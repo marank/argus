@@ -9,6 +9,11 @@ export default {
     inventoryNumber: 'Inventory no.',
     inventoryNumberHint: 'Empty: next number from the sequence of the model or its category.',
     serialNumber: 'Serial number',
+    identifier: 'Identifier',
+    identifierHelp:
+      'A further number of the manufacturer, e.g. the configuration of the device (Handtec CN, Lenovo MTM). The category says what it is called.',
+    partSerial: '{part} serial',
+    installedOn: 'Installed on',
     imei: 'IMEI',
     macAddress: 'MAC address',
     hostname: 'Hostname',
@@ -32,9 +37,11 @@ export default {
   },
   sections: {
     identification: 'Identification',
+    components: 'Components',
     usage: 'Status & usage',
     purchase: 'Purchase & warranty',
   },
+  since: 'since {date}',
   unassign: 'Take back',
   createRequest: 'Create request',
   quickAssign: {
@@ -82,6 +89,9 @@ export default {
     occurredAt: 'Date',
     component: 'Component',
     componentSerial: 'Component serial',
+    otherComponent: 'Other component',
+    newSerial: 'New serial number',
+    currentSerial: 'Previously: {serial}',
     cost: 'Cost',
     performedBy: 'By',
     employee: 'Employee',

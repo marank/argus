@@ -10,6 +10,11 @@ export default {
     inventoryNumberHint:
       'Leer: nächste Nummer aus der Nummernserie des Modells bzw. seiner Kategorie.',
     serialNumber: 'Seriennummer',
+    identifier: 'Kennung',
+    identifierHelp:
+      'Weitere Nummer des Herstellers, z. B. die Ausführung des Geräts (Handtec CN, Lenovo MTM). Wie sie heißt, steht an der Kategorie.',
+    partSerial: 'Seriennr. {part}',
+    installedOn: 'Eingebaut am',
     imei: 'IMEI',
     macAddress: 'MAC-Adresse',
     hostname: 'Hostname',
@@ -33,9 +38,11 @@ export default {
   },
   sections: {
     identification: 'Identifikation',
+    components: 'Komponenten',
     usage: 'Status & Nutzung',
     purchase: 'Kauf & Garantie',
   },
+  since: 'seit {date}',
   unassign: 'Zurücknehmen',
   createRequest: 'Anforderung erstellen',
   quickAssign: {
@@ -83,6 +90,9 @@ export default {
     occurredAt: 'Datum',
     component: 'Komponente',
     componentSerial: 'Seriennr. Komponente',
+    otherComponent: 'Andere Komponente',
+    newSerial: 'Neue Seriennummer',
+    currentSerial: 'Bisher: {serial}',
     cost: 'Kosten',
     performedBy: 'Durch',
     employee: 'Mitarbeiter',

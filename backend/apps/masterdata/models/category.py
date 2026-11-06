@@ -18,6 +18,14 @@ class CategoryKind(models.TextChoices):
     SOFTWARE = "software", _("Software")
 
 
+class ModelChoice(models.TextChoices):
+    """What employees choose from a category in the portal."""
+
+    ANY_OR_SPECIFIC = "any_or_specific", _("Any or a specific model")
+    ANY_ONLY = "any_only", _("Any model only")
+    SPECIFIC_ONLY = "specific_only", _("A specific model only")
+
+
 class Category(TimeStampedModel):
     """Category such as *Laptops*, *MDE accessories* or *Office software*.
 
@@ -37,6 +45,15 @@ class Category(TimeStampedModel):
         help_text=_("Name of a single item, e.g. “Laptop”. Shown for “any model” requests."),
     )
     code = models.SlugField(_("code"), max_length=30, blank=True)
+    identifier_label = models.CharField(
+        _("name of the identifier"),
+        max_length=30,
+        blank=True,
+        help_text=_(
+            "What the identifier of devices is called in this category, e.g. “CN” or “MTM”. "
+            "Not inherited by subcategories."
+        ),
+    )
     parent = models.ForeignKey(
         "self",
         verbose_name=_("parent category"),
@@ -71,13 +88,15 @@ class Category(TimeStampedModel):
     is_requestable = models.BooleanField(
         _("requestable"), default=True, help_text=_("Shown in the employee portal.")
     )
-    allow_any_model = models.BooleanField(
-        _("any model requestable"),
-        default=True,
+    model_choice = models.CharField(
+        _("choice in the portal"),
+        max_length=20,
+        choices=ModelChoice.choices,
+        default=ModelChoice.ANY_OR_SPECIFIC,
         help_text=_(
-            "Employees may request “any model” of this category, e.g. a charging cable "
-            "when the type does not matter; IT picks the model when assigning. Turn off "
-            "where employees have to choose a specific model."
+            "“Any model”: IT picks the model when handing out, e.g. a charging cable when the "
+            "type does not matter. Only any model: employees cannot pick one themselves, e.g. "
+            "for scanners. Only a specific model: e.g. toner, where the type matters."
         ),
     )
     requires_approval = models.BooleanField(
@@ -116,6 +135,14 @@ class Category(TimeStampedModel):
 
     def __str__(self) -> str:
         return self.name
+
+    @property
+    def allows_any_model(self) -> bool:
+        return self.model_choice != ModelChoice.SPECIFIC_ONLY
+
+    @property
+    def allows_specific_model(self) -> bool:
+        return self.model_choice != ModelChoice.ANY_ONLY
 
     @property
     def is_software(self) -> bool:

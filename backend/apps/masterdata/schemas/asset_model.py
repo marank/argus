@@ -32,6 +32,7 @@ class AssetModelOut(Schema):
     list_price: Decimal | None
     warranty_months: int
     compatible_with: list[AssetModelRefOut]
+    predecessor: AssetModelRefOut | None
     number_sequence: RefOut | None
     # The sequence new devices draw from: the model's own, the category's or the general one.
     # Empty for consumables and licenses, which get no inventory numbers.
@@ -82,6 +83,7 @@ class AssetModelIn(Schema):
     list_price: Decimal | None = None
     warranty_months: int = Field(24, ge=0)
     compatible_with: list[UUID] = []
+    predecessor: UUID | None = None
     number_sequence: UUID | None = None
     is_requestable: bool = True
     is_active: bool = True

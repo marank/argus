@@ -10,12 +10,18 @@ import { anyModelLabel } from '@/utils/requests'
 
 import CatalogOptionRow from './CatalogOptionRow.vue'
 import FreeTextOption from './FreeTextOption.vue'
-import { offersAnyModel, optionKey, optionCounts, type CatalogOption } from './types'
+import {
+  offersAnyModel,
+  offersSpecificModel,
+  optionKey,
+  optionCounts,
+  type CatalogOption,
+} from './types'
 
 /**
- * Options of one device group: "any device" first, then the specific models, then one block
- * with the accessories: the subcategories' options and the models of accessory categories
- * compatible with the group's models.
+ * Options of one device group: "any device" first, then the specific models, then the
+ * subcategories, then one block with the accessories: the subcategories marked as such and the
+ * models of accessory categories compatible with the group's models.
  */
 const props = defineProps<{
   category: Schemas['CatalogCategoryOut']
@@ -82,6 +88,36 @@ interface AccessoryGroup {
   options: AccessoryOption[]
 }
 
+/** What a group offers: any device of it, its models, or both (see the category's choice). */
+function optionsOf(group: Schemas['CatalogCategoryOut']): AccessoryOption[] {
+  return [
+    ...(offersAnyModel(group) ? [{ key: optionKey(group), category: group, fits: [] }] : []),
+    ...(offersSpecificModel(group)
+      ? group.models.map((model) => ({
+          key: optionKey(group, model),
+          category: group,
+          model,
+          fits: [],
+        }))
+      : []),
+  ]
+}
+
+/**
+ * Subcategories in the accessories block: those marked as accessories, unless the page is an
+ * accessory category itself (then they are just its subgroups).
+ */
+const isAccessoryGroup = (group: Schemas['CatalogCategoryOut']) =>
+  group.holds_accessories && !props.category.holds_accessories
+
+/** The other subcategories, as groups of their own (e.g. "Laptops / 14 inch"). */
+const subgroups = computed<AccessoryGroup[]>(() =>
+  props.children
+    .filter((group) => !isAccessoryGroup(group))
+    .map((group) => ({ category: group, options: optionsOf(group) }))
+    .filter((group) => group.options.length),
+)
+
 /**
  * The accessories, grouped by their category in catalog order. A group gets a heading only
  * when it has more than one option; a single option names its group in the hint instead.
@@ -96,12 +132,14 @@ const accessories = computed<AccessoryGroup[]>(() => {
   for (const device of props.category.models) {
     for (const id of device.accessories) {
       const entry = byModel.value.get(id)
-      if (entry) add(entry.category, entry.model).fits.push(device.full_name)
+      if (!entry) continue
+      // Where IT picks the model, the accessory is offered as "any" of its category.
+      const model = offersSpecificModel(entry.category) ? entry.model : undefined
+      add(entry.category, model).fits.push(device.full_name)
     }
   }
-  for (const group of props.children) {
-    if (offersAnyModel(group)) add(group)
-    for (const model of group.models) add(group, model)
+  for (const group of props.children.filter(isAccessoryGroup)) {
+    for (const option of optionsOf(group)) add(option.category, option.model)
   }
   const order = new Map(props.catalog.map((c, index) => [c.id, index]))
   const groups = new Map<Id, AccessoryGroup>()
@@ -114,6 +152,14 @@ const accessories = computed<AccessoryGroup[]>(() => {
     (a, b) => (order.get(a.category.id) ?? 0) - (order.get(b.category.id) ?? 0),
   )
 })
+
+/** A group's name goes into the hint of its only option instead of a heading of its own. */
+function groupHint(group: AccessoryGroup, option: AccessoryOption): string | undefined {
+  return hint(
+    group.options.length === 1 ? path(group.category) : undefined,
+    option.model?.description,
+  )
+}
 
 function accessoryHint(group: AccessoryGroup, option: AccessoryOption): string | undefined {
   // Fitting every model of the group goes without saying.
@@ -138,7 +184,10 @@ function accessoryHint(group: AccessoryGroup, option: AccessoryOption): string |
       </div>
     </header>
 
-    <section v-if="offersAnyModel(category) || category.models.length" class="group">
+    <section
+      v-if="offersAnyModel(category) || (offersSpecificModel(category) && category.models.length)"
+      class="group"
+    >
       <CatalogOptionRow
         v-if="offersAnyModel(category)"
         primary
@@ -148,7 +197,7 @@ function accessoryHint(group: AccessoryGroup, option: AccessoryOption): string |
         @add="emit('add', category)"
         @remove="emit('remove', category)"
       />
-      <template v-if="category.models.length">
+      <template v-if="offersSpecificModel(category) && category.models.length">
         <div v-if="offersAnyModel(category)" class="eyebrow sub">
           {{ t('requests.new.specificModel') }}
         </div>
@@ -165,6 +214,24 @@ function accessoryHint(group: AccessoryGroup, option: AccessoryOption): string |
           />
         </div>
       </template>
+    </section>
+
+    <section v-if="subgroups.length" class="group">
+      <div class="models">
+        <template v-for="group in subgroups" :key="group.category.id">
+          <div v-if="group.options.length > 1" class="sub-heading">{{ path(group.category) }}</div>
+          <CatalogOptionRow
+            v-for="option in group.options"
+            :key="option.key"
+            :label="option.model ? option.model.full_name : anyModelLabel(option.category)"
+            :hint="groupHint(group, option)"
+            :counts="optionCounts(option.category, option.model)"
+            :in-cart="cartCounts[option.key] ?? 0"
+            @add="emit('add', option.category, option.model)"
+            @remove="emit('remove', option.category, option.model)"
+          />
+        </template>
+      </div>
     </section>
 
     <section v-if="accessories.length" class="accessories">

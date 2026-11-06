@@ -118,6 +118,18 @@ export interface ResourceDef<T extends { id: Id }> {
   superuser?: boolean
   /** Whether a record offers deleting; by default all do. */
   deletable?: (row: T) => boolean
+  /**
+   * New records that build on an existing one, e.g. a successor model. A row action creates one
+   * with the `copy` fields taken over and the original in the `link` field; choosing a record in
+   * the `link` field of the form offers to take over the `copy` fields as well.
+   */
+  derive?: {
+    /** i18n key of the row action. */
+    label: string
+    icon: Component
+    link: string
+    copy: string[]
+  }
 }
 
 export const isVisible = (def: { visible?: () => boolean }) => def.visible?.() ?? true

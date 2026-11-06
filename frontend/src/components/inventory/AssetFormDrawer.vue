@@ -10,12 +10,13 @@ import {
   NInputNumber,
   NSelect,
 } from 'naive-ui'
-import { computed, reactive, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { usersApi } from '@/api/accounts'
 import { assetsApi } from '@/api/inventory'
 import { assetModelsApi, locationsApi, suppliersApi } from '@/api/masterdata'
+import { loadComponentTypes } from '@/utils/components'
 import type { Schemas } from '@/api/types'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import FieldLabel from '@/components/common/FieldLabel.vue'
@@ -47,6 +48,7 @@ function empty(): Form {
     model: null,
     inventory_number: '',
     serial_number: '',
+    identifier: '',
     imei: '',
     mac_address: '',
     hostname: '',
@@ -61,6 +63,7 @@ function empty(): Form {
     purchase_price: null,
     warranty_until: null,
     consumables: [],
+    installed_components: null,
     notes: '',
   }
 }
@@ -79,6 +82,7 @@ watch(show, (visible) => {
           model: a.model.id,
           inventory_number: a.inventory_number,
           serial_number: a.serial_number,
+          identifier: a.identifier,
           imei: a.imei,
           mac_address: a.mac_address,
           hostname: a.hostname,
@@ -93,11 +97,44 @@ watch(show, (visible) => {
           purchase_price: a.purchase_price,
           warranty_until: a.warranty_until,
           consumables: a.consumables.map((c) => c.id),
+          installed_components: null,
           notes: a.notes,
         }
       : empty(),
   )
+  category.value = a?.category ?? null
+  parts.value = Object.fromEntries(
+    (a?.installed_components ?? []).map((c) => [
+      c.component_type.id,
+      { serial_number: c.serial_number, installed_on: fromIsoDate(c.installed_on) },
+    ]),
+  )
+  fillParts()
 })
+
+/** The category of the chosen model: names the identifier and brings the tracked parts. */
+const category = ref<Schemas['CategoryRefOut'] | null>(null)
+const identifierLabel = computed(() =>
+  category.value?.identifier_label
+    ? `${t('inventory.fields.identifier')} (${category.value.identifier_label})`
+    : t('inventory.fields.identifier'),
+)
+/** The tracked parts of devices of this category, e.g. the battery. */
+const componentTypes = ref<Schemas['ComponentTypeOut'][]>([])
+/** Serial number and date of each part, by component type. */
+const parts = ref<Record<Id, { serial_number: string; installed_on: number | null }>>({})
+watch(
+  () => category.value?.id,
+  async (id) => {
+    componentTypes.value = await loadComponentTypes(id)
+    fillParts()
+  },
+)
+/** An empty entry for each part not recorded yet. */
+function fillParts() {
+  for (const type of componentTypes.value)
+    parts.value[type.id] ??= { serial_number: '', installed_on: null }
+}
 
 const statusOptions = computed(() =>
   ASSET_STATUSES.map((s) => ({ value: s, label: enumLabel('assetStatus', s) })),
@@ -119,12 +156,20 @@ const price = computed({
 })
 
 async function save() {
+  const data = {
+    ...form,
+    model: form.model!,
+    installed_components: componentTypes.value.map((type) => ({
+      component_type: type.id,
+      serial_number: parts.value[type.id]?.serial_number ?? '',
+      installed_on: toIsoDate(parts.value[type.id]?.installed_on ?? null),
+    })),
+  }
   const saved = await run(
     () =>
-      (props.asset
-        ? assetsApi.update(props.asset.id, { ...form, model: form.model! })
-        : assetsApi.create({ ...form, model: form.model! })
-      ).catch(fieldErrors.capture),
+      (props.asset ? assetsApi.update(props.asset.id, data) : assetsApi.create(data)).catch(
+        fieldErrors.capture,
+      ),
     t('common.saved'),
   )
   if (saved) {
@@ -161,6 +206,7 @@ async function save() {
                 :params="{ tracking: 'serialized', is_active: true }"
                 :label="(m) => `${modelLabel(m)} · ${m.category.name}`"
                 :initial="asset ? ({ ...asset.model, category: asset.category } as never) : null"
+                @select="(m) => (category = m?.category ?? null)"
               />
             </NFormItemGi>
             <NFormItemGi v-bind="fieldErrors.item('inventory_number')">
@@ -176,6 +222,12 @@ async function save() {
               :label="t('inventory.fields.serialNumber')"
             >
               <NInput v-model:value="form.serial_number" class="mono-input" />
+            </NFormItemGi>
+            <NFormItemGi v-bind="fieldErrors.item('identifier')">
+              <template #label
+                ><FieldLabel :label="identifierLabel" :help="t('inventory.fields.identifierHelp')"
+              /></template>
+              <NInput v-model:value="form.identifier" class="mono-input" />
             </NFormItemGi>
             <NFormItemGi v-bind="fieldErrors.item('imei')" :label="t('inventory.fields.imei')">
               <NInput v-model:value="form.imei" class="mono-input" />
@@ -206,6 +258,28 @@ async function save() {
                 "
               />
             </NFormItemGi>
+          </NGrid>
+        </FormSection>
+
+        <FormSection v-if="componentTypes.length" :title="t('inventory.sections.components')">
+          <NGrid :cols="2" :x-gap="12">
+            <template v-for="type in componentTypes" :key="type.id">
+              <NFormItemGi
+                v-if="parts[type.id]"
+                v-bind="fieldErrors.item('installed_components')"
+                :label="t('inventory.fields.partSerial', { part: type.name })"
+              >
+                <NInput v-model:value="parts[type.id]!.serial_number" class="mono-input" />
+              </NFormItemGi>
+              <NFormItemGi v-if="parts[type.id]" :label="t('inventory.fields.installedOn')">
+                <DateField
+                  v-model:value="parts[type.id]!.installed_on"
+                  type="date"
+                  clearable
+                  style="width: 100%"
+                />
+              </NFormItemGi>
+            </template>
           </NGrid>
         </FormSection>
 

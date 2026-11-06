@@ -6,7 +6,7 @@ from apps.accounts.schemas import TeamRefOut, default_team
 from apps.core.api.security import context_is_it_staff
 from apps.core.schemas import RefOut
 from apps.core.schemas.base import Schema
-from apps.masterdata.models import Category, CategoryKind
+from apps.masterdata.models import Category, CategoryKind, ModelChoice
 
 
 class CategoryOut(Schema):
@@ -15,12 +15,13 @@ class CategoryOut(Schema):
     kind: CategoryKind
     item_name: str
     code: str
+    identifier_label: str
     parent: RefOut | None
     description: str
     icon: str
     number_sequence: RefOut | None
     is_requestable: bool
-    allow_any_model: bool
+    model_choice: ModelChoice
     requires_approval: bool
     is_accessory: bool
     # Whether requests need approval, here or because of a category above.
@@ -62,12 +63,13 @@ class CategoryIn(Schema):
     kind: CategoryKind = CategoryKind.HARDWARE
     item_name: str = ""
     code: str = ""
+    identifier_label: str = ""
     parent: UUID | None = None
     description: str = ""
     icon: str = ""
     number_sequence: UUID | None = None
     is_requestable: bool = True
-    allow_any_model: bool = True
+    model_choice: ModelChoice = ModelChoice.ANY_OR_SPECIFIC
     requires_approval: bool = False
     is_accessory: bool = False
     team: UUID | None = None

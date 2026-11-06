@@ -20,7 +20,6 @@ export default {
     assigned: 'Ausgegeben',
     returned: 'Zurückgegeben',
     reserved: 'Reserviert',
-    battery_replaced: 'Akku getauscht',
     component_replaced: 'Komponente getauscht',
     repair: 'Reparatur',
     maintenance: 'Wartung',
@@ -66,6 +65,11 @@ export default {
     license: 'Softwarelizenz',
   },
   categoryKind: { hardware: 'Hardware', software: 'Software' },
+  modelChoice: {
+    any_or_specific: 'Beliebiges oder bestimmtes Modell',
+    any_only: 'Nur beliebiges Modell',
+    specific_only: 'Nur bestimmtes Modell',
+  },
   departmentIcon: {
     building: 'Gebäude',
     briefcase: 'Geschäftsleitung',

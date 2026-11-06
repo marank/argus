@@ -67,6 +67,15 @@ class AssetModel(TimeStampedModel):
         blank=True,
         help_text=_("Accessories, spare parts and consumables that fit this model."),
     )
+    predecessor = models.ForeignKey(
+        "self",
+        verbose_name=_("successor of"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="successors",
+        help_text=_("The model this one replaces."),
+    )
     number_sequence = models.ForeignKey(
         "core.NumberSequence",
         verbose_name=_("number sequence"),
@@ -135,6 +144,23 @@ class AssetModel(TimeStampedModel):
                     )
                 }
             )
+        if self.predecessor_id and self.predecessor_id in self._successor_chain_ids():
+            raise ValidationError(
+                {"predecessor": _("A model cannot succeed itself or one of its successors.")}
+            )
+
+    def _successor_chain_ids(self) -> set[UUID]:
+        """IDs of this model and of all models that (indirectly) succeed it."""
+        successors: dict[UUID, list[UUID]] = {}
+        for pk, predecessor_id in AssetModel.objects.filter(predecessor__isnull=False).values_list(
+            "pk", "predecessor_id"
+        ):
+            successors.setdefault(predecessor_id, []).append(pk)
+        ids, frontier = {self.pk}, [self.pk]
+        while frontier:
+            frontier = [pk for model in frontier for pk in successors.get(model, []) if pk not in ids]
+            ids.update(frontier)
+        return ids
 
     # Set by the portal catalog (apps/requests/api/portal.py), not columns; declared last
     # so the names shadow nothing in the class body.

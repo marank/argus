@@ -4,13 +4,14 @@ import { reactive } from 'vue'
 
 import { ApiError } from '@/api/client'
 import { assetsApi } from '@/api/inventory'
-import { assetModelsApi, locationsApi } from '@/api/masterdata'
+import { assetModelsApi, componentTypesApi, locationsApi } from '@/api/masterdata'
 import type { Schemas } from '@/api/types'
 import AssetFormDrawer from '@/components/inventory/AssetFormDrawer.vue'
 
 import { button, click } from './dom'
 import {
   bodyText,
+  categoryRef,
   field,
   locationRef,
   makeAsset,
@@ -108,6 +109,40 @@ describe('AssetFormDrawer', () => {
     )
     expect(state.onSaved).toHaveBeenCalledWith(created)
     expect(state.show).toBe(false)
+  })
+
+  it('names the identifier after the category and records the fitted parts', async () => {
+    vi.spyOn(componentTypesApi, 'list').mockResolvedValue(
+      page([{ id: 'ct1', name: 'Battery', categories: [], sort_order: 0 }]),
+    )
+    const asset = makeAsset({
+      category: { ...categoryRef(), identifier_label: 'MTM' },
+      identifier: '21L1-0012GE',
+      installed_components: [
+        {
+          component_type: { id: 'ct1', name: 'Battery' },
+          serial_number: 'BAT-1',
+          installed_on: '2025-03-01',
+        },
+      ],
+    })
+    const update = vi.spyOn(assetsApi, 'update').mockResolvedValue(asset)
+    await drawer(asset)
+    expect(componentTypesApi.list).toHaveBeenCalledWith({ category: 'c1', page_size: 50 })
+    expect(field('Identifier (MTM)').value).toBe('21L1-0012GE')
+    expect(field('Battery serial').value).toBe('BAT-1')
+    await type('Battery serial', 'BAT-2')
+    await click('Save')
+
+    expect(update).toHaveBeenCalledWith(
+      'a1',
+      expect.objectContaining({
+        identifier: '21L1-0012GE',
+        installed_components: [
+          { component_type: 'ct1', serial_number: 'BAT-2', installed_on: '2025-03-01' },
+        ],
+      }),
+    )
   })
 
   it('edits a device starting from its stored values', async () => {

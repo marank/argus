@@ -80,10 +80,12 @@ function device(overrides: Partial<Schemas['AssetOut']> = {}): Schemas['AssetOut
     reserved_for: null,
     inventory_number: 'NB-0001',
     serial_number: 'SN-111',
+    identifier: '',
     status: 'in_stock',
     model: modelRef('m-t14', 'ThinkPad T14'),
     category: {
       id: 'c-laptops',
+      identifier_label: '',
       name: 'Laptops',
       code: 'NB',
       icon: 'laptop',

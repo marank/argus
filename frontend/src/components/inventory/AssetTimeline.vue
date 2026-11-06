@@ -23,7 +23,6 @@ const TYPES: Partial<
   assigned: 'info',
   returned: 'default',
   reserved: 'info',
-  battery_replaced: 'warning',
   component_replaced: 'warning',
   repair: 'error',
   maintenance: 'warning',
@@ -41,8 +40,14 @@ const TYPES: Partial<
       <template #header>
         <div class="head">
           <strong>{{ enumLabel('eventKind', event.kind) }}</strong>
-          <span v-if="event.component" class="muted">· {{ event.component }}</span>
-          <span v-if="event.component_serial" class="mono muted">{{ event.component_serial }}</span>
+          <span v-if="event.component_type || event.component" class="muted"
+            >· {{ event.component_type?.name ?? event.component }}</span
+          >
+          <span v-if="event.component_serial || event.previous_serial" class="mono muted">{{
+            event.previous_serial
+              ? `${event.previous_serial} → ${event.component_serial || '—'}`
+              : event.component_serial
+          }}</span>
           <NButton
             v-if="editable && MANUAL_EVENT_KINDS.includes(event.kind)"
             quaternary

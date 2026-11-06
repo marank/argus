@@ -18,6 +18,7 @@ import FieldLabel from '@/components/common/FieldLabel.vue'
 import FormSection from '@/components/common/FormSection.vue'
 import ToggleRow from '@/components/common/ToggleRow.vue'
 import { useAction } from '@/composables/useAction'
+import { useConfirm } from '@/composables/useConfirm'
 import { useFieldErrors } from '@/composables/useFieldErrors'
 import { useFormat } from '@/composables/useFormat'
 import { CATEGORY_ICONS } from '@/utils/icons'
@@ -25,20 +26,79 @@ import { CATEGORY_ICONS } from '@/utils/icons'
 import { helpKey, isFieldVisible, sectionFields, type FieldDef, type ResourceDef } from './types'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const props = defineProps<{ resource: ResourceDef<any>; row: any | null; readonly?: boolean }>()
+const props = defineProps<{
+  resource: ResourceDef<any>
+  row: any | null
+  readonly?: boolean
+  /** For a new record: the record it builds on (see `derive` of the resource). */
+  source?: any | null
+}>()
 const show = defineModel<boolean>('show', { required: true })
 const emit = defineEmits<{ saved: [] }>()
 const { t } = useI18n()
 const { enumLabel } = useFormat()
 const { busy, run } = useAction()
+const confirm = useConfirm()
 
 const form = reactive<Record<string, any>>({})
 const fieldErrors = useFieldErrors(form)
+/** Labels of entity values set by the form itself (taken over from another record). */
+const labels = reactive<Record<string, any>>({})
+
+const fieldsByKey = computed(() => new Map(sectionFields(props.resource).map((f) => [f.key, f])))
+
+/** The record(s) an entity field shows for its value. */
+function initialOf(field: FieldDef & { type: 'entity' }) {
+  if (field.key in labels) return labels[field.key]
+  return props.row && field.initial ? field.initial(props.row) : null
+}
+
+/** Takes over the `copy` fields of `source`; lists are merged with what the form has. */
+function takeOver(source: any) {
+  const derive = props.resource.derive!
+  const values = props.resource.toForm(source)
+  for (const key of derive.copy) {
+    const field = fieldsByKey.value.get(key)
+    const label = field?.type === 'entity' && field.initial ? field.initial(source) : undefined
+    if (Array.isArray(values[key])) {
+      const own: any[] = Array.isArray(form[key]) ? form[key] : []
+      const ownLabels = field?.type === 'entity' ? (initialOf(field) ?? []) : []
+      form[key] = [...new Set([...own, ...(values[key] as any[])])]
+      if (label) labels[key] = [...ownLabels, ...label]
+    } else {
+      form[key] = values[key]
+      if (label) labels[key] = label
+    }
+  }
+}
 
 function resetForm() {
   for (const key of Object.keys(form)) delete form[key]
+  for (const key of Object.keys(labels)) delete labels[key]
   fieldErrors.clear()
   Object.assign(form, props.row ? props.resource.toForm(props.row) : props.resource.defaults())
+  const derive = props.resource.derive
+  if (!props.row && props.source && derive) {
+    takeOver(props.source)
+    form[derive.link] = props.source.id
+    labels[derive.link] = props.source
+  }
+}
+
+/** Choosing the record to build on offers to take over its fields. */
+async function onSelect(field: FieldDef, item: any) {
+  const derive = props.resource.derive
+  if (!derive || field.key !== derive.link || !item || item.id === props.row?.id) return
+  labels[derive.link] = item
+  const names = derive.copy
+    .map((key) => fieldsByKey.value.get(key))
+    .filter((f) => f && isFieldVisible(f, form))
+    .map((f) => t(f!.label))
+  const take = await confirm(
+    t('masterdata.takeOver', { name: props.resource.title(item), fields: names.join(', ') }),
+    { positiveText: t('masterdata.takeOverYes'), negativeText: t('masterdata.takeOverNo') },
+  )
+  if (take) takeOver(item)
 }
 
 watch(show, (visible) => {
@@ -175,7 +235,8 @@ async function save(another = false) {
                   :label="field.display"
                   :params="field.params"
                   :multiple="field.multiple"
-                  :initial="row && field.initial ? field.initial(row) : null"
+                  :initial="initialOf(field)"
+                  @select="(item: any) => onSelect(field, item)"
                 />
               </NFormItemGi>
             </NGrid>

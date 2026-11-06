@@ -3067,3 +3067,113 @@ msgstr "Legen Sie das Lieferdatum fest oder benachrichtigen Sie den Mitarbeiter 
 #: apps/requests/services/workflow.py
 msgid "Set date and place of the pickup, or do not notify the employee."
 msgstr "Legen Sie Termin und Ort der Abholung fest oder benachrichtigen Sie den Mitarbeiter nicht."
+
+#: apps/masterdata/models/asset_model.py:72
+msgid "successor of"
+msgstr "Nachfolger von"
+
+#: apps/masterdata/models/asset_model.py:77
+msgid "The model this one replaces."
+msgstr "Das Modell, das durch dieses ersetzt wird."
+
+#: apps/masterdata/models/asset_model.py:157
+msgid "A model cannot succeed itself or one of its successors."
+msgstr ""
+"Ein Modell kann nicht Nachfolger von sich selbst oder einem seiner "
+"Nachfolger sein."
+
+#: apps/inventory/models/asset.py
+msgid "identifier"
+msgstr "Kennung"
+
+#: apps/inventory/models/asset.py
+msgid ""
+"A further number of the manufacturer, e.g. the configuration of the device "
+"(Handtec CN, Lenovo MTM). The category says what it is called there."
+msgstr ""
+"Weitere Nummer des Herstellers, z. B. die Ausführung des Geräts (Handtec "
+"CN, Lenovo MTM). Wie sie heißt, steht an der Kategorie."
+
+#: apps/masterdata/models/category.py
+msgid "name of the identifier"
+msgstr "Name der Kennung"
+
+#: apps/masterdata/models/category.py
+msgid ""
+"What the identifier of devices is called in this category, e.g. “CN” or "
+"“MTM”. Not inherited by subcategories."
+msgstr ""
+"Wie die Kennung der Geräte in dieser Kategorie heißt, z. B. „CN“ oder „MTM“. "
+"Gilt nicht für Unterkategorien."
+
+#: apps/masterdata/models/component_type.py apps/inventory/models/asset_event.py
+msgid "component type"
+msgstr "Komponente"
+
+#: apps/masterdata/models/component_type.py
+msgid "component types"
+msgstr "Komponenten"
+
+#: apps/masterdata/models/component_type.py
+msgid "Devices of these categories and their subcategories have this part."
+msgstr "Geräte dieser Kategorien und ihrer Unterkategorien haben dieses Teil."
+
+#: apps/inventory/models/asset_component.py
+msgid "installed component"
+msgstr "Eingebaute Komponente"
+
+#: apps/inventory/models/asset_component.py
+msgid "installed components"
+msgstr "Eingebaute Komponenten"
+
+#: apps/inventory/models/asset_component.py
+msgid "installed on"
+msgstr "Eingebaut am"
+
+#: apps/inventory/models/asset_event.py
+msgid "previous serial number"
+msgstr "Bisherige Seriennummer"
+
+#: apps/inventory/services/assets.py
+#, python-format
+msgid "Devices of the category %(category)s have no part of this kind."
+msgstr "Geräte der Kategorie %(category)s haben kein Teil dieser Art."
+
+#: apps/inventory/services/assets.py
+msgid "Each kind of part can be fitted only once."
+msgstr "Jede Komponente kann nur einmal eingebaut sein."
+
+#: apps/masterdata/models/category.py
+msgid "Any or a specific model"
+msgstr "Beliebiges oder bestimmtes Modell"
+
+#: apps/masterdata/models/category.py
+msgid "Any model only"
+msgstr "Nur beliebiges Modell"
+
+#: apps/masterdata/models/category.py
+msgid "A specific model only"
+msgstr "Nur bestimmtes Modell"
+
+#: apps/masterdata/models/category.py
+msgid "choice in the portal"
+msgstr "Auswahl im Portal"
+
+#: apps/masterdata/models/category.py
+msgid ""
+"“Any model”: IT picks the model when handing out, e.g. a charging cable when "
+"the type does not matter. Only any model: employees cannot pick one "
+"themselves, e.g. for scanners. Only a specific model: e.g. toner, where the "
+"type matters."
+msgstr ""
+"„Beliebiges Modell“: Die IT wählt das Modell bei der Ausgabe, z. B. ein "
+"Ladekabel, wenn der Typ egal ist. Nur beliebiges Modell: Mitarbeiter können "
+"keines selbst wählen, z. B. bei MDEs. Nur bestimmtes Modell: z. B. Toner, wo "
+"der Typ entscheidet."
+
+#: apps/requests/services/workflow.py
+#, python-format
+msgid "For “%(category)s” IT picks the model; request any model instead."
+msgstr ""
+"Für „%(category)s“ wählt die IT das Modell; fordern Sie ein beliebiges Modell "
+"an."

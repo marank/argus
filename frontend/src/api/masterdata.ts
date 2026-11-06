@@ -8,6 +8,9 @@ export const manufacturersApi = createResource<Schemas['ManufacturerOut']>(
 )
 export const suppliersApi = createResource<Schemas['SupplierOut']>('/masterdata/suppliers')
 export const categoriesApi = createResource<Schemas['CategoryOut']>('/masterdata/categories')
+export const componentTypesApi = createResource<Schemas['ComponentTypeOut']>(
+  '/masterdata/component-types',
+)
 export const locationsApi = createResource<Schemas['LocationOut']>('/masterdata/locations')
 export const assetModelsApi = createResource<Schemas['AssetModelOut']>('/masterdata/models')
 export const numberSequencesApi = {

@@ -95,6 +95,20 @@ const baseColumns = computed<DataTableColumns<Schemas['AssetOut']>>(() => [
     render: (a) => h('span', { class: 'mono' }, a.serial_number || '—'),
   },
   {
+    key: 'identifier',
+    title: t('inventory.fields.identifier'),
+    sorter: true,
+    width: 170,
+    render: (a) =>
+      a.identifier
+        ? h(
+            'span',
+            { class: 'mono', title: a.category.identifier_label || undefined },
+            a.identifier,
+          )
+        : '—',
+  },
+  {
     key: 'status',
     title: t('common.status'),
     sorter: true,
@@ -231,7 +245,7 @@ function onSaved(asset: { id: Id }) {
         :row-key="(a: Schemas['AssetOut']) => a.id"
         :row-props="(a: Schemas['AssetOut']) => grouping.rowProps(a, openAsset)"
         :row-class-name="grouping.rowClass"
-        :scroll-x="1100"
+        :scroll-x="1270"
         @update:sorter="list.onSort"
       />
     </div>

@@ -37,6 +37,16 @@ class Asset(TimeStampedModel):
         related_name="assets",
     )
     serial_number = models.CharField(_("serial number"), max_length=100, blank=True, db_index=True)
+    identifier = models.CharField(
+        _("identifier"),
+        max_length=100,
+        blank=True,
+        db_index=True,
+        help_text=_(
+            "A further number of the manufacturer, e.g. the configuration of the device "
+            "(Handtec CN, Lenovo MTM). The category says what it is called there."
+        ),
+    )
     imei = models.CharField(_("IMEI"), max_length=20, blank=True)
     mac_address = models.CharField(_("MAC address"), max_length=17, blank=True)
     hostname = models.CharField(_("hostname"), max_length=63, blank=True)

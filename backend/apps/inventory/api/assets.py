@@ -32,6 +32,8 @@ router = Router(tags=["assets"], auth=permission_auth(ResourceKey.ASSETS))
 SEARCH_FIELDS = (
     "inventory_number",
     "serial_number",
+    "identifier",
+    "installed_components__serial_number",
     "imei",
     "mac_address",
     "hostname",
@@ -46,6 +48,7 @@ ORDERING_FIELDS = (
     "model__category__sort_order",
     "model__category__name",
     "serial_number",
+    "identifier",
     "status",
     "model__name",
     "location__name",

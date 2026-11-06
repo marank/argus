@@ -1,5 +1,7 @@
-import type { Schemas } from '@/api/types'
+import { CopyPlus } from '@lucide/vue'
 import { h } from 'vue'
+
+import type { Schemas } from '@/api/types'
 
 import { teamsApi } from '@/api/accounts'
 import {
@@ -30,6 +32,23 @@ export default defineResource<Schemas['AssetModelOut']>({
   api: assetModelsApi,
   ordering: 'manufacturer__name',
   title: modelLabel,
+  // A successor starts as a copy of what stays the same: who makes, numbers, buys and supports it.
+  derive: {
+    label: 'masterdata.createSuccessor',
+    icon: CopyPlus,
+    link: 'predecessor',
+    copy: [
+      'manufacturer',
+      'category',
+      'tracking',
+      'number_sequence',
+      'default_supplier',
+      'warranty_months',
+      'team',
+      'is_requestable',
+      'compatible_with',
+    ],
+  },
   columns: [
     {
       key: 'name',
@@ -241,6 +260,16 @@ export default defineResource<Schemas['AssetModelOut']>({
       title: 'masterdata.sections.details',
       fields: [
         {
+          key: 'predecessor',
+          label: 'masterdata.fields.predecessor',
+          type: 'entity',
+          span: 2,
+          help: 'masterdata.fields.predecessorHelp',
+          fetcher: assetModelsApi.list,
+          display: modelLabel,
+          initial: (m: Schemas['AssetModelOut']) => m.predecessor,
+        },
+        {
           key: 'compatible_with',
           label: 'masterdata.fields.compatibleWith',
           type: 'entity',
@@ -270,6 +299,7 @@ export default defineResource<Schemas['AssetModelOut']>({
     list_price: null,
     warranty_months: 24,
     compatible_with: [],
+    predecessor: null,
     number_sequence: null,
     is_requestable: true,
     is_active: true,
@@ -289,6 +319,7 @@ export default defineResource<Schemas['AssetModelOut']>({
     list_price: m.list_price ? Number(m.list_price) : null,
     warranty_months: m.warranty_months,
     compatible_with: m.compatible_with.map((c) => c.id),
+    predecessor: m.predecessor?.id ?? null,
     number_sequence: m.number_sequence?.id ?? null,
     is_requestable: m.is_requestable,
     is_active: m.is_active,

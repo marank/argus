@@ -29,6 +29,8 @@ function event(overrides: Partial<Schemas['AssetEventOut']> = {}): Schemas['Asse
     description: 'Display replaced',
     component: 'Display',
     component_serial: '',
+    component_type: null,
+    previous_serial: '',
     cost: null,
     asset_request: null,
     performed_by: userRef('Ian Tech', 'u9'),

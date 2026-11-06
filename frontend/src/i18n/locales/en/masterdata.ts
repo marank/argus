@@ -2,6 +2,11 @@ export default {
   title: 'Master data',
   noDepartment: 'No department',
   treeView: 'As tree',
+  createSuccessor: 'Create successor',
+  takeOver:
+    'Take over the details of {name}? These are: {fields}. Enter the name, designation, part number and EAN yourself.',
+  takeOverYes: 'Take over',
+  takeOverNo: 'Don’t take over',
   noAccess: 'Your roles do not give access to this area.',
   roles: {
     permissions: 'Rights',
@@ -34,6 +39,7 @@ export default {
     manufacturers: 'Manufacturers',
     suppliers: 'Suppliers',
     categories: 'Categories',
+    componentTypes: 'Components',
     models: 'Models',
     locations: 'Locations',
     departments: 'Departments',
@@ -46,6 +52,7 @@ export default {
     manufacturers: 'Manufacturer',
     suppliers: 'Supplier',
     categories: 'Category',
+    componentTypes: 'Component',
     models: 'Model',
     locations: 'Location',
     departments: 'Department',
@@ -166,14 +173,22 @@ export default {
       'Name of a single item, e.g. “Laptop”. Shown in the portal as “Laptop · any model”.',
     categoryKindHelp: 'Subcategories have the same type as their parent category.',
     compatibleWithHelp: 'Accessories, spare parts and consumables that fit this model.',
+    predecessor: 'Successor of',
+    predecessorHelp:
+      'The model this one replaces. On choosing it, the form offers to take over the manufacturer, category, number sequence, accessories and more.',
     pickupPointHelp: 'Offered when scheduling a pickup.',
     itStaffHelp: 'Access to the IT area. Roles determine which areas.',
     sequenceCodeHelp:
       'Optional, for finding it again. System sequences keep their code: Argus draws inventory, request and order numbers by it.',
     systemSequence: 'System',
-    allowAnyModel: '“Any model” requestable',
-    allowAnyModelHelp:
-      'Employees may request “any model” of this category, e.g. a charging cable when the type does not matter; IT picks the model when assigning. Turn off where employees have to choose a specific model.',
+    modelChoice: 'Choice in the portal',
+    modelChoiceHelp:
+      'Any model: IT picks the model when handing out, e.g. a charging cable when the type does not matter. “Any model only” where employees should not pick a model themselves (e.g. scanners); “A specific model only” where the type matters (e.g. toner).',
+    identifierLabel: 'Name of the identifier',
+    identifierLabelHelp:
+      'What the identifier of devices in this category is called, e.g. “CN” or “MTM”. The device form shows it that way. Not inherited by subcategories.',
+    componentCategoriesHelp:
+      'Devices of these categories and their subcategories have this part: the device form records its serial number and installation date, the service book its replacement.',
     isAccessory: 'Accessories',
     isAccessoryHelp:
       'Accessories, spare parts or consumables. In the portal the models also appear with the devices they are compatible with (“Compatible with” on the model). Applies to subcategories as well.',

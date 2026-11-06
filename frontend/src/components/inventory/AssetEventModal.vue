@@ -5,6 +5,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { assetsApi, consumablesApi } from '@/api/inventory'
+import { loadComponentTypes } from '@/utils/components'
 import type { Schemas } from '@/api/types'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import ToggleRow from '@/components/common/ToggleRow.vue'
@@ -14,7 +15,13 @@ import { useFormat } from '@/composables/useFormat'
 import { MANUAL_EVENT_KINDS } from '@/types/inventory'
 import { useFeaturesStore } from '@/stores/features'
 
-const props = defineProps<{ assetId: Id }>()
+const props = defineProps<{
+  assetId: Id
+  /** The device's category: its tracked parts (e.g. the battery) can be replaced here. */
+  categoryId?: Id
+  /** The parts fitted now, to show what a replacement takes out. */
+  installed?: Schemas['AssetComponentOut'][]
+}>()
 const show = defineModel<boolean>('show', { required: true })
 const emit = defineEmits<{ saved: [] }>()
 const { t } = useI18n()
@@ -23,33 +30,47 @@ const { enumLabel } = useFormat()
 const { busy, run } = useAction()
 
 const form = reactive({
-  kind: 'battery_replaced' as Schemas['AssetEventKind'],
+  kind: 'component_replaced' as Schemas['AssetEventKind'],
   occurred_at: Date.now(),
   description: '',
   component: '',
+  component_type: null as Id | null,
   component_serial: '',
   cost: null as number | null,
 })
+/** The tracked parts devices of this category have. */
+const componentTypes = ref<Schemas['ComponentTypeOut'][]>([])
 const consume = ref(false)
 const consumable = ref<Id | null>(null)
 const quantity = ref(1)
 
-watch(show, (visible) => {
-  if (visible)
-    Object.assign(form, {
-      occurred_at: Date.now(),
-      description: '',
-      component: '',
-      component_serial: '',
-      cost: null,
-    })
+watch(show, async (visible) => {
+  if (!visible) return
+  Object.assign(form, {
+    occurred_at: Date.now(),
+    description: '',
+    component: '',
+    component_type: null,
+    component_serial: '',
+    cost: null,
+  })
+  componentTypes.value = await loadComponentTypes(props.categoryId)
+  // The likeliest replacement: the first tracked part, e.g. the battery.
+  form.component_type = componentTypes.value[0]?.id ?? null
 })
 
 const kindOptions = computed(() =>
   MANUAL_EVENT_KINDS.map((k) => ({ value: k, label: enumLabel('eventKind', k) })),
 )
-const hasComponent = computed(() =>
-  ['battery_replaced', 'component_replaced', 'repair'].includes(form.kind),
+const hasComponent = computed(() => ['component_replaced', 'repair'].includes(form.kind))
+/** A tracked part is replaced: the device gets the new serial number. */
+const tracked = computed(() => form.kind === 'component_replaced' && !!form.component_type)
+const typeOptions = computed(() =>
+  componentTypes.value.map((c) => ({ value: c.id, label: c.name })),
+)
+const currentSerial = computed(
+  () =>
+    props.installed?.find((c) => c.component_type.id === form.component_type)?.serial_number ?? '',
 )
 
 async function save() {
@@ -57,6 +78,8 @@ async function save() {
     () =>
       assetsApi.addEvent(props.assetId, {
         ...form,
+        component_type: tracked.value ? form.component_type : null,
+        component: tracked.value ? '' : form.component,
         occurred_at: new Date(form.occurred_at).toISOString(),
         cost: form.cost === null ? null : form.cost.toFixed(2),
         consume:
@@ -89,11 +112,34 @@ async function save() {
           <DateField v-model:value="form.occurred_at" type="datetime" style="width: 100%" />
         </NFormItem>
         <template v-if="hasComponent">
-          <NFormItem :label="t('inventory.event.component')">
+          <NFormItem
+            v-if="form.kind === 'component_replaced' && typeOptions.length"
+            :label="t('inventory.event.component')"
+          >
+            <NSelect
+              v-model:value="form.component_type"
+              :options="typeOptions"
+              clearable
+              :placeholder="t('inventory.event.otherComponent')"
+            />
+          </NFormItem>
+          <NFormItem
+            v-if="!tracked"
+            :label="
+              t(typeOptions.length ? 'inventory.event.otherComponent' : 'inventory.event.component')
+            "
+          >
             <NInput v-model:value="form.component" />
           </NFormItem>
-          <NFormItem :label="t('inventory.event.componentSerial')">
-            <NInput v-model:value="form.component_serial" />
+          <NFormItem
+            :label="t(tracked ? 'inventory.event.newSerial' : 'inventory.event.componentSerial')"
+          >
+            <div class="serial">
+              <NInput v-model:value="form.component_serial" class="mono-input" />
+              <small v-if="tracked && currentSerial" class="muted">
+                {{ t('inventory.event.currentSerial', { serial: currentSerial }) }}
+              </small>
+            </div>
           </NFormItem>
         </template>
         <NFormItem :label="t('inventory.event.cost')">
@@ -142,6 +188,14 @@ async function save() {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0 12px;
+}
+.serial {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+}
+.mono-input :deep(input) {
+  font-family: var(--ar-font-mono);
 }
 .consume-toggle {
   margin-top: 6px;

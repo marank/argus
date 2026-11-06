@@ -36,6 +36,7 @@ const model = (name: string): Schemas['AssetModelRefOut'] => ({
 })
 
 export const LAPTOP_CATEGORY: Schemas['CategoryRefOut'] = {
+  identifier_label: '',
   id: 'cat-laptop',
   code: 'LAP',
   icon: 'laptop',

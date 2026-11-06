@@ -99,6 +99,12 @@ def _require_requestable(line: AssetRequestItem) -> None:
     )
     if not (model_offered and categories_offered):
         raise BusinessError(_("“%(item)s” cannot be requested.") % {"item": line.label})
+    if model and not model.category.allows_specific_model:
+        # IT picks the model when handing out; employees ask for any device of the category.
+        raise BusinessError(
+            _("For “%(category)s” IT picks the model; request any model instead.")
+            % {"category": model.category}
+        )
 
 
 @transaction.atomic
@@ -142,7 +148,7 @@ def submit(
         if from_catalog:
             _require_requestable(line)
         if line.category and not line.asset_model_id and not line.description:
-            if not line.category.allow_any_model:
+            if not line.category.allows_any_model:
                 raise BusinessError(
                     _("Please choose a specific model for “%(category)s”.") % {"category": line.category}
                 )

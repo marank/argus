@@ -15,7 +15,13 @@ import { scrollerOf } from '@/utils/scroll'
 import CatalogOptionRow from './CatalogOptionRow.vue'
 import CategoryOptions from './CategoryOptions.vue'
 import CustomRequestCard from './CustomRequestCard.vue'
-import { offersAnyModel, optionKey, optionCounts, type CatalogOption } from './types'
+import {
+  offersAnyModel,
+  offersSpecificModel,
+  optionKey,
+  optionCounts,
+  type CatalogOption,
+} from './types'
 
 /**
  * Catalog with search on top, below in two columns: all groups as a list on the
@@ -119,13 +125,16 @@ const results = computed<CatalogOption[]>(() => {
   if (!q) return []
   const options: CatalogOption[] = []
   for (const category of props.catalog) {
-    if (offersAnyModel(category) && category.name.toLowerCase().includes(q))
-      options.push({ key: optionKey(category), category })
-    for (const model of category.models) {
-      if (`${model.full_name} ${category.name}`.toLowerCase().includes(q)) {
-        options.push({ key: optionKey(category, model), category, model })
-      }
-    }
+    const models = category.models.filter((m) =>
+      `${m.full_name} ${category.name}`.toLowerCase().includes(q),
+    )
+    // Where IT picks the model, a hit on one of them offers the group.
+    const anyHit = offersSpecificModel(category)
+      ? category.name.toLowerCase().includes(q)
+      : models.length > 0
+    if (offersAnyModel(category) && anyHit) options.push({ key: optionKey(category), category })
+    if (!offersSpecificModel(category)) continue
+    for (const model of models) options.push({ key: optionKey(category, model), category, model })
   }
   return options
 })

@@ -12,7 +12,6 @@ class AssetEventKind(models.TextChoices):
     ASSIGNED = "assigned", _("Handed out")
     RETURNED = "returned", _("Returned")
     RESERVED = "reserved", _("Reserved")
-    BATTERY_REPLACED = "battery_replaced", _("Battery replaced")
     COMPONENT_REPLACED = "component_replaced", _("Component replaced")
     REPAIR = "repair", _("Repair")
     MAINTENANCE = "maintenance", _("Maintenance")
@@ -23,11 +22,10 @@ class AssetEventKind(models.TextChoices):
 
 
 class AssetEvent(TimeStampedModel):
-    """Entry in the life cycle log of an asset (battery swap, repair, hand-out, ...)."""
+    """Entry in the life cycle log of an asset (part replaced, repair, hand-out, ...)."""
 
     # Kinds a technician records manually; the others are written by workflows.
     MANUAL_KINDS = (
-        AssetEventKind.BATTERY_REPLACED,
         AssetEventKind.COMPONENT_REPLACED,
         AssetEventKind.REPAIR,
         AssetEventKind.MAINTENANCE,
@@ -43,6 +41,16 @@ class AssetEvent(TimeStampedModel):
     description = models.TextField(_("description"), blank=True)
     component = models.CharField(_("component"), max_length=100, blank=True)
     component_serial = models.CharField(_("component serial number"), max_length=100, blank=True)
+    # A replaced part of a tracked kind (see ComponentType): the device gets component_serial.
+    component_type = models.ForeignKey(
+        "masterdata.ComponentType",
+        verbose_name=_("component type"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+    )
+    previous_serial = models.CharField(_("previous serial number"), max_length=100, blank=True)
     cost = models.DecimalField(_("cost"), max_digits=10, decimal_places=2, null=True, blank=True)
     performed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

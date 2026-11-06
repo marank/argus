@@ -85,9 +85,18 @@ export const optionKey = (
   model?: Schemas['CatalogModelOut'],
 ) => (model ? `m${model.id}` : `c${category.id}`)
 
-/** "Any device of this group" only makes sense when allowed and there is a choice. */
+/**
+ * "Any device of this group": where IT picks the model always (given there is one), otherwise
+ * only when allowed and there is a choice.
+ */
 export function offersAnyModel(category: Schemas['CatalogCategoryOut']): boolean {
-  return category.allow_any_model && category.models.length > 1
+  if (category.model_choice === 'any_only') return category.models.length > 0
+  return category.model_choice === 'any_or_specific' && category.models.length > 1
+}
+
+/** Whether employees pick a specific model of this group themselves. */
+export function offersSpecificModel(category: Schemas['CatalogCategoryOut']): boolean {
+  return category.model_choice !== 'any_only'
 }
 
 /** Counts of an option for display; null when availability is hidden. */
@@ -113,6 +122,7 @@ export function fittingDevices(
 ): FittingDevice[] {
   const byId = new Map<Id, FittingDevice['options'][number]>()
   for (const category of catalog) {
+    if (!offersSpecificModel(category)) continue
     for (const model of category.models) byId.set(model.id, { category, model })
   }
   return groups
