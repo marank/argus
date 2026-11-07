@@ -21,6 +21,11 @@ export const assetsApi = {
     }),
   createSeries: (data: Schemas['AssetSeriesIn']) =>
     http.post<Asset[]>('/inventory/assets/series', data),
+  /** What importing the rows would do; saves nothing. */
+  importPreview: (data: Schemas['AssetImportIn']) =>
+    http.post<Schemas['AssetImportResultOut']>('/inventory/assets/import/preview', data),
+  import: (data: Schemas['AssetImportIn']) =>
+    http.post<Schemas['AssetImportResultOut']>('/inventory/assets/import', data),
   update: (id: Id, data: Schemas['AssetIn']) =>
     http.put<AssetDetail>(`/inventory/assets/${id}`, data),
   assign: (id: Id, user: Schemas['AssetAssignIn']['user']) =>

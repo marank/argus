@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Id } from '@/types/common'
 import { modelLabel } from '@/utils/models'
-import { Layers, Plus, ScanBarcode } from '@lucide/vue'
+import { FileUp, Layers, Plus, ScanBarcode } from '@lucide/vue'
 import { NButton } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -20,6 +20,7 @@ import type { Schemas } from '@/api/types'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import AssetFormDrawer from '@/components/inventory/AssetFormDrawer.vue'
+import AssetImportModal from '@/components/inventory/AssetImportModal.vue'
 import BulkCreateModal from '@/components/inventory/BulkCreateModal.vue'
 import SeriesCreateModal from '@/components/inventory/SeriesCreateModal.vue'
 import ListTable from '@/components/table/ListTable.vue'
@@ -381,6 +382,7 @@ onMounted(list.load)
 const showForm = ref(false)
 const showBulk = ref(false)
 const showSeries = ref(false)
+const showImport = ref(false)
 
 const openAsset = (a: Asset) => router.push({ name: 'asset', params: { id: a.id } })
 
@@ -393,6 +395,10 @@ function onSaved(asset: { id: Id }) {
   <div class="page">
     <PageHeader :title="t('inventory.assets')" :subtitle="t('inventory.assetsSubtitle')">
       <template v-if="canWrite" #actions>
+        <NButton @click="showImport = true">
+          <template #icon><FileUp :size="16" /></template>
+          {{ t('inventory.importAssets') }}
+        </NButton>
         <NButton @click="showBulk = true">
           <template #icon><ScanBarcode :size="16" /></template>
           {{ t('inventory.bulkCreate') }}
@@ -421,6 +427,7 @@ function onSaved(asset: { id: Id }) {
     <AssetFormDrawer v-model:show="showForm" @saved="onSaved" />
     <BulkCreateModal v-model:show="showBulk" @created="list.reload" />
     <SeriesCreateModal v-model:show="showSeries" @created="list.reload" />
+    <AssetImportModal v-model:show="showImport" @imported="list.reload" />
   </div>
 </template>
 

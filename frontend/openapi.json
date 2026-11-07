@@ -1305,6 +1305,237 @@
         "title": "AssetFilter",
         "type": "object"
       },
+      "AssetImportChangeOut": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/ImportField"
+          },
+          "new": {
+            "title": "New",
+            "type": "string"
+          },
+          "old": {
+            "title": "Old",
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "old",
+          "new"
+        ],
+        "title": "AssetImportChangeOut",
+        "type": "object"
+      },
+      "AssetImportDefaultsIn": {
+        "description": "Values for new devices whose row leaves the field empty.",
+        "properties": {
+          "condition": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Condition"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "location": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AssetStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "AssetImportDefaultsIn",
+        "type": "object"
+      },
+      "AssetImportIn": {
+        "properties": {
+          "defaults": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AssetImportDefaultsIn"
+              }
+            ],
+            "default": {
+              "condition": null,
+              "location": null,
+              "model": null,
+              "status": null
+            }
+          },
+          "existing": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExistingDevices"
+              }
+            ],
+            "default": "update"
+          },
+          "ignore_case": {
+            "default": false,
+            "title": "Ignore Case",
+            "type": "boolean"
+          },
+          "match_by": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ImportMatch"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": "serial_number"
+          },
+          "rows": {
+            "items": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "propertyNames": {
+                "$ref": "#/components/schemas/ImportField"
+              },
+              "type": "object"
+            },
+            "maxItems": 2000,
+            "minItems": 1,
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "rows"
+        ],
+        "title": "AssetImportIn",
+        "type": "object"
+      },
+      "AssetImportResultOut": {
+        "properties": {
+          "created": {
+            "title": "Created",
+            "type": "integer"
+          },
+          "failed": {
+            "title": "Failed",
+            "type": "integer"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/AssetImportRowOut"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "skipped": {
+            "title": "Skipped",
+            "type": "integer"
+          },
+          "unchanged": {
+            "title": "Unchanged",
+            "type": "integer"
+          },
+          "updated": {
+            "title": "Updated",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "rows",
+          "created",
+          "updated",
+          "unchanged",
+          "skipped",
+          "failed"
+        ],
+        "title": "AssetImportResultOut",
+        "type": "object"
+      },
+      "AssetImportRowOut": {
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/ImportAction"
+          },
+          "asset_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asset Id"
+          },
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/AssetImportChangeOut"
+            },
+            "title": "Changes",
+            "type": "array"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "inventory_number": {
+            "title": "Inventory Number",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "row": {
+            "title": "Row",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "row",
+          "action",
+          "asset_id",
+          "inventory_number",
+          "model",
+          "changes",
+          "errors"
+        ],
+        "title": "AssetImportRowOut",
+        "type": "object"
+      },
       "AssetIn": {
         "properties": {
           "assigned_to": {
@@ -5900,6 +6131,15 @@
         "title": "EventFilter",
         "type": "object"
       },
+      "ExistingDevices": {
+        "description": "What happens to a row that matches a device already in the inventory.",
+        "enum": [
+          "update",
+          "skip"
+        ],
+        "title": "ExistingDevices",
+        "type": "string"
+      },
       "ExpiringOut": {
         "properties": {
           "detail": {
@@ -6465,6 +6705,52 @@
           "wrench"
         ],
         "title": "Icon",
+        "type": "string"
+      },
+      "ImportAction": {
+        "enum": [
+          "create",
+          "update",
+          "unchanged",
+          "skip",
+          "error"
+        ],
+        "title": "ImportAction",
+        "type": "string"
+      },
+      "ImportField": {
+        "description": "Device fields a column can be mapped to.",
+        "enum": [
+          "inventory_number",
+          "serial_number",
+          "identifier",
+          "imei",
+          "mac_address",
+          "hostname",
+          "model",
+          "status",
+          "condition",
+          "location",
+          "assigned_to",
+          "supplier",
+          "purchase_date",
+          "purchase_price",
+          "warranty_until",
+          "notes"
+        ],
+        "title": "ImportField",
+        "type": "string"
+      },
+      "ImportMatch": {
+        "description": "Fields that identify an existing device.",
+        "enum": [
+          "serial_number",
+          "inventory_number",
+          "imei",
+          "mac_address",
+          "hostname"
+        ],
+        "title": "ImportMatch",
         "type": "string"
       },
       "Input": {
@@ -15942,6 +16228,82 @@
           }
         ],
         "summary": "Bulk Create Assets",
+        "tags": [
+          "assets"
+        ]
+      }
+    },
+    "/api/inventory/assets/import": {
+      "post": {
+        "description": "Create or update a device per row; rows with errors are left out.",
+        "operationId": "apps_inventory_api_asset_import_import_assets",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetImportIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetImportResultOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "PermissionAuth": []
+          }
+        ],
+        "summary": "Import Assets",
+        "tags": [
+          "assets"
+        ]
+      }
+    },
+    "/api/inventory/assets/import/preview": {
+      "post": {
+        "description": "What importing the rows would do; nothing is saved.",
+        "operationId": "apps_inventory_api_asset_import_preview_import",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetImportIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetImportResultOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "PermissionAuth": []
+          }
+        ],
+        "summary": "Preview Import",
         "tags": [
           "assets"
         ]

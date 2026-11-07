@@ -3181,3 +3181,44 @@ msgid "For “%(category)s” IT picks the model; request any model instead."
 msgstr ""
 "Für „%(category)s“ wählt die IT das Modell; fordern Sie ein beliebiges Modell "
 "an."
+
+#: apps/inventory/services/asset_import.py
+#, python-format
+msgid "“%(value)s” is not a date (e.g. 2026-03-31 or 31.03.2026)."
+msgstr "„%(value)s“ ist kein Datum (z. B. 2026-03-31 oder 31.03.2026)."
+
+#: apps/inventory/services/asset_import.py
+#, python-format
+msgid "“%(value)s” is not a number."
+msgstr "„%(value)s“ ist keine Zahl."
+
+#: apps/inventory/services/asset_import.py
+#, python-format
+msgid "“%(value)s” is not one of: %(choices)s."
+msgstr "„%(value)s“ ist keiner dieser Werte: %(choices)s."
+
+#: apps/inventory/services/asset_import.py
+#, python-format
+msgid "%(field)s “%(value)s” not found."
+msgstr "%(field)s „%(value)s“ nicht gefunden."
+
+#: apps/inventory/services/asset_import.py
+#, python-format
+msgid "%(field)s “%(value)s” is ambiguous."
+msgstr "%(field)s „%(value)s“ ist nicht eindeutig."
+
+#: apps/inventory/services/asset_import.py
+#, python-format
+msgid "Several devices have the %(field)s “%(value)s”."
+msgstr "Mehrere Geräte haben %(field)s „%(value)s“."
+
+#: apps/inventory/services/asset_import.py
+msgid "No model: map a column to the model or choose one for all new devices."
+msgstr ""
+"Kein Modell: Ordnen Sie dem Modell eine Spalte zu oder wählen Sie eines für "
+"alle neuen Geräte."
+
+#: apps/inventory/services/asset_import.py
+#, python-format
+msgid "A file can hold at most %(count)d devices."
+msgstr "Eine Datei kann höchstens %(count)d Geräte enthalten."

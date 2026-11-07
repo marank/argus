@@ -759,6 +759,46 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/inventory/assets/import': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Import Assets
+     * @description Create or update a device per row; rows with errors are left out.
+     */
+    post: operations['apps_inventory_api_asset_import_import_assets']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/inventory/assets/import/preview': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Preview Import
+     * @description What importing the rows would do; nothing is saved.
+     */
+    post: operations['apps_inventory_api_asset_import_preview_import']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/inventory/assets/series': {
     parameters: {
       query?: never
@@ -2893,6 +2933,82 @@ export interface components {
       /** Warranty Until */
       warranty_until?: string | null
     }
+    /** AssetImportChangeOut */
+    AssetImportChangeOut: {
+      field: components['schemas']['ImportField']
+      /** New */
+      new: string
+      /** Old */
+      old: string
+    }
+    /**
+     * AssetImportDefaultsIn
+     * @description Values for new devices whose row leaves the field empty.
+     */
+    AssetImportDefaultsIn: {
+      condition?: components['schemas']['Condition'] | null
+      /** Location */
+      location?: string | null
+      /** Model */
+      model?: string | null
+      status?: components['schemas']['AssetStatus'] | null
+    }
+    /** AssetImportIn */
+    AssetImportIn: {
+      /**
+       * @default {
+       *       "condition": null,
+       *       "location": null,
+       *       "model": null,
+       *       "status": null
+       *     }
+       */
+      defaults: components['schemas']['AssetImportDefaultsIn']
+      /** @default update */
+      existing: components['schemas']['ExistingDevices']
+      /**
+       * Ignore Case
+       * @default false
+       */
+      ignore_case: boolean
+      /** @default serial_number */
+      match_by: components['schemas']['ImportMatch'] | null
+      /** Rows */
+      rows: {
+        [key: string]: string
+      }[]
+    }
+    /** AssetImportResultOut */
+    AssetImportResultOut: {
+      /** Created */
+      created: number
+      /** Failed */
+      failed: number
+      /** Rows */
+      rows: components['schemas']['AssetImportRowOut'][]
+      /** Skipped */
+      skipped: number
+      /** Unchanged */
+      unchanged: number
+      /** Updated */
+      updated: number
+    }
+    /** AssetImportRowOut */
+    AssetImportRowOut: {
+      action: components['schemas']['ImportAction']
+      /** Asset Id */
+      asset_id: string | null
+      /** Changes */
+      changes: components['schemas']['AssetImportChangeOut'][]
+      /** Errors */
+      errors: string[]
+      /** Inventory Number */
+      inventory_number: string
+      /** Model */
+      model: string
+      /** Row */
+      row: number
+    }
     /** AssetIn */
     AssetIn: {
       /** Assigned To */
@@ -4521,6 +4637,12 @@ export interface components {
       /** Until */
       until?: string | null
     }
+    /**
+     * ExistingDevices
+     * @description What happens to a row that matches a device already in the inventory.
+     * @enum {string}
+     */
+    ExistingDevices: 'update' | 'skip'
     /** ExpiringOut */
     ExpiringOut: {
       /** Detail */
@@ -4772,6 +4894,39 @@ export interface components {
       | 'truck'
       | 'warehouse'
       | 'wrench'
+    /**
+     * ImportAction
+     * @enum {string}
+     */
+    ImportAction: 'create' | 'update' | 'unchanged' | 'skip' | 'error'
+    /**
+     * ImportField
+     * @description Device fields a column can be mapped to.
+     * @enum {string}
+     */
+    ImportField:
+      | 'inventory_number'
+      | 'serial_number'
+      | 'identifier'
+      | 'imei'
+      | 'mac_address'
+      | 'hostname'
+      | 'model'
+      | 'status'
+      | 'condition'
+      | 'location'
+      | 'assigned_to'
+      | 'supplier'
+      | 'purchase_date'
+      | 'purchase_price'
+      | 'warranty_until'
+      | 'notes'
+    /**
+     * ImportMatch
+     * @description Fields that identify an existing device.
+     * @enum {string}
+     */
+    ImportMatch: 'serial_number' | 'inventory_number' | 'imei' | 'mac_address' | 'hostname'
     /** Input */
     Input: {
       /**
@@ -8745,6 +8900,54 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['AssetOut'][]
+        }
+      }
+    }
+  }
+  apps_inventory_api_asset_import_import_assets: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AssetImportIn']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AssetImportResultOut']
+        }
+      }
+    }
+  }
+  apps_inventory_api_asset_import_preview_import: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AssetImportIn']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AssetImportResultOut']
         }
       }
     }
