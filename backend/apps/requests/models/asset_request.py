@@ -215,6 +215,13 @@ class AssetRequest(TimeStampedModel):
     confirmed_at = models.DateTimeField(_("confirmed at"), null=True, blank=True)
     handed_out_at = models.DateTimeField(_("handed out at"), null=True, blank=True)
     completed_at = models.DateTimeField(_("completed at"), null=True, blank=True)
+    # Handed out outside the system: lines without a device stay open, and the devices can
+    # be recorded later until IT marks them returned.
+    devices_unrecorded = models.BooleanField(
+        _("devices not recorded"),
+        default=False,
+        help_text=_("Handed out without recording which devices; they can still be recorded."),
+    )
 
     # Cached by ``schemas.asset_request.pending_approvers``, not a column.
     _pending_approvers: list[User]

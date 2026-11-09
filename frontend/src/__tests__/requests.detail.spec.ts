@@ -51,6 +51,8 @@ const api = vi.hoisted(() => {
       allocate: fn(),
       autoAllocate: fn(),
       removeAllocation: fn(),
+      handOutUnrecorded: fn(),
+      returnUnrecorded: fn(),
       resolveItem: fn(),
       assign: fn(),
     },
@@ -480,6 +482,64 @@ describe('RequestDetailView', () => {
         handover_mode: 'collect',
         notify: true,
       })
+    })
+  })
+
+  describe('a request handed out outside the system', () => {
+    const unrecorded = (overrides: Partial<AssetRequest> = {}) =>
+      makeRequest({
+        status: 'handed_out',
+        devices_unrecorded: true,
+        items: [makeItem({ quantity_confirmed: 1 })],
+        ...overrides,
+      })
+
+    it('is marked handed out from a confirmed request missing devices', async () => {
+      api.requests.handOutUnrecorded.mockResolvedValue(unrecorded())
+      await open(makeRequest({ status: 'confirmed', items: [makeItem({ quantity_confirmed: 1 })] }))
+      await click('Mark as handed out')
+      expect(screen()).toContain(
+        'Hand out without recorded devices? Without a device: 1× Acme Laptop 14.',
+      )
+      await click('Confirm')
+      expect(api.requests.handOutUnrecorded).toHaveBeenCalledWith(REQUEST_ID)
+      expect(screen()).toContain('Handed out without recorded devices. Record them below')
+    })
+
+    it('stays as it is when the question is called off', async () => {
+      await open(makeRequest({ status: 'confirmed', items: [makeItem({ quantity_confirmed: 1 })] }))
+      await click('Mark as handed out')
+      await click('Cancel')
+      expect(api.requests.handOutUnrecorded).not.toHaveBeenCalled()
+    })
+
+    it('records devices later, without picking them from the pool', async () => {
+      await open(unrecorded())
+      expect(screen()).toContain('Record devices')
+      expect(screen()).toContain('counts as with the employee since the hand-out')
+      expect(api.requests.candidates).toHaveBeenCalled()
+      expect(buttons('Allocate automatically')).toEqual([])
+    })
+
+    it('is marked returned without devices after confirming', async () => {
+      api.requests.returnUnrecorded.mockResolvedValue(
+        unrecorded({ status: 'completed', devices_unrecorded: false }),
+      )
+      await open(unrecorded())
+      await click('Mark as returned')
+      expect(screen()).toContain('No devices can be recorded afterwards.')
+      await click('Confirm')
+      expect(api.requests.returnUnrecorded).toHaveBeenCalledWith(REQUEST_ID)
+      expect(buttons('Mark as returned')).toEqual([])
+    })
+
+    it('keeps recording open for a permanent hand-out, with nothing to take back', async () => {
+      await open(unrecorded({ status: 'completed', duration: 'permanent', end_date: null }))
+      expect(screen()).toContain(
+        'Handed out without recorded devices. Record them below once known.',
+      )
+      expect(buttons('Mark as returned')).toEqual([])
+      expect(screen()).toContain('Record devices')
     })
   })
 

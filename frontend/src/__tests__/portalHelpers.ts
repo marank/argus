@@ -198,6 +198,7 @@ export function assetRequest(
     assigned_team: null,
     assignee: null,
     completed_at: null,
+    devices_unrecorded: false,
     confirmed_at: null,
     created_at: '2026-10-01T09:00:00Z',
     created_by: JANE,

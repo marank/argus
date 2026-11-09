@@ -51,7 +51,7 @@ import RequestHistory from '@/components/requests/detail/RequestHistory.vue'
 import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
 import { useFormat } from '@/composables/useFormat'
-import { handoverPlanned, isReturnable } from '@/utils/requests'
+import { handoverPlanned, isReturnable, itemLabel } from '@/utils/requests'
 import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps<{ id: Id }>()
@@ -114,6 +114,32 @@ function itemAvailability(item: Schemas['AssetRequestItemOut']): Schemas['Counts
 const status = computed(() => assetRequest.value?.status)
 const missing = computed(() => assetRequest.value?.items.some((i) => i.quantity_missing) ?? false)
 const preparing = computed(() => status.value === 'confirmed')
+/** Handed out without recorded devices: they can still be recorded. */
+const recording = computed(
+  () =>
+    !!assetRequest.value?.devices_unrecorded &&
+    ['handed_out', 'completed'].includes(status.value ?? ''),
+)
+/** The lines without devices, e.g. "2× ThinkPad T14". */
+const missingLines = computed(() =>
+  (assetRequest.value?.items ?? [])
+    .filter((i) => i.quantity_missing)
+    .map((i) => `${i.quantity_missing}× ${itemLabel(i)}`)
+    .join(', '),
+)
+
+/** The devices went out outside the system before the request was prepared. */
+async function handOutUnrecorded() {
+  if (await confirm(t('requests.unrecorded.confirmHandOut', { items: missingLines.value }))) {
+    await act(() => requestsApi.handOutUnrecorded(props.id))
+  }
+}
+
+async function returnUnrecorded() {
+  if (await confirm(t('requests.unrecorded.confirmReturn', { items: missingLines.value }))) {
+    await act(() => requestsApi.returnUnrecorded(props.id))
+  }
+}
 /** Only license seats: nothing to collect, so marking ready hands it out right away. */
 const seatsOnly = computed(() => {
   const allocations = (assetRequest.value?.items ?? []).flatMap((i) => i.allocations)
@@ -215,8 +241,11 @@ const nextStep = computed(() => {
         },
       )
     case 'handed_out':
+      if (r.devices_unrecorded) return t('requests.nextStep.unrecorded')
       if (r.duration !== 'temporary' || r.is_overdue || !r.end_date) return null
       return t('requests.nextStep.lent', { date: date(r.end_date) })
+    case 'completed':
+      return r.devices_unrecorded ? t('requests.nextStep.unrecordedPermanent') : null
     default:
       return null
   }
@@ -301,6 +330,9 @@ async function cancel() {
           <template v-if="status === 'confirmed'">
             <NButton @click="openConfirm('confirm')">{{ t('common.edit') }}</NButton>
             <!-- Ready only once everything confirmed is allocated. -->
+            <NButton v-if="missing" :loading="busy" @click="handOutUnrecorded">
+              {{ t('requests.actions.handOutUnrecorded') }}
+            </NButton>
             <NButton v-if="!missing" type="primary" :loading="busy" @click="markReady">
               <template #icon><PackageCheck :size="15" /></template>
               {{
@@ -330,6 +362,14 @@ async function cancel() {
           >
             <template #icon><Undo2 :size="15" /></template>
             {{ t('requests.actions.return') }}
+          </NButton>
+          <NButton
+            v-if="status === 'handed_out' && assetRequest.devices_unrecorded"
+            :type="lent ? 'default' : 'primary'"
+            :loading="busy"
+            @click="returnUnrecorded"
+          >
+            {{ t('requests.actions.returnUnrecorded') }}
           </NButton>
           <NButton v-if="status === 'confirmed' && missing" @click="showOrder = true">
             <template #icon><ShoppingCart :size="15" /></template>
@@ -380,18 +420,24 @@ async function cancel() {
         <div class="layout">
           <div class="stack">
             <NCard
-              :title="preparing ? t('requests.allocation.title') : t('requests.items')"
+              :title="
+                preparing
+                  ? t('requests.allocation.title')
+                  : recording
+                    ? t('requests.unrecorded.title')
+                    : t('requests.items')
+              "
               size="small"
             >
-              <p v-if="preparing" class="muted small hint">
-                {{ t('requests.allocation.hint') }}
+              <p v-if="preparing || recording" class="muted small hint">
+                {{ t(recording ? 'requests.unrecorded.hint' : 'requests.allocation.hint') }}
               </p>
               <AllocationPanel
                 v-for="item in assetRequest.items"
                 :key="item.id"
                 :assetRequest="assetRequest"
                 :item="item"
-                :editable="preparing"
+                :editable="preparing || recording"
                 :availability="itemAvailability(item)"
                 @updated="(r) => (assetRequest = r)"
               />

@@ -492,11 +492,64 @@ def _lock_item(item: AssetRequestItem) -> AssetRequestItem:
     return item
 
 
+def _records_late(asset_request: AssetRequest) -> bool:
+    """Handed out without devices: what IT allocates now is recorded as handed out back then."""
+    return asset_request.devices_unrecorded and asset_request.status in AssetRequest.RETURNABLE_STATUSES
+
+
+def _require_allocatable(asset_request: AssetRequest) -> None:
+    if not _records_late(asset_request):
+        _require_status(asset_request, AssetRequestStatus.CONFIRMED)
+
+
+def _hand_out_late(allocation: AssetRequestAllocation, user: User) -> AssetRequestAllocation:
+    """A device (or consumable, or seat) recorded after a hand-out without devices.
+
+    The employee has had it since the hand-out, so it counts as handed out then. Once every
+    line has its devices, nothing is left unrecorded.
+    """
+    asset_request = allocation.item.asset_request
+    requester = asset_request.requester
+    since = asset_request.handed_out_at or timezone.now()
+    if allocation.asset:
+        asset = allocation.asset
+        asset.status = AssetStatus.IN_USE
+        asset.assigned_to = requester
+        asset.assigned_since = since
+        asset.save(update_fields=["status", "assigned_to", "assigned_since", "updated_at"])
+        log_event(
+            asset,
+            AssetEventKind.ASSIGNED,
+            user,
+            related_user=requester,
+            asset_request=asset_request,
+            description=_("Recorded after the hand-out of %(number)s") % {"number": asset_request.number},
+        )
+    elif allocation.consumable:
+        move_consumable(
+            allocation.consumable,
+            -allocation.quantity,
+            ConsumableMovement.Reason.ISSUE,
+            user,
+            release_reserved=allocation.quantity,
+            recipient=requester,
+            asset_request=asset_request,
+            note=asset_request.number,
+        )
+    allocation.handed_out_at = since
+    allocation.save(update_fields=["handed_out_at"])
+    record(asset_request, AssetRequestEventKind.ALLOCATED, user, items=[allocation_label(allocation)])
+    if not any(item.quantity_missing for item in asset_request.items.all()):
+        asset_request.devices_unrecorded = False
+        asset_request.save(update_fields=["devices_unrecorded", "updated_at"])
+    return allocation
+
+
 @transaction.atomic
 def allocate_asset(item: AssetRequestItem, asset: Asset, user: User) -> AssetRequestAllocation:
     item = _lock_item(item)
     asset_request = item.asset_request
-    _require_status(asset_request, AssetRequestStatus.CONFIRMED)
+    _require_allocatable(asset_request)
     asset = Asset.objects.select_for_update().get(pk=asset.pk)
     if not _matches(item, asset.model):
         raise BusinessError(
@@ -516,7 +569,8 @@ def allocate_asset(item: AssetRequestItem, asset: Asset, user: User) -> AssetReq
     # the devices once it is ready.
     asset.status = AssetStatus.RESERVED
     asset.save(update_fields=["status", "updated_at"])
-    return AssetRequestAllocation.objects.create(item=item, asset=asset, allocated_by=user)
+    allocation = AssetRequestAllocation.objects.create(item=item, asset=asset, allocated_by=user)
+    return _hand_out_late(allocation, user) if _records_late(asset_request) else allocation
 
 
 @transaction.atomic
@@ -524,7 +578,7 @@ def allocate_consumable(
     item: AssetRequestItem, consumable: Consumable, quantity: int, user: User
 ) -> AssetRequestAllocation:
     item = _lock_item(item)
-    _require_status(item.asset_request, AssetRequestStatus.CONFIRMED)
+    _require_allocatable(item.asset_request)
     if not _matches(item, consumable.model):
         raise BusinessError(
             _("%(model)s does not match “%(item)s”.") % {"model": consumable.model, "item": item.label}
@@ -538,7 +592,7 @@ def allocate_consumable(
     allocation = AssetRequestAllocation.objects.create(
         item=item, consumable=consumable, quantity=quantity, allocated_by=user
     )
-    return allocation
+    return _hand_out_late(allocation, user) if _records_late(item.asset_request) else allocation
 
 
 @transaction.atomic
@@ -548,7 +602,7 @@ def allocate_license(
     """Give the requester a seat of ``license`` (or one of their devices, for device licenses)."""
     item = _lock_item(item)
     asset_request = item.asset_request
-    _require_status(asset_request, AssetRequestStatus.CONFIRMED)
+    _require_allocatable(asset_request)
     if not _matches(item, license.model):
         raise BusinessError(
             _("%(model)s does not match “%(item)s”.") % {"model": license.model, "item": item.label}
@@ -572,7 +626,7 @@ def allocate_license(
     allocation = AssetRequestAllocation.objects.create(
         item=item, license=license, license_assignment=assignment, allocated_by=user
     )
-    return allocation
+    return _hand_out_late(allocation, user) if _records_late(asset_request) else allocation
 
 
 @transaction.atomic
@@ -796,6 +850,76 @@ def hand_out(
                 raise BusinessError(_("Choose a member of the IT department."))
     else:
         handed_out_by_id = user.pk
+    return _record_hand_out(
+        asset_request,
+        user,
+        method=method,
+        received_by_id=received_by_id,
+        received_by_name=received_by_name,
+        signature=signature,
+        notes=notes,
+        location=location,
+        allocation_notes=allocation_notes or {},
+        handed_out_by_id=handed_out_by_id,
+    )
+
+
+@transaction.atomic
+def hand_out_without_devices(asset_request: AssetRequest, user: User, *, notes: str = "") -> AssetRequest:
+    """The devices went out outside the system, before IT prepared the request.
+
+    What is allocated is handed out as usual; the lines still missing devices stay open,
+    so IT can record the devices later (or mark them returned without). A temporary
+    request waits for the return like any other.
+    """
+    _require_status(asset_request, AssetRequestStatus.CONFIRMED)
+    if not any(item.quantity_missing for item in asset_request.items.all()):
+        raise BusinessError(_("Every device is allocated: mark the request ready and hand it out."))
+    asset_request.devices_unrecorded = True
+    return _record_hand_out(
+        asset_request,
+        user,
+        method=HandoverMethod.DIRECT,
+        received_by_id=None,
+        received_by_name="",
+        signature="",
+        notes=notes,
+        location="",
+        allocation_notes={},
+        handed_out_by_id=user.pk,
+    )
+
+
+def _missing_labels(asset_request: AssetRequest) -> list[str]:
+    """The lines still without devices, e.g. "2× ThinkPad T14"."""
+    return [
+        f"{item.quantity_missing}× {item.label}"
+        for item in asset_request.items.all()
+        if item.quantity_missing
+    ]
+
+
+def _lent_without_devices(asset_request: AssetRequest) -> bool:
+    """A line without its devices that would come back: anything but consumables."""
+    return any(
+        item.quantity_missing and not (item.asset_model and item.asset_model.is_bulk)
+        for item in asset_request.items.all()
+    )
+
+
+def _record_hand_out(
+    asset_request: AssetRequest,
+    user: User,
+    *,
+    method: str,
+    received_by_id: UUID | None,
+    received_by_name: str,
+    signature: str,
+    notes: str,
+    location: str,
+    allocation_notes: dict[UUID, str],
+    handed_out_by_id: UUID | None,
+) -> AssetRequest:
     requester = asset_request.requester
     if received_by_id:
         # The requester always may; anyone else must be a current employee (not a terminal).
@@ -872,20 +996,25 @@ def hand_out(
         received_by=received_by_name.strip(),
         location=location.strip(),
         items=[allocation_label(a) for a in allocations],
+        missing=_missing_labels(asset_request) if asset_request.devices_unrecorded else [],
     )
     asset_request.handed_out_at = now
     if method != HandoverMethod.SIGNATURE:
         asset_request.handled_by = user
-    lent = any(allocation.is_returnable for allocation in allocations)
+    lent = any(allocation.is_returnable for allocation in allocations) or (
+        asset_request.devices_unrecorded and _lent_without_devices(asset_request)
+    )
     if asset_request.duration == AssetRequest.Duration.PERMANENT or not lent:
         asset_request.status = AssetRequestStatus.COMPLETED
         asset_request.completed_at = now
     else:
         asset_request.status = AssetRequestStatus.HANDED_OUT
     asset_request.save()
-    notifications.request_handed_out(
-        asset_request, [allocation_label(a) for a in allocations], received_by_name.strip()
-    )
+    # Handed out outside the system: the employee already has the devices, nothing to tell.
+    if not asset_request.devices_unrecorded:
+        notifications.request_handed_out(
+            asset_request, [allocation_label(a) for a in allocations], received_by_name.strip()
+        )
     return asset_request
 
 
@@ -1085,7 +1214,11 @@ def return_devices(
     returnable = open_allocations.filter(Q(asset__isnull=False) | Q(license__isnull=False))
     selected = list(returnable.filter(pk__in=allocation_ids) if allocation_ids else returnable.all())
     if not selected:
-        if asset_request.status == AssetRequestStatus.HANDED_OUT and not returnable.exists():
+        if (
+            asset_request.status == AssetRequestStatus.HANDED_OUT
+            and not returnable.exists()
+            and not asset_request.devices_unrecorded
+        ):
             # Only consumables were handed out: nothing comes back, the request is done.
             open_allocations.update(returned_at=now)
             asset_request.status = AssetRequestStatus.COMPLETED
@@ -1152,12 +1285,49 @@ def return_devices(
     notifications.request_returned(
         asset_request, taken, damaged_labels, [allocation_label(a) for a in returnable]
     )
-    if asset_request.status == AssetRequestStatus.HANDED_OUT and not returnable.exists():
+    # Devices handed out without being recorded are still out until IT marks them returned.
+    if (
+        asset_request.status == AssetRequestStatus.HANDED_OUT
+        and not returnable.exists()
+        and not asset_request.devices_unrecorded
+    ):
         open_allocations.update(returned_at=now)
         asset_request.status = AssetRequestStatus.COMPLETED
         asset_request.completed_at = now
         record(asset_request, AssetRequestEventKind.COMPLETED, user)
     asset_request.handled_by = user
+    asset_request.save()
+    return asset_request
+
+
+@transaction.atomic
+def return_without_devices(asset_request: AssetRequest, user: User, *, notes: str = "") -> AssetRequest:
+    """The devices handed out without being recorded are back, still without knowing which.
+
+    Recorded devices still out are taken back on their own; once none are left, the request
+    is complete. Devices can no longer be recorded for it.
+    """
+    _require_status(asset_request, AssetRequestStatus.HANDED_OUT)
+    if not asset_request.devices_unrecorded:
+        raise BusinessError(_("Every device of this request is recorded. Take them back one by one."))
+    now = timezone.now()
+    record(
+        asset_request,
+        AssetRequestEventKind.RETURNED,
+        user,
+        missing=_missing_labels(asset_request),
+        notes=notes.strip(),
+    )
+    asset_request.devices_unrecorded = False
+    asset_request.handled_by = user
+    open_allocations = AssetRequestAllocation.objects.filter(
+        item__asset_request=asset_request, returned_at__isnull=True, handed_out_at__isnull=False
+    )
+    if not open_allocations.filter(Q(asset__isnull=False) | Q(license__isnull=False)).exists():
+        open_allocations.update(returned_at=now)
+        asset_request.status = AssetRequestStatus.COMPLETED
+        asset_request.completed_at = now
+        record(asset_request, AssetRequestEventKind.COMPLETED, user)
     asset_request.save()
     return asset_request
 

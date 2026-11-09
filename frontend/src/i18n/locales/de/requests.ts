@@ -157,6 +157,8 @@ export default {
     allocated: '{count} bereits zugewiesen',
   },
   actions: {
+    handOutUnrecorded: 'Als ausgegeben markieren',
+    returnUnrecorded: 'Als zurückgegeben markieren',
     cancel: 'Anforderung stornieren',
     confirmCancel:
       'Anforderung stornieren? Zugewiesene Geräte werden wieder in den Pool übernommen.',
@@ -206,6 +208,10 @@ export default {
     pickup: '{name} holt die Geräte am Abholterminal ab und unterschreibt dort.',
     handOut: 'Geräte an {name} übergeben und anschließend die Ausgabe erfassen.',
     lent: 'Die Geräte sind bis {date} verliehen. Bei Rückgabe hier zurücknehmen.',
+    unrecorded:
+      'Ohne erfasste Geräte ausgegeben. Geräte unten erfassen, sobald sie bekannt sind; bei Rückgabe hier zurücknehmen.',
+    unrecordedPermanent:
+      'Ohne erfasste Geräte ausgegeben. Geräte unten erfassen, sobald sie bekannt sind.',
   },
   approval: {
     label: 'Genehmigung',
@@ -253,6 +259,7 @@ export default {
       created: 'Angefordert',
       direct: 'Direktausgabe erfasst',
       quick: 'Schnellzuweisung erfasst',
+      withoutDevices: 'Ohne Gerät',
       for: 'für {name}',
       approved: 'Genehmigt',
       declined: 'Nicht genehmigt',
@@ -326,6 +333,14 @@ export default {
     handedOut: 'ausgegeben',
     consumed: 'übergeben, ohne Rückgabe',
     returned: 'zurückgegeben',
+  },
+  unrecorded: {
+    title: 'Geräte erfassen',
+    hint: 'Ohne erfasste Geräte ausgegeben. Ein hier erfasstes Gerät gilt als seit der Ausgabe beim Mitarbeiter.',
+    confirmHandOut:
+      'Ohne erfasste Geräte ausgeben? Ohne Gerät: {items}. Die Geräte können danach jederzeit erfasst werden.',
+    confirmReturn:
+      'Ohne erfasste Geräte als zurückgegeben markieren? Ohne Gerät: {items}. Danach können keine Geräte mehr erfasst werden.',
   },
   returning: {
     title: 'Rücknahme',

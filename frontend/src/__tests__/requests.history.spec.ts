@@ -118,6 +118,7 @@ describe('RequestHistory', () => {
         method: 'delivered',
         received_by: 'Jane Doe',
         location: 'Office 2.14',
+        missing: [],
       }),
     )
     expect(entry!.title).toBe('Handed out · Max IT')
@@ -127,12 +128,28 @@ describe('RequestHistory', () => {
     ])
   })
 
+  it('names the lines handed out and taken back without a device', () => {
+    const [returned, handed] = history(
+      event('handed_out', {
+        items: [],
+        method: 'direct',
+        received_by: null,
+        location: null,
+        missing: ['2× Laptops'],
+      }),
+      event('returned', { items: [], damaged: [], notes: null, missing: ['1× Laptops'] }),
+    )
+    expect(handed!.lines).toContain('Without a device: 2× Laptops')
+    expect(returned!.lines).toEqual(['Without a device: 1× Laptops'])
+  })
+
   it('shows what came back damaged and the notes of a return', () => {
     const [entry] = history(
       event('returned', {
         items: ['INV-001', 'INV-002'],
         damaged: ['INV-002'],
         notes: 'Display cracked.',
+        missing: [],
       }),
     )
     expect(entry!.title).toBe('Taken back · Max IT')
@@ -140,7 +157,9 @@ describe('RequestHistory', () => {
   })
 
   it('leaves out the damage line when everything came back fine', () => {
-    const [entry] = history(event('returned', { items: ['INV-001'], damaged: [], notes: null }))
+    const [entry] = history(
+      event('returned', { items: ['INV-001'], damaged: [], notes: null, missing: [] }),
+    )
     expect(entry!.lines).toEqual(['INV-001'])
   })
 

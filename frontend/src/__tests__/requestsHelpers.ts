@@ -140,6 +140,7 @@ export function makeRequest(overrides: Partial<AssetRequest> = {}): AssetRequest
     assignee: null,
     can_approve: false,
     completed_at: null,
+    devices_unrecorded: false,
     confirmed_at: null,
     created_at: '2026-10-01T08:00:00Z',
     created_by: JANE,

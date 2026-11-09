@@ -2158,6 +2158,26 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/requests/{pk}/hand-out-unrecorded': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Hand Out Without Devices
+     * @description Handed out outside the system before it was prepared: devices can be recorded later.
+     */
+    post: operations['apps_requests_api_asset_requests_hand_out_without_devices']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/requests/{pk}/items/{item_id}/resolve': {
     parameters: {
       query?: never
@@ -2263,6 +2283,26 @@ export interface paths {
     put?: never
     /** Return Devices */
     post: operations['apps_requests_api_allocations_return_devices']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/requests/{pk}/return-unrecorded': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Return Without Devices
+     * @description The devices handed out without being recorded are back.
+     */
+    post: operations['apps_requests_api_allocations_return_without_devices']
     delete?: never
     options?: never
     head?: never
@@ -3689,6 +3729,8 @@ export interface components {
       created_at: string
       created_by: components['schemas']['UserRefOut'] | null
       department: components['schemas']['RefOut'] | null
+      /** Devices Unrecorded */
+      devices_unrecorded: boolean
       duration: components['schemas']['Duration']
       /** End Date */
       end_date: string | null
@@ -4802,6 +4844,11 @@ export interface components {
       /** Location */
       location: string | null
       method: components['schemas']['HandoverMethod'] | null
+      /**
+       * Missing
+       * @default []
+       */
+      missing: string[]
       /** Received By */
       received_by: string | null
     }
@@ -6793,6 +6840,11 @@ export interface components {
        * @default []
        */
       items: string[]
+      /**
+       * Missing
+       * @default []
+       */
+      missing: string[]
       /** Notes */
       notes: string | null
     }
@@ -7477,6 +7529,17 @@ export interface components {
     UnreadOut: {
       /** Unread */
       unread: number
+    }
+    /**
+     * UnrecordedIn
+     * @description Handed out or taken back without recording the devices.
+     */
+    UnrecordedIn: {
+      /**
+       * Notes
+       * @default
+       */
+      notes: string
     }
     /** UpcomingOut */
     UpcomingOut: {
@@ -11555,6 +11618,32 @@ export interface operations {
       }
     }
   }
+  apps_requests_api_asset_requests_hand_out_without_devices: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        pk: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UnrecordedIn']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AssetRequestOut']
+        }
+      }
+    }
+  }
   apps_requests_api_allocations_resolve_item: {
     parameters: {
       query?: never
@@ -11690,6 +11779,32 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['ReturnIn']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AssetRequestOut']
+        }
+      }
+    }
+  }
+  apps_requests_api_allocations_return_without_devices: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        pk: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UnrecordedIn']
       }
     }
     responses: {

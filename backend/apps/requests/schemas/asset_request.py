@@ -216,16 +216,21 @@ class HandOutData(Schema):
     received_by: str | None = None
     location: str | None = None
     items: list[str] = []
+    # Handed out outside the system: the lines that went out without recorded devices.
+    missing: list[str] = []
 
 
 class ReturnData(Schema):
     items: list[str] = []
     damaged: list[str] = []
     notes: str | None = None
+    # Marked returned without recorded devices: the lines that came back so.
+    missing: list[str] = []
 
 
 class AllocationData(Schema):
-    # Steps of older requests; allocations are now noted when the request is ready.
+    # Devices recorded after a hand-out without devices (and steps of older requests:
+    # allocations made while preparing are noted when the request is ready).
     items: list[str] = []
 
 
@@ -339,6 +344,8 @@ class AssetRequestOut(AssetRequestListOut):
     confirmed_at: datetime | None
     handed_out_at: datetime | None
     completed_at: datetime | None
+    # Handed out outside the system: devices of open lines can still be recorded.
+    devices_unrecorded: bool
     items: list[AssetRequestItemOut]
     handover: HandoverOut | None
     returns: list[DeviceReturnOut] = []
@@ -505,6 +512,12 @@ class AllocateIn(Schema):
 
 class ResolveItemIn(Schema):
     asset_model: UUID
+
+
+class UnrecordedIn(Schema):
+    """Handed out or taken back without recording the devices."""
+
+    notes: str = ""
 
 
 class ReturnIn(Schema):

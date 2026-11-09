@@ -156,6 +156,8 @@ export default {
     allocated: '{count} already allocated',
   },
   actions: {
+    handOutUnrecorded: 'Mark as handed out',
+    returnUnrecorded: 'Mark as returned',
     cancel: 'Cancel request',
     confirmCancel: 'Cancel this request? Allocated devices are returned to the pool.',
     confirm: 'Confirm',
@@ -204,6 +206,9 @@ export default {
     pickup: '{name} collects the devices at the pickup terminal and signs there.',
     handOut: 'Hand the devices to {name}, then record the hand-out.',
     lent: 'The devices are on loan until {date}. Take them back here when they are returned.',
+    unrecorded:
+      'Handed out without recorded devices. Record them below once known; take them back here when they are returned.',
+    unrecordedPermanent: 'Handed out without recorded devices. Record them below once known.',
   },
   approval: {
     label: 'Approval',
@@ -250,6 +255,7 @@ export default {
       created: 'Requested',
       direct: 'Direct hand-out recorded',
       quick: 'Quick assignment recorded',
+      withoutDevices: 'Without a device',
       for: 'for {name}',
       approved: 'Approved',
       declined: 'Not approved',
@@ -323,6 +329,14 @@ export default {
     handedOut: 'handed out',
     consumed: 'handed over, not returned',
     returned: 'returned',
+  },
+  unrecorded: {
+    title: 'Record devices',
+    hint: 'Handed out without recorded devices. A device recorded here counts as with the employee since the hand-out.',
+    confirmHandOut:
+      'Hand out without recorded devices? Without a device: {items}. The devices can be recorded at any time afterwards.',
+    confirmReturn:
+      'Mark as returned without recorded devices? Without a device: {items}. No devices can be recorded afterwards.',
   },
   returning: {
     title: 'Return',

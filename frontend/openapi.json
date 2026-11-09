@@ -3594,6 +3594,10 @@
               }
             ]
           },
+          "devices_unrecorded": {
+            "title": "Devices Unrecorded",
+            "type": "boolean"
+          },
           "duration": {
             "$ref": "#/components/schemas/Duration"
           },
@@ -3841,6 +3845,7 @@
           "confirmed_at",
           "handed_out_at",
           "completed_at",
+          "devices_unrecorded",
           "items",
           "handover",
           "returns",
@@ -6501,6 +6506,14 @@
               }
             ]
           },
+          "missing": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Missing",
+            "type": "array"
+          },
           "received_by": {
             "anyOf": [
               {
@@ -6517,7 +6530,8 @@
           "method",
           "received_by",
           "location",
-          "items"
+          "items",
+          "missing"
         ],
         "title": "HandOutData",
         "type": "object"
@@ -11613,6 +11627,14 @@
             "title": "Items",
             "type": "array"
           },
+          "missing": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Missing",
+            "type": "array"
+          },
           "notes": {
             "anyOf": [
               {
@@ -11628,7 +11650,8 @@
         "required": [
           "items",
           "damaged",
-          "notes"
+          "notes",
+          "missing"
         ],
         "title": "ReturnData",
         "type": "object"
@@ -13196,6 +13219,18 @@
           "unread"
         ],
         "title": "UnreadOut",
+        "type": "object"
+      },
+      "UnrecordedIn": {
+        "description": "Handed out or taken back without recording the devices.",
+        "properties": {
+          "notes": {
+            "default": "",
+            "title": "Notes",
+            "type": "string"
+          }
+        },
+        "title": "UnrecordedIn",
         "type": "object"
       },
       "UpcomingOut": {
@@ -22472,6 +22507,55 @@
         ]
       }
     },
+    "/api/requests/{pk}/hand-out-unrecorded": {
+      "post": {
+        "description": "Handed out outside the system before it was prepared: devices can be recorded later.",
+        "operationId": "apps_requests_api_asset_requests_hand_out_without_devices",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pk",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Pk",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnrecordedIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetRequestOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "PermissionAuth": []
+          }
+        ],
+        "summary": "Hand Out Without Devices",
+        "tags": [
+          "requests"
+        ]
+      }
+    },
     "/api/requests/{pk}/items/{item_id}/resolve": {
       "post": {
         "description": "Assign a catalog model to a free-text line (e.g. one IT just created).",
@@ -22748,6 +22832,55 @@
           }
         ],
         "summary": "Return Devices",
+        "tags": [
+          "request preparation"
+        ]
+      }
+    },
+    "/api/requests/{pk}/return-unrecorded": {
+      "post": {
+        "description": "The devices handed out without being recorded are back.",
+        "operationId": "apps_requests_api_allocations_return_without_devices",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pk",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Pk",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnrecordedIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetRequestOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "PermissionAuth": []
+          }
+        ],
+        "summary": "Return Without Devices",
         "tags": [
           "request preparation"
         ]

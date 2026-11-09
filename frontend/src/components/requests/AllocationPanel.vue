@@ -284,11 +284,14 @@ async function remove(allocationId: Id) {
         @select="(id) => allocate({ asset: id })"
         @enter="(scanned) => allocate({ code: scanned })"
       />
-      <span class="muted or">{{ t('requests.allocation.or') }}</span>
-      <NButton :theme-overrides="AS_INPUT" :loading="busy" @click="autoAllocate">
-        <template #icon><Sparkles :size="15" /></template>
-        {{ t('requests.actions.autoAllocate') }}
-      </NButton>
+      <!-- Recording devices after a hand-out: which ones went out is not for the pool to guess. -->
+      <template v-if="assetRequest.status === 'confirmed'">
+        <span class="muted or">{{ t('requests.allocation.or') }}</span>
+        <NButton :theme-overrides="AS_INPUT" :loading="busy" @click="autoAllocate">
+          <template #icon><Sparkles :size="15" /></template>
+          {{ t('requests.actions.autoAllocate') }}
+        </NButton>
+      </template>
       <template v-for="consumable in candidates?.consumables ?? []" :key="consumable.id">
         <div class="row consumable">
           <span class="small"

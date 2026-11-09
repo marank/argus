@@ -46,6 +46,12 @@ export const requestsApi = {
     http.post<AssetRequest>(`${base}/${id}/hand-out`, data),
   returnDevices: (id: Id, data: Partial<Schemas['ReturnIn']> = {}) =>
     http.post<AssetRequest>(`${base}/${id}/return`, data),
+  /** Handed out outside the system, without recording the devices. */
+  handOutUnrecorded: (id: Id, data: Partial<Schemas['UnrecordedIn']> = {}) =>
+    http.post<AssetRequest>(`${base}/${id}/hand-out-unrecorded`, data),
+  /** The devices handed out without being recorded are back. */
+  returnUnrecorded: (id: Id, data: Partial<Schemas['UnrecordedIn']> = {}) =>
+    http.post<AssetRequest>(`${base}/${id}/return-unrecorded`, data),
 }
 
 export const portalApi = {

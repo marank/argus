@@ -3289,3 +3289,24 @@ msgstr "Ersetzt durch %(asset)s"
 #, python-format
 msgid "Replaces %(asset)s"
 msgstr "Ersetzt %(asset)s"
+
+#: apps/requests/models/asset_request.py
+msgid "devices not recorded"
+msgstr "Geräte nicht erfasst"
+
+#: apps/requests/models/asset_request.py
+msgid "Handed out without recording which devices; they can still be recorded."
+msgstr "Ausgegeben, ohne zu erfassen, welche Geräte; sie können noch nachgetragen werden."
+
+#: apps/requests/services/workflow.py
+#, python-format
+msgid "Recorded after the hand-out of %(number)s"
+msgstr "Nach der Ausgabe von %(number)s nachgetragen"
+
+#: apps/requests/services/workflow.py
+msgid "Every device is allocated: mark the request ready and hand it out."
+msgstr "Alle Geräte sind zugeteilt: Markieren Sie die Anforderung als bereit und geben Sie sie aus."
+
+#: apps/requests/services/workflow.py
+msgid "Every device of this request is recorded. Take them back one by one."
+msgstr "Alle Geräte dieser Anforderung sind erfasst. Nehmen Sie sie einzeln zurück."

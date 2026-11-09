@@ -127,6 +127,9 @@ function details(entry: Entry): string[] {
       break
   }
   if (entry.items.length) lines.push(entry.items.join(', '))
+  // Handed out or taken back outside the system: the lines without a recorded device.
+  if ((event.kind === 'handed_out' || event.kind === 'returned') && event.data.missing.length)
+    lines.push(`${t('requests.detail.event.withoutDevices')}: ${event.data.missing.join(', ')}`)
   if (event.kind === 'returned') {
     if (event.data.damaged.length)
       lines.push(`${t('requests.returning.damaged')}: ${event.data.damaged.join(', ')}`)

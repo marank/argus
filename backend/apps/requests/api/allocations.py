@@ -21,6 +21,7 @@ from apps.requests.schemas.asset_request import (
     CandidatesOut,
     ResolveItemIn,
     ReturnIn,
+    UnrecordedIn,
 )
 from apps.requests.services import workflow
 
@@ -158,4 +159,12 @@ def return_devices(request: AuthedRequest, pk: UUID, payload: ReturnIn) -> Asset
         allocation_notes={n.allocation: n.note for n in payload.allocation_notes},
         damaged=set(payload.damaged),
     )
+    return get_asset_request(request, pk)
+
+
+@router.post("/{uuid:pk}/return-unrecorded", response=AssetRequestOut)
+@transaction.atomic
+def return_without_devices(request: AuthedRequest, pk: UUID, payload: UnrecordedIn) -> AssetRequest:
+    """The devices handed out without being recorded are back."""
+    workflow.return_without_devices(get_for_update(pk), request.user, notes=payload.notes)
     return get_asset_request(request, pk)

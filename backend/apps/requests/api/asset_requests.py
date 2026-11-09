@@ -32,6 +32,7 @@ from apps.requests.schemas.asset_request import (
     ReadyIn,
     RejectIn,
     ScheduleIn,
+    UnrecordedIn,
 )
 from apps.requests.services import workflow
 
@@ -267,4 +268,12 @@ def hand_out(request: AuthedRequest, pk: UUID, payload: HandOutIn) -> AssetReque
         location=payload.location,
         allocation_notes={n.allocation: n.note for n in payload.allocation_notes},
     )
+    return get_asset_request(request, pk)
+
+
+@router.post("/{uuid:pk}/hand-out-unrecorded", response=AssetRequestOut, auth=requests_write)
+@transaction.atomic
+def hand_out_without_devices(request: AuthedRequest, pk: UUID, payload: UnrecordedIn) -> AssetRequest:
+    """Handed out outside the system before it was prepared: devices can be recorded later."""
+    workflow.hand_out_without_devices(get_for_update(pk), request.user, notes=payload.notes)
     return get_asset_request(request, pk)
