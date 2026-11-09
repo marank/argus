@@ -41,7 +41,13 @@ import {
   type ImportField,
   type ImportMatch,
 } from '@/utils/assetImport'
-import { readCsvFile, type Table } from '@/utils/csv'
+import {
+  guessHasHeader,
+  readTableFile,
+  toTable,
+  UnsupportedFileError,
+  type Sheet,
+} from '@/utils/tableFile'
 
 type Result = Schemas['AssetImportResultOut']
 type ResultRow = Schemas['AssetImportRowOut']
@@ -56,7 +62,9 @@ const { busy, run } = useAction()
 
 const step = ref(1)
 const fileName = ref('')
-const table = ref<Table | null>(null)
+const sheets = ref<Sheet[]>([])
+const sheetIndex = ref(0)
+const hasHeader = ref(true)
 const readError = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
 
@@ -79,7 +87,7 @@ const filter = ref<Filter>('all')
 function reset() {
   step.value = 1
   fileName.value = ''
-  table.value = null
+  sheets.value = []
   readError.value = ''
   result.value = null
   imported.value = false
@@ -97,18 +105,44 @@ async function onFile(event: Event) {
   if (!file) return
   readError.value = ''
   try {
-    const read = await readCsvFile(file)
-    if (!read.headers.length || !read.rows.length) {
+    sheets.value = await readTableFile(file)
+    // The first sheet that holds anything.
+    const first = sheets.value.findIndex((s) => s.rows.some((r) => r.some((c) => c.trim())))
+    selectSheet(Math.max(first, 0))
+    if (!table.value!.rows.length) {
+      sheets.value = []
       readError.value = t('inventory.import.emptyFile')
       return
     }
-    table.value = read
     fileName.value = file.name
-    applySettings(read.headers)
     step.value = 2
-  } catch {
-    readError.value = t('inventory.import.unreadable')
+  } catch (error) {
+    readError.value = t(
+      error instanceof UnsupportedFileError
+        ? 'inventory.import.oldExcel'
+        : 'inventory.import.unreadable',
+    )
   }
+}
+
+const table = computed(() => {
+  const sheet = sheets.value[sheetIndex.value]
+  return sheet ? toTable(sheet.rows, hasHeader.value) : null
+})
+
+const sheetOptions = computed(() =>
+  sheets.value.map((s, index) => ({ value: index, label: s.name })),
+)
+
+function selectSheet(index: number) {
+  sheetIndex.value = index
+  hasHeader.value = guessHasHeader(sheets.value[index]!.rows)
+  applySettings(table.value!.headers)
+}
+
+function setHasHeader(value: boolean) {
+  hasHeader.value = value
+  applySettings(table.value!.headers)
 }
 
 /** The settings of the last import of a file with the same columns, or suggestions. */
@@ -129,11 +163,17 @@ function applySettings(headers: string[]) {
 const columnOptions = computed(() =>
   (table.value?.headers ?? []).map((header, index) => ({
     value: index,
-    label: header || t('inventory.import.column', { number: index + 1 }),
+    label:
+      header ||
+      [t('inventory.import.column', { number: index + 1 }), sampleValue(table.value!.rows, index)]
+        .filter(Boolean)
+        .join(' · '),
   })),
 )
 
-const mappedCount = computed(() => IMPORT_FIELDS.filter((f) => mapping.value[f] !== null).length)
+const mappedCount = computed(() =>
+  table.value?.rows.length ? IMPORT_FIELDS.filter((f) => mapping.value[f] !== null).length : 0,
+)
 const modelMissing = computed(() => mapping.value.model === null && !defaults.model)
 
 const fieldLabel = (field: ImportField) => t(FIELD_LABELS[field])
@@ -286,7 +326,7 @@ const columns = computed<DataTableColumns<ResultRow>>(() => [
       <input
         ref="fileInput"
         type="file"
-        accept=".csv,.txt,text/csv"
+        accept=".csv,.txt,.xlsx,.xlsm,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         class="file-input"
         data-test="import-file"
         @change="onFile"
@@ -309,6 +349,22 @@ const columns = computed<DataTableColumns<ResultRow>>(() => [
           })
         }}
       </p>
+      <div v-if="sheets.length > 1" class="sheet">
+        <FieldLabel :label="t('inventory.import.sheet')" />
+        <NSelect
+          :value="sheetIndex"
+          :options="sheetOptions"
+          data-test="sheet"
+          @update:value="selectSheet"
+        />
+      </div>
+      <ToggleRow
+        :model-value="hasHeader"
+        :label="t('inventory.import.hasHeader')"
+        :help="t('inventory.import.hasHeaderHelp')"
+        data-test="has-header"
+        @update:model-value="setHasHeader"
+      />
       <div class="mapping">
         <div class="mapping-head muted">
           <span>{{ t('inventory.import.field') }}</span>
@@ -463,6 +519,9 @@ const columns = computed<DataTableColumns<ResultRow>>(() => [
 </template>
 
 <style scoped>
+.sheet {
+  max-width: 320px;
+}
 .steps {
   margin-bottom: 20px;
 }

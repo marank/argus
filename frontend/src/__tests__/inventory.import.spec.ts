@@ -14,6 +14,7 @@ import {
   suggestMapping,
 } from '@/utils/assetImport'
 import { decodeText, detectDelimiter, parseCsv } from '@/utils/csv'
+import { toTable } from '@/utils/tableFile'
 
 import { button, click } from './dom'
 import { bodyText, mountPage, stubPickers } from './inventoryHelpers'
@@ -25,12 +26,14 @@ const EXPORT = [
   'Administrator,H064,HT60,00:00:5e:00:53:02,"192.0.2.26,fe80::2",27182B8281,HT60,\'--,\'--',
 ].join('\r\n')
 
+const csvTable = (text: string) => toTable(parseCsv(text), true)
+
 describe('reading CSV', () => {
   it('handles quotes, separators and line breaks inside cells', () => {
-    const table = parseCsv('﻿a;b;c\n1;"x;""y""\nz";3\n\n')
-    expect(table.delimiter).toBe(';')
-    expect(table.headers).toEqual(['a', 'b', 'c'])
-    expect(table.rows).toEqual([['1', 'x;"y"\nz', '3']])
+    expect(parseCsv('﻿a;b;c\n1;"x;""y""\nz";3\n\n')).toEqual([
+      ['a', 'b', 'c'],
+      ['1', 'x;"y"\nz', '3'],
+    ])
   })
 
   it('detects the separator outside quotes', () => {
@@ -47,7 +50,7 @@ describe('reading CSV', () => {
 })
 
 describe('mapping columns', () => {
-  const table = parseCsv(EXPORT)
+  const table = csvTable(EXPORT)
 
   it('suggests fields from the column names, each column once', () => {
     const mapping = suggestMapping(table.headers)
@@ -167,7 +170,7 @@ describe('AssetImportModal', () => {
     vi.spyOn(assetsApi, 'importPreview').mockResolvedValue(RESULT)
     await openWithFile()
     await click('Show preview')
-    const stored = loadSettings(parseCsv(EXPORT).headers)
+    const stored = loadSettings(csvTable(EXPORT).headers)
     expect(stored?.mapping.serial_number).toBe(5)
     expect(stored?.matchBy).toBe('serial_number')
   })
@@ -214,7 +217,7 @@ describe('AssetImportModal edge cases', () => {
     await open()
     await choose('Seriennummer,Gerätename\n')
     expect(bodyText()).toContain('The file holds no rows below the column names.')
-    expect(button('Choose CSV file')).toBeTruthy()
+    expect(button('Choose CSV or Excel file')).toBeTruthy()
   })
 
   it('goes back to the mapping and to another file, and shows changed values', async () => {
@@ -246,12 +249,12 @@ describe('AssetImportModal edge cases', () => {
     await click('Back')
     expect(bodyText()).toContain('DeviceList.csv: 2 rows, 9 columns')
     await click('Other file')
-    expect(button('Choose CSV file')).toBeTruthy()
+    expect(button('Choose CSV or Excel file')).toBeTruthy()
   })
 
   it('takes over the settings of the last file with the same columns', async () => {
     const preview = vi.spyOn(assetsApi, 'importPreview').mockResolvedValue(RESULT)
-    const headers = parseCsv(EXPORT).headers
+    const headers = csvTable(EXPORT).headers
     saveSettings(headers, {
       mapping: { ...emptyMapping(), serial_number: 5, location: 99 },
       defaults: { model: 'm1', location: null, status: 'in_stock', condition: null },
@@ -279,6 +282,6 @@ describe('AssetImportModal edge cases', () => {
     await flushPromises()
     await click('Show preview')
     expect(preview.mock.calls[0]![0].ignore_case).toBe(true)
-    expect(loadSettings(parseCsv(EXPORT).headers)?.ignoreCase).toBe(true)
+    expect(loadSettings(csvTable(EXPORT).headers)?.ignoreCase).toBe(true)
   })
 })

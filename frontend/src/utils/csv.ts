@@ -5,12 +5,6 @@
  * ends, a byte order mark, and the separator Excel uses in the respective locale.
  */
 
-export interface Table {
-  headers: string[]
-  rows: string[][]
-  delimiter: string
-}
-
 const DELIMITERS = [',', ';', '\t', '|']
 
 /** The separator that appears most often outside quotes in the first line. */
@@ -27,7 +21,8 @@ export function detectDelimiter(text: string): string {
   return best
 }
 
-export function parseCsv(input: string, delimiter = detectDelimiter(input)): Table {
+/** The non-empty records of a CSV text, header line included. */
+export function parseCsv(input: string, delimiter = detectDelimiter(input)): string[][] {
   const text = input.replace(/^﻿/, '')
   const records: string[][] = []
   let record: string[] = []
@@ -57,9 +52,7 @@ export function parseCsv(input: string, delimiter = detectDelimiter(input)): Tab
     record.push(cell)
     records.push(record)
   }
-  const nonEmpty = records.filter((r) => r.some((c) => c.trim() !== ''))
-  const [headers = [], ...rows] = nonEmpty
-  return { headers: headers.map((h) => h.trim()), rows, delimiter }
+  return records.filter((r) => r.some((c) => c.trim() !== ''))
 }
 
 /** UTF-8, or Windows-1252 for files that are not (older Excel "CSV" saves). */
@@ -69,8 +62,4 @@ export function decodeText(buffer: ArrayBuffer): string {
   } catch {
     return new TextDecoder('windows-1252').decode(buffer)
   }
-}
-
-export async function readCsvFile(file: File): Promise<Table> {
-  return parseCsv(decodeText(await file.arrayBuffer()))
 }

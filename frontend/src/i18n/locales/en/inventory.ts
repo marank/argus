@@ -76,10 +76,16 @@ export default {
   },
   import: {
     title: 'Import devices',
-    help: 'Pick a CSV file, e.g. the device export of the MDM. The first line holds the column names. Next you choose which column goes into which field and check a preview before anything is saved.',
-    pickFile: 'Choose CSV file',
+    help: 'Pick a CSV or Excel file (.xlsx), e.g. the device export of the MDM. Next you choose which column goes into which field and check a preview before anything is saved.',
+    pickFile: 'Choose CSV or Excel file',
+    oldExcel:
+      'Old (.xls) or password-protected Excel files cannot be read. Save the file in Excel as .xlsx without a password, or as CSV.',
+    sheet: 'Sheet',
+    hasHeader: 'First row holds the column names',
+    hasHeaderHelp:
+      'Turn off for files that start with data right away; the columns are then numbered.',
     emptyFile: 'The file holds no rows below the column names.',
-    unreadable: 'The file could not be read as CSV.',
+    unreadable: 'The file could not be read as a CSV or Excel file.',
     fileInfo: '{file}: {rows} rows, {columns} columns',
     column: 'Column {number}',
     stepFile: 'File',

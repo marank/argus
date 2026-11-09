@@ -77,10 +77,16 @@ export default {
   },
   import: {
     title: 'Geräte importieren',
-    help: 'Eine CSV-Datei wählen, z. B. den Geräteexport aus dem MDM. Die erste Zeile enthält die Spaltennamen. Danach legen Sie fest, welche Spalte in welches Feld kommt, und prüfen eine Vorschau, bevor etwas gespeichert wird.',
-    pickFile: 'CSV-Datei wählen',
+    help: 'Eine CSV- oder Excel-Datei (.xlsx) wählen, z. B. den Geräteexport aus dem MDM. Danach legen Sie fest, welche Spalte in welches Feld kommt, und prüfen eine Vorschau, bevor etwas gespeichert wird.',
+    pickFile: 'CSV- oder Excel-Datei wählen',
+    oldExcel:
+      'Alte (.xls) oder kennwortgeschützte Excel-Dateien können nicht gelesen werden. Speichern Sie die Datei in Excel als .xlsx ohne Kennwort oder als CSV.',
+    sheet: 'Tabellenblatt',
+    hasHeader: 'Erste Zeile enthält die Spaltennamen',
+    hasHeaderHelp:
+      'Ausschalten bei Dateien, die gleich mit Daten beginnen; die Spalten werden dann durchnummeriert.',
     emptyFile: 'Die Datei enthält unter den Spaltennamen keine Zeilen.',
-    unreadable: 'Die Datei konnte nicht als CSV gelesen werden.',
+    unreadable: 'Die Datei konnte weder als CSV- noch als Excel-Datei gelesen werden.',
     fileInfo: '{file}: {rows} Zeilen, {columns} Spalten',
     column: 'Spalte {number}',
     stepFile: 'Datei',

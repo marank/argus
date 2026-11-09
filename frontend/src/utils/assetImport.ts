@@ -73,7 +73,7 @@ const SYNONYMS: Record<ImportField, string[]> = {
   assigned_to: ['zugewiesenan', 'assignedto', 'benutzer', 'mitarbeiter'],
   supplier: ['lieferant', 'supplier', 'vendor'],
   purchase_date: ['kaufdatum', 'purchasedate', 'einkaufsdatum'],
-  purchase_price: ['einkaufspreis', 'kaufpreis', 'purchaseprice', 'price'],
+  purchase_price: ['einkaufspreis', 'kaufpreis', 'purchaseprice', 'preis', 'price'],
   warranty_until: ['garantieablaufdatum', 'garantiebis', 'warrantyuntil', 'warrantyexpiration'],
   notes: ['bemerkungen', 'notizen', 'notes', 'remarks'],
 }
