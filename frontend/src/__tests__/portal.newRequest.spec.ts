@@ -749,6 +749,7 @@ describe('NewRequestView', () => {
               code: 'NB',
               icon: 'laptop',
               kind: 'hardware',
+              device_naming: 'none',
             },
             description: 'Touchscreen',
             label: 'Laptops: Touchscreen',

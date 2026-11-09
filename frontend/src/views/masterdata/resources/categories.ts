@@ -8,7 +8,7 @@ import { bool, inherited, mono, ownOrInherited, path, withIcon } from '@/compone
 import { defineResource } from '@/components/crud/types'
 import { numberSequenceHints } from '@/components/masterdata/numberSequenceHints'
 import { i18n } from '@/i18n'
-import { CATEGORY_KINDS, MODEL_CHOICES } from '@/types/masterdata'
+import { CATEGORY_KINDS, DEVICE_NAMINGS, MODEL_CHOICES } from '@/types/masterdata'
 
 const { t } = i18n.global
 
@@ -51,6 +51,16 @@ export default defineResource<Schemas['CategoryOut']>({
       label: 'masterdata.fields.numberSequence',
       width: 200,
       render: (c) => c.number_sequence?.name ?? '—',
+    },
+    {
+      key: 'device_naming',
+      hidden: true,
+      label: 'masterdata.fields.deviceNaming',
+      width: 200,
+      render: (c) =>
+        c.device_naming === 'sequence'
+          ? (c.name_sequence?.name ?? '—')
+          : t(`enums.deviceNaming.${c.device_naming}`),
     },
     {
       key: 'team',
@@ -182,6 +192,31 @@ export default defineResource<Schemas['CategoryOut']>({
       extra: numberSequenceHints('parent'),
     },
     {
+      title: 'masterdata.sections.deviceNames',
+      fields: [
+        {
+          key: 'device_naming',
+          label: 'masterdata.fields.deviceNaming',
+          type: 'enum',
+          group: 'deviceNaming',
+          values: DEVICE_NAMINGS,
+          required: true,
+          help: 'masterdata.fields.deviceNamingHelp',
+        },
+        {
+          key: 'name_sequence',
+          label: 'masterdata.fields.nameSequence',
+          type: 'entity',
+          required: true,
+          visible: (form) => form.device_naming === 'sequence',
+          fetcher: numberSequencesApi.list,
+          display: (s: { name: string; preview?: string }) =>
+            s.preview ? `${s.name} · ${s.preview}` : s.name,
+          initial: (c: Schemas['CategoryOut']) => c.name_sequence,
+        },
+      ],
+    },
+    {
       title: 'masterdata.sections.responsibility',
       fields: [
         {
@@ -236,6 +271,8 @@ export default defineResource<Schemas['CategoryOut']>({
     description: '',
     icon: '',
     number_sequence: null,
+    device_naming: 'none',
+    name_sequence: null,
     team: null,
     is_requestable: true,
     model_choice: 'any_or_specific',
@@ -253,6 +290,8 @@ export default defineResource<Schemas['CategoryOut']>({
     description: c.description,
     icon: c.icon,
     number_sequence: c.number_sequence?.id ?? null,
+    device_naming: c.device_naming,
+    name_sequence: c.name_sequence?.id ?? null,
     team: c.team?.id ?? null,
     is_requestable: c.is_requestable,
     model_choice: c.model_choice,

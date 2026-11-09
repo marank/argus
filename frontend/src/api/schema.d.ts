@@ -896,6 +896,26 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/inventory/assets/{pk}/replace': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Replace Asset
+     * @description Put another device in this one's place; returns the replacement.
+     */
+    post: operations['apps_inventory_api_assets_replace_asset']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/inventory/consumables': {
     parameters: {
       query?: never
@@ -2741,8 +2761,6 @@ export interface components {
        * Format: date-time
        */
       created_at: string
-      /** Hostname */
-      hostname: string
       /**
        * Id
        * Format: uuid
@@ -2769,6 +2787,8 @@ export interface components {
       /** Model Consumables */
       model_consumables: components['schemas']['AssetModelRefOut'][]
       model_detail: components['schemas']['AssetModelDetailOut']
+      /** Name */
+      name: string
       /** Notes */
       notes: string
       /** Open Issues */
@@ -2830,6 +2850,7 @@ export interface components {
       | 'assigned'
       | 'returned'
       | 'reserved'
+      | 'replaced'
       | 'component_replaced'
       | 'repair'
       | 'maintenance'
@@ -2863,6 +2884,7 @@ export interface components {
       performed_by: components['schemas']['UserRefOut'] | null
       /** Previous Serial */
       previous_serial: string
+      related_asset: components['schemas']['AssetRefOut'] | null
       related_user: components['schemas']['UserRefOut'] | null
     }
     /** AssetEventRequestOut */
@@ -2902,6 +2924,7 @@ export interface components {
       performed_by: components['schemas']['UserRefOut'] | null
       /** Previous Serial */
       previous_serial: string
+      related_asset: components['schemas']['AssetRefOut'] | null
       related_user: components['schemas']['UserRefOut'] | null
     }
     /** AssetFilter */
@@ -2918,6 +2941,8 @@ export interface components {
       manufacturer?: string[] | null
       /** Model */
       model?: string[] | null
+      /** Own Category */
+      own_category?: string[] | null
       /** Purchase From */
       purchase_from?: string | null
       /** Purchase Until */
@@ -3021,11 +3046,6 @@ export interface components {
        */
       consumables: string[]
       /**
-       * Hostname
-       * @default
-       */
-      hostname: string
-      /**
        * Identifier
        * @default
        */
@@ -3059,6 +3079,11 @@ export interface components {
        * Format: uuid
        */
       model: string
+      /**
+       * Name
+       * @default
+       */
+      name: string
       /**
        * Notes
        * @default
@@ -3364,8 +3389,6 @@ export interface components {
        * Format: date-time
        */
       created_at: string
-      /** Hostname */
-      hostname: string
       /**
        * Id
        * Format: uuid
@@ -3384,6 +3407,8 @@ export interface components {
       mac_address: string
       manufacturer: components['schemas']['RefOut']
       model: components['schemas']['AssetModelRefOut']
+      /** Name */
+      name: string
       /** Notes */
       notes: string
       parent: components['schemas']['AssetParentOut'] | null
@@ -3424,8 +3449,19 @@ export interface components {
       /** Inventory Number */
       inventory_number: string
       model: components['schemas']['AssetModelRefOut']
+      /** Name */
+      name: string
       /** Serial Number */
       serial_number: string
+      status: components['schemas']['AssetStatus']
+    }
+    /** AssetReplaceIn */
+    AssetReplaceIn: {
+      /**
+       * Replacement
+       * Format: uuid
+       */
+      replacement: string
       status: components['schemas']['AssetStatus']
     }
     /** AssetRequestAssignIn */
@@ -3970,6 +4006,8 @@ export interface components {
        * @default
        */
       description: string
+      /** @default none */
+      device_naming: components['schemas']['DeviceNaming']
       /**
        * Icon
        * @default
@@ -4001,6 +4039,8 @@ export interface components {
       model_choice: components['schemas']['ModelChoice']
       /** Name */
       name: string
+      /** Name Sequence */
+      name_sequence?: string | null
       /** Number Sequence */
       number_sequence?: string | null
       /** Parent */
@@ -4029,6 +4069,7 @@ export interface components {
       code: string
       /** Description */
       description: string
+      device_naming: components['schemas']['DeviceNaming']
       effective_team: components['schemas']['TeamRefOut'] | null
       /** Holds Accessories */
       holds_accessories: boolean
@@ -4051,6 +4092,7 @@ export interface components {
       model_choice: components['schemas']['ModelChoice']
       /** Name */
       name: string
+      name_sequence: components['schemas']['RefOut'] | null
       /** Needs Approval */
       needs_approval: boolean
       number_sequence: components['schemas']['RefOut'] | null
@@ -4067,6 +4109,7 @@ export interface components {
     CategoryRefOut: {
       /** Code */
       code: string
+      device_naming: components['schemas']['DeviceNaming']
       /** Icon */
       icon: string
       /**
@@ -4508,6 +4551,12 @@ export interface components {
       /** Sort Order */
       sort_order: number
     }
+    /**
+     * DeviceNaming
+     * @description Where new devices of a category get their device name from.
+     * @enum {string}
+     */
+    DeviceNaming: 'none' | 'sequence' | 'inventory_number'
     /** DeviceReturnOut */
     DeviceReturnOut: {
       /**
@@ -4910,7 +4959,7 @@ export interface components {
       | 'identifier'
       | 'imei'
       | 'mac_address'
-      | 'hostname'
+      | 'name'
       | 'model'
       | 'status'
       | 'condition'
@@ -4926,7 +4975,7 @@ export interface components {
      * @description Fields that identify an existing device.
      * @enum {string}
      */
-    ImportMatch: 'serial_number' | 'inventory_number' | 'imei' | 'mac_address' | 'hostname'
+    ImportMatch: 'serial_number' | 'inventory_number' | 'imei' | 'mac_address' | 'name'
     /** Input */
     Input: {
       /**
@@ -4965,8 +5014,6 @@ export interface components {
       category: string
       /** Category Icon */
       category_icon: string
-      /** Hostname */
-      hostname: string
       /**
        * Id
        * Format: uuid
@@ -4976,6 +5023,8 @@ export interface components {
       inventory_number: string
       location: components['schemas']['LocationRefOut'] | null
       model: components['schemas']['AssetModelRefOut']
+      /** Name */
+      name: string
       /** Purchase Date */
       purchase_date: string | null
       /** Serial Number */
@@ -8834,6 +8883,7 @@ export interface operations {
         purchase_from?: string | null
         purchase_until?: string | null
         category?: string[] | null
+        own_category?: string[] | null
         q?: string | null
         ordering?: string | null
         page?: number
@@ -9137,6 +9187,32 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['AssetEventOut']
+        }
+      }
+    }
+  }
+  apps_inventory_api_assets_replace_asset: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        pk: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AssetReplaceIn']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AssetDetailOut']
         }
       }
     }

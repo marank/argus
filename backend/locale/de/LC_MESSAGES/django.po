@@ -1096,8 +1096,8 @@ msgid "Enter a MAC address of twelve hex digits, e.g. AA:BB:CC:DD:EE:FF."
 msgstr "Geben Sie eine MAC-Adresse aus zwölf Hex-Ziffern ein, z. B. AA:BB:CC:DD:EE:FF."
 
 #: apps/inventory/models/asset.py:36
-msgid "hostname"
-msgstr "Hostname"
+msgid "device name"
+msgstr "Gerätename"
 
 #: apps/inventory/models/asset.py:39 apps/inventory/models/asset_issue.py:32
 #: apps/inventory/models/asset_issue.py:103
@@ -3222,3 +3222,70 @@ msgstr ""
 #, python-format
 msgid "A file can hold at most %(count)d devices."
 msgstr "Eine Datei kann höchstens %(count)d Geräte enthalten."
+
+#: apps/masterdata/models/category.py
+msgid "No name"
+msgstr "Kein Name"
+
+#: apps/masterdata/models/category.py
+msgid "From a number sequence"
+msgstr "Aus einer Nummernserie"
+
+#: apps/masterdata/models/category.py
+msgid "Same as the inventory number"
+msgstr "Wie die Inventarnummer"
+
+#: apps/masterdata/models/category.py
+msgid "device names"
+msgstr "Gerätenamen"
+
+#: apps/masterdata/models/category.py
+msgid "Name new devices get when none is entered, e.g. the hostname of PCs or the name of MDEs in the MDM. Not inherited by subcategories."
+msgstr "Name, den neue Geräte bekommen, wenn keiner eingegeben ist, z. B. der Hostname von PCs oder der Name von MDEs im MDM. Wird nicht an Unterkategorien vererbt."
+
+#: apps/masterdata/models/category.py
+msgid "number sequence for device names"
+msgstr "Nummernserie für Gerätenamen"
+
+#: apps/masterdata/models/category.py
+msgid "Choose the number sequence for the device names."
+msgstr "Wählen Sie die Nummernserie für die Gerätenamen."
+
+#: apps/inventory/models/asset.py
+msgid "What the device is called in daily use, e.g. its hostname or its name in the MDM."
+msgstr "Wie das Gerät im Alltag heißt, z. B. sein Hostname oder sein Name im MDM."
+
+#: apps/inventory/models/asset.py
+msgid "Another device in use already has this name."
+msgstr "Ein anderes Gerät im Einsatz hat bereits diesen Namen."
+
+#: apps/inventory/models/asset_event.py
+msgid "Device replaced"
+msgstr "Gerät ersetzt"
+
+#: apps/inventory/models/asset_event.py
+msgid "related device"
+msgstr "verbundenes Gerät"
+
+#: apps/inventory/services/assets.py
+msgid "A device cannot replace itself."
+msgstr "Ein Gerät kann sich nicht selbst ersetzen."
+
+#: apps/inventory/services/assets.py
+#, python-format
+msgid "Only a device in stock can be the replacement; %(asset)s is “%(status)s”."
+msgstr "Nur ein Gerät im Lager kann als Ersatz dienen; %(asset)s ist „%(status)s“."
+
+#: apps/inventory/services/assets.py
+msgid "The replaced device can go into stock, into repair or be retired."
+msgstr "Das ersetzte Gerät kann ins Lager oder in Reparatur gehen oder ausgemustert werden."
+
+#: apps/inventory/services/assets.py
+#, python-format
+msgid "Replaced by %(asset)s"
+msgstr "Ersetzt durch %(asset)s"
+
+#: apps/inventory/services/assets.py
+#, python-format
+msgid "Replaces %(asset)s"
+msgstr "Ersetzt %(asset)s"

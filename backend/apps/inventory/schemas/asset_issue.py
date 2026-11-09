@@ -146,7 +146,7 @@ class IssueDeviceDetailOut(Schema):
     id: UUID
     inventory_number: str
     serial_number: str
-    hostname: str
+    name: str
     status: AssetStatus
     model: AssetModelRefOut
     category: str = Field(..., alias="model.category.name")

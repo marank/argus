@@ -23,6 +23,7 @@ const TYPES: Partial<
   assigned: 'info',
   returned: 'default',
   reserved: 'info',
+  replaced: 'info',
   component_replaced: 'warning',
   repair: 'error',
   maintenance: 'warning',
@@ -66,6 +67,14 @@ const TYPES: Partial<
           <span v-if="event.related_user"
             >{{ t('inventory.event.employee') }}: {{ event.related_user.display_name }}</span
           >
+          <RouterLink
+            v-if="event.related_asset"
+            :to="{ name: 'asset', params: { id: event.related_asset.id } }"
+            class="mono"
+          >
+            {{ event.related_asset.inventory_number
+            }}{{ event.related_asset.name ? ` · ${event.related_asset.name}` : '' }}
+          </RouterLink>
           <RouterLink
             v-if="event.asset_request"
             :to="{ name: 'request', params: { id: event.asset_request.id } }"

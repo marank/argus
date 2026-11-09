@@ -30,6 +30,9 @@ export const assetsApi = {
     http.put<AssetDetail>(`/inventory/assets/${id}`, data),
   assign: (id: Id, user: Schemas['AssetAssignIn']['user']) =>
     http.post<AssetDetail>(`/inventory/assets/${id}/assign`, { user }),
+  /** Put another device from stock in this one's place; returns the replacement. */
+  replace: (id: Id, data: Schemas['AssetReplaceIn']) =>
+    http.post<AssetDetail>(`/inventory/assets/${id}/replace`, data),
   remove: (id: Id) => http.remove(`/inventory/assets/${id}`),
   events: (id: Id) => http.get<Schemas['AssetEventOut'][]>(`/inventory/assets/${id}/events`),
   addEvent: (id: Id, data: Schemas['AssetEventIn']) =>

@@ -716,7 +716,7 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:
                                 Asset.Condition.WORN,
                             ]
                         ),
-                        "hostname": f"NB-{model_index}{i:02d}" if model.category.code == "laptops" else "",
+                        "name": f"NB-{model_index}{i:02d}" if model.category.code == "laptops" else "",
                     },
                     admin,
                 )

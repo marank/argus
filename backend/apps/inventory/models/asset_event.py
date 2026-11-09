@@ -12,6 +12,7 @@ class AssetEventKind(models.TextChoices):
     ASSIGNED = "assigned", _("Handed out")
     RETURNED = "returned", _("Returned")
     RESERVED = "reserved", _("Reserved")
+    REPLACED = "replaced", _("Device replaced")
     COMPONENT_REPLACED = "component_replaced", _("Component replaced")
     REPAIR = "repair", _("Repair")
     MAINTENANCE = "maintenance", _("Maintenance")
@@ -67,6 +68,15 @@ class AssetEvent(TimeStampedModel):
         null=True,
         blank=True,
         related_name="asset_events",
+    )
+    # "Device replaced": the other device, the replacement or the one replaced.
+    related_asset = models.ForeignKey(
+        "inventory.Asset",
+        verbose_name=_("related device"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
     )
     asset_request = models.ForeignKey(
         "requests.AssetRequest",

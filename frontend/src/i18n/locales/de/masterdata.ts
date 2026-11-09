@@ -68,6 +68,7 @@ export default {
     contact: 'Kontakt',
     notes: 'Notizen',
     numbering: 'Inventarnummern',
+    deviceNames: 'Gerätenamen',
     portal: 'Mitarbeiterportal',
     identification: 'Identifikation',
     procurement: 'Beschaffung',
@@ -150,6 +151,10 @@ export default {
     terminalShort: 'Terminal',
     jobTitle: 'Position',
     department: 'Abteilung',
+    deviceNaming: 'Name neuer Geräte',
+    deviceNamingHelp:
+      'Wie neue Geräte heißen, wenn kein Name eingegeben ist: z. B. der nächste Hostname für PCs (pc-104) oder MDEs (H065), oder die Inventarnummer. Wird ein Gerät ersetzt, geht der Name auf den Ersatz über. Unterkategorien übernehmen das nicht.',
+    nameSequence: 'Nummernserie für Namen',
     numberSequenceHelp:
       'Neue Geräte dieser Kategorie erhalten ihre Inventarnummer aus dieser Serie. Unterkategorien übernehmen sie nicht. Leer: Es gilt die allgemeine Serie für Assets.',
     parentSequence: 'Übergeordnete Kategorie · {name}',

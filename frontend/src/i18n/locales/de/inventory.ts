@@ -18,7 +18,9 @@ export default {
     installedOn: 'Eingebaut am',
     imei: 'IMEI',
     macAddress: 'MAC-Adresse',
-    hostname: 'Hostname',
+    name: 'Gerätename',
+    nameHint:
+      'Leer: Die Kategorie vergibt ggf. einen, aus einer Nummernserie oder wie die Inventarnummer.',
     model: 'Modell',
     category: 'Kategorie',
     manufacturer: 'Hersteller',
@@ -148,6 +150,18 @@ export default {
     submit: '{count} Geräte anlegen',
     created: '{count} Geräte angelegt ({first} – {last})',
   },
+  replace: {
+    action: 'Ersetzen',
+    title: 'Gerät ersetzen',
+    hint: 'Der Ersatz übernimmt den Namen {name}, die Zuweisung und den Standort. Wählen Sie ein Gerät aus dem Lager.',
+    hintWithoutName:
+      'Der Ersatz übernimmt die Zuweisung und den Standort. Wählen Sie ein Gerät aus dem Lager.',
+    replacement: 'Ersatzgerät',
+    anyCategory: 'Auch aus anderen Kategorien',
+    oldStatus: 'Danach ist dieses Gerät',
+    submit: 'Gerät ersetzen',
+    saved: 'Gerät ersetzt',
+  },
   event: {
     kind: 'Art',
     occurredAt: 'Datum',
@@ -246,7 +260,7 @@ export default {
       device: 'Gerät',
       openDevice: 'Gerät öffnen',
       serialNumber: 'Seriennummer',
-      hostname: 'Hostname',
+      deviceName: 'Gerätename',
       category: 'Kategorie',
       location: 'Standort',
       assignedTo: 'Ausgegeben an',

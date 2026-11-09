@@ -63,6 +63,7 @@ const LAPTOP = allocation({
   asset: {
     id: 'a1',
     inventory_number: 'NB-0001',
+    name: '',
     serial_number: 'SN-111',
     status: 'reserved',
     model: model('ThinkPad T14'),

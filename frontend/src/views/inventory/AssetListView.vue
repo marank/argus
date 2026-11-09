@@ -152,11 +152,11 @@ const columns = computed<TableColumn<Asset>[]>(() => [
     render: (a) => enumLabel('condition', a.condition),
   },
   {
-    key: 'hostname',
-    title: t('inventory.fields.hostname'),
+    key: 'name',
+    title: t('inventory.fields.name'),
     hidden: true,
     width: 150,
-    render: (a) => mono(a.hostname),
+    render: (a) => mono(a.name),
   },
   {
     key: 'imei',

@@ -29,7 +29,7 @@ class AssetOut(Schema):
     identifier: str
     imei: str
     mac_address: str
-    hostname: str
+    name: str
     status: AssetStatus
     condition: Asset.Condition
     is_loanable: bool
@@ -166,7 +166,7 @@ class AssetIn(Schema):
     identifier: str = ""
     imei: str = ""
     mac_address: str = ""
-    hostname: str = ""
+    name: str = ""
     status: AssetStatus = AssetStatus.IN_STOCK
     condition: Asset.Condition = Asset.Condition.NEW
     is_loanable: bool = True
@@ -217,6 +217,12 @@ class AssetSeriesPreviewOut(Schema):
 
 class AssetAssignIn(Schema):
     user: UUID | None
+
+
+class AssetReplaceIn(Schema):
+    replacement: UUID
+    # What becomes of the replaced device: in stock, in repair or retired.
+    status: AssetStatus
 
 
 AssetOut.model_rebuild()

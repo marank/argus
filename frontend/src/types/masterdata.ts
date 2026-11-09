@@ -6,6 +6,12 @@ export const CATEGORY_KINDS = allValues<Schemas['CategoryKind']>({
   software: true,
 })
 
+export const DEVICE_NAMINGS = allValues<Schemas['DeviceNaming']>({
+  none: true,
+  sequence: true,
+  inventory_number: true,
+})
+
 export const MODEL_CHOICES = allValues<Schemas['ModelChoice']>({
   any_or_specific: true,
   any_only: true,

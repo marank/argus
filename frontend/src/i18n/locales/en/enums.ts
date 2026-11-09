@@ -15,6 +15,7 @@ export default {
     assigned: 'Handed out',
     returned: 'Returned',
     reserved: 'Reserved',
+    replaced: 'Device replaced',
     component_replaced: 'Component replaced',
     repair: 'Repair',
     maintenance: 'Maintenance',
@@ -60,6 +61,11 @@ export default {
     license: 'Software license',
   },
   categoryKind: { hardware: 'Hardware', software: 'Software' },
+  deviceNaming: {
+    none: 'No name',
+    sequence: 'From a number sequence',
+    inventory_number: 'Same as the inventory number',
+  },
   modelChoice: {
     any_or_specific: 'Any or a specific model',
     any_only: 'Any model only',

@@ -20,7 +20,9 @@ def category_queryset() -> QuerySet[Category]:
     # `tree_position`: parents before their subcategories; the default order of every list.
     positions = Category.tree_positions()
     return (
-        Category.objects.select_related("parent__parent__team", "parent__team", "number_sequence", "team")
+        Category.objects.select_related(
+            "parent__parent__team", "parent__team", "number_sequence", "name_sequence", "team"
+        )
         .annotate(
             tree_position=Case(
                 *[When(pk=pk, then=Value(position)) for pk, position in positions.items()],

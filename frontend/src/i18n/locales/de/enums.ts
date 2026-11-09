@@ -20,6 +20,7 @@ export default {
     assigned: 'Ausgegeben',
     returned: 'Zurückgegeben',
     reserved: 'Reserviert',
+    replaced: 'Gerät ersetzt',
     component_replaced: 'Komponente getauscht',
     repair: 'Reparatur',
     maintenance: 'Wartung',
@@ -65,6 +66,11 @@ export default {
     license: 'Softwarelizenz',
   },
   categoryKind: { hardware: 'Hardware', software: 'Software' },
+  deviceNaming: {
+    none: 'Kein Name',
+    sequence: 'Aus einer Nummernserie',
+    inventory_number: 'Wie die Inventarnummer',
+  },
   modelChoice: {
     any_or_specific: 'Beliebiges oder bestimmtes Modell',
     any_only: 'Nur beliebiges Modell',

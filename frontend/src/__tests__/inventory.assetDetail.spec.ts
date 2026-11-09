@@ -30,6 +30,7 @@ function event(overrides: Partial<Schemas['AssetEventOut']> = {}): Schemas['Asse
     component: 'Display',
     component_serial: '',
     component_type: null,
+    related_asset: null,
     previous_serial: '',
     cost: null,
     asset_request: null,
@@ -152,6 +153,75 @@ describe('AssetDetailView', () => {
     await pick(wrapper, usersApi.list, 'u2')
     await click('Assign')
     expect(assign).toHaveBeenCalledWith('a1', 'u2')
+  })
+
+  it('puts a device from stock in the place of this one', async () => {
+    const spare = makeAsset({ id: 'a2', inventory_number: 'INV-000187', name: '' })
+    vi.mocked(assetsApi.list).mockResolvedValue(page([spare as never]))
+    const replace = vi
+      .spyOn(assetsApi, 'replace')
+      .mockResolvedValue({ ...spare, name: 'H017', status: 'in_use' })
+    const { wrapper, router } = await show(
+      makeAsset({ name: 'H017', status: 'in_use', assigned_to: userRef() }),
+    )
+    expect(bodyText()).toContain('H017')
+    await click('Replace')
+    expect(bodyText()).toContain('takes over the name H017')
+    // Devices in stock of the same category.
+    expect(assetsApi.list).toHaveBeenLastCalledWith(
+      expect.objectContaining({ status: 'in_stock', own_category: 'c1' }),
+    )
+    await pick(wrapper, assetsApi.list, 'a2')
+    const retired = [...document.body.querySelectorAll<HTMLElement>('.n-radio-button')].find(
+      (b) => b.textContent?.trim() === 'Retired',
+    )!
+    retired.querySelector('input')!.click()
+    await flushPromises()
+    await click('Replace device')
+    expect(replace).toHaveBeenCalledWith('a1', { replacement: 'a2', status: 'retired' })
+    // On to the replacement.
+    expect(router.currentRoute.value.params).toEqual({ id: 'a2' })
+  })
+
+  it('replaces a device without a name and from other categories on request', async () => {
+    await show(makeAsset({ name: '' }))
+    await click('Replace')
+    expect(bodyText()).toContain('takes over the holder and the location')
+    const anyCategory = [...document.body.querySelectorAll<HTMLElement>('.n-checkbox')].find((c) =>
+      c.textContent?.includes('other categories'),
+    )!
+    anyCategory.click()
+    await flushPromises()
+    expect(assetsApi.list).toHaveBeenLastCalledWith(
+      expect.not.objectContaining({ own_category: expect.anything() }),
+    )
+  })
+
+  it('links the other device of a replacement in the history', async () => {
+    vi.mocked(assetsApi.events).mockResolvedValue([
+      event({
+        kind: 'replaced',
+        description: 'Replaced by INV-000187',
+        component: '',
+        related_asset: {
+          id: 'a2',
+          inventory_number: 'INV-000187',
+          name: 'H017',
+          serial_number: '',
+          status: 'in_use',
+          model: modelRef(),
+        },
+      }),
+    ])
+    await show()
+    const link = [...history().querySelectorAll('a')].find((a) => a.textContent?.includes('H017'))!
+    expect(link.textContent).toContain('INV-000187 · H017')
+    expect(link.getAttribute('href')).toMatch(/\/a2$/)
+  })
+
+  it('does not offer to replace a retired device', async () => {
+    await show(makeAsset({ status: 'retired' }))
+    expect(hasButton('Replace')).toBe(false)
   })
 
   it('is for viewing only without the right to change devices', async () => {

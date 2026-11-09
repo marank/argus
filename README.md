@@ -186,6 +186,11 @@ signs in through the app's login, so the second step applies there too.
 - **Number sequences** – configurable patterns per category
   (`{prefix}{year}-{seq}`, yearly/monthly restart) for inventory, request and
   order numbers.
+- **Device names** – the inventory number belongs to the device for good; the device
+  name (hostname of a PC, name of an MDE in the MDM) belongs to its place and passes
+  to the replacement when a device is replaced. A category can give new devices the
+  next name from a number sequence (`pc-{seq}`, `H{seq}`) or their inventory number.
+  Only one device in use has a given name.
 - **Self-service portal** – employees request devices by group ("any headset") or
   model, for a period or permanently, and follow status, pickup time and their
   assigned devices. Consumables that fit their own devices are offered as a quick pick.
@@ -269,6 +274,7 @@ is not used: a request also covers permanent hand-outs, software and consumables
 | `approve` (department)   | Genehmigung             | Approval            |
 | `confirm` (IT)           | Bestätigung             | Confirmation        |
 | `origin="direct"`        | Direktausgabe           | Direct hand-out     |
+| `Asset.name`             | Gerätename              | Device name         |
 
 The model is `AssetRequest` (variables `asset_request`), not `Request`, to avoid
 confusion with the `request` argument of every API view.

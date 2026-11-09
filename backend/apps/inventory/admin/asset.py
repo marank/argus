@@ -47,7 +47,7 @@ class AssetAdmin(admin.ModelAdmin[Asset]):
         "serial_number",
         "imei",
         "mac_address",
-        "hostname",
+        "name",
         "model__name",
         "assigned_to__username",
         "assigned_to__last_name",
@@ -65,7 +65,7 @@ class AssetAdmin(admin.ModelAdmin[Asset]):
     readonly_fields = ["created_at", "updated_at"]
     date_hierarchy = "purchase_date"
     fieldsets = [
-        (None, {"fields": ["inventory_number", "model", "serial_number", "imei", "mac_address", "hostname"]}),
+        (None, {"fields": ["inventory_number", "name", "model", "serial_number", "imei", "mac_address"]}),
         (
             _("Status & usage"),
             {

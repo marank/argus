@@ -37,6 +37,7 @@ const model = (name: string): Schemas['AssetModelRefOut'] => ({
 
 export const LAPTOP_CATEGORY: Schemas['CategoryRefOut'] = {
   identifier_label: '',
+  device_naming: 'none',
   id: 'cat-laptop',
   code: 'LAP',
   icon: 'laptop',
@@ -76,6 +77,7 @@ export function device(
     asset: {
       id: `asset-${inventoryNumber}`,
       inventory_number: inventoryNumber,
+      name: '',
       model: model(modelName),
       serial_number: `SN-${inventoryNumber}`,
       status: 'reserved',

@@ -213,6 +213,7 @@ describe('dashboard widgets', () => {
           asset: {
             id: ID(3),
             inventory_number: 'NB-0815',
+            name: '',
             model,
             serial_number: 'SN1',
             status: 'in_use',

@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import { useLive } from '@/composables/useLive'
 import type { Id } from '@/types/common'
-import { ClipboardList, Pencil, Trash2, UserMinus, UserPlus, Wrench } from '@lucide/vue'
+import {
+  ArrowLeftRight,
+  ClipboardList,
+  Pencil,
+  Trash2,
+  UserMinus,
+  UserPlus,
+  Wrench,
+} from '@lucide/vue'
 import { NAlert, NButton, NCard, NModal, NSkeleton, useMessage } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -18,6 +26,7 @@ import AssetEventModal from '@/components/inventory/AssetEventModal.vue'
 import AssetFormDrawer from '@/components/inventory/AssetFormDrawer.vue'
 import AssetTimeline from '@/components/inventory/AssetTimeline.vue'
 import QuickAssignModal from '@/components/inventory/QuickAssignModal.vue'
+import ReplaceAssetModal from '@/components/inventory/ReplaceAssetModal.vue'
 import { useAction } from '@/composables/useAction'
 import { useConfirm } from '@/composables/useConfirm'
 import { useFormat } from '@/composables/useFormat'
@@ -33,8 +42,8 @@ const canWrite = computed(() => useAuthStore().can('assets', 'write'))
 // Without the right to record hand-outs, the device is only assigned.
 const canHandOut = computed(() => useAuthStore().can('requests', 'write'))
 const features = useFeaturesStore()
-const router = useRouter()
 const message = useMessage()
+const router = useRouter()
 const confirm = useConfirm()
 const { date, dateTime, money, enumLabel } = useFormat()
 const { busy, run } = useAction()
@@ -45,6 +54,11 @@ const showForm = ref(false)
 const showEvent = ref(false)
 const showAssign = ref(false)
 const showQuickAssign = ref(false)
+const showReplace = ref(false)
+// Lost and retired devices are no longer in anyone's place.
+const replaceable = computed(
+  () => !!asset.value && !['lost', 'retired'].includes(asset.value.status),
+)
 const assignTo = ref<Id | null>(null)
 
 async function load() {
@@ -56,7 +70,12 @@ async function load() {
 onMounted(load)
 useLive(['asset'], load, {
   id: () => props.id,
-  paused: () => showForm.value || showEvent.value || showAssign.value || showQuickAssign.value,
+  paused: () =>
+    showForm.value ||
+    showEvent.value ||
+    showAssign.value ||
+    showQuickAssign.value ||
+    showReplace.value,
 })
 
 const identification = computed<DetailEntry[]>(() => {
@@ -83,7 +102,6 @@ const identification = computed<DetailEntry[]>(() => {
     })),
     { label: t('inventory.fields.imei'), value: a.imei, mono: true },
     { label: t('inventory.fields.macAddress'), value: a.mac_address, mono: true },
-    { label: t('inventory.fields.hostname'), value: a.hostname, mono: true },
     { label: t('inventory.fields.parent'), slot: 'parent' },
     { label: t('inventory.fields.components'), slot: 'components' },
   ]
@@ -188,6 +206,7 @@ async function removeEvent(event: Schemas['AssetEventOut']) {
       >
         <template #eyebrow>
           <span class="mono id">{{ asset.inventory_number }}</span>
+          <span v-if="asset.name" class="mono id device-name">· {{ asset.name }}</span>
         </template>
         <template #badge>
           <StatusTag group="assetStatus" :value="asset.status" />
@@ -207,6 +226,10 @@ async function removeEvent(event: Schemas['AssetEventOut']) {
               {{ t('inventory.quickAssign.title') }}
             </NButton>
           </template>
+          <NButton v-if="replaceable" @click="showReplace = true">
+            <template #icon><ArrowLeftRight :size="15" /></template>
+            {{ t('inventory.replace.action') }}
+          </NButton>
           <NButton @click="showEvent = true">
             <template #icon><Wrench :size="15" /></template>
             {{ t('inventory.recordEvent') }}
@@ -376,6 +399,11 @@ async function removeEvent(event: Schemas['AssetEventOut']) {
         @saved="load"
       />
       <QuickAssignModal v-model:show="showQuickAssign" :asset-id="asset.id" @saved="load" />
+      <ReplaceAssetModal
+        v-model:show="showReplace"
+        :asset="asset"
+        @replaced="(r) => router.push({ name: 'asset', params: { id: r.id } })"
+      />
       <NModal
         v-model:show="showAssign"
         preset="card"
@@ -418,6 +446,11 @@ async function removeEvent(event: Schemas['AssetEventOut']) {
   font-size: 12px;
   color: var(--ar-primary);
   letter-spacing: 0.02em;
+}
+/* Hostnames and MDM names as they are spelled, not in the eyebrow's capitals. */
+.device-name {
+  margin-left: 6px;
+  text-transform: none;
 }
 .layout {
   display: grid;

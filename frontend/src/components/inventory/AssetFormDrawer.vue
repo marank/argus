@@ -52,7 +52,7 @@ function empty(): Form {
     identifier: '',
     imei: '',
     mac_address: '',
-    hostname: '',
+    name: '',
     status: 'in_stock',
     condition: 'new',
     is_loanable: true,
@@ -86,7 +86,7 @@ watch(show, (visible) => {
           identifier: a.identifier,
           imei: a.imei,
           mac_address: a.mac_address,
-          hostname: a.hostname,
+          name: a.name,
           status: a.status,
           condition: a.condition,
           is_loanable: a.is_loanable,
@@ -119,6 +119,10 @@ const identifierLabel = computed(() =>
   category.value?.identifier_label
     ? `${t('inventory.fields.identifier')} (${category.value.identifier_label})`
     : t('inventory.fields.identifier'),
+)
+// A new device left without a name gets one from its category.
+const namedByCategory = computed(
+  () => !props.asset && !!category.value && category.value.device_naming !== 'none',
 )
 /** The tracked parts of devices of this category, e.g. the battery. */
 const componentTypes = ref<Schemas['ComponentTypeOut'][]>([])
@@ -218,6 +222,18 @@ async function save() {
               /></template>
               <NInput v-model:value="form.inventory_number" class="mono-input" placeholder="auto" />
             </NFormItemGi>
+            <NFormItemGi v-bind="fieldErrors.item('name')">
+              <template #label
+                ><FieldLabel
+                  :label="t('inventory.fields.name')"
+                  :help="asset ? undefined : t('inventory.fields.nameHint')"
+              /></template>
+              <NInput
+                v-model:value="form.name"
+                class="mono-input"
+                :placeholder="namedByCategory ? 'auto' : undefined"
+              />
+            </NFormItemGi>
             <NFormItemGi
               v-bind="fieldErrors.item('serial_number')"
               :label="t('inventory.fields.serialNumber')"
@@ -243,12 +259,6 @@ async function save() {
                 placeholder="AA:BB:CC:DD:EE:FF"
                 @blur="form.mac_address = formatMacAddress(form.mac_address)"
               />
-            </NFormItemGi>
-            <NFormItemGi
-              v-bind="fieldErrors.item('hostname')"
-              :label="t('inventory.fields.hostname')"
-            >
-              <NInput v-model:value="form.hostname" class="mono-input" />
             </NFormItemGi>
             <NFormItemGi v-bind="fieldErrors.item('parent')" :label="t('inventory.fields.parent')">
               <EntitySelect

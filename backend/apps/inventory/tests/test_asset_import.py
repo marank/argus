@@ -12,9 +12,9 @@ IMPORT = "/api/inventory/assets/import"
 
 # Two rows of an MDM export (Fleetwise MDM): "'--" for empty cells, MACs in lower case.
 ROWS = [
-    {"hostname": "H102", "model": "SX58", "mac_address": "00:00:5e:00:53:01", "serial_number": "31415A926B"},
+    {"name": "H102", "model": "SX58", "mac_address": "00:00:5e:00:53:01", "serial_number": "31415A926B"},
     {
-        "hostname": "H064",
+        "name": "H064",
         "model": "SX58",
         "mac_address": "00:00:5e:00:53:02",
         "serial_number": "27182B8281",
@@ -43,7 +43,7 @@ def test_preview_saves_nothing_and_import_creates(it_client):
     # The preview promised the same numbers.
     assert [row["inventory_number"] for row in done["rows"]] == numbers
     asset = Asset.objects.get(serial_number="31415A926B")
-    assert (asset.hostname, asset.mac_address, asset.location, asset.condition, asset.imei) == (
+    assert (asset.name, asset.mac_address, asset.location, asset.condition, asset.imei) == (
         "H102",
         "00:00:5E:00:53:01",
         warehouse,
@@ -60,7 +60,7 @@ def test_preview_saves_nothing_and_import_creates(it_client):
 def test_update_existing_and_skip(it_client):
     asset = Asset.objects.filter(model__name="SX58").exclude(serial_number="").first()
     assert asset is not None
-    row = {"serial_number": asset.serial_number, "hostname": "NEW-HOST", "status": "Defekt"}
+    row = {"serial_number": asset.serial_number, "name": "NEW-HOST", "status": "Defekt"}
     response = it_client.post(PREVIEW, {"rows": [row]}, content_type=JSON).json()
     # "Defekt" is a condition, not a status.
     assert response["failed"] == 1 and "Defekt" in response["rows"][0]["errors"][0]
@@ -69,15 +69,15 @@ def test_update_existing_and_skip(it_client):
     response = it_client.post(IMPORT, {"rows": [row]}, content_type=JSON).json()
     assert response["updated"] == 1
     changes = {c["field"]: c for c in response["rows"][0]["changes"]}
-    assert changes["hostname"]["new"] == "NEW-HOST"
+    assert changes["name"]["new"] == "NEW-HOST"
     asset.refresh_from_db()
-    assert (asset.hostname, asset.status) == ("NEW-HOST", "in_repair")
+    assert (asset.name, asset.status) == ("NEW-HOST", "in_repair")
 
-    row["hostname"] = "OTHER"
+    row["name"] = "OTHER"
     skipped = it_client.post(IMPORT, {"rows": [row], "existing": "skip"}, content_type=JSON).json()
     assert skipped["skipped"] == 1
     asset.refresh_from_db()
-    assert asset.hostname == "NEW-HOST"
+    assert asset.name == "NEW-HOST"
 
 
 def test_row_errors_leave_other_rows(it_client):
@@ -131,7 +131,7 @@ def test_parsers():
 def test_ignore_case_when_matching(it_client):
     asset = Asset.objects.filter(model__name="SX58").exclude(serial_number="").first()
     assert asset is not None
-    rows = [{"serial_number": asset.serial_number.lower(), "hostname": "LOWER"}]
+    rows = [{"serial_number": asset.serial_number.lower(), "name": "LOWER"}]
     payload = {"rows": rows, "defaults": {"model": str(asset.model_id)}}
 
     exact = it_client.post(PREVIEW, payload, content_type=JSON).json()

@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from apps.core.schemas.base import Schema
-from apps.masterdata.models import AssetModel, CategoryKind
+from apps.masterdata.models import AssetModel, CategoryKind, DeviceNaming
 
 
 class AssetModelRefOut(Schema):
@@ -26,3 +26,4 @@ class CategoryRefOut(Schema):
     code: str
     icon: str
     identifier_label: str
+    device_naming: DeviceNaming

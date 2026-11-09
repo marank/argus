@@ -17,7 +17,7 @@ export const IMPORT_FIELDS = allValues<ImportField>({
   identifier: true,
   imei: true,
   mac_address: true,
-  hostname: true,
+  name: true,
   model: true,
   status: true,
   condition: true,
@@ -35,7 +35,7 @@ export const IMPORT_MATCHES = allValues<ImportMatch>({
   inventory_number: true,
   imei: true,
   mac_address: true,
-  hostname: true,
+  name: true,
 })
 
 /** i18n key of each field's label. */
@@ -45,7 +45,7 @@ export const FIELD_LABELS: Record<ImportField, string> = {
   identifier: 'inventory.fields.identifier',
   imei: 'inventory.fields.imei',
   mac_address: 'inventory.fields.macAddress',
-  hostname: 'inventory.fields.hostname',
+  name: 'inventory.fields.name',
   model: 'inventory.fields.model',
   status: 'common.status',
   condition: 'inventory.fields.condition',
@@ -65,7 +65,7 @@ const SYNONYMS: Record<ImportField, string[]> = {
   identifier: ['identifier', 'kennung', 'cn', 'mtm', 'configurationnumber'],
   imei: ['imei', 'imei1'],
   mac_address: ['wifimac', 'wlanmac', 'macadresse', 'macaddress', 'mac'],
-  hostname: ['hostname', 'gerätename', 'devicename', 'computername'],
+  name: ['hostname', 'gerätename', 'devicename', 'computername'],
   model: ['gerätemodell', 'devicemodel', 'modell', 'model', 'modellnr', 'produktbezeichnung'],
   status: ['status', 'gerätestatus', 'devicestatus'],
   condition: ['zustand', 'condition'],

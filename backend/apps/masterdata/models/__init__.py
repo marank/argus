@@ -1,5 +1,5 @@
 from .asset_model import AssetModel
-from .category import Category, CategoryKind, ModelChoice
+from .category import Category, CategoryKind, DeviceNaming, ModelChoice
 from .component_type import ComponentType
 from .location import Location, LocationKind
 from .manufacturer import Manufacturer
@@ -9,6 +9,7 @@ __all__ = [
     "AssetModel",
     "Category",
     "CategoryKind",
+    "DeviceNaming",
     "ComponentType",
     "Location",
     "LocationKind",

@@ -21,6 +21,10 @@ class AssetStatus(models.TextChoices):
     RETIRED = "retired", _("Retired")
 
 
+# Devices that no longer count: their device name may be given to another one.
+INACTIVE_STATUSES = [AssetStatus.LOST, AssetStatus.RETIRED]
+
+
 class Asset(TimeStampedModel):
     """A single, individually tracked device (laptop, phone, MDE, headset, ...)."""
 
@@ -61,7 +65,12 @@ class Asset(TimeStampedModel):
             )
         ],
     )
-    hostname = models.CharField(_("hostname"), max_length=63, blank=True)
+    name = models.CharField(
+        _("device name"),
+        max_length=100,
+        blank=True,
+        help_text=_("What the device is called in daily use, e.g. its hostname or its name in the MDM."),
+    )
 
     status = models.CharField(
         _("status"), max_length=12, choices=AssetStatus.choices, default=AssetStatus.IN_STOCK, db_index=True
@@ -148,6 +157,16 @@ class Asset(TimeStampedModel):
                 fields=["model", "serial_number"],
                 condition=~models.Q(serial_number=""),
                 name="unique_serial_per_model",
+            ),
+            # A name passes to another device when this one is replaced; lost and retired
+            # devices keep theirs for the record.
+            models.UniqueConstraint(
+                fields=["name"],
+                condition=~models.Q(name="") & ~models.Q(status__in=INACTIVE_STATUSES),
+                name="unique_active_device_name",
+                violation_error_message=_("Another device in use already has this name."),
+                # Reported at the name field rather than for the whole form.
+                violation_error_code="unique",
             ),
         ]
 

@@ -6,7 +6,7 @@ from apps.accounts.schemas import TeamRefOut, default_team
 from apps.core.api.security import context_is_it_staff
 from apps.core.schemas import RefOut
 from apps.core.schemas.base import Schema
-from apps.masterdata.models import Category, CategoryKind, ModelChoice
+from apps.masterdata.models import Category, CategoryKind, DeviceNaming, ModelChoice
 
 
 class CategoryOut(Schema):
@@ -20,6 +20,8 @@ class CategoryOut(Schema):
     description: str
     icon: str
     number_sequence: RefOut | None
+    device_naming: DeviceNaming
+    name_sequence: RefOut | None
     is_requestable: bool
     model_choice: ModelChoice
     requires_approval: bool
@@ -68,6 +70,8 @@ class CategoryIn(Schema):
     description: str = ""
     icon: str = ""
     number_sequence: UUID | None = None
+    device_naming: DeviceNaming = DeviceNaming.NONE
+    name_sequence: UUID | None = None
     is_requestable: bool = True
     model_choice: ModelChoice = ModelChoice.ANY_OR_SPECIFIC
     requires_approval: bool = False

@@ -67,6 +67,7 @@ export default {
     contact: 'Contact',
     notes: 'Notes',
     numbering: 'Inventory numbers',
+    deviceNames: 'Device names',
     portal: 'Employee portal',
     identification: 'Identification',
     procurement: 'Procurement',
@@ -149,6 +150,10 @@ export default {
     terminalShort: 'Terminal',
     jobTitle: 'Job title',
     department: 'Department',
+    deviceNaming: 'Name of new devices',
+    deviceNamingHelp:
+      'What new devices are called when no name is entered: e.g. the next hostname for PCs (pc-104) or MDEs (H065), or the inventory number. The name passes to the replacement when a device is replaced. Subcategories do not inherit it.',
+    nameSequence: 'Number sequence for names',
     numberSequenceHelp:
       'New devices of this category draw their inventory number from this sequence. Subcategories do not inherit it. Empty: the general asset sequence applies.',
     parentSequence: 'Parent category · {name}',

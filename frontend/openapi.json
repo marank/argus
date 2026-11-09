@@ -616,10 +616,6 @@
             "title": "Created At",
             "type": "string"
           },
-          "hostname": {
-            "title": "Hostname",
-            "type": "string"
-          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -687,6 +683,10 @@
           },
           "model_detail": {
             "$ref": "#/components/schemas/AssetModelDetailOut"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
           },
           "notes": {
             "title": "Notes",
@@ -787,7 +787,7 @@
           "identifier",
           "imei",
           "mac_address",
-          "hostname",
+          "name",
           "status",
           "condition",
           "is_loanable",
@@ -891,6 +891,7 @@
           "assigned",
           "returned",
           "reserved",
+          "replaced",
           "component_replaced",
           "repair",
           "maintenance",
@@ -974,6 +975,16 @@
             "title": "Previous Serial",
             "type": "string"
           },
+          "related_asset": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AssetRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "related_user": {
             "anyOf": [
               {
@@ -997,6 +1008,7 @@
           "cost",
           "performed_by",
           "related_user",
+          "related_asset",
           "asset_request"
         ],
         "title": "AssetEventOut",
@@ -1096,6 +1108,16 @@
             "title": "Previous Serial",
             "type": "string"
           },
+          "related_asset": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AssetRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "related_user": {
             "anyOf": [
               {
@@ -1119,6 +1141,7 @@
           "cost",
           "performed_by",
           "related_user",
+          "related_asset",
           "asset_request",
           "asset"
         ],
@@ -1212,6 +1235,21 @@
               }
             ],
             "title": "Model"
+          },
+          "own_category": {
+            "anyOf": [
+              {
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Own Category"
           },
           "purchase_from": {
             "anyOf": [
@@ -1567,11 +1605,6 @@
             "title": "Consumables",
             "type": "array"
           },
-          "hostname": {
-            "default": "",
-            "title": "Hostname",
-            "type": "string"
-          },
           "identifier": {
             "default": "",
             "title": "Identifier",
@@ -1626,6 +1659,11 @@
           "model": {
             "format": "uuid",
             "title": "Model",
+            "type": "string"
+          },
+          "name": {
+            "default": "",
+            "title": "Name",
             "type": "string"
           },
           "notes": {
@@ -2547,10 +2585,6 @@
             "title": "Created At",
             "type": "string"
           },
-          "hostname": {
-            "title": "Hostname",
-            "type": "string"
-          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -2591,6 +2625,10 @@
           },
           "model": {
             "$ref": "#/components/schemas/AssetModelRefOut"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
           },
           "notes": {
             "title": "Notes",
@@ -2684,7 +2722,7 @@
           "identifier",
           "imei",
           "mac_address",
-          "hostname",
+          "name",
           "status",
           "condition",
           "is_loanable",
@@ -2737,6 +2775,10 @@
           "model": {
             "$ref": "#/components/schemas/AssetModelRefOut"
           },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
           "serial_number": {
             "title": "Serial Number",
             "type": "string"
@@ -2748,11 +2790,30 @@
         "required": [
           "id",
           "inventory_number",
+          "name",
           "serial_number",
           "status",
           "model"
         ],
         "title": "AssetRefOut",
+        "type": "object"
+      },
+      "AssetReplaceIn": {
+        "properties": {
+          "replacement": {
+            "format": "uuid",
+            "title": "Replacement",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AssetStatus"
+          }
+        },
+        "required": [
+          "replacement",
+          "status"
+        ],
+        "title": "AssetReplaceIn",
         "type": "object"
       },
       "AssetRequestAssignIn": {
@@ -4463,6 +4524,14 @@
             "title": "Description",
             "type": "string"
           },
+          "device_naming": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceNaming"
+              }
+            ],
+            "default": "none"
+          },
           "icon": {
             "default": "",
             "title": "Icon",
@@ -4507,6 +4576,18 @@
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "name_sequence": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name Sequence"
           },
           "number_sequence": {
             "anyOf": [
@@ -4579,6 +4660,9 @@
             "title": "Description",
             "type": "string"
           },
+          "device_naming": {
+            "$ref": "#/components/schemas/DeviceNaming"
+          },
           "effective_team": {
             "anyOf": [
               {
@@ -4627,6 +4711,16 @@
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "name_sequence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "needs_approval": {
             "title": "Needs Approval",
@@ -4689,6 +4783,8 @@
           "description",
           "icon",
           "number_sequence",
+          "device_naming",
+          "name_sequence",
           "is_requestable",
           "model_choice",
           "requires_approval",
@@ -4708,6 +4804,9 @@
           "code": {
             "title": "Code",
             "type": "string"
+          },
+          "device_naming": {
+            "$ref": "#/components/schemas/DeviceNaming"
           },
           "icon": {
             "title": "Icon",
@@ -4741,7 +4840,8 @@
           "item_name",
           "code",
           "icon",
-          "identifier_label"
+          "identifier_label",
+          "device_naming"
         ],
         "title": "CategoryRefOut",
         "type": "object"
@@ -5787,6 +5887,16 @@
         "title": "DepartmentOut",
         "type": "object"
       },
+      "DeviceNaming": {
+        "description": "Where new devices of a category get their device name from.",
+        "enum": [
+          "none",
+          "sequence",
+          "inventory_number"
+        ],
+        "title": "DeviceNaming",
+        "type": "string"
+      },
       "DeviceReturnOut": {
         "properties": {
           "id": {
@@ -6726,7 +6836,7 @@
           "identifier",
           "imei",
           "mac_address",
-          "hostname",
+          "name",
           "model",
           "status",
           "condition",
@@ -6748,7 +6858,7 @@
           "inventory_number",
           "imei",
           "mac_address",
-          "hostname"
+          "name"
         ],
         "title": "ImportMatch",
         "type": "string"
@@ -6873,10 +6983,6 @@
             "title": "Category Icon",
             "type": "string"
           },
-          "hostname": {
-            "title": "Hostname",
-            "type": "string"
-          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -6898,6 +7004,10 @@
           },
           "model": {
             "$ref": "#/components/schemas/AssetModelRefOut"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
           },
           "purchase_date": {
             "anyOf": [
@@ -6935,7 +7045,7 @@
           "id",
           "inventory_number",
           "serial_number",
-          "hostname",
+          "name",
           "status",
           "model",
           "category",
@@ -16074,6 +16184,26 @@
           },
           {
             "in": "query",
+            "name": "own_category",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Own Category"
+            }
+          },
+          {
+            "in": "query",
             "name": "q",
             "required": false,
             "schema": {
@@ -16647,6 +16777,55 @@
         "summary": "Create Asset Event",
         "tags": [
           "asset events"
+        ]
+      }
+    },
+    "/api/inventory/assets/{pk}/replace": {
+      "post": {
+        "description": "Put another device in this one's place; returns the replacement.",
+        "operationId": "apps_inventory_api_assets_replace_asset",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pk",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Pk",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetReplaceIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetDetailOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "PermissionAuth": []
+          }
+        ],
+        "summary": "Replace Asset",
+        "tags": [
+          "assets"
         ]
       }
     },

@@ -213,6 +213,7 @@ describe('MyRequestDetailView', () => {
       asset: {
         id: `a-${id}`,
         inventory_number: number,
+        name: '',
         serial_number: '',
         status: 'reserved',
         model: requestItem().asset_model!,

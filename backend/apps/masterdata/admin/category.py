@@ -10,6 +10,7 @@ class CategoryAdmin(admin.ModelAdmin[Category]):
         "code",
         "parent",
         "number_sequence",
+        "device_naming",
         "team",
         "is_requestable",
         "model_choice",
@@ -20,5 +21,5 @@ class CategoryAdmin(admin.ModelAdmin[Category]):
     list_filter = ["is_requestable", "model_choice", "requires_approval", "is_accessory", "parent"]
     list_editable = ["sort_order"]
     search_fields = ["name", "code", "identifier_label"]
-    list_select_related = ["parent", "number_sequence", "team"]
-    autocomplete_fields = ["parent", "number_sequence", "team"]
+    list_select_related = ["parent", "number_sequence", "name_sequence", "team"]
+    autocomplete_fields = ["parent", "number_sequence", "name_sequence", "team"]

@@ -30,6 +30,7 @@ const ALL_KINDS = allValues<Schemas['AssetEventKind']>({
   assigned: true,
   returned: true,
   reserved: true,
+  replaced: true,
   status_changed: true,
   created: true,
   issue_reported: true,

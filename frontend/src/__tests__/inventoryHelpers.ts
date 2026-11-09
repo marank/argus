@@ -226,6 +226,7 @@ export const categoryRef = (name = 'Laptops'): Schemas['CategoryRefOut'] => ({
   icon: 'laptop',
   item_name: 'Laptop',
   identifier_label: '',
+  device_naming: 'none',
   kind: 'hardware',
   name,
 })
@@ -271,7 +272,7 @@ export function makeAsset(overrides: Partial<Schemas['AssetDetailOut']> = {}) {
     identifier: '',
     imei: '',
     mac_address: '',
-    hostname: 'nb-0042',
+    name: 'nb-0042',
     status: 'in_stock',
     condition: 'good',
     is_loanable: true,

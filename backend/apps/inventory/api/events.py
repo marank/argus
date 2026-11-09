@@ -41,7 +41,12 @@ EVENT_ORDERING_FIELDS = (
 
 def event_queryset() -> QuerySet[AssetEvent]:
     return AssetEvent.objects.select_related(
-        "performed_by", "related_user", "asset_request", "asset__model__manufacturer", "component_type"
+        "performed_by",
+        "related_user",
+        "asset_request",
+        "asset__model__manufacturer",
+        "component_type",
+        "related_asset__model__manufacturer",
     )
 
 

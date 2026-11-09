@@ -54,7 +54,7 @@ describe('mapping columns', () => {
 
   it('suggests fields from the column names, each column once', () => {
     const mapping = suggestMapping(table.headers)
-    expect(mapping.hostname).toBe(1)
+    expect(mapping.name).toBe(1)
     expect(mapping.model).toBe(2)
     expect(mapping.mac_address).toBe(3)
     expect(mapping.serial_number).toBe(5)
@@ -71,7 +71,7 @@ describe('mapping columns', () => {
       serial_number: '31415A926B',
       imei: "'--",
       mac_address: '00:00:5e:00:53:01',
-      hostname: 'H102',
+      name: 'H102',
       model: 'HT60',
     })
   })
@@ -85,7 +85,7 @@ const RESULT: Schemas['AssetImportResultOut'] = {
       asset_id: null,
       inventory_number: 'MDE-0042',
       model: 'Handtec HT60',
-      changes: [{ field: 'hostname', old: '', new: 'H102' }],
+      changes: [{ field: 'name', old: '', new: 'H102' }],
       errors: [],
     },
     {
@@ -147,7 +147,7 @@ describe('AssetImportModal', () => {
     expect(sent.match_by).toBe('serial_number')
     expect(sent.existing).toBe('update')
     expect(sent.ignore_case).toBe(false)
-    expect(sent.rows[1]).toMatchObject({ serial_number: '27182B8281', hostname: 'H064' })
+    expect(sent.rows[1]).toMatchObject({ serial_number: '27182B8281', name: 'H064' })
     // Rows with errors are shown first.
     expect(bodyText()).toContain('Model “CT61” not found.')
     expect(bodyText()).not.toContain('MDE-0042')
@@ -230,7 +230,7 @@ describe('AssetImportModal edge cases', () => {
           asset_id: 'a1',
           inventory_number: 'MDE-0001',
           model: 'Handtec HT60',
-          changes: [{ field: 'hostname', old: 'OLD-HOST', new: 'H102' }],
+          changes: [{ field: 'name', old: 'OLD-HOST', new: 'H102' }],
           errors: [],
         },
       ],

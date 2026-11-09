@@ -90,7 +90,7 @@ describe('AssetFormDrawer', () => {
     await pick(wrapper, assetModelsApi.list, 'm1')
     await pick(wrapper, locationsApi.list, 'l1')
     await type('Serial number', 'CN-123')
-    await type('Hostname', 'nb-0099')
+    await type('Device name', 'nb-0099')
     await click('Save')
 
     expect(create).toHaveBeenCalledWith(
@@ -98,7 +98,7 @@ describe('AssetFormDrawer', () => {
         model: 'm1',
         inventory_number: '',
         serial_number: 'CN-123',
-        hostname: 'nb-0099',
+        name: 'nb-0099',
         location: 'l1',
         status: 'in_stock',
         condition: 'new',
@@ -109,6 +109,17 @@ describe('AssetFormDrawer', () => {
     )
     expect(state.onSaved).toHaveBeenCalledWith(created)
     expect(state.show).toBe(false)
+  })
+
+  it('tells when the category names a new device', async () => {
+    vi.mocked(assetModelsApi.list).mockResolvedValue(
+      page([makeModel({ category: { ...categoryRef(), device_naming: 'sequence' } })]),
+    )
+    const { wrapper } = await drawer()
+    const name = () => field('Device name')
+    expect(name().placeholder).not.toBe('auto')
+    await pick(wrapper, assetModelsApi.list, 'm1')
+    expect(name().placeholder).toBe('auto')
   })
 
   it('names the identifier after the category and records the fitted parts', async () => {

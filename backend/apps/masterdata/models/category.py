@@ -27,6 +27,14 @@ class ModelChoice(models.TextChoices):
     SPECIFIC_ONLY = "specific_only", _("A specific model only")
 
 
+class DeviceNaming(models.TextChoices):
+    """Where new devices of a category get their device name from."""
+
+    NONE = "none", _("No name")
+    SEQUENCE = "sequence", _("From a number sequence")
+    INVENTORY_NUMBER = "inventory_number", _("Same as the inventory number")
+
+
 class Category(TimeStampedModel):
     """Category such as *Laptops*, *MDE accessories* or *Office software*.
 
@@ -76,6 +84,24 @@ class Category(TimeStampedModel):
             "Inventory numbers for new assets. Not inherited by subcategories; "
             "without one, the general asset sequence applies."
         ),
+    )
+    device_naming = models.CharField(
+        _("device names"),
+        max_length=20,
+        choices=DeviceNaming.choices,
+        default=DeviceNaming.NONE,
+        help_text=_(
+            "Name new devices get when none is entered, e.g. the hostname of PCs or the name "
+            "of MDEs in the MDM. Not inherited by subcategories."
+        ),
+    )
+    name_sequence = models.ForeignKey(
+        "core.NumberSequence",
+        verbose_name=_("number sequence for device names"),
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="+",
     )
     team = models.ForeignKey(
         "accounts.Team",
@@ -156,6 +182,10 @@ class Category(TimeStampedModel):
             raise ValidationError(
                 {"parent": _("A category cannot be placed below itself or one of its subcategories.")}
             )
+        if self.device_naming == DeviceNaming.SEQUENCE and not self.name_sequence_id:
+            raise ValidationError({"name_sequence": _("Choose the number sequence for the device names.")})
+        if self.device_naming != DeviceNaming.SEQUENCE:
+            self.name_sequence = None
         if self.parent is not None and self.parent.kind != self.kind:
             raise ValidationError(
                 {"kind": _("A subcategory must have the same type as its parent category.")}

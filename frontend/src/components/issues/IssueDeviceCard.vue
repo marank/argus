@@ -13,7 +13,7 @@ import { categoryIcon } from '@/utils/icons'
 
 /**
  * The device the report is about. IT also sees where it is, when it was bought
- * and the hostname; the reporter what helps them describe it.
+ * and the device name; the reporter what helps them describe it.
  */
 const props = defineProps<{
   issue: Schemas['AssetIssueDetailOut']
@@ -42,8 +42,8 @@ const entries = computed<DetailEntry[]>(() => {
   return [
     { label: t('inventory.issues.detail.category'), value: a.category },
     { label: t('inventory.issues.detail.serialNumber'), value: a.serial_number, mono: true },
-    ...(forIt.value && a.hostname
-      ? [{ label: t('inventory.issues.detail.hostname'), value: a.hostname, mono: true }]
+    ...(forIt.value && a.name
+      ? [{ label: t('inventory.issues.detail.deviceName'), value: a.name, mono: true }]
       : []),
     ...(forIt.value
       ? [

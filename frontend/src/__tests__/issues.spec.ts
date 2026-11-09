@@ -83,7 +83,7 @@ function makeIssue(
       id: 'a1',
       inventory_number: 'NB-0042',
       serial_number: 'SN-1',
-      hostname: 'nb-0042',
+      name: 'nb-0042',
       model: modelRef(),
       category: 'Laptops',
       category_icon: 'laptop',

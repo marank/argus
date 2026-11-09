@@ -9,7 +9,9 @@ from django.utils.translation import gettext as _
 from apps.accounts.models import User
 from apps.core.exceptions import BusinessError
 from apps.core.models import NumberSequence
+from apps.core.services.numbering import next_number
 from apps.inventory.models import (
+    INACTIVE_STATUSES,
     Asset,
     AssetComponent,
     AssetEvent,
@@ -20,7 +22,7 @@ from apps.inventory.models import (
 from apps.inventory.services.consumables import move_consumable
 from apps.inventory.services.events import log_event
 from apps.inventory.services.mac_address import normalize_mac_address
-from apps.masterdata.models import AssetModel, ComponentType
+from apps.masterdata.models import AssetModel, ComponentType, DeviceNaming
 
 if TYPE_CHECKING:
     from apps.requests.models import AssetRequestAllocation
@@ -81,6 +83,29 @@ def _set_components(asset: Asset, entries: list[dict[str, Any]] | None) -> None:
     asset.installed_components.exclude(component_type__in=keep).delete()
 
 
+def name_taken(name: str, exclude: UUID | None = None) -> bool:
+    """Whether a device in use is already called ``name``, in any letter case (as hostnames)."""
+    queryset = Asset.objects.filter(name__iexact=name).exclude(status__in=INACTIVE_STATUSES)
+    if exclude is not None:
+        queryset = queryset.exclude(pk=exclude)
+    return queryset.exists()
+
+
+def _give_name(asset: Asset) -> None:
+    """A new device without a name gets the one its category provides, if any."""
+    category = asset.model.category
+    if asset.name or asset.status in INACTIVE_STATUSES:
+        return
+    match category.device_naming:
+        case DeviceNaming.SEQUENCE if category.name_sequence:
+            asset.name = next_number(category.name_sequence, taken=name_taken)
+        case DeviceNaming.INVENTORY_NUMBER if not name_taken(asset.inventory_number):
+            asset.name = asset.inventory_number
+        case _:
+            return
+    asset.save(update_fields=["name", "updated_at"])
+
+
 @transaction.atomic
 def create_asset(data: dict[str, Any], user: User) -> Asset:
     data = dict(data)
@@ -93,6 +118,7 @@ def create_asset(data: dict[str, Any], user: User) -> Asset:
         asset.assigned_since = timezone.now()
     asset.full_clean(exclude=["inventory_number"])
     asset.save()
+    _give_name(asset)
     _set_consumables(asset, consumables)
     _set_components(asset, components)
     log_event(asset, AssetEventKind.CREATED, user)
@@ -170,6 +196,48 @@ def update_asset(asset: Asset, data: dict[str, Any], user: User) -> Asset:
     _set_consumables(asset, consumables)
     _set_components(asset, components)
     return asset
+
+
+# What becomes of a device that another one replaces.
+REPLACED_STATUSES = (AssetStatus.IN_STOCK, AssetStatus.IN_REPAIR, AssetStatus.RETIRED)
+
+
+@transaction.atomic
+def replace_asset(asset: Asset, replacement: Asset, status: str, user: User) -> Asset:
+    """``replacement`` takes the place of ``asset``: its device name, holder and location.
+
+    E.g. a new PC that keeps the hostname of the old one, or a spare MDE for one in repair.
+    ``asset`` gives all three up and gets ``status``.
+    """
+    if replacement.pk == asset.pk:
+        raise BusinessError(_("A device cannot replace itself."))
+    if replacement.status != AssetStatus.IN_STOCK:
+        raise BusinessError(
+            _("Only a device in stock can be the replacement; %(asset)s is “%(status)s”.")
+            % {"asset": replacement.inventory_number, "status": replacement.get_status_display()}
+        )
+    if status not in REPLACED_STATUSES:
+        raise BusinessError(_("The replaced device can go into stock, into repair or be retired."))
+    name, holder = asset.name, asset.assigned_to_id
+    location = asset.location_id or replacement.location_id
+    # The old device gives the name up first: only one device in use may have it.
+    update_asset(asset, {"name": "", "assigned_to": None, "status": status}, user)
+    update_asset(replacement, {"name": name, "assigned_to": holder, "location": location}, user)
+    log_event(
+        asset,
+        AssetEventKind.REPLACED,
+        user,
+        related_asset=replacement,
+        description=_("Replaced by %(asset)s") % {"asset": replacement.inventory_number},
+    )
+    log_event(
+        replacement,
+        AssetEventKind.REPLACED,
+        user,
+        related_asset=asset,
+        description=_("Replaces %(asset)s") % {"asset": asset.inventory_number},
+    )
+    return replacement
 
 
 @transaction.atomic

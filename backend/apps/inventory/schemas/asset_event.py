@@ -30,6 +30,7 @@ class AssetEventOut(Schema):
     cost: Decimal | None
     performed_by: UserRefOut | None
     related_user: UserRefOut | None
+    related_asset: AssetRefOut | None
     asset_request: AssetEventRequestOut | None
 
 

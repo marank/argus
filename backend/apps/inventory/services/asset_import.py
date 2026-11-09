@@ -40,7 +40,7 @@ class ImportField(models.TextChoices):
     IDENTIFIER = "identifier"
     IMEI = "imei"
     MAC_ADDRESS = "mac_address"
-    HOSTNAME = "hostname"
+    NAME = "name"
     MODEL = "model"
     STATUS = "status"
     CONDITION = "condition"
@@ -60,7 +60,7 @@ class ImportMatch(models.TextChoices):
     INVENTORY_NUMBER = "inventory_number"
     IMEI = "imei"
     MAC_ADDRESS = "mac_address"
-    HOSTNAME = "hostname"
+    NAME = "name"
 
 
 class ImportAction(models.TextChoices):

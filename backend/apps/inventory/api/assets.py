@@ -20,6 +20,7 @@ from apps.inventory.schemas.asset import (
     AssetDetailOut,
     AssetIn,
     AssetOut,
+    AssetReplaceIn,
     AssetSeriesIn,
     AssetSeriesPreviewOut,
 )
@@ -36,7 +37,7 @@ SEARCH_FIELDS = (
     "installed_components__serial_number",
     "imei",
     "mac_address",
-    "hostname",
+    "name",
     "model__name",
     "model__manufacturer__name",
     "assigned_to__first_name",
@@ -79,6 +80,8 @@ class AssetFilter(FilterSchema):
     purchase_from: Annotated[date | None, FilterLookup("purchase_date__gte")] = None
     purchase_until: Annotated[date | None, FilterLookup("purchase_date__lte")] = None
     category: list[UUID] | None = None
+    # Only these categories, without the ones below (``category`` includes those).
+    own_category: Annotated[list[UUID] | None, FilterLookup("model__category_id__in")] = None
 
     def filter_category(self, value: list[UUID] | None) -> Q:
         if not value:
@@ -166,6 +169,15 @@ def assign_asset(request: AuthedRequest, pk: UUID, payload: AssetAssignIn) -> As
     asset = get_object_or_404(Asset, pk=pk)
     asset_service.update_asset(asset, {"assigned_to": payload.user}, request.user)
     return get_asset(request, pk)
+
+
+@router.post("/{uuid:pk}/replace", response=AssetDetailOut)
+def replace_asset(request: AuthedRequest, pk: UUID, payload: AssetReplaceIn) -> Asset:
+    """Put another device in this one's place; returns the replacement."""
+    asset = get_object_or_404(Asset, pk=pk)
+    replacement = get_object_or_404(Asset, pk=payload.replacement)
+    asset_service.replace_asset(asset, replacement, payload.status, request.user)
+    return get_asset(request, replacement.pk)
 
 
 @router.delete("/{uuid:pk}", response={204: None})
