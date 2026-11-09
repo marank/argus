@@ -61,8 +61,7 @@ async function remove(row: any) {
     !(await confirm(`${props.resource.title(row)}: ${t('common.confirmDelete')}`, { danger: true }))
   )
     return
-  if ((await run(() => props.resource.api.remove(row.id), t('common.deleted'))) !== undefined)
-    list.load()
+  if ((await run(() => props.resource.api.remove(row.id))) !== undefined) list.load()
 }
 
 const filters = computed<TableFilter[]>(() =>

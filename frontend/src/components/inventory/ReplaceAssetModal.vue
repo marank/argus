@@ -44,10 +44,8 @@ const label = (a: Schemas['AssetOut']) =>
   [a.inventory_number, a.name, modelLabel(a.model), a.serial_number].filter(Boolean).join(' · ')
 
 async function save() {
-  const replacement = await run(
-    () =>
-      assetsApi.replace(props.asset.id, { replacement: form.replacement!, status: form.status }),
-    t('inventory.replace.saved'),
+  const replacement = await run(() =>
+    assetsApi.replace(props.asset.id, { replacement: form.replacement!, status: form.status }),
   )
   if (replacement) {
     show.value = false

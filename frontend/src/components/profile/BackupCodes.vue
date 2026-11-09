@@ -3,6 +3,7 @@ import { Copy, Download } from '@lucide/vue'
 import { NButton, useMessage } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
 
+import { showError } from '@/composables/useErrorPopover'
 import { useAuthStore } from '@/stores/auth'
 
 /** Freshly created backup codes: shown once, to copy or save as a text file. */
@@ -26,7 +27,7 @@ async function copy() {
     await navigator.clipboard.writeText(props.codes.join('\n'))
     message.success(t('profile.security.copied'))
   } catch {
-    message.error(t('common.error'))
+    showError(t('common.error'))
   }
 }
 

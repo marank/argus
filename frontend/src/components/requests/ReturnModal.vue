@@ -48,17 +48,15 @@ function toggle(list: Id[], id: Id, on: boolean) {
 
 async function save() {
   const all = form.selected.length === open.value.length
-  const saved = await run(
-    () =>
-      requestsApi.returnDevices(props.assetRequest.id, {
-        allocations: all ? null : form.selected,
-        notes: form.notes,
-        allocation_notes: form.selected
-          .filter((id) => form.allocationNotes[id]?.trim())
-          .map((id) => ({ allocation: id, note: form.allocationNotes[id]! })),
-        damaged: form.damaged.filter((id) => form.selected.includes(id)),
-      }),
-    t('common.saved'),
+  const saved = await run(() =>
+    requestsApi.returnDevices(props.assetRequest.id, {
+      allocations: all ? null : form.selected,
+      notes: form.notes,
+      allocation_notes: form.selected
+        .filter((id) => form.allocationNotes[id]?.trim())
+        .map((id) => ({ allocation: id, note: form.allocationNotes[id]! })),
+      damaged: form.damaged.filter((id) => form.selected.includes(id)),
+    }),
   )
   if (saved) {
     show.value = false

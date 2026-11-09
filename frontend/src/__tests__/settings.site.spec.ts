@@ -113,7 +113,6 @@ describe('settings', () => {
       expect(isOn(switchOf('Module enabled', 'Procurement'))).toBe(false)
       await click(switchOf('Module enabled', 'Procurement'))
       expect(api.updateSite).toHaveBeenCalledWith({ flags: { procurement: true } })
-      expect(pageText()).toContain('Procurement enabled')
       expect(isOn(switchOf('Module enabled', 'Procurement'))).toBe(true)
     })
 
@@ -121,7 +120,6 @@ describe('settings', () => {
       await features({})
       await click(switchOf('Warranty ends in the calendar'))
       expect(api.updateSite).toHaveBeenCalledWith({ flags: { calendar_warranty: false } })
-      expect(pageText()).toContain('Warranty ends in the calendar disabled')
     })
 
     it('greys out features while a module they need is off and names it', async () => {
@@ -189,7 +187,6 @@ describe('settings', () => {
         mail: { request_confirmed: false, approval_requested: true, request_submitted: true },
         app: { request_confirmed: true, approval_requested: true, request_submitted: false },
       })
-      expect(pageText()).toContain('Saved')
     })
 
     it('points to the mail setup while email is not ready', async () => {

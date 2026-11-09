@@ -59,7 +59,6 @@ export default {
       'Leave empty for today. An earlier date records an assignment that already began.',
     today: 'Today',
     submit: 'Assign',
-    saved: 'Device assigned.',
   },
   activeRequest: 'Reserved for {number} ({name})',
   handedOutRequest: 'Handed out with {number} ({name})',
@@ -158,7 +157,6 @@ export default {
     anyCategory: 'Also from other categories',
     oldStatus: 'This device is then',
     submit: 'Replace device',
-    saved: 'Device replaced',
   },
   event: {
     kind: 'Type',

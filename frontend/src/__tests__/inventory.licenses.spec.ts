@@ -12,7 +12,7 @@ import LicenseFormDrawer from '@/components/inventory/LicenseFormDrawer.vue'
 import LicenseDetailView from '@/views/inventory/LicenseDetailView.vue'
 import LicenseListView from '@/views/inventory/LicenseListView.vue'
 
-import { button, click, hasButton } from './dom'
+import { button, click, hasButton, fieldErrors } from './dom'
 import {
   bodyText,
   categoryRef,
@@ -301,9 +301,7 @@ describe('licenses', () => {
       )
       const { state } = await openDrawer(makeLicense())
       await click('Save')
-      expect(document.body.querySelector('.ar-form')!.textContent).toContain(
-        'Fewer seats than assigned.',
-      )
+      expect(fieldErrors().join(' ')).toContain('Fewer seats than assigned.')
       expect(state.show).toBe(true)
     })
   })

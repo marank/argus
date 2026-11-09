@@ -6,6 +6,7 @@ import { defineComponent, h, type Component } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import type { Schemas } from '@/api/types'
+import ErrorPopover from '@/components/common/ErrorPopover.vue'
 import { i18n } from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useFeaturesStore } from '@/stores/features'
@@ -53,8 +54,10 @@ export async function mountPage(
     defineComponent({
       render: () =>
         h(NMessageProvider, null, {
-          default: () =>
+          default: () => [
+            h(ErrorPopover),
             h(NDialogProvider, null, { default: () => h(component, options.props ?? {}) }),
+          ],
         }),
     }),
     { attachTo: document.body, global: { plugins: [i18n, pinia, router] } },

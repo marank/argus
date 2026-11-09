@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n'
 import { ApiError } from '@/api/client'
 import { requestsApi } from '@/api/requests'
 import { useConfirm } from '@/composables/useConfirm'
+import { showError } from '@/composables/useErrorPopover'
 
 /**
  * Emails an employee to return their devices, after asking (as on the
@@ -26,7 +27,7 @@ export function useRemind(reload: () => Promise<unknown>) {
       message.success(t('requests.actions.remindSent', { name }))
       await reload()
     } catch (error) {
-      message.error(error instanceof ApiError ? error.message : t('common.error'))
+      showError(error instanceof ApiError ? error.message : t('common.error'))
     } finally {
       sending.value = null
     }

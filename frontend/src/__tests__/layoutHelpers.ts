@@ -5,6 +5,7 @@ import { defineComponent, h, type Component } from 'vue'
 import { createMemoryHistory, createRouter, type RouteRecordRaw } from 'vue-router'
 
 import type { Schemas } from '@/api/types'
+import ErrorPopover from '@/components/common/ErrorPopover.vue'
 import { i18n } from '@/i18n'
 import { routes } from '@/router/routes'
 import { useAuthStore } from '@/stores/auth'
@@ -74,8 +75,10 @@ export async function mountView(component: Component, options: MountOptions = {}
     defineComponent({
       render: () =>
         h(NMessageProvider, null, {
-          default: () =>
+          default: () => [
+            h(ErrorPopover),
             h(NDialogProvider, null, { default: () => h(component, options.props ?? {}) }),
+          ],
         }),
     }),
     { attachTo: document.body, global: { plugins: [i18n, pinia, router] } },

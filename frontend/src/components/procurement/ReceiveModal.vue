@@ -52,7 +52,7 @@ async function save() {
       }
     })
     .filter((r) => r.quantity > 0)
-  const order = await run(() => ordersApi.receive(props.order.id, payload), t('common.saved'))
+  const order = await run(() => ordersApi.receive(props.order.id, payload))
   if (order) {
     show.value = false
     emit('saved', order)

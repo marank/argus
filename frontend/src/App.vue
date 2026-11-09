@@ -13,6 +13,7 @@ import {
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import ErrorPopover from '@/components/common/ErrorPopover.vue'
 import { useTheme } from '@/theme/useTheme'
 
 const { naiveTheme, overrides } = useTheme()
@@ -37,9 +38,10 @@ const naiveDateLocale = computed(() => (locale.value === 'de' ? dateDeDE : dateE
   >
     <NGlobalStyle />
     <NLoadingBarProvider>
-      <NMessageProvider placement="bottom-right" :max="4">
+      <NMessageProvider placement="top" :max="3">
         <NDialogProvider>
           <RouterView />
+          <ErrorPopover />
         </NDialogProvider>
       </NMessageProvider>
     </NLoadingBarProvider>

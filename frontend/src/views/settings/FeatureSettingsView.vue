@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { NSkeleton, NSwitch, useMessage } from 'naive-ui'
+import { NSkeleton, NSwitch } from 'naive-ui'
 import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import SettingRow from '@/components/settings/SettingRow.vue'
 import SettingsGroup from '@/components/settings/SettingsGroup.vue'
+import { showError } from '@/composables/useErrorPopover'
 import { useFeaturesStore } from '@/stores/features'
 import type { Schemas } from '@/api/types'
 
@@ -14,7 +15,6 @@ import type { Schemas } from '@/api/types'
  * module it needs is off. Features without a module come last under "General".
  */
 const { t } = useI18n()
-const message = useMessage()
 const features = useFeaturesStore()
 
 onMounted(() => features.load())
@@ -49,13 +49,8 @@ const featureDisabled = (feature: Definition) => feature.requires.some((key) => 
 async function toggle(key: string, value: boolean) {
   try {
     await features.update({ [key]: value })
-    message.success(
-      t(value ? 'settings.flags.switchedOn' : 'settings.flags.switchedOff', {
-        name: t(`settings.flags.${key}`),
-      }),
-    )
   } catch {
-    message.error(t('common.error'))
+    showError(t('common.error'))
   }
 }
 </script>

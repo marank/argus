@@ -72,7 +72,7 @@ async function assign() {
   const data = perDevice.value
     ? { asset: target.value, note: note.value }
     : { user: target.value, note: note.value }
-  const updated = await run(() => licensesApi.assign(license.value!.id, data), t('common.saved'))
+  const updated = await run(() => licensesApi.assign(license.value!.id, data))
   if (updated) {
     license.value = updated
     target.value = null
@@ -94,7 +94,7 @@ async function remove() {
     }))
   )
     return
-  if ((await run(() => licensesApi.remove(license.value!.id), t('common.deleted'))) !== undefined)
+  if ((await run(() => licensesApi.remove(license.value!.id))) !== undefined)
     router.push({ name: 'licenses' })
 }
 </script>

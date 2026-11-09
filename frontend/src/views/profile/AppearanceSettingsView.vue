@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { Check } from '@lucide/vue'
-import { useMessage } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
 
 import PageHeader from '@/components/common/PageHeader.vue'
 import SettingsGroup from '@/components/settings/SettingsGroup.vue'
+import { showError } from '@/composables/useErrorPopover'
 import { useAuthStore } from '@/stores/auth'
 import { THEME_ICONS } from '@/theme/icons'
 import type { Palette } from '@/theme/palette'
@@ -16,7 +16,6 @@ import { THEME_GROUPS, THEMES, useTheme, type ThemeMode } from '@/theme/useTheme
  * light and the dark theme side by side.
  */
 const { t } = useI18n()
-const message = useMessage()
 const auth = useAuthStore()
 const { mode } = useTheme()
 
@@ -27,9 +26,8 @@ async function choose(theme: ThemeMode) {
   if (theme === mode.value) return
   try {
     await auth.changeTheme(theme)
-    message.success(t('common.saved'))
   } catch {
-    message.error(t('common.error'))
+    showError(t('common.error'))
   }
 }
 </script>

@@ -27,6 +27,17 @@ export function button(text: string, within: ParentNode = document.body): HTMLBu
   return found.at(-1)!
 }
 
+/** The errors that refused form fields carry for the error popover. */
+export const fieldErrors = (within: ParentNode = document.body) =>
+  [...within.querySelectorAll<HTMLElement>('[data-field-error]')].map((el) => el.dataset.fieldError)
+
+/** Text of the shown error popover ('' when none). */
+export const errorPopoverText = () =>
+  [...document.body.querySelectorAll('.error-popover')]
+    .filter(shown)
+    .map((el) => el.textContent)
+    .join(' ')
+
 export const hasButton = (text: string, within: ParentNode = document.body) =>
   buttons(text, within).length > 0
 

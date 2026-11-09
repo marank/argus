@@ -7,6 +7,7 @@ import { ApiError } from '@/api/client'
 import { useAction } from '@/composables/useAction'
 import { useAssigned } from '@/composables/useAssigned'
 import { useConfirm } from '@/composables/useConfirm'
+import { errorPopover, hideError } from '@/composables/useErrorPopover'
 import { useFieldErrors } from '@/composables/useFieldErrors'
 import { useFormat } from '@/composables/useFormat'
 import { useScanner } from '@/composables/useScanner'
@@ -30,6 +31,7 @@ vi.mock('naive-ui', async (importOriginal) => ({
 }))
 
 beforeEach(() => {
+  hideError()
   ui.success.mockReset()
   ui.error.mockReset()
   ui.dialog.warning.mockReset()
@@ -60,7 +62,7 @@ describe('useAction', () => {
     expect(result).toBeUndefined()
     expect(busy.value).toBe(false)
     expect(ui.success).not.toHaveBeenCalled()
-    expect(ui.error).toHaveBeenCalledWith('Already handed out.', { duration: 6000 })
+    expect(errorPopover.message).toBe('Already handed out.')
   })
 
   it('shows other errors as text', async () => {
@@ -68,7 +70,7 @@ describe('useAction', () => {
     await run(async () => {
       throw new Error('boom')
     })
-    expect(ui.error).toHaveBeenCalledWith('Error: boom', { duration: 6000 })
+    expect(errorPopover.message).toBe('Error: boom')
   })
 })
 
@@ -143,14 +145,14 @@ describe('useFieldErrors', () => {
     const { capture, item } = useFieldErrors(reactive({ name: '', email: '' }))
     expect(() => capture(failed({ name: ['Required.'] }))).toThrow('Check the form.')
     expect(item('name')).toEqual({
-      showFeedback: true,
-      feedback: 'Required.',
+      showFeedback: false,
       validationStatus: 'error',
+      'data-field-error': 'Required.',
     })
     expect(item('email')).toEqual({
       showFeedback: false,
-      feedback: undefined,
       validationStatus: undefined,
+      'data-field-error': undefined,
     })
   })
 

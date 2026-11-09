@@ -68,12 +68,10 @@ async function send(text: string) {
 }
 
 async function changeStatus(status: Schemas['AssetIssueStatus'], text: string) {
-  const updated = await run(
-    () =>
-      forIt.value
-        ? issuesApi.update(props.id, { status, message: text })
-        : portalApi.resolveMyIssue(props.id, text),
-    t('common.saved'),
+  const updated = await run(() =>
+    forIt.value
+      ? issuesApi.update(props.id, { status, message: text })
+      : portalApi.resolveMyIssue(props.id, text),
   )
   if (updated) {
     issue.value = updated

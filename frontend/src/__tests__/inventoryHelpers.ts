@@ -10,6 +10,7 @@ import { assetsApi, consumablesApi } from '@/api/inventory'
 import { assetModelsApi, categoriesApi, locationsApi, suppliersApi } from '@/api/masterdata'
 import type { Schemas } from '@/api/types'
 import EntitySelect from '@/components/common/EntitySelect.vue'
+import ErrorPopover from '@/components/common/ErrorPopover.vue'
 import { i18n } from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useFeaturesStore } from '@/stores/features'
@@ -81,7 +82,10 @@ export async function mountPage(
     defineComponent({
       render: () =>
         h(NMessageProvider, null, {
-          default: () => h(NDialogProvider, null, { default: () => h(component, { ...props }) }),
+          default: () => [
+            h(ErrorPopover),
+            h(NDialogProvider, null, { default: () => h(component, { ...props }) }),
+          ],
         }),
     }),
     { attachTo: document.body, global: { plugins: [i18n, pinia, router] } },

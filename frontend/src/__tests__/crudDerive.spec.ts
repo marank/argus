@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 import { CopyPlus } from '@lucide/vue'
 
+import ErrorPopover from '@/components/common/ErrorPopover.vue'
 import CrudPage from '@/components/crud/CrudPage.vue'
 import { defineResource } from '@/components/crud/types'
 import { i18n } from '@/i18n'
@@ -94,7 +95,10 @@ async function mountPage() {
     defineComponent({
       render: () =>
         h(NMessageProvider, null, {
-          default: () => h(NDialogProvider, null, { default: () => h(CrudPage, { resource }) }),
+          default: () => [
+            h(ErrorPopover),
+            h(NDialogProvider, null, { default: () => h(CrudPage, { resource }) }),
+          ],
         }),
     }),
     { attachTo: document.body, global: { plugins: [i18n, pinia] } },

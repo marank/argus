@@ -85,7 +85,6 @@ describe('mail settings', () => {
       await typeInto(field('argus@example.com'), 'it@example.com')
       await click('Save')
       expect(api.update).toHaveBeenCalledWith({ ...SENT, from_email: 'it@example.com' })
-      expect(pageText()).toContain('Saved')
     })
 
     it('sends a new password', async () => {

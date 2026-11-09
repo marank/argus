@@ -8,6 +8,7 @@ import { mailSettingsApi } from '@/api/settings'
 import SettingRow from '@/components/settings/SettingRow.vue'
 import SettingsGroup from '@/components/settings/SettingsGroup.vue'
 import { useAction } from '@/composables/useAction'
+import { showError } from '@/composables/useErrorPopover'
 import { useAuthStore } from '@/stores/auth'
 import { useFeaturesStore } from '@/stores/features'
 
@@ -64,9 +65,8 @@ const securityOptions = computed(() =>
 )
 
 async function save() {
-  const saved = await run(
-    () => mailSettingsApi.update({ ...form, password: newPassword.value || null }),
-    t('common.saved'),
+  const saved = await run(() =>
+    mailSettingsApi.update({ ...form, password: newPassword.value || null }),
   )
   if (saved) {
     apply(saved)
@@ -80,7 +80,7 @@ async function sendTest() {
     const result = await mailSettingsApi.test(testTo.value)
     message.success(result.detail)
   } catch (error) {
-    message.error(error instanceof Error ? error.message : t('common.error'))
+    showError(error instanceof Error ? error.message : t('common.error'))
   } finally {
     testing.value = false
   }

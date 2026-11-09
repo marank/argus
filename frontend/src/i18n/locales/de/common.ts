@@ -31,8 +31,6 @@ export default {
   all: 'Alle',
   back: 'Zurück',
   open: 'Öffnen',
-  saved: 'Gespeichert',
-  deleted: 'Gelöscht',
   confirmDelete: 'Diesen Eintrag endgültig löschen?',
   confirmTitle: 'Bitte bestätigen',
   name: 'Name',

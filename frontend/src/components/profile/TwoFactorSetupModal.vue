@@ -19,6 +19,7 @@ import { useI18n } from 'vue-i18n'
 import { twoFactorApi } from '@/api/auth'
 import { ApiError } from '@/api/client'
 import CodeInput from '@/components/common/CodeInput.vue'
+import { showError } from '@/composables/useErrorPopover'
 
 import BackupCodes from './BackupCodes.vue'
 
@@ -126,7 +127,7 @@ async function copySecret() {
     await navigator.clipboard.writeText(setup.value?.secret ?? '')
     message.success(t('profile.security.copied'))
   } catch {
-    message.error(t('common.error'))
+    showError(t('common.error'))
   }
 }
 

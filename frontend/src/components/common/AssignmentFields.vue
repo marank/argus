@@ -38,10 +38,7 @@ onMounted(async () => {
 const isMine = computed(() => assignee.value === auth.user?.id)
 
 async function save() {
-  const updated = await run(
-    () => props.assign({ team: team.value, assignee: assignee.value }),
-    t('common.saved'),
-  )
+  const updated = await run(() => props.assign({ team: team.value, assignee: assignee.value }))
   if (updated) emit('updated', updated)
   else {
     team.value = props.team?.id ?? null

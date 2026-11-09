@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NAlert, NSkeleton, useMessage } from 'naive-ui'
+import { NAlert, NSkeleton } from 'naive-ui'
 import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -8,6 +8,7 @@ import NotificationMatrix, {
   type NotificationGroup,
 } from '@/components/settings/NotificationMatrix.vue'
 import type { Schemas } from '@/api/types'
+import { showError } from '@/composables/useErrorPopover'
 import { useAuthStore } from '@/stores/auth'
 import { useFeaturesStore } from '@/stores/features'
 import type { NotificationChannel } from '@/types/settings'
@@ -19,7 +20,6 @@ import type { NotificationChannel } from '@/types/settings'
  * a mail setup (or an address of their own) all email switches show off and locked.
  */
 const { t } = useI18n()
-const message = useMessage()
 const auth = useAuthStore()
 const features = useFeaturesStore()
 
@@ -66,9 +66,8 @@ async function toggle(
         [key]: value,
       },
     })
-    message.success(t('common.saved'))
   } catch {
-    message.error(t('common.error'))
+    showError(t('common.error'))
   }
 }
 </script>

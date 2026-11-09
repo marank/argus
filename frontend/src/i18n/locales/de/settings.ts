@@ -112,8 +112,6 @@ export default {
     moduleOn: 'Modul aktiviert',
     general: 'Allgemein',
     generalDescription: 'Funktionen, die zu keinem einzelnen Modul gehören.',
-    switchedOn: '{name} aktiviert',
-    switchedOff: '{name} deaktiviert',
     consumables: 'Verbrauchsmaterial',
     consumablesHelp: 'Bestände, Mindestmengen und Buchungen von Tinte, Akkus, Kabeln usw.',
     licenses: 'Software & Lizenzen',

@@ -10,7 +10,7 @@ import {
   UserPlus,
   Wrench,
 } from '@lucide/vue'
-import { NAlert, NButton, NCard, NModal, NSkeleton, useMessage } from 'naive-ui'
+import { NAlert, NButton, NCard, NModal, NSkeleton } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
@@ -42,7 +42,6 @@ const canWrite = computed(() => useAuthStore().can('assets', 'write'))
 // Without the right to record hand-outs, the device is only assigned.
 const canHandOut = computed(() => useAuthStore().can('requests', 'write'))
 const features = useFeaturesStore()
-const message = useMessage()
 const router = useRouter()
 const confirm = useConfirm()
 const { date, dateTime, money, enumLabel } = useFormat()
@@ -174,7 +173,7 @@ const consumables = computed(() => {
 })
 
 async function assign(user: Id | null) {
-  const updated = await run(() => assetsApi.assign(props.id, user), t('common.saved'))
+  const updated = await run(() => assetsApi.assign(props.id, user))
   if (updated) {
     showAssign.value = false
     await load()
@@ -184,7 +183,6 @@ async function assign(user: Id | null) {
 async function remove() {
   if (!(await confirm(t('common.confirmDelete'), { danger: true }))) return
   if (await run(() => assetsApi.remove(props.id))) {
-    message.success(t('common.deleted'))
     router.push({ name: 'assets' })
   }
 }

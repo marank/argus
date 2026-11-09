@@ -105,7 +105,6 @@ describe('modals on the device page', () => {
         start_date: null,
         end_date: '2026-11-03',
       })
-      expect(bodyText()).toContain('Device assigned.')
       expect(state.onSaved).toHaveBeenCalledWith(assigned)
       expect(state.show).toBe(false)
     })

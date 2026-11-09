@@ -34,16 +34,14 @@ watch(show, (visible) => {
 })
 
 async function save() {
-  const ok = await run(
-    () =>
-      props.item
-        ? consumablesApi.update(props.item.id, { min_quantity: form.min_quantity })
-        : consumablesApi.create({
-            model: form.model!,
-            location: form.location!,
-            min_quantity: form.min_quantity,
-          }),
-    t('common.saved'),
+  const ok = await run(() =>
+    props.item
+      ? consumablesApi.update(props.item.id, { min_quantity: form.min_quantity })
+      : consumablesApi.create({
+          model: form.model!,
+          location: form.location!,
+          min_quantity: form.min_quantity,
+        }),
   )
   if (ok) {
     show.value = false

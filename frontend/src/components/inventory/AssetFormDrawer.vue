@@ -170,12 +170,10 @@ async function save() {
       installed_on: toIsoDate(parts.value[type.id]?.installed_on ?? null),
     })),
   }
-  const saved = await run(
-    () =>
-      (props.asset ? assetsApi.update(props.asset.id, data) : assetsApi.create(data)).catch(
-        fieldErrors.capture,
-      ),
-    t('common.saved'),
+  const saved = await run(() =>
+    (props.asset ? assetsApi.update(props.asset.id, data) : assetsApi.create(data)).catch(
+      fieldErrors.capture,
+    ),
   )
   if (saved) {
     emit('saved', saved)

@@ -76,23 +76,21 @@ const incomplete = computed(
 
 async function save() {
   const pickup_at = form.pickup_at ? new Date(form.pickup_at).toISOString() : null
-  const saved = await run(
-    () =>
-      props.mode === 'confirm'
-        ? requestsApi.confirm(props.assetRequest.id, {
-            items: Object.entries(form.quantities).map(([id, quantity]) => ({
-              id,
-              quantity_confirmed: quantity,
-            })),
-            comment: form.comment,
-          })
-        : requestsApi.schedule(props.assetRequest.id, {
-            pickup_at,
-            pickup_location: form.pickup_location,
-            handover_mode: form.handover_mode,
-            notify: form.notify,
-          }),
-    t('common.saved'),
+  const saved = await run(() =>
+    props.mode === 'confirm'
+      ? requestsApi.confirm(props.assetRequest.id, {
+          items: Object.entries(form.quantities).map(([id, quantity]) => ({
+            id,
+            quantity_confirmed: quantity,
+          })),
+          comment: form.comment,
+        })
+      : requestsApi.schedule(props.assetRequest.id, {
+          pickup_at,
+          pickup_location: form.pickup_location,
+          handover_mode: form.handover_mode,
+          notify: form.notify,
+        }),
   )
   if (saved) {
     show.value = false

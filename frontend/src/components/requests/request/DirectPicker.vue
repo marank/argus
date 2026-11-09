@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { watchDebounced } from '@vueuse/core'
 import { Check, Plus, ScanLine } from '@lucide/vue'
-import { NButton, NInput, NSpin, useMessage } from 'naive-ui'
+import { NButton, NInput, NSpin } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -9,6 +9,7 @@ import { assetsApi, consumablesApi, lookupApi } from '@/api/inventory'
 import type { Schemas } from '@/api/types'
 import EmptyState from '@/components/common/EmptyState.vue'
 import { useAction } from '@/composables/useAction'
+import { showError } from '@/composables/useErrorPopover'
 import { useFormat } from '@/composables/useFormat'
 import { useScanner } from '@/composables/useScanner'
 
@@ -27,10 +28,10 @@ const emit = defineEmits<{
 }>()
 const { t } = useI18n()
 const { enumLabel } = useFormat()
-const message = useMessage()
 const { run } = useAction()
 
 const query = ref('')
+const field = ref<{ $el: HTMLElement } | null>(null)
 const loading = ref(false)
 const assets = ref<Schemas['AssetOut'][]>([])
 const consumables = ref<Schemas['ConsumableOut'][]>([])
@@ -78,15 +79,16 @@ async function scan(code = query.value) {
     found.assets.find((a) => a.status === 'in_stock') ??
     (found.assets.length === 1 ? found.assets[0] : undefined)
   if (!asset) {
-    message.warning(t('requests.direct.notFound', { code: value }))
+    showError(t('requests.direct.notFound', { code: value }), field.value?.$el)
     return
   }
   if (asset.status !== 'in_stock') {
-    message.warning(
+    showError(
       t('requests.direct.notInStock', {
         number: asset.inventory_number,
         status: enumLabel('assetStatus', asset.status),
       }),
+      field.value?.$el,
     )
     return
   }
@@ -108,6 +110,7 @@ const empty = computed(() => !loading.value && !assets.value.length && !consumab
 <template>
   <section class="picker">
     <NInput
+      ref="field"
       v-model:value="query"
       size="large"
       clearable

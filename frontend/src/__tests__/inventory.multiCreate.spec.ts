@@ -9,7 +9,7 @@ import type { Schemas } from '@/api/types'
 import BulkCreateModal from '@/components/inventory/BulkCreateModal.vue'
 import SeriesCreateModal from '@/components/inventory/SeriesCreateModal.vue'
 
-import { button, click } from './dom'
+import { button, click, fieldErrors } from './dom'
 import {
   bodyText,
   field,
@@ -157,9 +157,7 @@ describe('creating many devices', () => {
       await pick(wrapper, assetModelsApi.list, 'm1')
       await settle()
       await click('Create 10 devices')
-      expect(document.body.querySelector('.ar-form')!.textContent).toContain(
-        'Only 4 numbers are left.',
-      )
+      expect(fieldErrors().join(' ')).toContain('Only 4 numbers are left.')
       expect(state.show).toBe(true)
     })
   })

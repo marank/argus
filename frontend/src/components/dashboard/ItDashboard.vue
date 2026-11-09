@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Plus } from '@lucide/vue'
-import { NButton, NModal, NSkeleton, NTag, useMessage } from 'naive-ui'
+import { NButton, NModal, NSkeleton, NTag } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -17,6 +17,7 @@ import {
   widgetType,
   type WidgetDef,
 } from '@/components/dashboard/widgets'
+import { showError } from '@/composables/useErrorPopover'
 import { useLive } from '@/composables/useLive'
 import { useAuthStore } from '@/stores/auth'
 import { useFeaturesStore } from '@/stores/features'
@@ -28,7 +29,6 @@ const editing = defineModel<boolean>('editing', { default: false })
 const { t } = useI18n()
 const auth = useAuthStore()
 const features = useFeaturesStore()
-const message = useMessage()
 const data = ref<Schemas['ITOverviewOut'] | null>(null)
 
 const load = async () => (data.value = await dashboardApi.it())
@@ -136,7 +136,7 @@ async function setOptions(widget: Schemas['DashboardWidgetOut'], options: Record
   try {
     await auth.changeDashboard({ widgets: layout })
   } catch {
-    message.error(t('common.error'))
+    showError(t('common.error'))
   }
 }
 
@@ -202,9 +202,8 @@ async function save() {
       widgets: isDefaultLayout(WIDGETS, draft.value) ? [] : draft.value,
     })
     editing.value = false
-    message.success(t('common.saved'))
   } catch {
-    message.error(t('common.error'))
+    showError(t('common.error'))
   } finally {
     saving.value = false
   }

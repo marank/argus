@@ -168,7 +168,6 @@ describe('RequestDetailView', () => {
         items: [{ id: 'item-1', quantity_confirmed: 2 }],
         comment: 'Only two left.',
       })
-      expect(screen()).toContain('Saved')
       expect(modal()).toBeNull()
       // Confirmed: the next step is preparing it.
       expect(buttons('Reject')).toEqual([])

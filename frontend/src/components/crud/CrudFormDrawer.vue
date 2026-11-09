@@ -136,13 +136,11 @@ function span(field: FieldDef): number {
 /** Saves; with `another` (new records only) the drawer stays open with an empty form for the next one. */
 async function save(another = false) {
   fieldErrors.clear()
-  const ok = await run(
-    () =>
-      (props.row
-        ? props.resource.api.update(props.row.id, { ...form })
-        : props.resource.api.create({ ...form })
-      ).catch(fieldErrors.capture),
-    t('common.saved'),
+  const ok = await run(() =>
+    (props.row
+      ? props.resource.api.update(props.row.id, { ...form })
+      : props.resource.api.create({ ...form })
+    ).catch(fieldErrors.capture),
   )
   if (!ok) return
   emit('saved')

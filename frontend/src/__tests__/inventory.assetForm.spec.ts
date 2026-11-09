@@ -8,7 +8,7 @@ import { assetModelsApi, componentTypesApi, locationsApi } from '@/api/masterdat
 import type { Schemas } from '@/api/types'
 import AssetFormDrawer from '@/components/inventory/AssetFormDrawer.vue'
 
-import { button, click } from './dom'
+import { button, click, fieldErrors } from './dom'
 import {
   bodyText,
   categoryRef,
@@ -195,14 +195,12 @@ describe('AssetFormDrawer', () => {
     await type('Serial number', 'SN-1')
     await click('Save')
 
-    expect(document.body.querySelector('.ar-form')!.textContent).toContain(
-      'Serial number already exists.',
-    )
+    expect(fieldErrors().join(' ')).toContain('Serial number already exists.')
     expect(state.show).toBe(true)
     expect(state.onSaved).not.toHaveBeenCalled()
 
     // Changing the field takes the complaint away.
     await type('Serial number', 'SN-2')
-    expect(document.body.querySelector('.ar-form')!.textContent).not.toContain('already exists')
+    expect(fieldErrors().join(' ')).not.toContain('already exists')
   })
 })

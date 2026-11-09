@@ -89,19 +89,17 @@ const draftTotal = computed(() =>
 )
 
 async function save() {
-  const updated = await run(
-    () =>
-      ordersApi.update(props.id, {
-        ...header,
-        expected_date: toIsoDate(header.expected_date),
-        lines: isDraft.value
-          ? lines.value.map(({ price, ...line }) => ({
-              ...line,
-              unit_price: price === null ? null : price.toFixed(2),
-            }))
-          : undefined,
-      }),
-    t('common.saved'),
+  const updated = await run(() =>
+    ordersApi.update(props.id, {
+      ...header,
+      expected_date: toIsoDate(header.expected_date),
+      lines: isDraft.value
+        ? lines.value.map(({ price, ...line }) => ({
+            ...line,
+            unit_price: price === null ? null : price.toFixed(2),
+          }))
+        : undefined,
+    }),
   )
   if (updated) apply(updated)
   return !!updated
@@ -131,8 +129,7 @@ async function cancelOrder() {
 
 async function remove() {
   if (!(await confirm(t('common.confirmDelete'), { danger: true }))) return
-  if ((await run(() => ordersApi.remove(props.id), t('common.deleted'))) !== undefined)
-    router.push({ name: 'orders' })
+  if ((await run(() => ordersApi.remove(props.id))) !== undefined) router.push({ name: 'orders' })
 }
 
 function openOrdered() {

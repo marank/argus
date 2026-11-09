@@ -43,10 +43,7 @@ watch(
 const disabled = (ts: number) => ts <= current.value || ts < today()
 
 async function save() {
-  const saved = await run(
-    () => requestsApi.extend(props.assetRequest.id, toIsoDate(end.value)!),
-    t('common.saved'),
-  )
+  const saved = await run(() => requestsApi.extend(props.assetRequest.id, toIsoDate(end.value)!))
   if (saved) {
     show.value = false
     emit('saved', saved)

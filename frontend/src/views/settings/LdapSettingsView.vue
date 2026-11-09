@@ -119,7 +119,7 @@ function payload(): Schemas['LdapSettingsIn'] {
 }
 
 async function save() {
-  const result = await run(() => ldapSettingsApi.update(payload()), t('common.saved'))
+  const result = await run(() => ldapSettingsApi.update(payload()))
   if (result) apply(result)
 }
 

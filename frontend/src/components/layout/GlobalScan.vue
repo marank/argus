@@ -7,6 +7,7 @@ import { useRouter } from 'vue-router'
 
 import { lookupApi } from '@/api/inventory'
 import StatusTag from '@/components/common/StatusTag.vue'
+import { showError } from '@/composables/useErrorPopover'
 import { useScanner } from '@/composables/useScanner'
 import type { Schemas } from '@/api/types'
 
@@ -19,6 +20,7 @@ const router = useRouter()
 const message = useMessage()
 
 const code = ref('')
+const field = ref<{ $el: HTMLElement } | null>(null)
 const result = ref<Schemas['LookupOut'] | null>(null)
 const showResults = ref(false)
 
@@ -30,7 +32,7 @@ async function lookup(value: string) {
     found = await lookupApi.lookup(trimmed)
   } catch (error) {
     // The code stays in the field, so the user can try again.
-    message.error(error instanceof Error ? error.message : t('common.error'))
+    showError(error instanceof Error ? error.message : t('common.error'), field.value?.$el)
     return
   }
   code.value = ''
@@ -45,7 +47,7 @@ async function lookup(value: string) {
       t('common.scanMultiple', { count: found.assets.length + found.models.length, code: trimmed }),
     )
   } else {
-    message.warning(t('common.scanNotFound', { code: trimmed }))
+    showError(t('common.scanNotFound', { code: trimmed }), field.value?.$el)
   }
 }
 
@@ -59,6 +61,7 @@ useScanner(lookup)
 
 <template>
   <NInput
+    ref="field"
     v-model:value="code"
     class="scan"
     size="small"

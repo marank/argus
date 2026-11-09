@@ -66,15 +66,13 @@ const delta = computed(() => {
 
 async function save() {
   if (!props.item) return
-  const ok = await run(
-    () =>
-      consumablesApi.move(props.item!.id, {
-        delta: delta.value,
-        reason: REASONS[form.direction],
-        note: form.note,
-        recipient: form.recipient,
-      }),
-    t('common.saved'),
+  const ok = await run(() =>
+    consumablesApi.move(props.item!.id, {
+      delta: delta.value,
+      reason: REASONS[form.direction],
+      note: form.note,
+      recipient: form.recipient,
+    }),
   )
   if (ok) {
     show.value = false

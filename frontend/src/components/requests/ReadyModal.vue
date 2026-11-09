@@ -50,16 +50,14 @@ const incomplete = computed(
 )
 
 async function save() {
-  const saved = await run(
-    () =>
-      requestsApi.markReady(props.assetRequest.id, {
-        handover_mode: mode.value,
-        skip_device_check: mode.value === 'pickup' && skipCheck.value,
-        pickup_at: when.value ? new Date(when.value).toISOString() : null,
-        pickup_location: where.value,
-        notify: notify.value,
-      }),
-    t('common.saved'),
+  const saved = await run(() =>
+    requestsApi.markReady(props.assetRequest.id, {
+      handover_mode: mode.value,
+      skip_device_check: mode.value === 'pickup' && skipCheck.value,
+      pickup_at: when.value ? new Date(when.value).toISOString() : null,
+      pickup_location: where.value,
+      notify: notify.value,
+    }),
   )
   if (saved) {
     show.value = false

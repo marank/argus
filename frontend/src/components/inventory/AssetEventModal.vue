@@ -74,20 +74,18 @@ const currentSerial = computed(
 )
 
 async function save() {
-  const done = await run(
-    () =>
-      assetsApi.addEvent(props.assetId, {
-        ...form,
-        component_type: tracked.value ? form.component_type : null,
-        component: tracked.value ? '' : form.component,
-        occurred_at: new Date(form.occurred_at).toISOString(),
-        cost: form.cost === null ? null : form.cost.toFixed(2),
-        consume:
-          consume.value && consumable.value
-            ? { consumable_id: consumable.value, quantity: quantity.value }
-            : null,
-      }),
-    t('common.saved'),
+  const done = await run(() =>
+    assetsApi.addEvent(props.assetId, {
+      ...form,
+      component_type: tracked.value ? form.component_type : null,
+      component: tracked.value ? '' : form.component,
+      occurred_at: new Date(form.occurred_at).toISOString(),
+      cost: form.cost === null ? null : form.cost.toFixed(2),
+      consume:
+        consume.value && consumable.value
+          ? { consumable_id: consumable.value, quantity: quantity.value }
+          : null,
+    }),
   )
   if (done) {
     show.value = false

@@ -5,11 +5,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 
 import { ApiError } from '@/api/client'
+import ErrorPopover from '@/components/common/ErrorPopover.vue'
 import CrudPage from '@/components/crud/CrudPage.vue'
 import { defineResource } from '@/components/crud/types'
 import { i18n } from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
 
+import { errorPopoverText, fieldErrors } from './dom'
 import { makeUser } from './helpers'
 
 interface Maker {
@@ -68,7 +70,10 @@ async function mountPage(permission: 'read' | 'write' = 'write') {
     defineComponent({
       render: () =>
         h(NMessageProvider, null, {
-          default: () => h(NDialogProvider, null, { default: () => h(CrudPage, { resource }) }),
+          default: () => [
+            h(ErrorPopover),
+            h(NDialogProvider, null, { default: () => h(CrudPage, { resource }) }),
+          ],
         }),
     }),
     { attachTo: document.body, global: { plugins: [i18n, pinia] } },
@@ -155,7 +160,9 @@ describe('CrudPage', () => {
     await flushPromises()
     button('Save').click()
     await flushPromises()
-    expect(document.body.querySelector('.ar-form')!.textContent).toContain('Taken.')
+    expect(fieldErrors()).toEqual(['Taken.'])
+    // The popover points at the first refused field.
+    expect(errorPopoverText()).toBe('Taken.')
     expect(api.list).toHaveBeenCalledOnce()
   })
 

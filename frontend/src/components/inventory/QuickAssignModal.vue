@@ -54,16 +54,14 @@ const afterToday = (ts: number) => ts > startOfToday()
 const beforeStart = (ts: number) => ts < Math.max(form.start ?? 0, startOfToday())
 
 async function save() {
-  const saved = await run(
-    () =>
-      requestsApi.quickAssign({
-        asset: props.assetId,
-        requester: form.requester!,
-        duration: form.duration,
-        start_date: toIsoDate(form.start),
-        end_date: form.duration === 'temporary' ? toIsoDate(form.end) : null,
-      }),
-    t('inventory.quickAssign.saved'),
+  const saved = await run(() =>
+    requestsApi.quickAssign({
+      asset: props.assetId,
+      requester: form.requester!,
+      duration: form.duration,
+      start_date: toIsoDate(form.start),
+      end_date: form.duration === 'temporary' ? toIsoDate(form.end) : null,
+    }),
   )
   if (saved) {
     show.value = false

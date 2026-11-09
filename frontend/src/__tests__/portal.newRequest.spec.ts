@@ -7,6 +7,7 @@ import { createMemoryHistory, createRouter, RouterView } from 'vue-router'
 
 import { ApiError } from '@/api/client'
 import type { Schemas } from '@/api/types'
+import ErrorPopover from '@/components/common/ErrorPopover.vue'
 import { i18n } from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
 import NewRequestView from '@/views/portal/NewRequestView.vue'
@@ -307,7 +308,10 @@ describe('NewRequestView', () => {
         defineComponent({
           render: () =>
             h(NMessageProvider, null, {
-              default: () => h(NDialogProvider, null, { default: () => h(RouterView) }),
+              default: () => [
+                h(ErrorPopover),
+                h(NDialogProvider, null, { default: () => h(RouterView) }),
+              ],
             }),
         }),
         { attachTo: document.body, global: { plugins: [i18n, pinia, router] } },

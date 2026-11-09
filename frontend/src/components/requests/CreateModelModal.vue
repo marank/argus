@@ -48,7 +48,7 @@ async function save() {
   const assetRequest = await run(async () => {
     const model = await assetModelsApi.create({ ...form, compatible_with: [] } as never)
     return requestsApi.resolveItem(props.assetRequest.id, props.item.id, model.id)
-  }, t('common.saved'))
+  })
   if (assetRequest) {
     show.value = false
     emit('saved', assetRequest)

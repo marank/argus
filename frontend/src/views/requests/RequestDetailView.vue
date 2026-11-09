@@ -126,16 +126,14 @@ async function markReady() {
     return
   }
   if (await confirm(t('requests.actions.confirmSeatsOnly'))) {
-    await act(
-      () =>
-        requestsApi.markReady(props.id, {
-          handover_mode: assetRequest.value!.handover_mode,
-          skip_device_check: false,
-          pickup_at: assetRequest.value!.pickup_at,
-          pickup_location: assetRequest.value!.pickup_location?.id ?? null,
-          notify: true,
-        }),
-      t('common.saved'),
+    await act(() =>
+      requestsApi.markReady(props.id, {
+        handover_mode: assetRequest.value!.handover_mode,
+        skip_device_check: false,
+        pickup_at: assetRequest.value!.pickup_at,
+        pickup_location: assetRequest.value!.pickup_location?.id ?? null,
+        notify: true,
+      }),
     )
   }
 }
@@ -183,7 +181,7 @@ async function reject() {
 
 async function reopen() {
   if (await confirm(t('requests.actions.confirmReopen'))) {
-    await act(() => requestsApi.reopen(props.id), t('common.saved'))
+    await act(() => requestsApi.reopen(props.id))
   }
 }
 

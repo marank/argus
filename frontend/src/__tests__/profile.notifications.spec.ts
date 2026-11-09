@@ -134,7 +134,6 @@ describe('own notification settings', () => {
       notification_settings: { request_ready: false, request_confirmed: false },
       app_notification_settings: { request_confirmed: true },
     })
-    expect(pageText()).toContain('Saved')
   })
 
   it('says when saving failed', async () => {

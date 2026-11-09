@@ -110,8 +110,6 @@ export default {
     moduleOn: 'Module enabled',
     general: 'General',
     generalDescription: 'Features that do not belong to a single module.',
-    switchedOn: '{name} enabled',
-    switchedOff: '{name} disabled',
     consumables: 'Consumables',
     consumablesHelp: 'Quantities, minimum levels and movements of ink, batteries, cables etc.',
     licenses: 'Software & licenses',

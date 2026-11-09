@@ -28,9 +28,8 @@ const existing = ref<Id | null>(null)
 
 async function assign() {
   if (!existing.value) return
-  const updated = await run(
-    () => requestsApi.resolveItem(props.assetRequest.id, props.item.id, existing.value!),
-    t('common.saved'),
+  const updated = await run(() =>
+    requestsApi.resolveItem(props.assetRequest.id, props.item.id, existing.value!),
   )
   if (updated) emit('updated', updated)
 }

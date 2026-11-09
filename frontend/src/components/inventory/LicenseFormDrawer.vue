@@ -97,13 +97,11 @@ const price = computed({
 const assignToLocked = computed(() => !!props.license?.seats_used)
 
 async function save() {
-  const saved = await run(
-    () =>
-      (props.license
-        ? licensesApi.update(props.license.id, { ...form, model: form.model! })
-        : licensesApi.create({ ...form, model: form.model! })
-      ).catch(fieldErrors.capture),
-    t('common.saved'),
+  const saved = await run(() =>
+    (props.license
+      ? licensesApi.update(props.license.id, { ...form, model: form.model! })
+      : licensesApi.create({ ...form, model: form.model! })
+    ).catch(fieldErrors.capture),
   )
   if (saved) {
     emit('saved', saved)

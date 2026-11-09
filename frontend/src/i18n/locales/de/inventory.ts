@@ -61,7 +61,6 @@ export default {
       'Leer lassen für heute. Ein früheres Datum erfasst eine Zuweisung, die schon begonnen hat.',
     today: 'Heute',
     submit: 'Zuweisen',
-    saved: 'Gerät zugewiesen.',
   },
   activeRequest: 'Reserviert für {number} ({name})',
   handedOutRequest: 'Ausgegeben über {number} ({name})',
@@ -160,7 +159,6 @@ export default {
     anyCategory: 'Auch aus anderen Kategorien',
     oldStatus: 'Danach ist dieses Gerät',
     submit: 'Gerät ersetzen',
-    saved: 'Gerät ersetzt',
   },
   event: {
     kind: 'Art',

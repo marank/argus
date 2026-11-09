@@ -49,19 +49,17 @@ watch(show, (visible) => {
 })
 
 async function save() {
-  const saved = await run(
-    () =>
-      requestsApi.handOut(props.assetRequest.id, {
-        method: form.method,
-        received_by: form.received_by,
-        received_by_name: '',
-        location: form.method === 'delivered' ? form.location : '',
-        notes: form.notes,
-        allocation_notes: Object.entries(form.allocationNotes)
-          .filter(([, note]) => note.trim())
-          .map(([allocation, note]) => ({ allocation, note })),
-      }),
-    t('common.saved'),
+  const saved = await run(() =>
+    requestsApi.handOut(props.assetRequest.id, {
+      method: form.method,
+      received_by: form.received_by,
+      received_by_name: '',
+      location: form.method === 'delivered' ? form.location : '',
+      notes: form.notes,
+      allocation_notes: Object.entries(form.allocationNotes)
+        .filter(([, note]) => note.trim())
+        .map(([allocation, note]) => ({ allocation, note })),
+    }),
   )
   if (saved) {
     show.value = false

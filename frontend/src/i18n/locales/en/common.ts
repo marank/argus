@@ -31,8 +31,6 @@ export default {
   all: 'All',
   back: 'Back',
   open: 'Open',
-  saved: 'Saved',
-  deleted: 'Deleted',
   confirmDelete: 'Delete this record permanently?',
   confirmTitle: 'Please confirm',
   name: 'Name',

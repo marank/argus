@@ -28,7 +28,7 @@ watch(
 )
 
 async function save() {
-  await run(() => features.updateRules({ ...form }), t('common.saved'))
+  await run(() => features.updateRules({ ...form }))
 }
 
 const FIELDS: {
