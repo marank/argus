@@ -158,6 +158,8 @@ export function requestItem(
   return {
     id: 'i1',
     label: 'ThinkPad T14',
+    category_name: 'Laptops',
+    category_icon: 'laptop',
     category: null,
     asset_model: {
       id: 'm1',

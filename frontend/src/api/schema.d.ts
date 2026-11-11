@@ -2030,6 +2030,26 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/requests/{pk}/allocations/scan': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Allocate Scanned
+     * @description One scan field for the whole request: the device goes to the open line it fits.
+     */
+    post: operations['apps_requests_api_allocations_allocate_scanned']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/requests/{pk}/allocations/{allocation_id}': {
     parameters: {
       query?: never
@@ -2095,6 +2115,26 @@ export interface paths {
     put?: never
     /** Cancel */
     post: operations['apps_requests_api_asset_requests_cancel']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/requests/{pk}/candidates': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Request Candidates
+     * @description Devices from the pool for the request's open lines, and how many each line could get.
+     */
+    get: operations['apps_requests_api_allocations_request_candidates']
+    put?: never
+    post?: never
     delete?: never
     options?: never
     head?: never
@@ -3607,6 +3647,10 @@ export interface components {
       allocations: components['schemas']['AllocationOut'][]
       asset_model: components['schemas']['AssetModelRefOut'] | null
       category: components['schemas']['CategoryRefOut'] | null
+      /** Category Icon */
+      category_icon: string
+      /** Category Name */
+      category_name: string
       /** Description */
       description: string
       /**
@@ -5667,6 +5711,28 @@ export interface components {
       /** Label */
       label: string
     }
+    /**
+     * LineCandidateOut
+     * @description A device from the pool for one of the request's open lines.
+     */
+    LineCandidateOut: {
+      asset: components['schemas']['AssetCandidateOut']
+      /**
+       * Item
+       * Format: uuid
+       */
+      item: string
+    }
+    /** LinePoolOut */
+    LinePoolOut: {
+      /** Available */
+      available: number
+      /**
+       * Item
+       * Format: uuid
+       */
+      item: string
+    }
     /** LocationFilter */
     LocationFilter: {
       /** Is Pickup Point */
@@ -6756,6 +6822,13 @@ export interface components {
       /** Comment */
       comment: string
     }
+    /** RequestCandidatesOut */
+    RequestCandidatesOut: {
+      /** Matches */
+      matches: components['schemas']['LineCandidateOut'][]
+      /** Pool */
+      pool: components['schemas']['LinePoolOut'][]
+    }
     /** RequestedData */
     RequestedData: {
       /** Follows */
@@ -6961,6 +7034,19 @@ export interface components {
       return_reminder_days: number
       /** Warranty Warning Days */
       warranty_warning_days: number
+    }
+    /**
+     * ScanIn
+     * @description A device for whichever open line it fits: scanned code or chosen from the search.
+     */
+    ScanIn: {
+      /** Asset */
+      asset?: string | null
+      /**
+       * Code
+       * @description Scanned inventory or serial number
+       */
+      code?: string | null
     }
     /** ScheduleData */
     ScheduleData: {
@@ -11445,6 +11531,32 @@ export interface operations {
       }
     }
   }
+  apps_requests_api_allocations_allocate_scanned: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        pk: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ScanIn']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AssetRequestOut']
+        }
+      }
+    }
+  }
   apps_requests_api_allocations_remove_allocation: {
     parameters: {
       query?: never
@@ -11536,6 +11648,30 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['AssetRequestOut']
+        }
+      }
+    }
+  }
+  apps_requests_api_allocations_request_candidates: {
+    parameters: {
+      query?: {
+        q?: string
+      }
+      header?: never
+      path: {
+        pk: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RequestCandidatesOut']
         }
       }
     }

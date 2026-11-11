@@ -2,7 +2,7 @@
 import { useDebounceFn } from '@vueuse/core'
 import { ScanLine } from '@lucide/vue'
 import { NAutoComplete } from 'naive-ui'
-import { ref } from 'vue'
+import { ref, type VNodeChild } from 'vue'
 
 /**
  * Scan field with suggestions: typing searches after a short pause and lists the hits,
@@ -15,6 +15,8 @@ const props = defineProps<{
   loading?: boolean
   /** Shown when nothing matches; without it an empty list stays closed. */
   emptyText?: string
+  /** Draws a hit richer than its label (the label stays its text for screen readers). */
+  renderLabel?: (option: { value?: string | number; label?: string }) => VNodeChild
 }>()
 const emit = defineEmits<{ search: [q: string]; select: [value: string]; enter: [code: string] }>()
 const code = defineModel<string>({ default: '' })
@@ -58,6 +60,7 @@ function onKeydown(event: KeyboardEvent) {
       :get-show="() => true"
       :show-empty="Boolean(emptyText)"
       clear-after-select
+      :render-label="props.renderLabel as never"
       @update:value="onInput"
       @select="(value: string | number) => emit('select', String(value))"
     >

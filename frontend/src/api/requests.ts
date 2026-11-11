@@ -25,6 +25,12 @@ export const requestsApi = {
     http.get<Schemas['CandidatesOut']>(`${base}/items/${itemId}/candidates`, { q }),
   allocate: (id: Id, data: Schemas['AllocateIn']) =>
     http.post<AssetRequest>(`${base}/${id}/allocations`, data),
+  /** Pool devices for the open lines matching `q`, and how many each line could get. */
+  lineCandidates: (id: Id, q?: string) =>
+    http.get<Schemas['RequestCandidatesOut']>(`${base}/${id}/candidates`, { q }),
+  /** A scanned or chosen device, for whichever open line it fits. */
+  scan: (id: Id, data: Partial<Schemas['ScanIn']>) =>
+    http.post<AssetRequest>(`${base}/${id}/allocations/scan`, data),
   resolveItem: (id: Id, itemId: Id, assetModel: Id) =>
     http.post<AssetRequest>(`${base}/${id}/items/${itemId}/resolve`, { asset_model: assetModel }),
   /** Fills the open items from the pool; with `itemId` only that one. */

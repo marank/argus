@@ -3310,3 +3310,12 @@ msgstr "Alle Geräte sind zugeteilt: Markieren Sie die Anforderung als bereit un
 #: apps/requests/services/workflow.py
 msgid "Every device of this request is recorded. Take them back one by one."
 msgstr "Alle Geräte dieser Anforderung sind erfasst. Nehmen Sie sie einzeln zurück."
+
+#: apps/requests/services/workflow.py
+#, python-format
+msgid "%(asset)s (%(model)s) matches no open line of this request."
+msgstr "%(asset)s (%(model)s) passt zu keiner offenen Position dieser Anforderung."
+
+#: apps/requests/api/allocations.py
+msgid "Scan or choose a device."
+msgstr "Scannen oder wählen Sie ein Gerät."

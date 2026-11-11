@@ -33,7 +33,7 @@ import type { Schemas } from '@/api/types'
 import PageHeader from '@/components/common/PageHeader.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import CreateOrderModal, { type DraftLine } from '@/components/procurement/CreateOrderModal.vue'
-import AllocationPanel from '@/components/requests/AllocationPanel.vue'
+import PreparationPanel from '@/components/requests/preparation/PreparationPanel.vue'
 import ConfirmModal from '@/components/requests/ConfirmModal.vue'
 import AssignmentCard from '@/components/requests/AssignmentCard.vue'
 import ExtendModal from '@/components/requests/ExtendModal.vue'
@@ -419,29 +419,13 @@ async function cancel() {
         </NAlert>
         <div class="layout">
           <div class="stack">
-            <NCard
-              :title="
-                preparing
-                  ? t('requests.allocation.title')
-                  : recording
-                    ? t('requests.unrecorded.title')
-                    : t('requests.items')
-              "
-              size="small"
-            >
-              <p v-if="preparing || recording" class="muted small hint">
-                {{ t(recording ? 'requests.unrecorded.hint' : 'requests.allocation.hint') }}
-              </p>
-              <AllocationPanel
-                v-for="item in assetRequest.items"
-                :key="item.id"
-                :assetRequest="assetRequest"
-                :item="item"
-                :editable="preparing || recording"
-                :availability="itemAvailability(item)"
-                @updated="(r) => (assetRequest = r)"
-              />
-            </NCard>
+            <PreparationPanel
+              :assetRequest="assetRequest"
+              :editable="preparing || recording"
+              :recording="recording"
+              :availability="itemAvailability"
+              @updated="(r) => (assetRequest = r)"
+            />
             <RequestHistory :assetRequest="assetRequest" />
           </div>
           <div class="stack">

@@ -517,8 +517,9 @@ describe('RequestDetailView', () => {
       await open(unrecorded())
       expect(screen()).toContain('Record devices')
       expect(screen()).toContain('counts as with the employee since the hand-out')
-      expect(api.requests.candidates).toHaveBeenCalled()
-      expect(buttons('Allocate automatically')).toEqual([])
+      // Scanned in, not filled from the pool.
+      expect(document.body.querySelector('.scan-combobox')).not.toBeNull()
+      expect(buttons('Automatically')).toEqual([])
     })
 
     it('is marked returned without devices after confirming', async () => {

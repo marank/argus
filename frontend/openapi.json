@@ -3223,6 +3223,14 @@
               }
             ]
           },
+          "category_icon": {
+            "title": "Category Icon",
+            "type": "string"
+          },
+          "category_name": {
+            "title": "Category Name",
+            "type": "string"
+          },
           "description": {
             "title": "Description",
             "type": "string"
@@ -3285,7 +3293,9 @@
           "quantity_allocated",
           "quantity_missing",
           "note",
-          "allocations"
+          "allocations",
+          "category_name",
+          "category_icon"
         ],
         "title": "AssetRequestItemOut",
         "type": "object"
@@ -8694,6 +8704,44 @@
         "title": "LineAssetRequestItemOut",
         "type": "object"
       },
+      "LineCandidateOut": {
+        "description": "A device from the pool for one of the request's open lines.",
+        "properties": {
+          "asset": {
+            "$ref": "#/components/schemas/AssetCandidateOut"
+          },
+          "item": {
+            "format": "uuid",
+            "title": "Item",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item",
+          "asset"
+        ],
+        "title": "LineCandidateOut",
+        "type": "object"
+      },
+      "LinePoolOut": {
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "integer"
+          },
+          "item": {
+            "format": "uuid",
+            "title": "Item",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item",
+          "available"
+        ],
+        "title": "LinePoolOut",
+        "type": "object"
+      },
       "LocationFilter": {
         "properties": {
           "is_pickup_point": {
@@ -11462,6 +11510,30 @@
         "title": "RejectIn",
         "type": "object"
       },
+      "RequestCandidatesOut": {
+        "properties": {
+          "matches": {
+            "items": {
+              "$ref": "#/components/schemas/LineCandidateOut"
+            },
+            "title": "Matches",
+            "type": "array"
+          },
+          "pool": {
+            "items": {
+              "$ref": "#/components/schemas/LinePoolOut"
+            },
+            "title": "Pool",
+            "type": "array"
+          }
+        },
+        "required": [
+          "matches",
+          "pool"
+        ],
+        "title": "RequestCandidatesOut",
+        "type": "object"
+      },
       "RequestedData": {
         "properties": {
           "follows": {
@@ -11891,6 +11963,37 @@
           "return_reminder_days"
         ],
         "title": "RulesSchema",
+        "type": "object"
+      },
+      "ScanIn": {
+        "description": "A device for whichever open line it fits: scanned code or chosen from the search.",
+        "properties": {
+          "asset": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asset"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Scanned inventory or serial number",
+            "title": "Code"
+          }
+        },
+        "title": "ScanIn",
         "type": "object"
       },
       "ScheduleData": {
@@ -22171,6 +22274,55 @@
         ]
       }
     },
+    "/api/requests/{pk}/allocations/scan": {
+      "post": {
+        "description": "One scan field for the whole request: the device goes to the open line it fits.",
+        "operationId": "apps_requests_api_allocations_allocate_scanned",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pk",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Pk",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetRequestOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "PermissionAuth": []
+          }
+        ],
+        "summary": "Allocate Scanned",
+        "tags": [
+          "request preparation"
+        ]
+      }
+    },
     "/api/requests/{pk}/allocations/{allocation_id}": {
       "delete": {
         "operationId": "apps_requests_api_allocations_remove_allocation",
@@ -22358,6 +22510,55 @@
         "summary": "Cancel",
         "tags": [
           "requests"
+        ]
+      }
+    },
+    "/api/requests/{pk}/candidates": {
+      "get": {
+        "description": "Devices from the pool for the request's open lines, and how many each line could get.",
+        "operationId": "apps_requests_api_allocations_request_candidates",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pk",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Pk",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Q",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestCandidatesOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "PermissionAuth": []
+          }
+        ],
+        "summary": "Request Candidates",
+        "tags": [
+          "request preparation"
         ]
       }
     },

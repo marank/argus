@@ -19,8 +19,12 @@ from apps.requests.schemas.asset_request import (
     AllocateIn,
     AssetRequestOut,
     CandidatesOut,
+    LineCandidateOut,
+    LinePoolOut,
+    RequestCandidatesOut,
     ResolveItemIn,
     ReturnIn,
+    ScanIn,
     UnrecordedIn,
 )
 from apps.requests.services import workflow
@@ -79,6 +83,39 @@ def candidates(request: AuthedRequest, item_id: UUID, q: str | None = None) -> C
     return {"assets": list(assets.order_by("inventory_number")[:100]), "consumables": consumables}
 
 
+@router.get("/{uuid:pk}/candidates", response=RequestCandidatesOut)
+def request_candidates(request: AuthedRequest, pk: UUID, q: str = "") -> RequestCandidatesOut:
+    """Devices from the pool for the request's open lines, and how many each line could get."""
+    asset_request = get_object_or_404(AssetRequest, pk=pk)
+    matches: list[LineCandidateOut] = []
+    pool: list[LinePoolOut] = []
+    seen: set[UUID] = set()
+    # Lines for an exact model come first, so a device is offered for that line.
+    lines = sorted(
+        (i for i in asset_request.items.select_related("asset_model", "category").order_by("position")),
+        key=lambda i: i.asset_model_id is None,
+    )
+    for item in lines:
+        if item.is_free_text or not item.quantity_missing:
+            continue
+        filters = {"model_id": item.asset_model_id, "category_id": item.category_id}
+        if item.is_software:
+            seats = pool_licenses(**filters).filter(assign_to=License.AssignTo.USER)
+            pool.append(LinePoolOut(item=item.pk, available=seats.count()))
+            continue
+        assets = pool_assets(**filters)
+        pool.append(LinePoolOut(item=item.pk, available=assets.count()))
+        if q.strip():
+            found = assets.filter(
+                Q(inventory_number__icontains=q.strip()) | Q(serial_number__icontains=q.strip())
+            ).select_related("model__manufacturer", "location__parent")
+            for asset in found.order_by("inventory_number")[:20]:
+                if asset.pk not in seen:
+                    seen.add(asset.pk)
+                    matches.append(LineCandidateOut.model_validate({"item": item.pk, "asset": asset}))
+    return RequestCandidatesOut(matches=matches[:20], pool=pool)
+
+
 def _asset_by_code(code: str) -> Asset:
     """The device with this inventory number, else the one with this serial number.
 
@@ -116,6 +153,20 @@ def allocate(request: AuthedRequest, pk: UUID, payload: AllocateIn) -> AssetRequ
         workflow.allocate_consumable(item, consumable, payload.quantity, request.user)
     else:
         raise BusinessError(_("Choose a device or consumable."))
+    return get_asset_request(request, pk)
+
+
+@router.post("/{uuid:pk}/allocations/scan", response=AssetRequestOut)
+@transaction.atomic
+def allocate_scanned(request: AuthedRequest, pk: UUID, payload: ScanIn) -> AssetRequest:
+    """One scan field for the whole request: the device goes to the open line it fits."""
+    if payload.code:
+        asset = _asset_by_code(payload.code.strip())
+    elif payload.asset:
+        asset = get_object_or_404(Asset, pk=payload.asset)
+    else:
+        raise BusinessError(_("Scan or choose a device."))
+    workflow.allocate_scanned(get_for_update(pk), asset, request.user)
     return get_asset_request(request, pk)
 
 

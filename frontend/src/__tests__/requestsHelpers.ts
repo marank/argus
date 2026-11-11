@@ -112,6 +112,8 @@ export function makeItem(overrides: Partial<Item> = {}): Item {
     allocations,
     asset_model: model('Laptop 14'),
     category: LAPTOP_CATEGORY,
+    category_name: 'Laptops',
+    category_icon: 'laptop',
     description: '',
     is_free_text: false,
     is_software: false,

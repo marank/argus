@@ -207,6 +207,19 @@ describe('useScanner', () => {
     wrapper.unmount()
   })
 
+  it('hands scans to the scanner shown last, and back once it is gone', () => {
+    const topBar = scanner()
+    const page = scanner()
+    press('A 1 2 3 4 5 Enter')
+    expect(page.onScan).toHaveBeenCalledWith('A12345')
+    expect(topBar.onScan).not.toHaveBeenCalled()
+
+    page.wrapper.unmount()
+    press('B 1 2 3 4 5 Enter')
+    expect(topBar.onScan).toHaveBeenCalledWith('B12345')
+    topBar.wrapper.unmount()
+  })
+
   it('prevents the default of the closing Enter', () => {
     const { wrapper } = scanner()
     press('A 1 2 3 4')

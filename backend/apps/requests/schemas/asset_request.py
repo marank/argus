@@ -91,10 +91,23 @@ class AssetRequestItemOut(Schema):
     quantity_missing: int
     note: str
     allocations: list[AllocationOut]
+    # The line's category (of its model, if it names one): every row of the line shows it.
+    category_name: str
+    category_icon: str
 
     @staticmethod
     def resolve_allocations(obj: AssetRequestItem) -> list[AssetRequestAllocation]:
         return list(obj.allocations.all())
+
+    @staticmethod
+    def resolve_category_name(obj: AssetRequestItem) -> str:
+        category = obj.asset_model.category if obj.asset_model else obj.category
+        return category.name if category else ""
+
+    @staticmethod
+    def resolve_category_icon(obj: AssetRequestItem) -> str:
+        category = obj.asset_model.category if obj.asset_model else obj.category
+        return category.icon if category else ""
 
 
 class AssetRequestListOut(Schema):
@@ -525,6 +538,31 @@ class ReturnIn(Schema):
     notes: str = ""
     allocation_notes: list[AllocationNoteIn] = []
     damaged: list[UUID] = Field([], description="Devices that go to repair instead of back into stock")
+
+
+class ScanIn(Schema):
+    """A device for whichever open line it fits: scanned code or chosen from the search."""
+
+    code: str | None = Field(None, description="Scanned inventory or serial number")
+    asset: UUID | None = None
+
+
+class LineCandidateOut(Schema):
+    """A device from the pool for one of the request's open lines."""
+
+    item: UUID
+    asset: AssetCandidateOut
+
+
+class LinePoolOut(Schema):
+    item: UUID
+    # Devices (or seats of user licenses) the pool holds for the line.
+    available: int
+
+
+class RequestCandidatesOut(Schema):
+    matches: list[LineCandidateOut]
+    pool: list[LinePoolOut]
 
 
 class CandidatesOut(Schema):

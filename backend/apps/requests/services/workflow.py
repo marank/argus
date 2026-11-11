@@ -573,6 +573,37 @@ def allocate_asset(item: AssetRequestItem, asset: Asset, user: User) -> AssetReq
     return _hand_out_late(allocation, user) if _records_late(asset_request) else allocation
 
 
+def _open_device_lines(asset_request: AssetRequest) -> list[AssetRequestItem]:
+    """Lines that still take devices: resolved, not software, not filled."""
+    return [
+        item
+        for item in asset_request.items.select_related("asset_model", "category").order_by("position")
+        if not item.is_free_text and not item.is_software and item.quantity_missing
+    ]
+
+
+def line_for(asset_request: AssetRequest, asset: Asset) -> AssetRequestItem:
+    """The open line a scanned device belongs to.
+
+    A line for its exact model comes before one for any model of its category, so
+    "any laptop" does not take the ThinkPad someone asked for by name.
+    """
+    lines = [item for item in _open_device_lines(asset_request) if _matches(item, asset.model)]
+    if not lines:
+        raise BusinessError(
+            _("%(asset)s (%(model)s) matches no open line of this request.")
+            % {"asset": asset.inventory_number, "model": asset.model}
+        )
+    return min(lines, key=lambda item: item.asset_model_id is None)
+
+
+@transaction.atomic
+def allocate_scanned(asset_request: AssetRequest, asset: Asset, user: User) -> AssetRequestAllocation:
+    """Allocate a device to whichever open line it belongs to (one scan field for all lines)."""
+    _require_allocatable(asset_request)
+    return allocate_asset(line_for(asset_request, asset), asset, user)
+
+
 @transaction.atomic
 def allocate_consumable(
     item: AssetRequestItem, consumable: Consumable, quantity: int, user: User
