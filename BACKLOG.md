@@ -54,3 +54,39 @@ mails and reminders stay queued unless
 - Purchase order detail page: its edit form would be overwritten. Could reload while
   the form is unchanged, or offer a "changed by someone else, reload?" hint.
 - Pickup terminal: still polls every 30 seconds; it could listen to `request`.
+
+## Operations
+
+### Backups inside the app container
+
+Today the nightly dump runs in a separate `backup` service that bind-mounts
+`docker/backup.sh` from the repository. Running a published image (`ARGUS_IMAGE`)
+therefore needs that script next to `compose.yml`; the docs leave the service out for
+that path and describe a manual `pg_dump` instead.
+
+Idea: the app container dumps the database itself (the worker already runs scheduled
+jobs), with time, retention and target configured under Settings in the frontend, and
+an overview of the dumps there. `compose.yml` then needs no file from the repository.
+
+### Updating an installation that runs a published image
+
+With `ARGUS_IMAGE`, `docker compose pull app` updates the app, but changes to
+`compose.yml` or `.env.example` in a new version have to be copied by hand. Decide how
+to ship them (release notes, a versioned compose file, or a check at start that warns
+about missing variables).
+
+## Wording: "Gerät" (device)
+
+The German UI says "Gerät"/"Geräte" for about 200 strings (requests 42, inventory 42,
+backend messages 67, also terminal, handover, dashboard, nav), but means three things:
+
+| Meaning | Examples | Proposal |
+| --- | --- | --- |
+| A serialized item with an inventory number (`Asset`) | notebook, MDE, MDE handle, docking station | "Asset" ("Assets", "Asset ersetzen"); matches "IT-Asset-Verwaltung" and the code |
+| Everything someone requests or receives | request lines, hand-out, terminal, "Meine Geräte" | "Ausstattung" ("Meine Ausstattung", "Bitte prüfen Sie Ihre Ausstattung"); covers cables, accessories, toner |
+| One concrete item whose kind is known | a handle in a request | the category's singular name ("Handgriff", "Notebook"), which exists already |
+
+"Gerät" would stay only where it really means a device, e.g. the device name
+(hostname). Touches German and English UI texts, backend messages (`django.po`), the
+docs and the glossary in README. Decide the terms first, then change everything in one
+go.

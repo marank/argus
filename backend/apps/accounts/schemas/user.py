@@ -1,6 +1,8 @@
 from typing import Any
 from uuid import UUID
 
+from ninja import Field
+
 from apps.accounts.models import Role, Team, TwoFactorMethod, User
 from apps.accounts.permissions import PermissionLevel, ResourceKey
 from apps.accounts.services import dashboard_layout
@@ -36,11 +38,20 @@ class UserOut(Schema):
     is_active: bool
     is_ldap_user: bool
     approval_exempt: bool
+    # Local accounts: whether the user may change the own password, and whether one is set.
+    can_change_password: bool
+    has_password: bool
+    # Own session duration in hours; None uses the site setting.
+    session_hours: int | None
     # Method of the second sign-in step ("email", "totp") or None; only for IT and the user.
     two_factor: TwoFactorMethod | None = None
     # IT staff's roles and teams; only sent to IT staff.
     roles: list[RefOut] = []
     teams: list[RefOut] = []
+
+    @staticmethod
+    def resolve_has_password(obj: User) -> bool:
+        return obj.has_usable_password()
 
     @staticmethod
     def resolve_roles(obj: User, context: dict[str, Any] | None) -> list[Role]:
@@ -90,6 +101,8 @@ class CurrentUserOut(UserOut):
     dashboard_settings: DashboardLayoutOut
     # Decides on requests of at least one department (shows the approvals page).
     is_approver: bool
+    # Named approver of a department (not only standing in); may name delegations.
+    is_department_approver: bool
 
     @staticmethod
     def resolve_notification_settings(obj: User) -> dict[NotificationEvent, bool]:
@@ -123,6 +136,8 @@ class UserIn(Schema):
     terminal_location: UUID | None = None
     is_active: bool = True
     approval_exempt: bool = False
+    can_change_password: bool = True
+    session_hours: int | None = Field(None, ge=1, le=720)
 
 
 class PreferencesIn(Schema):

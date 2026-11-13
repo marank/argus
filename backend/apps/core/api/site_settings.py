@@ -30,6 +30,8 @@ class RulesSchema(Schema):
     default_loan_days: int = Field(..., ge=1, le=365)
     max_loan_days: int = Field(..., ge=0, le=3650)
     return_reminder_days: int = Field(..., ge=0, le=60)
+    # How long a sign-in lasts; a user's own value overrides it.
+    session_hours: int = Field(..., ge=1, le=720)
 
 
 class NotificationEventOut(Schema):

@@ -7,7 +7,7 @@ export default {
     ldapDescription: 'Anmeldung mit Verzeichniskonten, Feldzuordnung',
     features: 'Module & Funktionen',
     rules: 'Fristen & Vorwarnzeiten',
-    rulesDescription: 'Ausleihdauer, Erinnerungen, Garantie und Lizenzen',
+    rulesDescription: 'Ausleihdauer, Erinnerungen, Garantie, Lizenzen und Sitzungsdauer',
     mail: 'E-Mail',
     mailDescription: 'SMTP-Server und Absender',
     notifications: 'Benachrichtigungen',
@@ -141,6 +141,7 @@ export default {
   },
   rules: {
     days: 'Tage',
+    hours: 'Stunden',
     loans: 'Ausleihen',
     loansDescription: 'Gelten für befristete Anforderungen.',
     warnings: 'Vorwarnzeiten',
@@ -156,6 +157,11 @@ export default {
     warranty_warning_daysHelp: 'Garantien, die innerhalb so vieler Tage enden.',
     license_warning_days: 'Lizenzen',
     license_warning_daysHelp: 'Lizenzen, die innerhalb so vieler Tage enden.',
+    signIn: 'Anmeldung',
+    signInDescription: 'Wie lange eine Anmeldung gilt.',
+    session_hours: 'Sitzungsdauer',
+    session_hoursHelp:
+      'Danach ist eine neue Anmeldung nötig. Gilt ab der nächsten Anmeldung; ein eigener Wert am Mitarbeiter hat Vorrang.',
   },
   notifications: {
     mailNotReady:

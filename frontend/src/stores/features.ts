@@ -36,6 +36,7 @@ export const useFeaturesStore = defineStore('features', () => {
         default_loan_days: 5,
         max_loan_days: 0,
         return_reminder_days: 2,
+        session_hours: 12,
       },
   )
 

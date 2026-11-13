@@ -18,7 +18,7 @@ def connect() -> None:
         # The requester, whoever decided the approval and, while it waits, everyone who may approve.
         users = [r.requester_id, r.approver_id]
         if r.status == AssetRequestStatus.PENDING_APPROVAL:
-            users += r.approvers().values_list("pk", flat=True)
+            users += r.deciders().values_list("pk", flat=True)
         return "request", r.pk, users
 
     track(AssetRequest, asset_request)

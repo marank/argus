@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.28
 #
-# Argus: one image with nginx (static frontend + reverse proxy), gunicorn (Django)
+# Argus: one image with nginx (static frontend and documentation + reverse proxy), gunicorn (Django)
 # and supervisord keeping both alive. Runs as an unprivileged user on port 8080.
 
 ARG PYTHON_VERSION=3.14
@@ -17,7 +17,16 @@ COPY frontend/ ./
 # Type-check and build; a type error fails the image build.
 RUN pnpm build
 
-# --- 2. Python dependencies ------------------------------------------------------
+# --- 2. Documentation ------------------------------------------------------------
+FROM node:${NODE_VERSION}-alpine AS docs
+WORKDIR /build
+RUN corepack enable
+COPY docs/package.json docs/pnpm-lock.yaml docs/pnpm-workspace.yaml ./
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store     pnpm install --frozen-lockfile
+COPY docs/ ./
+RUN pnpm build
+
+# --- 3. Python dependencies ------------------------------------------------------
 FROM python:${PYTHON_VERSION}-slim-trixie AS backend
 COPY --from=ghcr.io/astral-sh/uv:0.13.4 /uv /usr/local/bin/uv
 ENV UV_COMPILE_BYTECODE=1 \
@@ -29,7 +38,7 @@ COPY backend/pyproject.toml backend/uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-install-project
 
-# --- 3. Runtime ------------------------------------------------------------------
+# --- 4. Runtime ------------------------------------------------------------------
 FROM python:${PYTHON_VERSION}-slim-trixie AS runtime
 # renovate: datasource=pypi depName=supervisor
 ARG SUPERVISOR_VERSION=4.3.0
@@ -61,6 +70,7 @@ COPY --from=backend /app/.venv /app/.venv
 # Code and configuration stay owned by root: the app user can read but not change them.
 COPY backend/ /app/
 COPY --from=frontend /build/dist /app/frontend
+COPY --from=docs /build/.vitepress/dist /app/docs
 COPY docker/ /app/docker/
 
 # Static files for the Django admin; a throwaway (random) key is enough here.

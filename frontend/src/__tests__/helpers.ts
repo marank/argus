@@ -32,6 +32,7 @@ export const DEFAULT_RULES: Schemas['RulesSchema'] = {
   default_loan_days: 5,
   max_loan_days: 0,
   return_reminder_days: 2,
+  session_hours: 12,
 }
 
 /** Site settings with the given flags; flags not named count as on. */

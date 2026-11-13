@@ -3319,3 +3319,98 @@ msgstr "%(asset)s (%(model)s) passt zu keiner offenen Position dieser Anforderun
 #: apps/requests/api/allocations.py
 msgid "Scan or choose a device."
 msgstr "Scannen oder wählen Sie ein Gerät."
+
+#: apps/accounts/models/user.py
+msgid "may change password"
+msgstr "darf Passwort ändern"
+
+#: apps/accounts/models/user.py
+msgid ""
+"Local accounts change their own password under Sign-in & security. Directory "
+"accounts change it in the directory."
+msgstr ""
+"Lokale Konten ändern ihr Passwort selbst unter Anmeldung & Sicherheit. "
+"Verzeichniskonten ändern es im Verzeichnis."
+
+#: apps/accounts/api/password.py apps/accounts/api/users.py
+msgid "Change the password of a directory account in the directory."
+msgstr "Das Passwort eines Verzeichniskontos ändern Sie im Verzeichnis."
+
+#: apps/accounts/api/password.py
+msgid "You may not change your password. Please contact IT."
+msgstr "Sie dürfen Ihr Passwort nicht ändern. Bitte wenden Sie sich an die IT."
+
+#: apps/accounts/api/users.py
+msgid "Change your own password under Sign-in & security."
+msgstr "Ihr eigenes Passwort ändern Sie unter Anmeldung & Sicherheit."
+
+#: apps/accounts/models/user.py apps/core/models/site_settings.py
+msgid "session duration (hours)"
+msgstr "Sitzungsdauer (Stunden)"
+
+#: apps/core/models/site_settings.py
+msgid "How long a sign-in lasts; a user's own value overrides it."
+msgstr "So lange gilt eine Anmeldung; ein eigener Wert am Benutzer hat Vorrang."
+
+#: apps/accounts/models/user.py
+msgid ""
+"Empty: the duration from the site settings. E.g. longer for the pickup "
+"terminal."
+msgstr ""
+"Leer: die Dauer aus den Einstellungen. Z. B. länger für das Abholterminal."
+
+#: apps/accounts/models/approval_delegation.py
+msgid "delegate"
+msgstr "Vertretung"
+
+#: apps/accounts/models/approval_delegation.py
+msgid "from"
+msgstr "von"
+
+#: apps/accounts/models/approval_delegation.py
+msgid "until"
+msgstr "bis"
+
+#: apps/accounts/models/approval_delegation.py
+msgid "Empty: until removed."
+msgstr "Leer: bis zum Entfernen."
+
+#: apps/accounts/models/approval_delegation.py
+msgid "approval delegation"
+msgstr "Vertretung für Genehmigungen"
+
+#: apps/accounts/models/approval_delegation.py
+msgid "approval delegations"
+msgstr "Vertretungen für Genehmigungen"
+
+#: apps/accounts/models/approval_delegation.py
+msgid "You cannot delegate to yourself."
+msgstr "Sie können sich nicht selbst vertreten."
+
+#: apps/accounts/models/approval_delegation.py
+msgid "The end must not be before the start."
+msgstr "Das Ende darf nicht vor dem Beginn liegen."
+
+#: apps/accounts/api/delegations.py apps/accounts/services/delegations.py
+msgid "Only approvers of a department can delegate approvals."
+msgstr "Nur Genehmiger einer Abteilung können eine Vertretung eintragen."
+
+#: apps/accounts/services/delegations.py
+msgid "Choose an active employee as delegate."
+msgstr "Wählen Sie einen aktiven Mitarbeiter als Vertretung."
+
+#: apps/accounts/services/delegations.py
+msgid "The start must not be in the past."
+msgstr "Der Beginn darf nicht in der Vergangenheit liegen."
+
+#: apps/accounts/services/delegations.py
+msgid "This delegation is over."
+msgstr "Dieser Vertretungszeitraum ist vorbei."
+
+#: apps/accounts/services/delegations.py
+msgid "The delegation has started; only the end can change."
+msgstr "Die Vertretung hat schon begonnen; nur das Ende lässt sich noch ändern."
+
+#: apps/accounts/services/delegations.py
+msgid "The end must not be in the past."
+msgstr "Das Ende darf nicht in der Vergangenheit liegen."

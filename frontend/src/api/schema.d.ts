@@ -172,6 +172,26 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/accounts/users/{pk}/password': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Set Password
+     * @description An administrator sets the password of a local account, e.g. a new one or the terminal.
+     */
+    post: operations['apps_accounts_api_users_set_password']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/accounts/users/{pk}/two-factor/reset': {
     parameters: {
       query?: never
@@ -206,6 +226,88 @@ export interface paths {
     get: operations['apps_requests_api_approvals_list_approvals']
     put?: never
     post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/approvals/delegations': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Delegations */
+    get: operations['apps_accounts_api_delegations_list_delegations']
+    put?: never
+    /** Add Delegation */
+    post: operations['apps_accounts_api_delegations_add_delegation']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/approvals/delegations/candidates': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Candidates
+     * @description Active employees to choose a delegate from; needs at least two characters.
+     */
+    get: operations['apps_accounts_api_delegations_candidates']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/approvals/delegations/{pk}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * Change Period
+     * @description A new period, e.g. back earlier or away longer.
+     */
+    put: operations['apps_accounts_api_delegations_change_period']
+    post?: never
+    /**
+     * Remove Delegation
+     * @description Approvers remove their own delegations, planned, running or past.
+     */
+    delete: operations['apps_accounts_api_delegations_remove_delegation']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/approvals/delegations/{pk}/end': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * End Delegation
+     * @description Back early: a running delegation ends now and stays in the history; a planned one goes.
+     */
+    post: operations['apps_accounts_api_delegations_end_delegation']
     delete?: never
     options?: never
     head?: never
@@ -359,6 +461,26 @@ export interface paths {
     head?: never
     /** Update Preferences */
     patch: operations['apps_core_api_session_update_preferences']
+    trace?: never
+  }
+  '/api/auth/password': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Change Password
+     * @description Needs the current password; this session stays signed in, others end.
+     */
+    post: operations['apps_accounts_api_password_change_password']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
     trace?: never
   }
   '/api/auth/two-factor': {
@@ -2741,6 +2863,53 @@ export interface components {
      * @enum {string}
      */
     Approval: '' | 'pending' | 'approved' | 'rejected'
+    /** ApprovalDelegationIn */
+    ApprovalDelegationIn: {
+      /**
+       * Delegate
+       * Format: uuid
+       */
+      delegate: string
+      /** Ends On */
+      ends_on?: string | null
+      /**
+       * Starts On
+       * Format: date
+       */
+      starts_on: string
+    }
+    /** ApprovalDelegationOut */
+    ApprovalDelegationOut: {
+      approver: components['schemas']['UserRefOut']
+      delegate: components['schemas']['UserRefOut']
+      /** Ends On */
+      ends_on: string | null
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /**
+       * Starts On
+       * Format: date
+       */
+      starts_on: string
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'running' | 'planned' | 'ended'
+    }
+    /** ApprovalDelegationPeriodIn */
+    ApprovalDelegationPeriodIn: {
+      /** Ends On */
+      ends_on?: string | null
+      /**
+       * Starts On
+       * Format: date
+       */
+      starts_on: string
+    }
     /** ApproveIn */
     ApproveIn: {
       /**
@@ -4455,6 +4624,8 @@ export interface components {
       }
       /** Approval Exempt */
       approval_exempt: boolean
+      /** Can Change Password */
+      can_change_password: boolean
       dashboard_settings: components['schemas']['DashboardLayoutOut']
       department: components['schemas']['RefOut'] | null
       /** Display Name */
@@ -4465,6 +4636,8 @@ export interface components {
       employee_number: string
       /** First Name */
       first_name: string
+      /** Has Password */
+      has_password: boolean
       /**
        * Id
        * Format: uuid
@@ -4474,6 +4647,8 @@ export interface components {
       is_active: boolean
       /** Is Approver */
       is_approver: boolean
+      /** Is Department Approver */
+      is_department_approver: boolean
       /** Is It Staff */
       is_it_staff: boolean
       /** Is Ldap User */
@@ -4502,6 +4677,8 @@ export interface components {
        * @default []
        */
       roles: components['schemas']['RefOut'][]
+      /** Session Hours */
+      session_hours: number | null
       /**
        * Teams
        * @default []
@@ -4569,6 +4746,17 @@ export interface components {
     DeclineIn: {
       /** Comment */
       comment: string
+    }
+    /** DelegationsOut */
+    DelegationsOut: {
+      /** Departments */
+      departments: components['schemas']['RefOut'][]
+      /** Mine */
+      mine: components['schemas']['ApprovalDelegationOut'][]
+      /** Past */
+      past: components['schemas']['ApprovalDelegationOut'][]
+      /** Received */
+      received: components['schemas']['ApprovalDelegationOut'][]
     }
     /** DepartmentIn */
     DepartmentIn: {
@@ -6527,8 +6715,20 @@ export interface components {
       /** Items */
       items: components['schemas']['UserOut'][]
     }
+    /** PasswordChangeIn */
+    PasswordChangeIn: {
+      /** Current Password */
+      current_password: string
+      /** New Password */
+      new_password: string
+    }
     /** PasswordIn */
     PasswordIn: {
+      /** Password */
+      password: string
+    }
+    /** PasswordSetIn */
+    PasswordSetIn: {
       /** Password */
       password: string
     }
@@ -7032,6 +7232,8 @@ export interface components {
       max_loan_days: number
       /** Return Reminder Days */
       return_reminder_days: number
+      /** Session Hours */
+      session_hours: number
       /** Warranty Warning Days */
       warranty_warning_days: number
     }
@@ -7666,6 +7868,11 @@ export interface components {
        * @default false
        */
       approval_exempt: boolean
+      /**
+       * Can Change Password
+       * @default true
+       */
+      can_change_password: boolean
       /** Department */
       department?: string | null
       /**
@@ -7717,6 +7924,8 @@ export interface components {
       phone: string
       /** Roles */
       roles?: string[] | null
+      /** Session Hours */
+      session_hours?: number | null
       /** Teams */
       teams?: string[] | null
       /** Terminal Location */
@@ -7728,6 +7937,8 @@ export interface components {
     UserOut: {
       /** Approval Exempt */
       approval_exempt: boolean
+      /** Can Change Password */
+      can_change_password: boolean
       department: components['schemas']['RefOut'] | null
       /** Display Name */
       display_name: string
@@ -7737,6 +7948,8 @@ export interface components {
       employee_number: string
       /** First Name */
       first_name: string
+      /** Has Password */
+      has_password: boolean
       /**
        * Id
        * Format: uuid
@@ -7763,6 +7976,8 @@ export interface components {
        * @default []
        */
       roles: components['schemas']['RefOut'][]
+      /** Session Hours */
+      session_hours: number | null
       /**
        * Teams
        * @default []
@@ -8325,6 +8540,32 @@ export interface operations {
       }
     }
   }
+  apps_accounts_api_users_set_password: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        pk: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PasswordSetIn']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UserOut']
+        }
+      }
+    }
+  }
   apps_accounts_api_users_reset_two_factor: {
     parameters: {
       query?: never
@@ -8368,6 +8609,138 @@ export interface operations {
         content: {
           'application/json': components['schemas']['PagedAssetRequestListOut']
         }
+      }
+    }
+  }
+  apps_accounts_api_delegations_list_delegations: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DelegationsOut']
+        }
+      }
+    }
+  }
+  apps_accounts_api_delegations_add_delegation: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ApprovalDelegationIn']
+      }
+    }
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ApprovalDelegationOut']
+        }
+      }
+    }
+  }
+  apps_accounts_api_delegations_candidates: {
+    parameters: {
+      query?: {
+        q?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UserRefOut'][]
+        }
+      }
+    }
+  }
+  apps_accounts_api_delegations_change_period: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        pk: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ApprovalDelegationPeriodIn']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ApprovalDelegationOut']
+        }
+      }
+    }
+  }
+  apps_accounts_api_delegations_remove_delegation: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        pk: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  apps_accounts_api_delegations_end_delegation: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        pk: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
       }
     }
   }
@@ -8577,6 +8950,28 @@ export interface operations {
         content: {
           'application/json': components['schemas']['CurrentUserOut']
         }
+      }
+    }
+  }
+  apps_accounts_api_password_change_password: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PasswordChangeIn']
+      }
+    }
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
       }
     }
   }

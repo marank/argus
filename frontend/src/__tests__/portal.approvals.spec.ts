@@ -4,6 +4,7 @@ import { ApiError } from '@/api/client'
 import type { Schemas } from '@/api/types'
 import ApprovalDetailView from '@/views/portal/ApprovalDetailView.vue'
 import ApprovalsView from '@/views/portal/ApprovalsView.vue'
+import DelegationsView from '@/views/portal/DelegationsView.vue'
 
 import { makeUser } from './helpers'
 import { button, click, hasButton, typeInto } from './dom'
@@ -14,6 +15,12 @@ const api = vi.hoisted(() => ({
   approve: vi.fn<(...args: unknown[]) => Promise<unknown>>(),
   decline: vi.fn<(...args: unknown[]) => Promise<unknown>>(),
   get: vi.fn<(...args: unknown[]) => Promise<unknown>>(),
+  delegations: vi.fn<() => Promise<unknown>>(),
+  candidates: vi.fn<(q: string) => Promise<unknown>>(),
+  addDelegation: vi.fn<(data: unknown) => Promise<unknown>>(),
+  removeDelegation: vi.fn<(id: string) => Promise<unknown>>(),
+  endDelegation: vi.fn<(id: string) => Promise<unknown>>(),
+  changePeriod: vi.fn<(id: string, data: unknown) => Promise<unknown>>(),
 }))
 
 vi.mock('@/api/requests', async (importOriginal) => {
@@ -22,13 +29,35 @@ vi.mock('@/api/requests', async (importOriginal) => {
     ...original,
     approvalsApi: { list: api.list, approve: api.approve, decline: api.decline },
     requestsApi: { ...original.requestsApi, get: api.get },
+    delegationsApi: {
+      list: api.delegations,
+      candidates: api.candidates,
+      add: api.addDelegation,
+      remove: api.removeDelegation,
+      end: api.endDelegation,
+      changePeriod: api.changePeriod,
+    },
   }
 })
 
 const APPROVER = makeUser({ id: 'u-boss', display_name: 'Bob Boss', is_approver: true })
 
+const NO_DELEGATIONS = { departments: [], mine: [], past: [], received: [] }
+const delegationEntry = (fields: Partial<Schemas['ApprovalDelegationOut']> = {}) => ({
+  id: 'd1',
+  approver: { id: 'u-boss', username: 'boss', display_name: 'Bob Boss' },
+  delegate: { id: 'u-anna', username: 'abecker', display_name: 'Anna Becker' },
+  starts_on: '2026-11-20',
+  ends_on: '2026-11-27',
+  status: 'running' as const,
+  ...fields,
+})
+
 describe('ApprovalsView', () => {
-  beforeEach(() => Object.values(api).forEach((mock) => mock.mockReset()))
+  beforeEach(() => {
+    Object.values(api).forEach((mock) => mock.mockReset())
+    api.delegations.mockResolvedValue(NO_DELEGATIONS)
+  })
   afterEach(unmountPages)
 
   it('lists the waiting requests with requester, department and purpose', async () => {
@@ -171,5 +200,89 @@ describe('ApprovalDetailView', () => {
     expect(document.body.querySelector('.n-alert')!.textContent).toContain(
       'Rejected: „Too expensive“',
     )
+  })
+})
+
+describe('DelegationsView', () => {
+  const NAMED = makeUser({
+    id: 'u-boss',
+    display_name: 'Bob Boss',
+    is_approver: true,
+    is_department_approver: true,
+  })
+  const delegations = (fields: Partial<Schemas['DelegationsOut']> = {}) => ({
+    ...NO_DELEGATIONS,
+    ...fields,
+  })
+  beforeEach(() => Object.values(api).forEach((mock) => mock.mockReset()))
+  afterEach(unmountPages)
+
+  it('says when nobody stands in and offers to name someone', async () => {
+    api.delegations.mockResolvedValue(
+      delegations({ departments: [{ id: 'd-log', name: 'Logistics' }] }),
+    )
+    await mountPage(DelegationsView, { user: NAMED })
+    expect(bodyText()).toContain('No delegation active')
+    expect(bodyText()).toContain('You approve for')
+    expect(bodyText()).toContain('Logistics')
+    expect(bodyText()).toContain('No delegation yet.')
+    await click(button('Delegate approvals'))
+    expect(bodyText()).toContain('During the period your delegate sees your approvals')
+    expect(button('Delegate').disabled).toBe(true)
+  })
+
+  it('shows the running delegate in the banner and ends it', async () => {
+    api.delegations.mockResolvedValue(delegations({ mine: [delegationEntry()] }))
+    api.endDelegation.mockResolvedValue(undefined)
+    await mountPage(DelegationsView, { user: NAMED })
+    expect(bodyText()).toContain('Anna Becker approves for you')
+    expect(bodyText()).toContain('Running')
+    await click(button("I'm back"))
+    expect(bodyText()).toContain('End running delegations now?')
+  })
+
+  it('lists planned and past delegations', async () => {
+    api.delegations.mockResolvedValue(
+      delegations({
+        mine: [delegationEntry({ id: 'd2', status: 'planned', ends_on: null })],
+        past: [delegationEntry({ id: 'd0', status: 'ended' })],
+      }),
+    )
+    await mountPage(DelegationsView, { user: NAMED })
+    expect(bodyText()).toContain('Planned: Anna Becker approves for you')
+    expect(bodyText()).toContain('until removed')
+    expect(hasButton('Remove')).toBe(true)
+    expect(bodyText()).toContain('Past delegations')
+  })
+
+  it('opens the period of a delegate for changes', async () => {
+    api.delegations.mockResolvedValue(delegations({ mine: [delegationEntry()] }))
+    await mountPage(DelegationsView, { user: NAMED })
+    await click(button('Change period'))
+    expect(bodyText()).toContain('The delegation has started; only the end can change.')
+  })
+
+  it('tells delegations whom they stand in for, without the own part', async () => {
+    api.delegations.mockResolvedValue(
+      delegations({ received: [delegationEntry({ ends_on: null })] }),
+    )
+    await mountPage(DelegationsView, { user: APPROVER })
+    expect(bodyText()).toContain('I approve for')
+    expect(bodyText()).toContain('Bob Boss')
+    expect(hasButton('Delegate approvals')).toBe(false)
+  })
+})
+
+describe('approvals page for delegations', () => {
+  beforeEach(() => {
+    Object.values(api).forEach((mock) => mock.mockReset())
+    api.list.mockResolvedValue({ items: [], count: 0 })
+  })
+  afterEach(unmountPages)
+
+  it('says whom the delegate decides for', async () => {
+    api.delegations.mockResolvedValue({ ...NO_DELEGATIONS, received: [delegationEntry()] })
+    await mountPage(ApprovalsView, { user: APPROVER })
+    expect(bodyText()).toContain('You approve on behalf of Bob Boss')
   })
 })

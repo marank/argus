@@ -1,5 +1,14 @@
 <script setup lang="ts">
-import { Bell, ChevronDown, Languages, LogOut, Palette, Settings, ShieldCheck } from '@lucide/vue'
+import {
+  Bell,
+  ChevronDown,
+  CircleQuestionMark,
+  Languages,
+  LogOut,
+  Palette,
+  Settings,
+  ShieldCheck,
+} from '@lucide/vue'
 import { NButton, NDropdown, type DropdownOption } from 'naive-ui'
 import { computed, h, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -46,6 +55,7 @@ const options = computed<DropdownOption[]>(() => [
   { key: 'appearance', label: t('profile.appearance.title'), icon: icon(Palette) },
   { key: 'notifications', label: t('profile.notifications.title'), icon: icon(Bell) },
   { key: 'security', label: t('profile.security.title'), icon: icon(ShieldCheck) },
+  { key: 'docs', label: t('nav.docs'), icon: icon(CircleQuestionMark) },
   ...(auth.isItStaff ? [{ key: 'admin', label: t('nav.admin'), icon: icon(Settings) }] : []),
   { key: 'logout', label: t('nav.logout'), icon: icon(LogOut) },
 ])
@@ -54,6 +64,8 @@ async function onSelect(key: string) {
   const [kind, value] = key.split(':')
   if (kind === 'theme') await auth.changeTheme(value as ThemeMode)
   else if (kind === 'lang') await auth.changeLanguage(value as 'en' | 'de')
+  // IT staff land in the IT area; everyone else in the area for employees.
+  else if (kind === 'docs') window.open(auth.isItStaff ? '/docs/it/' : '/docs/employees/', '_blank')
   else if (kind === 'admin') window.open('/admin/', '_blank')
   else if (kind === 'appearance') router.push({ name: 'profile-appearance' })
   else if (kind === 'notifications') router.push({ name: 'profile-notifications' })

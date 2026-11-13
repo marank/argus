@@ -70,7 +70,7 @@ def approval_requested(asset_request: AssetRequest) -> None:
 
     notify(
         NotificationEvent.APPROVAL_REQUESTED,
-        asset_request.approvers().exclude(pk__in=_involved(asset_request)),
+        asset_request.deciders().exclude(pk__in=_involved(asset_request)),
         render,
         path=f"/portal/approvals/{asset_request.pk}",
     )

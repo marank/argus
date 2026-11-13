@@ -70,6 +70,20 @@ class User(AbstractUser):
         default=False,
         help_text=_("Requests go straight to IT, even for categories that need approval."),
     )
+    session_hours = models.PositiveSmallIntegerField(
+        _("session duration (hours)"),
+        null=True,
+        blank=True,
+        help_text=_("Empty: the duration from the site settings. E.g. longer for the pickup terminal."),
+    )
+    can_change_password = models.BooleanField(
+        _("may change password"),
+        default=True,
+        help_text=_(
+            "Local accounts change their own password under Sign-in & security. "
+            "Directory accounts change it in the directory."
+        ),
+    )
     ldap_dn = models.CharField(
         _("LDAP DN"),
         max_length=500,
@@ -131,5 +145,12 @@ class User(AbstractUser):
 
     @property
     def is_approver(self) -> bool:
-        """Approves requests for at least one department."""
+        """Approves requests for at least one department, or stands in for an approver today."""
+        from apps.accounts.services import delegations
+
+        return self.is_department_approver or delegations.is_delegate(self)
+
+    @property
+    def is_department_approver(self) -> bool:
+        """Named as approver of a department (not just standing in); may name delegations."""
         return self.approving_departments.exists()

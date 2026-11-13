@@ -8,7 +8,7 @@ from django.http import Http404, HttpRequest, HttpResponse
 from django.utils.translation import gettext as _
 from ninja import NinjaAPI, Status
 
-from apps.accounts.api import departments, ldap, roles, teams, two_factor, users
+from apps.accounts.api import delegations, departments, ldap, password, roles, teams, two_factor, users
 from apps.core.api import (
     mail_settings,
     notification_settings,
@@ -44,6 +44,8 @@ api = NinjaAPI(
 
 api.add_router("/auth", session.router)
 api.add_router("/auth/two-factor", two_factor.router)
+api.add_router("/auth/password", password.router)
+api.add_router("/approvals/delegations", delegations.router)
 api.add_router("/dashboard", overview.router)
 api.add_router("/dashboard/widgets", widgets.router)
 api.add_router("/calendar", calendar.router)

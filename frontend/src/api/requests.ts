@@ -91,6 +91,20 @@ export const approvalsApi = {
     http.post<AssetRequest>(`/approvals/${id}/decline`, { comment }),
 }
 
+/** Approvers name delegations who decide in their place, e.g. during a holiday. */
+export const delegationsApi = {
+  list: () => http.get<Schemas['DelegationsOut']>('/approvals/delegations'),
+  candidates: (q: string) =>
+    http.get<Schemas['UserRefOut'][]>('/approvals/delegations/candidates', { q }),
+  add: (data: Schemas['ApprovalDelegationIn']) =>
+    http.post<Schemas['ApprovalDelegationOut']>('/approvals/delegations', data),
+  changePeriod: (id: Id, data: Schemas['ApprovalDelegationPeriodIn']) =>
+    http.put<Schemas['ApprovalDelegationOut']>(`/approvals/delegations/${id}`, data),
+  /** Back early: a running delegate ends now, a planned one is removed. */
+  end: (id: Id) => http.post<void>(`/approvals/delegations/${id}/end`),
+  remove: (id: Id) => http.delete<void>(`/approvals/delegations/${id}`),
+}
+
 export const terminalApi = {
   pickups: (q?: string) => http.get<Schemas['TerminalPickupOut'][]>('/terminal/pickups', { q }),
   get: (id: Id) => http.get<Schemas['TerminalPickupDetailOut']>(`/terminal/pickups/${id}`),

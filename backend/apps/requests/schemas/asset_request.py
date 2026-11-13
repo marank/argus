@@ -328,11 +328,11 @@ type AssetRequestEventOut = Annotated[
 
 
 def pending_approvers(asset_request: AssetRequest) -> list[User]:
-    """Who may approve while the request waits for approval; asked once per request."""
+    """Who may decide while the request waits for approval (delegations included); asked once."""
     if asset_request.status != AssetRequestStatus.PENDING_APPROVAL:
         return []
     if not hasattr(asset_request, "_pending_approvers"):
-        asset_request._pending_approvers = list(asset_request.approvers())
+        asset_request._pending_approvers = list(asset_request.deciders())
     return asset_request._pending_approvers
 
 

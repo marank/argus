@@ -9,6 +9,9 @@ export const usersApi = {
   /** For users who lost their phone and backup codes. */
   resetTwoFactor: (id: Id) =>
     http.post<Schemas['UserOut']>(`/accounts/users/${id}/two-factor/reset`),
+  /** Administrators set the password of a local account. */
+  setPassword: (id: Id, password: string) =>
+    http.post<Schemas['UserOut']>(`/accounts/users/${id}/password`, { password }),
 }
 export const departmentsApi = createResource<Schemas['DepartmentOut']>('/accounts/departments')
 export const teamsApi = createResource<Schemas['TeamOut']>('/accounts/teams')

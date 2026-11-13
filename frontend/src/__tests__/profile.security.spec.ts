@@ -16,12 +16,14 @@ const api = vi.hoisted(() => ({
   renewBackupCodes: vi.fn<(password: string) => Promise<unknown>>(),
   disable: vi.fn<(password: string) => Promise<unknown>>(),
   me: vi.fn<() => Promise<unknown>>(),
+  change: vi.fn<(current: string, password: string) => Promise<unknown>>(),
 }))
 vi.mock('@/api/auth', async (importOriginal) => {
-  const { me, ...twoFactorApi } = api
+  const { me, change, ...twoFactorApi } = api
   return {
     ...(await importOriginal<typeof import('@/api/auth')>()),
     twoFactorApi,
+    passwordApi: { change },
     authApi: { me },
   }
 })
@@ -74,8 +76,8 @@ describe('sign-in security', () => {
     vi.useRealTimers()
   })
 
-  async function page() {
-    const result = await mountView(SecuritySettingsView)
+  async function page(user?: ReturnType<typeof makeUser>) {
+    const result = await mountView(SecuritySettingsView, { user })
     unmount = () => result.wrapper.unmount()
     return result
   }
@@ -116,6 +118,49 @@ describe('sign-in security', () => {
       api.status.mockRejectedValue(new ApiError(500, 'HTTP 500'))
       await page()
       expect(pageText()).toContain('An error occurred')
+    })
+  })
+
+  describe('password', () => {
+    const fields = () => [
+      ...document.body.querySelectorAll<HTMLInputElement>('.n-modal input[type="password"]'),
+    ]
+
+    it('changes the own password with the current one', async () => {
+      api.change.mockResolvedValue(undefined)
+      await page(makeUser({ can_change_password: true, is_ldap_user: false }))
+      await click(button('Change password'))
+      const [current, next, repeat] = fields()
+      await typeInto(current!, 'old-secret')
+      await typeInto(next!, 'new-secret-2026')
+      await typeInto(repeat!, 'new-secret-20')
+      expect(pageText()).toContain('The passwords do not match.')
+      await typeInto(repeat!, 'new-secret-2026')
+      await click([...document.body.querySelectorAll('.n-modal button')].at(-1) as HTMLElement)
+      expect(api.change).toHaveBeenCalledWith('old-secret', 'new-secret-2026')
+    })
+
+    it('shows the broken rules at the form', async () => {
+      api.change.mockRejectedValue(new ApiError(422, 'This password is too short.'))
+      await page(makeUser({ can_change_password: true, is_ldap_user: false }))
+      await click(button('Change password'))
+      const [current, next, repeat] = fields()
+      await typeInto(current!, 'old-secret')
+      await typeInto(next!, 'short')
+      await typeInto(repeat!, 'short')
+      await click([...document.body.querySelectorAll('.n-modal button')].at(-1) as HTMLElement)
+      expect(pageText()).toContain('This password is too short.')
+    })
+
+    it('points directory accounts to the directory', async () => {
+      await page(makeUser({ can_change_password: true, is_ldap_user: true }))
+      expect(pageText()).toContain('Change your password there.')
+      expect(pageText()).not.toContain('Change password')
+    })
+
+    it('says that IT sets the password when changing is off', async () => {
+      await page(makeUser({ can_change_password: false, is_ldap_user: false }))
+      expect(pageText()).toContain('IT sets your password.')
     })
   })
 

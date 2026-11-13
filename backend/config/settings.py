@@ -171,7 +171,9 @@ if BEHIND_PROXY:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     USE_X_FORWARDED_HOST = True
 
-SESSION_COOKIE_AGE = 60 * 60 * 12  # one working day
+# Fallback only: a sign-in lasts as long as the site setting or the user's own value
+# (apps.accounts.services.sessions).
+SESSION_COOKIE_AGE = 60 * 60 * 12
 
 LOGGING = {
     "version": 1,

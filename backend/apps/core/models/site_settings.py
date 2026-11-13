@@ -36,6 +36,13 @@ class SiteSettings(TimeStampedModel):
         help_text=_("Employees are reminded this many days before a return is due."),
     )
 
+    # Sign-in.
+    session_hours = models.PositiveSmallIntegerField(
+        _("session duration (hours)"),
+        default=12,
+        help_text=_("How long a sign-in lasts; a user's own value overrides it."),
+    )
+
     class Meta:
         verbose_name = _("site settings")
         verbose_name_plural = _("site settings")
@@ -56,4 +63,5 @@ RULE_FIELDS = (
     "default_loan_days",
     "max_loan_days",
     "return_reminder_days",
+    "session_hours",
 )

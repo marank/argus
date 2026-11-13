@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { NDataTable, type DataTableColumns } from 'naive-ui'
+import { NAlert, NDataTable, type DataTableColumns } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
-import { approvalsApi } from '@/api/requests'
+import { approvalsApi, delegationsApi } from '@/api/requests'
 import type { Schemas } from '@/api/types'
 import EmptyState from '@/components/common/EmptyState.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
@@ -22,6 +22,12 @@ async function load() {
   requests.value = (await approvalsApi.list({ page_size: 100 })).items
 }
 onMounted(load)
+
+// Delegations see whom they decide for; the delegations page has the details.
+const received = ref<Schemas['ApprovalDelegationOut'][]>([])
+onMounted(async () => {
+  received.value = (await delegationsApi.list()).received.filter((d) => d.status === 'running')
+})
 useLive(['request'], load)
 
 const period = (r: Schemas['AssetRequestListOut']) =>
@@ -71,6 +77,17 @@ const columns = computed<DataTableColumns<Schemas['AssetRequestListOut']>>(() =>
       :title="t('requests.approvals.title')"
       :subtitle="t('requests.approvals.subtitle')"
     />
+    <NAlert v-for="d in received" :key="d.id" type="info" :bordered="false" class="standing-in">
+      {{
+        t('requests.delegations.received', {
+          name: d.approver.display_name,
+          period: d.ends_on
+            ? t('requests.delegations.period', { from: date(d.starts_on), until: date(d.ends_on) })
+            : t('requests.delegations.periodOpen', { from: date(d.starts_on) }),
+        })
+      }}
+      <RouterLink :to="{ name: 'portal-delegations' }">{{ t('nav.delegations') }}</RouterLink>
+    </NAlert>
     <EmptyState v-if="requests && !requests.length" :text="t('requests.approvals.empty')" />
     <NDataTable
       v-else
@@ -89,3 +106,9 @@ const columns = computed<DataTableColumns<Schemas['AssetRequestListOut']>>(() =>
     />
   </div>
 </template>
+
+<style scoped>
+.standing-in {
+  margin-bottom: 12px;
+}
+</style>

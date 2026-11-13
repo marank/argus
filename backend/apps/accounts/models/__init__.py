@@ -1,3 +1,4 @@
+from .approval_delegation import ApprovalDelegation
 from .department import Department
 from .ldap_settings import LdapSettings
 from .role import Role
@@ -7,6 +8,7 @@ from .two_factor import BackupCode, TwoFactor, TwoFactorMethod
 from .user import User
 
 __all__ = [
+    "ApprovalDelegation",
     "BackupCode",
     "Department",
     "LdapSettings",

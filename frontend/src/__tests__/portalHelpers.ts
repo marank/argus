@@ -22,6 +22,7 @@ const ROUTES = [
   { path: '/portal/requests/:id', name: 'portal-request', component: page },
   { path: '/portal/approvals', name: 'portal-approvals', component: page },
   { path: '/portal/approvals/:id', name: 'portal-approval', component: page },
+  { path: '/portal/delegations', name: 'portal-delegations', component: page },
   { path: '/portal/devices/:id', name: 'portal-device', component: page },
   { path: '/portal/issues/:id', name: 'portal-issue', component: page },
   { path: '/requests/:id', name: 'request', component: page },

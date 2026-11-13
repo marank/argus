@@ -317,6 +317,115 @@
         "title": "Approval",
         "type": "string"
       },
+      "ApprovalDelegationIn": {
+        "properties": {
+          "delegate": {
+            "format": "uuid",
+            "title": "Delegate",
+            "type": "string"
+          },
+          "ends_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends On"
+          },
+          "starts_on": {
+            "format": "date",
+            "title": "Starts On",
+            "type": "string"
+          }
+        },
+        "required": [
+          "delegate",
+          "starts_on"
+        ],
+        "title": "ApprovalDelegationIn",
+        "type": "object"
+      },
+      "ApprovalDelegationOut": {
+        "properties": {
+          "approver": {
+            "$ref": "#/components/schemas/UserRefOut"
+          },
+          "delegate": {
+            "$ref": "#/components/schemas/UserRefOut"
+          },
+          "ends_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends On"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "starts_on": {
+            "format": "date",
+            "title": "Starts On",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "running",
+              "planned",
+              "ended"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "approver",
+          "delegate",
+          "starts_on",
+          "ends_on",
+          "status"
+        ],
+        "title": "ApprovalDelegationOut",
+        "type": "object"
+      },
+      "ApprovalDelegationPeriodIn": {
+        "properties": {
+          "ends_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends On"
+          },
+          "starts_on": {
+            "format": "date",
+            "title": "Starts On",
+            "type": "string"
+          }
+        },
+        "required": [
+          "starts_on"
+        ],
+        "title": "ApprovalDelegationPeriodIn",
+        "type": "object"
+      },
       "ApproveIn": {
         "properties": {
           "comment": {
@@ -5437,6 +5546,10 @@
             "title": "Approval Exempt",
             "type": "boolean"
           },
+          "can_change_password": {
+            "title": "Can Change Password",
+            "type": "boolean"
+          },
           "dashboard_settings": {
             "$ref": "#/components/schemas/DashboardLayoutOut"
           },
@@ -5466,6 +5579,10 @@
             "title": "First Name",
             "type": "string"
           },
+          "has_password": {
+            "title": "Has Password",
+            "type": "boolean"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -5477,6 +5594,10 @@
           },
           "is_approver": {
             "title": "Is Approver",
+            "type": "boolean"
+          },
+          "is_department_approver": {
+            "title": "Is Department Approver",
             "type": "boolean"
           },
           "is_it_staff": {
@@ -5538,6 +5659,17 @@
             "title": "Roles",
             "type": "array"
           },
+          "session_hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Hours"
+          },
           "teams": {
             "default": [],
             "items": {
@@ -5592,6 +5724,9 @@
           "is_active",
           "is_ldap_user",
           "approval_exempt",
+          "can_change_password",
+          "has_password",
+          "session_hours",
           "two_factor",
           "roles",
           "teams",
@@ -5601,7 +5736,8 @@
           "notification_settings",
           "app_notification_settings",
           "dashboard_settings",
-          "is_approver"
+          "is_approver",
+          "is_department_approver"
         ],
         "title": "CurrentUserOut",
         "type": "object"
@@ -5761,6 +5897,46 @@
           "comment"
         ],
         "title": "DeclineIn",
+        "type": "object"
+      },
+      "DelegationsOut": {
+        "properties": {
+          "departments": {
+            "items": {
+              "$ref": "#/components/schemas/RefOut"
+            },
+            "title": "Departments",
+            "type": "array"
+          },
+          "mine": {
+            "items": {
+              "$ref": "#/components/schemas/ApprovalDelegationOut"
+            },
+            "title": "Mine",
+            "type": "array"
+          },
+          "past": {
+            "items": {
+              "$ref": "#/components/schemas/ApprovalDelegationOut"
+            },
+            "title": "Past",
+            "type": "array"
+          },
+          "received": {
+            "items": {
+              "$ref": "#/components/schemas/ApprovalDelegationOut"
+            },
+            "title": "Received",
+            "type": "array"
+          }
+        },
+        "required": [
+          "departments",
+          "mine",
+          "past",
+          "received"
+        ],
+        "title": "DelegationsOut",
         "type": "object"
       },
       "DepartmentIn": {
@@ -10696,6 +10872,24 @@
         "title": "PagedUserOut",
         "type": "object"
       },
+      "PasswordChangeIn": {
+        "properties": {
+          "current_password": {
+            "title": "Current Password",
+            "type": "string"
+          },
+          "new_password": {
+            "title": "New Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "PasswordChangeIn",
+        "type": "object"
+      },
       "PasswordIn": {
         "properties": {
           "password": {
@@ -10707,6 +10901,19 @@
           "password"
         ],
         "title": "PasswordIn",
+        "type": "object"
+      },
+      "PasswordSetIn": {
+        "properties": {
+          "password": {
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "password"
+        ],
+        "title": "PasswordSetIn",
         "type": "object"
       },
       "PermissionLevel": {
@@ -11948,6 +12155,12 @@
             "title": "Return Reminder Days",
             "type": "integer"
           },
+          "session_hours": {
+            "maximum": 720,
+            "minimum": 1,
+            "title": "Session Hours",
+            "type": "integer"
+          },
           "warranty_warning_days": {
             "maximum": 365,
             "minimum": 1,
@@ -11960,7 +12173,8 @@
           "license_warning_days",
           "default_loan_days",
           "max_loan_days",
-          "return_reminder_days"
+          "return_reminder_days",
+          "session_hours"
         ],
         "title": "RulesSchema",
         "type": "object"
@@ -13448,6 +13662,11 @@
             "title": "Approval Exempt",
             "type": "boolean"
           },
+          "can_change_password": {
+            "default": true,
+            "title": "Can Change Password",
+            "type": "boolean"
+          },
           "department": {
             "anyOf": [
               {
@@ -13531,6 +13750,19 @@
             ],
             "title": "Roles"
           },
+          "session_hours": {
+            "anyOf": [
+              {
+                "maximum": 720,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Hours"
+          },
           "teams": {
             "anyOf": [
               {
@@ -13575,6 +13807,10 @@
             "title": "Approval Exempt",
             "type": "boolean"
           },
+          "can_change_password": {
+            "title": "Can Change Password",
+            "type": "boolean"
+          },
           "department": {
             "anyOf": [
               {
@@ -13600,6 +13836,10 @@
           "first_name": {
             "title": "First Name",
             "type": "string"
+          },
+          "has_password": {
+            "title": "Has Password",
+            "type": "boolean"
           },
           "id": {
             "format": "uuid",
@@ -13645,6 +13885,17 @@
             },
             "title": "Roles",
             "type": "array"
+          },
+          "session_hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Hours"
           },
           "teams": {
             "default": [],
@@ -13697,6 +13948,9 @@
           "is_active",
           "is_ldap_user",
           "approval_exempt",
+          "can_change_password",
+          "has_password",
+          "session_hours",
           "two_factor",
           "roles",
           "teams"
@@ -14961,6 +15215,55 @@
         ]
       }
     },
+    "/api/accounts/users/{pk}/password": {
+      "post": {
+        "description": "An administrator sets the password of a local account, e.g. a new one or the terminal.",
+        "operationId": "apps_accounts_api_users_set_password",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pk",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Pk",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordSetIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "SuperuserAuth": []
+          }
+        ],
+        "summary": "Set Password",
+        "tags": [
+          "users"
+        ]
+      }
+    },
     "/api/accounts/users/{pk}/two-factor/reset": {
       "post": {
         "description": "For users who lost their phone and backup codes: they sign in with the password alone again.",
@@ -15068,6 +15371,222 @@
           }
         ],
         "summary": "List Approvals",
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
+    "/api/approvals/delegations": {
+      "get": {
+        "operationId": "apps_accounts_api_delegations_list_delegations",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DelegationsOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "EmployeeAuth": []
+          }
+        ],
+        "summary": "List Delegations",
+        "tags": [
+          "approvals"
+        ]
+      },
+      "post": {
+        "operationId": "apps_accounts_api_delegations_add_delegation",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalDelegationIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalDelegationOut"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "EmployeeAuth": []
+          }
+        ],
+        "summary": "Add Delegation",
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
+    "/api/approvals/delegations/candidates": {
+      "get": {
+        "description": "Active employees to choose a delegate from; needs at least two characters.",
+        "operationId": "apps_accounts_api_delegations_candidates",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Q",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/UserRefOut"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "EmployeeAuth": []
+          }
+        ],
+        "summary": "Candidates",
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
+    "/api/approvals/delegations/{pk}": {
+      "delete": {
+        "description": "Approvers remove their own delegations, planned, running or past.",
+        "operationId": "apps_accounts_api_delegations_remove_delegation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pk",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Pk",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "EmployeeAuth": []
+          }
+        ],
+        "summary": "Remove Delegation",
+        "tags": [
+          "approvals"
+        ]
+      },
+      "put": {
+        "description": "A new period, e.g. back earlier or away longer.",
+        "operationId": "apps_accounts_api_delegations_change_period",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pk",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Pk",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalDelegationPeriodIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalDelegationOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "EmployeeAuth": []
+          }
+        ],
+        "summary": "Change Period",
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
+    "/api/approvals/delegations/{pk}/end": {
+      "post": {
+        "description": "Back early: a running delegation ends now and stays in the history; a planned one goes.",
+        "operationId": "apps_accounts_api_delegations_end_delegation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pk",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Pk",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "EmployeeAuth": []
+          }
+        ],
+        "summary": "End Delegation",
         "tags": [
           "approvals"
         ]
@@ -15361,6 +15880,37 @@
           }
         ],
         "summary": "Update Preferences",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/password": {
+      "post": {
+        "description": "Needs the current password; this session stays signed in, others end.",
+        "operationId": "apps_accounts_api_password_change_password",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordChangeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "EmployeeAuth": []
+          }
+        ],
+        "summary": "Change Password",
         "tags": [
           "auth"
         ]

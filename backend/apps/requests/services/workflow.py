@@ -155,8 +155,8 @@ def submit(
         line.save()
     asset_request.assigned_team = assignment.route(_item_team(item) for item in asset_request.items.all())
     if _needs_approval(asset_request, created_by):
-        if asset_request.may_approve(requester):
-            # An approver's own request is approved by asking for it.
+        if asset_request.approvers().filter(pk=requester.pk).exists():
+            # An approver's own request is approved by asking for it (not a delegate's).
             _record_approval(asset_request, requester, Approval.APPROVED)
         else:
             asset_request.status = AssetRequestStatus.PENDING_APPROVAL

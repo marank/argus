@@ -254,8 +254,14 @@ class AssetRequest(TimeStampedModel):
             return User.objects.none()
         return User.objects.filter(approving_departments=source, is_active=True)
 
+    def deciders(self) -> QuerySet[User]:
+        """The approvers plus the delegations standing in for them today."""
+        from apps.accounts.services import delegations
+
+        return delegations.deciders(self.approvers())
+
     def may_approve(self, user: User) -> bool:
-        return self.approvers().filter(pk=user.pk).exists()
+        return self.deciders().filter(pk=user.pk).exists()
 
     @property
     def is_overdue(self) -> bool:

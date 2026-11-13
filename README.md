@@ -61,6 +61,7 @@ start the container waits for the database and applies migrations.
 
 | Variable | Purpose |
 | --- | --- |
+| `ARGUS_IMAGE` | Image to run (default `argus:latest`, built from this repository). Set a published image such as `registry.example.com/it/argus:1` to run without the source code. |
 | `APP_URLS` | All URLs users open Argus under, comma separated. Allowed hosts, CSRF origins and secure cookies (all `https`) are derived from it. |
 | `TRUSTED_PROXIES` | Addresses or CIDR ranges of a TLS proxy in front; only these may pass on the client's address and scheme. |
 | `APP_PORT` | Host port (default `8080`). |
@@ -81,9 +82,11 @@ clients cannot fake their address (used to limit failed sign-ins) or HTTPS. A
 `SECRET_KEY` turns debug off unless `DEBUG=true` is set. The API docs (`/api/docs`)
 are only served with debug on. HSTS is up to the TLS proxy; Argus does not send it.
 
-Forgotten password, or locked out after too many failed sign-ins: set a new one in
-the running container (any password is accepted; `--reset-two-factor` also switches
-off the second sign-in step):
+Local accounts (not LDAP) change their own password under *Sign-in & security* unless
+*May change password* is off on the user; administrators set a new one under *Master
+data → Employees*. Both follow Django's password validators. Without any administrator
+who can sign in, set a new one in the running container (any password is accepted;
+`--reset-two-factor` also switches off the second sign-in step):
 
 ```bash
 docker compose exec app python manage.py set_password admin
@@ -247,6 +250,8 @@ frontend/src/
   composables/       list state, actions, formatting, scanner, confirm
   i18n/locales/      en/ and de/, one file per area
   theme/             palette and Naive UI overrides (light/dark)
+
+docs/                user and operator documentation (VitePress, German), served at /docs/
 ```
 
 All models use UUIDs as primary keys (`apps.core.models.UUIDModel`, also on
@@ -286,6 +291,7 @@ The VS Code task **Check: all** runs the same checks as CI; by hand:
 ```bash
 cd backend && uv run ruff check . && uv run ruff format --check . && uv run mypy . && uv run deptry . && uv run pytest --cov
 cd frontend && pnpm lint && pnpm format:check && pnpm type-check && pnpm test:coverage && pnpm check:licenses && pnpm build-only && pnpm size
+cd docs && pnpm build
 ```
 
 Coverage must not fall below the minimum: 90 % in the backend (`fail_under` in
@@ -312,6 +318,25 @@ uv tool run pre-commit install
 The backend tests run in parallel (pytest-xdist, up to 8 workers). For a single file
 or test, `-n0` skips the worker start-up, e.g.
 `uv run pytest -n0 apps/accounts/tests/test_roles.py`.
+
+## Documentation
+
+The user and operator documentation lives in `docs/` (VitePress). Content is German,
+file and folder names are English. The image serves it at `/docs/`; the user menu
+links to it as *Help* (IT staff to `/docs/it/`, everyone else to `/docs/employees/`).
+
+Three areas, each with its own navigation and search (VitePress locales):
+`employees/` and `approvers/` can be linked for everyone and never link into `it/`
+(the build fails otherwise); `it/` covers daily IT work, administration and operations.
+
+```bash
+cd docs
+pnpm install
+pnpm dev --port 5175      # http://localhost:5175/docs/; the frontend dev server proxies /docs there
+pnpm build                # also fails on dead links, anchors and IT links in employees/ or approvers/
+```
+
+VS Code tasks: **Dev: docs**, **Check: docs**. Screenshots are not part of it yet.
 
 ## API types
 

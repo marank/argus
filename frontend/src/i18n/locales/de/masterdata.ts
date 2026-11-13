@@ -212,6 +212,11 @@ export default {
     approvalExempt: 'Von Genehmigungen befreit',
     approvalExemptHelp:
       'Anforderungen gehen direkt an die IT, auch für genehmigungspflichtige Kategorien.',
+    canChangePassword: 'Darf Passwort ändern',
+    sessionHours: 'Sitzungsdauer (Stunden)',
+    sessionHoursHelp: 'Leer: die Dauer aus den Einstellungen. Z. B. länger für das Abholterminal.',
+    canChangePasswordHelp:
+      'Lokale Konten ändern ihr Passwort unter „Anmeldung & Sicherheit“. Verzeichniskonten ändern es im Verzeichnis.',
     requiresApproval: 'Genehmigungspflichtig',
     requiresApprovalHelp:
       'Anforderungen müssen zuerst von einem Genehmiger der Abteilung genehmigt werden. Gilt auch für Unterkategorien.',
@@ -224,5 +229,14 @@ export default {
     confirmReset:
       '2FA und Backup-Codes dieses Kontos löschen? Identität der anfragenden Person vorher prüfen.',
     wasReset: 'Zwei-Faktor-Authentifizierung zurückgesetzt',
+  },
+  password: {
+    label: 'Passwort',
+    set: 'gesetzt',
+    notSet: 'nicht gesetzt',
+    setButton: 'Passwort setzen',
+    title: 'Passwort setzen',
+    text: 'Neues Passwort für {name}. Es gilt sofort; bestehende Sitzungen des Kontos enden.',
+    saved: 'Passwort gesetzt',
   },
 }

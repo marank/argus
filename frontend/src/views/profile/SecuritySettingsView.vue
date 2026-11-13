@@ -5,16 +5,17 @@ import { NAlert, NButton, NModal, NSkeleton, NTag, useMessage } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { twoFactorApi } from '@/api/auth'
+import { passwordApi, twoFactorApi } from '@/api/auth'
 import PageHeader from '@/components/common/PageHeader.vue'
 import BackupCodes from '@/components/profile/BackupCodes.vue'
+import NewPasswordModal from '@/components/profile/NewPasswordModal.vue'
 import PasswordConfirmModal from '@/components/profile/PasswordConfirmModal.vue'
 import TwoFactorSetupModal from '@/components/profile/TwoFactorSetupModal.vue'
 import SettingRow from '@/components/settings/SettingRow.vue'
 import SettingsGroup from '@/components/settings/SettingsGroup.vue'
 import { useAuthStore } from '@/stores/auth'
 
-/** The user's two-factor sign-in: app or email, backup codes, switching off. */
+/** The user's sign-in: own password (local accounts), two-factor by app or email, backup codes. */
 const { t } = useI18n()
 const message = useMessage()
 const auth = useAuthStore()
@@ -46,6 +47,9 @@ function openSetup(method: Schemas['TwoFactorMethod']) {
   showSetup.value = true
 }
 
+const showPassword = ref(false)
+const changePassword = (password: string, current: string) => passwordApi.change(current, password)
+
 const showRenew = ref(false)
 const showDisable = ref(false)
 const newCodes = ref<string[]>([])
@@ -76,6 +80,29 @@ async function onDisabled() {
       <NAlert v-if="fewCodes" type="warning" :bordered="false" class="gap">
         {{ t('profile.security.fewCodes', { count: status.backup_codes_left }) }}
       </NAlert>
+
+      <SettingsGroup
+        :title="t('profile.security.password.title')"
+        :description="t('profile.security.password.description')"
+      >
+        <SettingRow
+          v-if="!auth.user?.is_ldap_user && auth.user?.can_change_password"
+          :label="t('profile.security.password.change')"
+          toggle
+        >
+          <NButton size="small" secondary @click="showPassword = true">
+            <template #icon><KeyRound :size="14" /></template>
+            {{ t('profile.security.password.change') }}
+          </NButton>
+        </SettingRow>
+        <p v-else class="muted text">
+          {{
+            auth.user?.is_ldap_user
+              ? t('profile.security.password.ldap')
+              : t('profile.security.password.locked')
+          }}
+        </p>
+      </SettingsGroup>
 
       <SettingsGroup
         :title="t('profile.security.twoFactor')"
@@ -152,6 +179,15 @@ async function onDisabled() {
       </SettingsGroup>
     </template>
 
+    <NewPasswordModal
+      v-model:show="showPassword"
+      :title="t('profile.security.password.change')"
+      :text="t('profile.security.password.changeText')"
+      :confirm-label="t('profile.security.password.change')"
+      with-current
+      :action="changePassword"
+      @done="message.success(t('profile.security.password.changed'))"
+    />
     <TwoFactorSetupModal v-model:show="showSetup" :method="setupMethod" @done="refresh" />
     <PasswordConfirmModal
       v-model:show="showRenew"

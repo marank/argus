@@ -7,6 +7,8 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 const backend = process.env.BACKEND_URL ?? 'http://127.0.0.1:8000'
 // Keep the browser's Host header so Django's CSRF origin check sees a same-origin request.
 const proxy = { target: backend, changeOrigin: false }
+// The documentation's dev server (VS Code task "Dev: docs"); in the image nginx serves /docs/.
+const docs = process.env.DOCS_URL ?? 'http://127.0.0.1:5175'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -23,6 +25,7 @@ export default defineConfig({
       '/api': proxy,
       '/admin': proxy,
       '/django-static': proxy,
+      '/docs': { target: docs },
     },
   },
 })

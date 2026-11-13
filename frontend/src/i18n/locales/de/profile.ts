@@ -20,7 +20,22 @@ export default {
   },
   security: {
     title: 'Anmeldung & Sicherheit',
-    subtitle: 'Zwei-Faktor-Authentifizierung und Backup-Codes für Ihr Konto.',
+    subtitle: 'Passwort, Zwei-Faktor-Authentifizierung und Backup-Codes für Ihr Konto.',
+    password: {
+      title: 'Passwort',
+      description: 'Mit diesem Passwort melden Sie sich bei Argus an.',
+      change: 'Passwort ändern',
+      changeText:
+        'Geben Sie Ihr aktuelles und Ihr neues Passwort ein. Andere Sitzungen werden danach abgemeldet.',
+      current: 'Aktuelles Passwort',
+      new: 'Neues Passwort',
+      repeat: 'Neues Passwort wiederholen',
+      mismatch: 'Die Passwörter stimmen nicht überein.',
+      rules: 'Mindestens 8 Zeichen, nicht nur Ziffern, kein gängiges Passwort.',
+      changed: 'Passwort geändert',
+      ldap: 'Sie melden sich mit Ihrem Verzeichniskonto an. Ihr Passwort ändern Sie dort.',
+      locked: 'Ihr Passwort legt die IT fest. Wenden Sie sich bei Bedarf an die IT.',
+    },
     twoFactor: 'Zwei-Faktor-Authentifizierung (2FA)',
     twoFactorDescription:
       'Zusätzlich zum Passwort ist bei der Anmeldung ein Einmalcode erforderlich – aus einer Authenticator-App oder per E-Mail.',

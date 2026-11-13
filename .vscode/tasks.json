@@ -27,12 +27,21 @@
       "isBackground": true,
       "problemMatcher": []
     },
+    {
+      "label": "Dev: docs",
+      "detail": "Documentation (VitePress) on :5175/docs/",
+      "type": "shell",
+      "command": "pnpm dev --port 5175",
+      "options": { "cwd": "${workspaceFolder}/docs" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
 
     // --- Setup ---------------------------------------------------------------
     {
       "label": "Setup: install dependencies",
       "detail": "uv sync + pnpm install",
-      "dependsOn": ["Setup: backend dependencies", "Setup: frontend dependencies"],
+      "dependsOn": ["Setup: backend dependencies", "Setup: frontend dependencies", "Setup: docs dependencies"],
       "problemMatcher": []
     },
     {
@@ -47,6 +56,13 @@
       "type": "shell",
       "command": "pnpm install",
       "options": { "cwd": "${workspaceFolder}/frontend" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Setup: docs dependencies",
+      "type": "shell",
+      "command": "pnpm install",
+      "options": { "cwd": "${workspaceFolder}/docs" },
       "problemMatcher": []
     },
 
@@ -108,8 +124,8 @@
     // --- Quality -------------------------------------------------------------
     {
       "label": "Check: all",
-      "detail": "Everything CI runs for backend and frontend (reports only, fixes nothing)",
-      "dependsOn": ["Check: backend", "Check: deploy settings", "Check: frontend"],
+      "detail": "Everything CI runs for backend, frontend and docs (reports only, fixes nothing)",
+      "dependsOn": ["Check: backend", "Check: deploy settings", "Check: frontend", "Check: docs"],
       "dependsOrder": "sequence",
       "group": "test",
       "problemMatcher": []
@@ -145,6 +161,14 @@
       "command": "pnpm lint && pnpm format:check && pnpm type-check && pnpm test:coverage && pnpm check:licenses && pnpm build-only && pnpm size",
       "options": { "cwd": "${workspaceFolder}/frontend" },
       "problemMatcher": ["$tsc"]
+    },
+    {
+      "label": "Check: docs",
+      "detail": "Same as the CI docs job: build the documentation (fails on dead links, anchors and IT links in the employee areas)",
+      "type": "shell",
+      "command": "pnpm build",
+      "options": { "cwd": "${workspaceFolder}/docs" },
+      "problemMatcher": []
     },
     {
       "label": "Test: backend",

@@ -7,7 +7,7 @@ export default {
     ldapDescription: 'Sign-in with directory accounts, field mapping',
     features: 'Modules & features',
     rules: 'Deadlines & warnings',
-    rulesDescription: 'Loan periods, reminders, warranty and licenses',
+    rulesDescription: 'Loan periods, reminders, warranty, licenses and session duration',
     mail: 'Email',
     mailDescription: 'SMTP server and sender',
     notifications: 'Notifications',
@@ -138,6 +138,7 @@ export default {
   },
   rules: {
     days: 'days',
+    hours: 'hours',
     loans: 'Loans',
     loansDescription: 'Apply to time-limited requests.',
     warnings: 'Warning periods',
@@ -152,6 +153,11 @@ export default {
     warranty_warning_daysHelp: 'Warranties ending within this many days.',
     license_warning_days: 'Licenses',
     license_warning_daysHelp: 'Licenses ending within this many days.',
+    signIn: 'Sign-in',
+    signInDescription: 'How long a sign-in lasts.',
+    session_hours: 'Session duration',
+    session_hoursHelp:
+      'Afterwards users sign in again. Applies from the next sign-in; a value on the employee overrides it.',
   },
   notifications: {
     mailNotReady:

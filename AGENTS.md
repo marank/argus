@@ -50,6 +50,17 @@ VS Code tasks (`.vscode/tasks.json`) hold the everyday commands; the README list
   (`src/i18n/locales/en` and `de`, one file per area).
 - No inline `<script>` and no remote scripts or fonts: the CSP only allows our own origin.
 
+## Documentation
+
+- `docs/` holds the user and operator documentation (VitePress), served at `/docs/`. A change users
+  or operators notice (new feature, changed rule, new setting or variable) updates the matching page.
+- Content in German, file and folder names in English. Professional and direct: no filler, no
+  unnecessary detail. Use the exact UI labels from `frontend/src/i18n/locales/de`; edge cases go
+  into `::: info Gut zu wissen` boxes on the feature's page.
+- Three areas: `employees/`, `approvers/` (linkable for everyone, never link into `it/`) and `it/`
+  (IT work, `administration/`, `operations/`). Each area has its own sidebar in `.vitepress/config.mts`.
+- `pnpm build` in `docs/` must pass (dead links, anchors and IT links in the open areas fail it).
+
 ## Docker / runtime
 
 - The app container runs read-only, without capabilities, as an unprivileged user. Only `/tmp` is

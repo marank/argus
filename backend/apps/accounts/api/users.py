@@ -9,10 +9,10 @@ from ninja.errors import HttpError
 
 from apps.accounts.models import User
 from apps.accounts.permissions import PermissionLevel, ResourceKey, can
-from apps.accounts.schemas import UserIn, UserOut
-from apps.accounts.services import two_factor
+from apps.accounts.schemas import PasswordSetIn, UserIn, UserOut
+from apps.accounts.services import passwords, two_factor
 from apps.core.api.crud import CrudConfig, build_crud_router
-from apps.core.api.security import AuthedRequest, permission_auth
+from apps.core.api.security import AuthedRequest, permission_auth, superuser_auth
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ def check_user_input(request: AuthedRequest, data: dict[str, Any], user: User | 
 
 
 def new_user() -> User:
-    # Accounts created here sign in via LDAP or get a password with `manage.py set_password`;
+    # Accounts created here sign in via LDAP or get a password from an administrator;
     # until then no password matches (an empty one would fail validation).
     user = User()
     user.set_unusable_password()
@@ -129,4 +129,17 @@ def reset_two_factor(request: AuthedRequest, pk: UUID) -> User:
         raise HttpError(403, _("Only administrators can reset the sign-in of an administrator."))
     two_factor.disable(user)
     logger.info("%s reset the two-factor sign-in of %s", request.user, user)
+    return user
+
+
+@router.post("/{uuid:pk}/password", response=UserOut, auth=superuser_auth)
+def set_password(request: AuthedRequest, pk: UUID, payload: PasswordSetIn) -> User:
+    """An administrator sets the password of a local account, e.g. a new one or the terminal."""
+    user = get_object_or_404(User.objects.select_related("department", "terminal_location__parent"), pk=pk)
+    if user.pk == request.user.pk:
+        raise HttpError(409, _("Change your own password under Sign-in & security."))
+    if user.is_ldap_user:
+        raise HttpError(409, _("Change the password of a directory account in the directory."))
+    passwords.set_password(user, payload.password)
+    logger.info("%s set the password of %s", request.user, user)
     return user

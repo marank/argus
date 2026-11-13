@@ -6,7 +6,7 @@ import { h } from 'vue'
 import { departmentsApi, rolesApi, teamsApi, usersApi } from '@/api/accounts'
 import { locationsApi } from '@/api/masterdata'
 import { bool, mono, text } from '@/components/crud/cells'
-import TwoFactorReset from '@/components/masterdata/TwoFactorReset.vue'
+import AccountSignIn from '@/components/masterdata/AccountSignIn.vue'
 import { defineResource } from '@/components/crud/types'
 import { i18n } from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
@@ -185,8 +185,22 @@ export default defineResource<Schemas['UserOut']>({
             useFeaturesStore().ldapEnabled ? 'masterdata.fields.usernameLdapHelp' : undefined,
         },
         { key: 'is_active', label: 'common.active', type: 'switch' },
+        {
+          key: 'can_change_password',
+          label: 'masterdata.fields.canChangePassword',
+          type: 'switch',
+          help: 'masterdata.fields.canChangePasswordHelp',
+        },
+        {
+          key: 'session_hours',
+          label: 'masterdata.fields.sessionHours',
+          type: 'number',
+          min: 1,
+          max: 720,
+          help: 'masterdata.fields.sessionHoursHelp',
+        },
       ],
-      extra: TwoFactorReset,
+      extra: AccountSignIn,
     },
     {
       title: 'masterdata.sections.permissions',
@@ -275,6 +289,8 @@ export default defineResource<Schemas['UserOut']>({
     roles: [],
     is_active: true,
     approval_exempt: false,
+    can_change_password: true,
+    session_hours: null,
   }),
   toForm: (u) => ({
     username: u.username,
@@ -293,5 +309,7 @@ export default defineResource<Schemas['UserOut']>({
     roles: u.roles.map((r) => r.id),
     is_active: u.is_active,
     approval_exempt: u.approval_exempt,
+    can_change_password: u.can_change_password,
+    session_hours: u.session_hours,
   }),
 })

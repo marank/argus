@@ -18,7 +18,22 @@ export default {
   },
   security: {
     title: 'Sign-in & security',
-    subtitle: 'Two-factor authentication and backup codes for your account.',
+    subtitle: 'Password, two-factor authentication and backup codes for your account.',
+    password: {
+      title: 'Password',
+      description: 'You sign in to Argus with this password.',
+      change: 'Change password',
+      changeText:
+        'Enter your current and your new password. Other sessions are signed out afterwards.',
+      current: 'Current password',
+      new: 'New password',
+      repeat: 'Repeat new password',
+      mismatch: 'The passwords do not match.',
+      rules: 'At least 8 characters, not only digits, not a common password.',
+      changed: 'Password changed',
+      ldap: 'You sign in with your directory account. Change your password there.',
+      locked: 'IT sets your password. Please contact IT if needed.',
+    },
     twoFactor: 'Two-factor authentication (2FA)',
     twoFactorDescription:
       'In addition to the password, sign-in requires a one-time code from an authenticator app or by email.',

@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404
 
 from apps.accounts.models import Department, User
 from apps.accounts.permissions import ResourceKey, can
+from apps.accounts.services import delegations
 from apps.core.api.security import AuthedRequest
 from apps.requests.models import (
     AssetRequest,
@@ -67,9 +68,13 @@ def visible_asset_requests(request: AuthedRequest) -> QuerySet[AssetRequest]:
 
 
 def approvable_asset_requests(user: User) -> QuerySet[AssetRequest]:
-    """Requests that went to one of the departments ``user`` approves for, including the
-    departments below that take over their approvers."""
-    approving = set(user.approving_departments.values_list("pk", flat=True)) if user.is_active else set()
+    """Requests that went to one of the departments ``user`` approves for, or approves for
+    today as a delegate, including the departments below that take over their approvers."""
+    approving: set[UUID] = set()
+    if user.is_active:
+        approving.update(user.approving_departments.values_list("pk", flat=True))
+        represented = delegations.represented(user)
+        approving.update(Department.objects.filter(approvers__in=represented).values_list("pk", flat=True))
     departments = [pk for pk, source in Department.approval_sources().items() if source in approving]
     return (
         asset_request_queryset()

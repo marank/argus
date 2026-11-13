@@ -1,6 +1,6 @@
 """Session based login for the single page app."""
 
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, logout
 from django.http import HttpRequest
 from django.middleware.csrf import get_token
 from django.utils.translation import gettext as _
@@ -10,7 +10,7 @@ from ninja.utils import check_csrf
 
 from apps.accounts.models import TwoFactor, TwoFactorMethod, User
 from apps.accounts.schemas import CodeIn, CurrentUserOut, PreferencesIn, TwoFactorChallengeOut
-from apps.accounts.services import dashboard_layout, throttle, two_factor
+from apps.accounts.services import dashboard_layout, sessions, throttle, two_factor
 from apps.core.api.security import AuthedRequest, session_auth
 from apps.core.notifications import receivable
 from apps.core.schemas.base import Schema
@@ -54,7 +54,7 @@ def login_view(request: HttpRequest, payload: LoginIn) -> Status[two_factor.Logi
     second = TwoFactor.objects.filter(user=user).first()
     if second is not None:
         return Status(202, two_factor.start_login(request.session, user, second))
-    login(request, user)
+    sessions.sign_in(request, user)
     return user
 
 
@@ -82,7 +82,7 @@ def verify_login(request: HttpRequest, payload: CodeIn) -> User:
         raise HttpError(400, _("The code is not correct or has expired."))
     request.session.pop(two_factor.PENDING_LOGIN, None)
     throttle.clear(throttle.code_key(user))
-    login(request, user, backend=state["backend"])
+    sessions.sign_in(request, user, backend=state["backend"])
     return user
 
 

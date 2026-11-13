@@ -95,6 +95,12 @@ export const routes: RouteRecordRaw[] = [
         meta: { approver: true, title: 'nav.approvals' },
       },
       {
+        path: 'portal/delegations',
+        name: 'portal-delegations',
+        component: () => import('@/views/portal/DelegationsView.vue'),
+        meta: { approver: true, title: 'nav.delegations' },
+      },
+      {
         path: 'portal/approvals/:id([0-9a-f-]{36})',
         name: 'portal-approval',
         component: () => import('@/views/portal/ApprovalDetailView.vue'),

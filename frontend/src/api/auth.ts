@@ -38,6 +38,15 @@ export const isChallenge = (
 
 type BackupCodes = { backup_codes: string[] }
 
+/** The user's own password (local accounts). */
+export const passwordApi = {
+  change: (currentPassword: string, newPassword: string) =>
+    http.post<void>('/auth/password', {
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
+}
+
 /** The user's own two-factor sign-in. */
 export const twoFactorApi = {
   status: () => http.get<Schemas['TwoFactorStatusOut']>('/auth/two-factor'),

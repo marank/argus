@@ -9,7 +9,7 @@ import SettingsGroup from '@/components/settings/SettingsGroup.vue'
 import { useAction } from '@/composables/useAction'
 import { useFeaturesStore } from '@/stores/features'
 
-/** Deadlines and warning periods, in days. */
+/** Deadlines and warning periods in days, and how long a sign-in lasts in hours. */
 const { t } = useI18n()
 const features = useFeaturesStore()
 const { busy, run } = useAction()
@@ -35,13 +35,15 @@ const FIELDS: {
   key: keyof Schemas['RulesSchema']
   min: number
   max: number
-  group: 'loans' | 'warnings'
+  group: 'loans' | 'warnings' | 'signIn'
+  unit?: 'hours'
 }[] = [
   { key: 'default_loan_days', min: 1, max: 365, group: 'loans' },
   { key: 'max_loan_days', min: 0, max: 3650, group: 'loans' },
   { key: 'return_reminder_days', min: 0, max: 60, group: 'loans' },
   { key: 'warranty_warning_days', min: 1, max: 365, group: 'warnings' },
   { key: 'license_warning_days', min: 1, max: 365, group: 'warnings' },
+  { key: 'session_hours', min: 1, max: 720, group: 'signIn', unit: 'hours' },
 ]
 </script>
 
@@ -49,7 +51,7 @@ const FIELDS: {
   <NSkeleton v-if="!loaded" height="320px" />
   <form v-else @submit.prevent="save">
     <SettingsGroup
-      v-for="group in ['loans', 'warnings'] as const"
+      v-for="group in ['loans', 'warnings', 'signIn'] as const"
       :key="group"
       :title="t(`settings.rules.${group}`)"
       :description="t(`settings.rules.${group}Description`)"
@@ -69,7 +71,7 @@ const FIELDS: {
           size="small"
           style="width: 140px"
         >
-          <template #suffix>{{ t('settings.rules.days') }}</template>
+          <template #suffix>{{ t(`settings.rules.${field.unit ?? 'days'}`) }}</template>
         </NInputNumber>
       </SettingRow>
     </SettingsGroup>

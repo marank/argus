@@ -17,4 +17,6 @@ backend/staticfiles
 backend/.env
 frontend/dist
 frontend/coverage
+docs/.vitepress/dist
+docs/.vitepress/cache
 **/*.tsbuildinfo

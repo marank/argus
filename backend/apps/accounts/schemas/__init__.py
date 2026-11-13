@@ -1,3 +1,9 @@
+from .approval_delegation import (
+    ApprovalDelegationIn,
+    ApprovalDelegationOut,
+    ApprovalDelegationPeriodIn,
+    DelegationsOut,
+)
 from .department import DepartmentIn, DepartmentOut
 from .ldap import (
     LdapSettingsIn,
@@ -9,6 +15,7 @@ from .ldap import (
     LdapTestIn,
     LdapTestOut,
 )
+from .password import PasswordChangeIn, PasswordSetIn
 from .team import TeamIn, TeamOut, TeamRefOut, default_team
 from .two_factor import (
     BackupCodesOut,
@@ -22,11 +29,15 @@ from .two_factor import (
 from .user import CurrentUserOut, PreferencesIn, UserIn, UserOut, UserRefOut
 
 __all__ = [
+    "ApprovalDelegationIn",
+    "ApprovalDelegationOut",
+    "ApprovalDelegationPeriodIn",
     "BackupCodesOut",
     "CodeIn",
     "CurrentUserOut",
     "DepartmentIn",
     "DepartmentOut",
+    "DelegationsOut",
     "LdapSettingsIn",
     "LdapSettingsOut",
     "LdapSyncApplyIn",
@@ -35,7 +46,9 @@ __all__ = [
     "LdapSyncResultOut",
     "LdapTestIn",
     "LdapTestOut",
+    "PasswordChangeIn",
     "PasswordIn",
+    "PasswordSetIn",
     "PreferencesIn",
     "TeamIn",
     "TeamOut",

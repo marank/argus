@@ -1,5 +1,8 @@
-# Argus with PostgreSQL. Configure via .env (see .env.example), then:
+# Argus with PostgreSQL. Configure via .env (see .env.example), then either build the
+# image from this repository:
 #   docker compose up --build -d
+# or run a published image (ARGUS_IMAGE in .env) without the source code:
+#   docker compose pull && docker compose up -d --no-build
 name: argus
 
 services:
@@ -21,7 +24,7 @@ services:
   app:
     build:
       context: .
-    image: argus:latest
+    image: ${ARGUS_IMAGE:-argus:latest}
     restart: unless-stopped
     env_file:
       - path: .env

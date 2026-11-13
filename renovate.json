@@ -34,6 +34,13 @@
       "groupName": "frontend (non-major)"
     },
     {
+      "description": "Documentation (docs/) in its own PR",
+      "matchManagers": ["npm"],
+      "matchFileNames": ["docs/**"],
+      "matchPackageNames": ["!pnpm"],
+      "groupName": "docs"
+    },
+    {
       "description": "Non-major updates in one PR per side",
       "matchManagers": ["pep621"],
       "matchUpdateTypes": ["minor", "patch"],

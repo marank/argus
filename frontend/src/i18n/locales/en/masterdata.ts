@@ -209,6 +209,11 @@ export default {
       'Approve requests for categories that require approval from this department and from subdepartments without approvers of their own. Empty: the parent department’s approvers apply; without any, requests go straight to IT.',
     approvalExempt: 'Exempt from approval',
     approvalExemptHelp: 'Requests go straight to IT, even for categories that need approval.',
+    canChangePassword: 'May change password',
+    sessionHours: 'Session duration (hours)',
+    sessionHoursHelp: 'Empty: the duration from the settings. E.g. longer for the pickup terminal.',
+    canChangePasswordHelp:
+      'Local accounts change their password under "Sign-in & security". Directory accounts change it in the directory.',
     requiresApproval: 'Requires approval',
     requiresApprovalHelp:
       'Requests must first be approved by an approver of the department. Applies to subcategories as well.',
@@ -221,5 +226,14 @@ export default {
     confirmReset:
       'Delete 2FA and backup codes of this account? Verify the identity of the requesting person first.',
     wasReset: 'Two-factor authentication reset',
+  },
+  password: {
+    label: 'Password',
+    set: 'set',
+    notSet: 'not set',
+    setButton: 'Set password',
+    title: 'Set password',
+    text: 'New password for {name}. It applies at once; existing sessions of the account end.',
+    saved: 'Password set',
   },
 }

@@ -1,4 +1,4 @@
-# Argus CI: lint and test backend + frontend, then build the image and push it
+# Argus CI: lint and test backend + frontend, build the docs, then build the image and push it
 # to the Gitea container registry.
 #
 # Required repository secrets:
@@ -170,6 +170,29 @@ jobs:
           pnpm build-only
           pnpm size
 
+  # --- Docs: VitePress build (fails on dead links, anchors and IT links in the employee areas) -------------------------------
+  docs:
+    runs-on: ubuntu-latest
+    container:
+      image: node:24-trixie-slim
+    defaults:
+      run:
+        working-directory: docs
+    steps:
+      - name: Install git
+        working-directory: /
+        run: apt-get update && apt-get install -y --no-install-recommends git ca-certificates
+
+      - uses: builtin:checkout
+
+      - name: Install dependencies
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
   # --- Repository: secrets, vulnerable dependencies, Dockerfile misconfiguration --
   repository:
     runs-on: ubuntu-latest
@@ -199,7 +222,7 @@ jobs:
 
   # --- Image: build, smoke-test, scan, push -------------------------------------
   image:
-    needs: [backend, frontend, repository]
+    needs: [backend, frontend, docs, repository]
     runs-on: ubuntu-latest
     env:
       DOCKER_BUILDKIT: "1"
