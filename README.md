@@ -376,7 +376,8 @@ Setting up a repository on Gitea, in this order:
    | `RENOVATE_TOKEN` | Renovate | access token of the user that opens the PRs, with write access to the repository and the scopes `write:repository`, `write:issue`, `read:organization`, `read:user`, `read:package` |
    | `GH_COM_TOKEN` | Renovate, optional | read-only github.com token: release notes in the PRs, no rate limits |
 
-The registry is set as `REGISTRY` in `build.yaml` (`registry.example.com`); the image is
+The registry host is the repository variable `REGISTRY` (*Settings → Actions → Variables*, e.g.
+`git.example.com`), read in `build.yaml`; the image is
 `<registry>/<owner>/<repository>` in lower case.
 
 Renovate's dependency dashboard is an issue in the repository; updates that need a
