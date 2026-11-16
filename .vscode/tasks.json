@@ -77,7 +77,7 @@
     {
       "label": "DB: make migrations",
       "type": "shell",
-      "command": "uv run python manage.py makemigrations",
+      "command": "uv run python manage.py makemigrations --no-header",
       "options": { "cwd": "${workspaceFolder}/backend" },
       "problemMatcher": []
     },
