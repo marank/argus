@@ -20,7 +20,7 @@
     {
       "description": "Images started with `docker run` inside workflow steps (Trivy scan)",
       "customType": "regex",
-      "managerFilePatterns": ["/^\\.gitea/workflows/.+\\.ya?ml$/"],
+      "managerFilePatterns": ["/^\\.github/workflows/.+\\.ya?ml$/"],
       "matchStrings": ["(?<depName>aquasec/trivy):(?<currentValue>\\d+\\.\\d+\\.\\d+)"],
       "datasourceTemplate": "docker"
     }

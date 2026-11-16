@@ -61,7 +61,7 @@ start the container waits for the database and applies migrations.
 
 | Variable | Purpose |
 | --- | --- |
-| `ARGUS_IMAGE` | Image to run (default `argus:latest`, built from this repository). Set a published image such as `registry.example.com/it/argus:1` to run without the source code. |
+| `ARGUS_IMAGE` | Image to run (default `argus:latest`, built from this repository). Set a published image such as `ghcr.io/marank/argus:1` to run without the source code. |
 | `APP_URLS` | All URLs users open Argus under, comma separated. Allowed hosts, CSRF origins and secure cookies (all `https`) are derived from it. |
 | `TRUSTED_PROXIES` | Addresses or CIDR ranges of a TLS proxy in front; only these may pass on the client's address and scheme. |
 | `APP_PORT` | Host port (default `8080`). |
@@ -352,36 +352,29 @@ Commit `frontend/openapi.json` and `frontend/src/api/schema.d.ts`; CI fails when
 not match the code. `src/types/` refers to them (`Schemas['AssetOut']`), so a changed
 API shows up as a type error in the frontend.
 
-## CI and Gitea
+## CI
 
-`.gitea/workflows/build.yaml` runs on every push to `main`, on version tags (`v1.2.3`)
-and on pull requests. The jobs `backend`, `frontend` and `repository` run in parallel
-(the same checks as **Check: all**, plus Trivy on the repository); `image` then builds
-the image, starts it against a throwaway PostgreSQL, scans it and, except for pull
-requests, pushes it to the Gitea registry (`latest`, `sha-…`, and `1.2.3`/`1.2`/`1`
-for tags). `.gitea/workflows/renovate.yaml` runs Renovate every night.
+`.github/workflows/build.yaml` runs on every push to `main`, on version tags (`v1.2.3`)
+and on pull requests, also from forks. The jobs `backend`, `frontend`, `docs` and
+`repository` run in parallel (the same checks as **Check: all**, plus Trivy on the
+repository); `image` then builds the image, starts it against a throwaway PostgreSQL,
+scans it and, except for pull requests, pushes it to `ghcr.io/marank/argus` (`latest`,
+`sha-…`, and `1.2.3`/`1.2`/`1` for tags). The push uses the workflow's `GITHUB_TOKEN`;
+no secrets are needed.
 
-Setting up a repository on Gitea, in this order:
+Repository settings on GitHub:
 
-1. **Protect `main`** (*Settings → Branches*): require the status checks `backend`,
-   `frontend`, `repository` and `image`, so nothing is merged with a failing check.
-2. **Enable Actions** for the repository; the runner needs Docker (the `image` and
-   `repository` jobs run `docker build` and `docker run`).
-3. **Secrets** (*Settings → Actions → Secrets*):
+1. **Protect `main`** (*Settings → Branches* or *Rules*): changes only by pull request,
+   with the status checks `backend`, `frontend`, `docs`, `repository` and `image` required.
+2. **Renovate**: install the [Renovate GitHub app](https://github.com/apps/renovate) for
+   the repository; it reads `renovate.json`. Its dependency dashboard is an issue in the
+   repository; updates that need a decision (Django, Python, TypeScript majors) wait for
+   approval there.
+3. **Package visibility**: after the first push, make the `argus` package public
+   (*Packages → argus → Package settings*), so the image can be pulled without a login.
 
-   | Secret | Used by | Value |
-   | --- | --- | --- |
-   | `REGISTRY_USER` | build | Gitea user that owns (or may write to) the package |
-   | `REGISTRY_TOKEN` | build | access token of that user with `write:package` |
-   | `RENOVATE_TOKEN` | Renovate | access token of the user that opens the PRs, with write access to the repository and the scopes `write:repository`, `write:issue`, `read:organization`, `read:user`, `read:package` |
-   | `GH_COM_TOKEN` | Renovate, optional | read-only github.com token: release notes in the PRs, no rate limits |
-
-The registry host is the repository variable `REGISTRY` (*Settings → Actions → Variables*, e.g.
-`git.example.com`), read in `build.yaml`; the image is
-`<registry>/<owner>/<repository>` in lower case.
-
-Renovate's dependency dashboard is an issue in the repository; updates that need a
-decision (Django, Python, TypeScript majors) wait for approval there.
+A private mirror on Gitea or elsewhere is a pull mirror of the GitHub repository; it
+runs no CI of its own.
 
 ## Translations
 
@@ -391,3 +384,12 @@ uv run python manage.py makemessages -l de --ignore ".venv/*"
 # edit locale/de/LC_MESSAGES/django.po
 uv run python manage.py compilemessages
 ```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and the conventions in [AGENTS.md](AGENTS.md).
+
+## License
+
+Argus is licensed under the [GNU Affero General Public License v3.0 or later](LICENSE).
+Running a modified Argus for others over a network obliges you to offer them its source.

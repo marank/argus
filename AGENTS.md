@@ -9,7 +9,7 @@ changing structure; `README.md` has setup, commands and the glossary of domain t
 VS Code tasks (`.vscode/tasks.json`) hold the everyday commands; the README lists the plain equivalents.
 - **Dev: start all**: Django :8000 + Vite :5173 → http://localhost:5173. `seed_demo` fills the database.
 - **Check: all** runs everything CI runs and must pass before a push. If you change a check, change it in
-  both `tasks.json` and `.gitea/workflows/build.yaml`.
+  both `tasks.json` and `.github/workflows/build.yaml`.
 - **DB: make migrations** after model changes; commit the migrations (CI fails on missing ones).
 - **API: update types** after any API change: exports `frontend/openapi.json` and regenerates
   `frontend/src/api/schema.d.ts`; commit both (CI fails when they are out of date).

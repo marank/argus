@@ -8,7 +8,7 @@ Einstellungen, die sich im laufenden Betrieb ändern (Module, Fristen, E-Mail-Se
 
 | Variable | Standard | Bedeutung |
 | --- | --- | --- |
-| `ARGUS_IMAGE` | `argus:latest` | Das Image, das läuft. Standard ist das aus dem Repository gebaute. Für ein fertiges Image z. B. `registry.example.com/it/argus:1`, siehe [Installation](./installation#mit-fertigem-image). |
+| `ARGUS_IMAGE` | `argus:latest` | Das Image, das läuft. Standard ist das aus dem Repository gebaute. Für ein fertiges Image z. B. `ghcr.io/marank/argus:1`, siehe [Installation](./installation#mit-fertigem-image). |
 | `APP_URLS` | `http://localhost:8080` | Alle Adressen, unter denen Argus aufgerufen wird, kommagetrennt. Daraus leitet Argus erlaubte Hosts, CSRF-Ursprünge und sichere Cookies ab. |
 | `APP_PORT` | `8080` | Port auf dem Host |
 | `APP_WORKERS` | 2 × CPU + 1, höchstens 5 | Anzahl der Gunicorn-Prozesse |

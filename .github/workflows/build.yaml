@@ -1,12 +1,10 @@
 # Argus CI: lint and test backend + frontend, build the docs, then build the image and push it
-# to the Gitea container registry.
+# to the GitHub container registry (ghcr.io/<owner>/<repository>).
 #
-# Required repository secrets:
-#   REGISTRY_USER   Gitea user that owns (or may write to) the package
-#   REGISTRY_TOKEN  access token with the "write:package" scope
+# No secrets needed: the push uses the workflow's GITHUB_TOKEN.
 #
-# Pull requests only run the checks and a test build; pushes to main and
-# version tags (v1.2.3) also push the image.
+# Pull requests (also from forks) only run the checks and a test build; pushes to main
+# and version tags (v1.2.3) also push the image.
 name: build
 
 on:
@@ -18,11 +16,14 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ gitea.workflow }}-${{ gitea.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 env:
-  REGISTRY: ${{ vars.REGISTRY }}
+  REGISTRY: ghcr.io
   TRIVY_IMAGE: aquasec/trivy:0.76.0
 
 jobs:
@@ -57,13 +58,13 @@ jobs:
       run:
         working-directory: backend
     steps:
-      # builtin:checkout runs git inside the job image; the -slim images lack it.
+      # actions/checkout needs git inside the job image; the -slim images lack it.
       # working-directory: / because backend/ or frontend/ does not exist yet.
       - name: Install git
         working-directory: /
         run: apt-get update && apt-get install -y --no-install-recommends git ca-certificates
 
-      - uses: builtin:checkout
+      - uses: actions/checkout@v5
 
       - name: Install dependencies
         # --locked also fails when uv.lock no longer matches pyproject.toml.
@@ -129,13 +130,13 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      # builtin:checkout runs git inside the job image; the -slim images lack it.
+      # actions/checkout needs git inside the job image; the -slim images lack it.
       # working-directory: / because backend/ or frontend/ does not exist yet.
       - name: Install git
         working-directory: /
         run: apt-get update && apt-get install -y --no-install-recommends git ca-certificates
 
-      - uses: builtin:checkout
+      - uses: actions/checkout@v5
 
       - name: Install dependencies
         run: |
@@ -183,7 +184,7 @@ jobs:
         working-directory: /
         run: apt-get update && apt-get install -y --no-install-recommends git ca-certificates
 
-      - uses: builtin:checkout
+      - uses: actions/checkout@v5
 
       - name: Install dependencies
         run: |
@@ -197,7 +198,7 @@ jobs:
   repository:
     runs-on: ubuntu-latest
     steps:
-      - uses: builtin:checkout
+      - uses: actions/checkout@v5
 
       # Secrets, critical fixable vulnerabilities in the lock files and HIGH/CRITICAL
       # Dockerfile misconfigurations fail; HIGH vulnerabilities are reported. The files
@@ -224,21 +225,24 @@ jobs:
   image:
     needs: [backend, frontend, docs, repository]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     env:
       DOCKER_BUILDKIT: "1"
-      PUSH: ${{ gitea.event_name != 'pull_request' }}
+      PUSH: ${{ github.event_name != 'pull_request' }}
     steps:
-      - uses: builtin:checkout
+      - uses: actions/checkout@v5
 
       - name: Compute tags
         id: meta
         # Context values go in via env, never straight into the script: tag names
         # may contain shell metacharacters.
         env:
-          REPO: ${{ gitea.repository }}
-          REF: ${{ gitea.ref }}
-          REF_NAME: ${{ gitea.ref_name }}
-          SHA: ${{ gitea.sha }}
+          REPO: ${{ github.repository }}
+          REF: ${{ github.ref }}
+          REF_NAME: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
         run: |
           IMAGE=$(echo "$REGISTRY/$REPO" | tr 'A-Z' 'a-z')
           SHORT_SHA=$(echo "$SHA" | cut -c1-12)
@@ -269,8 +273,8 @@ jobs:
       - name: Login
         if: env.PUSH == 'true'
         env:
-          REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
-          REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: echo "$REGISTRY_TOKEN" | docker login "$REGISTRY" -u "$REGISTRY_USER" --password-stdin
 
       - name: Build
@@ -282,8 +286,8 @@ jobs:
           docker build --pull \
             --cache-from "${{ steps.meta.outputs.image }}:latest" \
             --build-arg BUILDKIT_INLINE_CACHE=1 \
-            --label "org.opencontainers.image.source=${{ gitea.server_url }}/${{ gitea.repository }}" \
-            --label "org.opencontainers.image.revision=${{ gitea.sha }}" \
+            --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
+            --label "org.opencontainers.image.revision=${{ github.sha }}" \
             --label "org.opencontainers.image.created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             $TAG_ARGS .
 
@@ -295,7 +299,7 @@ jobs:
       - name: Smoke test
         run: |
           IMAGE="${{ steps.meta.outputs.image }}:sha-${{ steps.meta.outputs.short_sha }}"
-          NAME="argus-smoke-${{ gitea.run_id }}"
+          NAME="argus-smoke-${{ github.run_id }}"
           docker network create "$NAME"
           trap 'docker logs "$NAME" || true; docker rm -f "$NAME" "$NAME-db" >/dev/null 2>&1 || true; docker network rm "$NAME" >/dev/null 2>&1 || true' EXIT
           docker run -d --name "$NAME-db" --network "$NAME" --network-alias db \

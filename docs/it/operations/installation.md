@@ -18,18 +18,18 @@ Es gibt zwei Wege:
 
 | Weg | Wann |
 | --- | --- |
-| [Mit fertigem Image](#mit-fertigem-image) | Der Server braucht nur zwei Dateien und Zugriff auf die Registry. Die nächtliche Sicherung richten Sie selbst ein. |
+| [Mit fertigem Image](#mit-fertigem-image) | Der Server braucht nur zwei Dateien und Zugriff auf `ghcr.io`. Die nächtliche Sicherung richten Sie selbst ein. |
 | [Aus dem Repository bauen](#aus-dem-repository-bauen) | Das Image wird auf dem Server gebaut. Enthält die nächtliche Sicherung. |
 
 ## Mit fertigem Image
 
-Ersetzen Sie `registry.example.com/it/argus` durch die Adresse Ihrer Registry. Die CI veröffentlicht dort jede Version:
+Die CI veröffentlicht jede Version öffentlich unter `ghcr.io/marank/argus`:
 
 | Tag | Inhalt |
 | --- | --- |
-| `registry.example.com/it/argus:1` | Neueste Version 1.x. Empfohlen: erhält Updates, aber keine inkompatiblen Änderungen. |
-| `registry.example.com/it/argus:1.2.3` | Genau diese Version |
-| `registry.example.com/it/argus:latest` | Aktueller Stand von `main` |
+| `ghcr.io/marank/argus:1` | Neueste Version 1.x. Empfohlen: erhält Updates, aber keine inkompatiblen Änderungen. |
+| `ghcr.io/marank/argus:1.2.3` | Genau diese Version |
+| `ghcr.io/marank/argus:latest` | Aktueller Stand von `main` |
 
 Versions-Tags wie `:1` entstehen, sobald eine Version im Repository getaggt ist (z. B. `v1.0.0`). Bis dahin gibt es nur `:latest`.
 
@@ -38,16 +38,10 @@ Versions-Tags wie `:1` entstehen, sobald eine Version im Repository getaggt ist 
 2. Konfiguration anlegen, siehe [Konfiguration anlegen](#konfiguration-anlegen), und das Image eintragen:
 
    ```ini
-   ARGUS_IMAGE=registry.example.com/it/argus:1
+   ARGUS_IMAGE=ghcr.io/marank/argus:1
    ```
 
-3. Bei der Registry anmelden, falls sie eine Anmeldung verlangt:
-
-   ```bash
-   docker login registry.example.com
-   ```
-
-4. Image holen und Argus mit Datenbank starten:
+3. Image holen und Argus mit Datenbank starten:
 
    ```bash
    docker compose pull app
@@ -63,10 +57,10 @@ Der Dienst `backup` braucht ein Skript aus dem Repository und läuft auf diesem 
 
 ## Aus dem Repository bauen
 
-1. Repository auf den Server holen (Adresse durch die Ihres Repositorys ersetzen):
+1. Repository auf den Server holen:
 
    ```bash
-   git clone https://git.example.com/it/argus.git /opt/argus
+   git clone https://github.com/marank/argus.git /opt/argus
    ```
 
 2. Konfiguration anlegen, siehe [Konfiguration anlegen](#konfiguration-anlegen). `ARGUS_IMAGE` bleibt leer.
