@@ -16,6 +16,10 @@ updates:
     groups:
       frontend:
         update-types: [minor, patch]
+    ignore:
+      # Follows the Node major of the images (node:24 in the Dockerfile and CI).
+      - dependency-name: "@types/node"
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: npm
     directory: /docs
