@@ -13,8 +13,16 @@ from apps.core.services import backups
 
 @pytest.fixture(autouse=True)
 def database(monkeypatch):
-    """The production database settings (tests run on another database)."""
-    settings_dict = {"NAME": "argus", "HOST": "db", "PORT": "5432", "USER": "argus", "PASSWORD": "secret"}
+    """Production-like connection details for pg_dump. The rest of the test database's
+    settings stays: Django still uses them, e.g. when a test changes TIME_ZONE."""
+    settings_dict = {
+        **connection.settings_dict,
+        "NAME": "argus",
+        "HOST": "db",
+        "PORT": "5432",
+        "USER": "argus",
+        "PASSWORD": "secret",
+    }
     monkeypatch.setattr(connection, "settings_dict", settings_dict)
     return settings_dict
 
