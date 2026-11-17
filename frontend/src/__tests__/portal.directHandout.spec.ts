@@ -5,7 +5,7 @@ import type { Schemas } from '@/api/types'
 import NewRequestView from '@/views/portal/NewRequestView.vue'
 
 import { makeUser } from './helpers'
-import { button, click, hasButton, typeInto } from './dom'
+import { button, click, typeInto } from './dom'
 import {
   assetRequest,
   bodyText,

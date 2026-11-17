@@ -57,7 +57,7 @@ const api = vi.hoisted(() => {
       assign: fn(),
     },
     portal: { availability: fn() },
-    locations: vi.fn(async (): Promise<unknown> => ({ items: [], count: 0 })),
+    locations: vi.fn<(...args: never[]) => Promise<unknown>>(async () => ({ items: [], count: 0 })),
   }
 })
 
