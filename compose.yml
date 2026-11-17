@@ -1,8 +1,8 @@
-# Argus with PostgreSQL. Configure via .env (see .env.example), then either build the
-# image from this repository:
-#   docker compose up --build -d
-# or run a published image (ARGUS_IMAGE in .env) without the source code:
-#   docker compose pull && docker compose up -d --no-build
+# Argus with PostgreSQL. Needs only this file and .env (see .env.example):
+#   docker compose pull && docker compose up -d
+# To run an image built from this repository instead, build it first and leave
+# ARGUS_IMAGE unset:
+#   docker build -t argus:latest . && docker compose up -d
 name: argus
 
 services:
@@ -12,7 +12,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-argus}
       POSTGRES_USER: ${POSTGRES_USER:-argus}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
     volumes:
       - db-data:/var/lib/postgresql
     healthcheck:
@@ -22,8 +22,6 @@ services:
       retries: 10
 
   app:
-    build:
-      context: .
     image: ${ARGUS_IMAGE:-argus:latest}
     restart: unless-stopped
     env_file:
@@ -37,6 +35,9 @@ services:
         condition: service_healthy
     ports:
       - "${APP_PORT:-8080}:8080"
+    volumes:
+      # Nightly database dumps (BACKUP_TIME, BACKUP_KEEP_DAYS); see README, "Backups".
+      - db-backups:/backups
     # Hardening: read-only root filesystem (only /tmp is writable for nginx/gunicorn
     # runtime files) and no privilege escalation via setuid binaries.
     read_only: true
@@ -48,39 +49,6 @@ services:
     cap_drop:
       - ALL
 
-  # Nightly pg_dump into the "backups" volume (see docker/backup.sh). Manual dump:
-  #   docker compose exec backup sh /backup.sh now
-  # Copy dumps off the host: docker compose cp backup:/var/lib/postgresql/backups ./backups
-  # Restore: see README, section "Backups".
-  backup:
-    image: postgres:18-alpine
-    restart: unless-stopped
-    entrypoint: ["sh", "/backup.sh"]
-    user: postgres
-    environment:
-      PGHOST: db
-      PGDATABASE: ${POSTGRES_DB:-argus}
-      PGUSER: ${POSTGRES_USER:-argus}
-      PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
-      TZ: ${TIME_ZONE:-Europe/Berlin}
-      BACKUP_TIME: ${BACKUP_TIME:-02:30}
-      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
-    volumes:
-      - ./docker/backup.sh:/backup.sh:ro
-      # Mounted on the image's postgres-owned home, so the new volume is writable for
-      # the postgres user without any capabilities.
-      - backups:/var/lib/postgresql
-    depends_on:
-      db:
-        condition: service_healthy
-    read_only: true
-    tmpfs:
-      - /tmp
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-
 volumes:
   db-data:
-  backups:
+  db-backups:

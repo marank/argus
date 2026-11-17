@@ -230,9 +230,9 @@
     // --- Docker --------------------------------------------------------------
     {
       "label": "Docker: build and start",
-      "detail": "docker compose up --build -d (uses .env)",
+      "detail": "Build the image argus:latest, then docker compose up -d (uses .env)",
       "type": "shell",
-      "command": "docker compose up --build -d",
+      "command": "docker build -t argus:latest . && docker compose up -d",
       "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": []
     },
@@ -240,7 +240,7 @@
       "label": "Docker: backup now",
       "detail": "Dump the database into the backups volume (see README, Backups)",
       "type": "shell",
-      "command": "docker compose exec backup sh /backup.sh now",
+      "command": "docker compose exec app python manage.py backup_database",
       "problemMatcher": []
     },
     {

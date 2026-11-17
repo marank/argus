@@ -42,6 +42,10 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 FROM python:${PYTHON_VERSION}-slim-trixie AS runtime
 # renovate: datasource=pypi depName=supervisor
 ARG SUPERVISOR_VERSION=4.3.0
+# pg_dump for the nightly backups; its major version must be at least the server's
+# (postgres image in compose.yml). Debian's own client lags behind, so it comes from
+# the PostgreSQL project's repository.
+ARG POSTGRES_MAJOR=18
 
 LABEL org.opencontainers.image.title="Argus" \
       org.opencontainers.image.description="IT asset management (Django + Vue)"
@@ -51,10 +55,16 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PATH="/app/.venv/bin:$PATH" \
     DJANGO_SETTINGS_MODULE=config.settings \
     DEBUG=false \
-    BEHIND_PROXY=true
+    BEHIND_PROXY=true \
+    BACKUP_DIR=/backups
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends nginx curl \
+    && apt-get install -y --no-install-recommends nginx curl ca-certificates \
+    && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc -o /usr/share/keyrings/pgdg.asc \
+    && echo "deb [signed-by=/usr/share/keyrings/pgdg.asc] https://apt.postgresql.org/pub/repos/apt trixie-pgdg main" \
+        > /etc/apt/sources.list.d/pgdg.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends "postgresql-client-${POSTGRES_MAJOR}" \
     && rm -rf /var/lib/apt/lists/* \
     # supervisord from PyPI, outside the app's venv: it is infrastructure, not an app
     # dependency (Debian's package would also bring setuptools). pip is not needed at
@@ -63,7 +73,10 @@ RUN apt-get update \
     && pip uninstall -y --root-user-action=ignore pip \
     && rm -f /etc/nginx/sites-enabled/default \
     && groupadd --system --gid 10001 argus \
-    && useradd --system --uid 10001 --gid argus --home-dir /app --shell /usr/sbin/nologin argus
+    && useradd --system --uid 10001 --gid argus --home-dir /app --shell /usr/sbin/nologin argus \
+    # Mount point of the backups volume: a new volume takes over owner and mode, so the
+    # app user can write dumps there while the root filesystem stays read-only.
+    && install -d -o argus -g argus -m 0700 /backups
 
 WORKDIR /app
 COPY --from=backend /app/.venv /app/.venv

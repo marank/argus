@@ -67,4 +67,6 @@ VS Code tasks (`.vscode/tasks.json`) hold the everyday commands; the README list
   writable; new features must not loosen the hardening.
 - supervisord runs gunicorn, uvicorn (`/api/events`), the Procrastinate worker and nginx; nginx serves
   the SPA, `/django-static/`, and proxies `/api` and `/admin`.
-- The `backup` service dumps the database nightly; see README "Backups".
+- The job worker dumps the database nightly into the `db-backups` volume (`/backups`,
+  `apps/core/services/backups.py`); see README "Backups". `compose.yml` must work with
+  `.env` alone, without any other file from the repository.

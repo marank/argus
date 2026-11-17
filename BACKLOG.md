@@ -57,16 +57,12 @@ mails and reminders stay queued unless
 
 ## Operations
 
-### Backups inside the app container
+### Backups in the frontend
 
-Today the nightly dump runs in a separate `backup` service that bind-mounts
-`docker/backup.sh` from the repository. Running a published image (`ARGUS_IMAGE`)
-therefore needs that script next to `compose.yml`; the docs leave the service out for
-that path and describe a manual `pg_dump` instead.
-
-Idea: the app container dumps the database itself (the worker already runs scheduled
-jobs), with time, retention and target configured under Settings in the frontend, and
-an overview of the dumps there. `compose.yml` then needs no file from the repository.
+The job worker dumps the database nightly (`apps/core/services/backups.py`), configured
+by `BACKUP_TIME` and `BACKUP_KEEP_DAYS`. Idea: time and retention under Settings, a list
+of the dumps with their size, a "Back up now" button, and a warning on the dashboard
+when the last dump failed or is older than a day.
 
 ### Updating an installation that runs a published image
 

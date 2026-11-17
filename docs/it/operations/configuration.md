@@ -8,7 +8,7 @@ Einstellungen, die sich im laufenden Betrieb ändern (Module, Fristen, E-Mail-Se
 
 | Variable | Standard | Bedeutung |
 | --- | --- | --- |
-| `ARGUS_IMAGE` | `argus:latest` | Das Image, das läuft. Standard ist das aus dem Repository gebaute. Für ein fertiges Image z. B. `ghcr.io/marank/argus:1`, siehe [Installation](./installation#mit-fertigem-image). |
+| `ARGUS_IMAGE` | `argus:latest` | Das Image, das läuft. Standard ist das lokal aus dem Repository gebaute. Für ein fertiges Image z. B. `ghcr.io/marank/argus:1`, siehe [Installation](./installation#mit-fertigem-image). |
 | `APP_URLS` | `http://localhost:8080` | Alle Adressen, unter denen Argus aufgerufen wird, kommagetrennt. Daraus leitet Argus erlaubte Hosts, CSRF-Ursprünge und sichere Cookies ab. |
 | `APP_PORT` | `8080` | Port auf dem Host |
 | `APP_WORKERS` | 2 × CPU + 1, höchstens 5 | Anzahl der Gunicorn-Prozesse |
@@ -43,8 +43,11 @@ Jede Adresse, unter der Argus aufgerufen wird, muss in `APP_URLS` stehen, mit Sc
 
 | Variable | Standard | Bedeutung |
 | --- | --- | --- |
-| `BACKUP_TIME` | `02:30` | Uhrzeit der täglichen Sicherung (in `TIME_ZONE`) |
+| `BACKUP_TIME` | `01:30` | Uhrzeit der täglichen Sicherung (in `TIME_ZONE`) |
 | `BACKUP_KEEP_DAYS` | `14` | Aufbewahrungsdauer in Tagen |
+| `BACKUP_DIR` | `/backups` | Ziel im Container (Volume `db-backups`). Leer schaltet die nächtliche Sicherung ab. |
+
+Siehe [Backups](./backups).
 
 ## LDAP und Active Directory
 

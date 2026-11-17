@@ -52,8 +52,12 @@ job worker and supervisord; docker compose adds PostgreSQL.
 
 ```bash
 cp .env.example .env      # set APP_URLS, SECRET_KEY, ADMIN_PASSWORD, POSTGRES_PASSWORD
-docker compose up --build -d
+docker build -t argus:latest .
+docker compose up -d
 ```
+
+A server needs only `compose.yml` and `.env`: with `ARGUS_IMAGE` set to a published
+image, `docker compose pull && docker compose up -d` runs Argus without the source code.
 
 Argus is then available on `http://localhost:8080`, the Django admin on `/admin/`
 (user from `ADMIN_USERNAME` / `ADMIN_PASSWORD`, created on first start). On every
@@ -71,7 +75,8 @@ start the container waits for the database and applies migrations.
 | `TIME_ZONE`, `LOG_LEVEL` | Defaults `Europe/Berlin`, `INFO`. |
 | `ADMIN_USERNAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` | First administrator, created on first start (later: `set_password`). Made an administrator again on every start; deactivating it in the app sticks. |
 | `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | Database (also used by the Postgres container). |
-| `BACKUP_TIME`, `BACKUP_KEEP_DAYS` | Daily database dump at this time (default `02:30`, in `TIME_ZONE`), kept this many days (default `14`), see [Backups](#backups). |
+| `BACKUP_TIME`, `BACKUP_KEEP_DAYS` | Daily database dump at this time (default `01:30`, in `TIME_ZONE`), kept this many days (default `14`), see [Backups](#backups). |
+| `BACKUP_DIR` | Where the dumps go (default `/backups` in the image, the `db-backups` volume); empty switches the nightly dump off. |
 | `LDAP_*` | Optional LDAP / AD login, see [LDAP login](#ldap-login). |
 
 The app container runs unprivileged with a read-only root filesystem; health
@@ -94,24 +99,25 @@ docker compose exec app python manage.py set_password admin
 
 ## Backups
 
-The `backup` service dumps the database every night (`BACKUP_TIME`) into the
-`backups` volume and deletes dumps older than `BACKUP_KEEP_DAYS`. The dumps are in
-PostgreSQL's custom format (`argus-<UTC timestamp>.dump`).
+The app container's job worker dumps the database every night (`BACKUP_TIME`) into the
+`db-backups` volume (`/backups`) and deletes dumps older than `BACKUP_KEEP_DAYS`. The
+dumps are in PostgreSQL's custom format (`argus-<UTC timestamp>.dump`). A failed dump
+is logged in the container output.
 
 Dumps on the same host do not protect against losing the host: copy them off
 regularly, or include the Docker volume in the host's backup.
 
 ```bash
-docker compose exec backup sh /backup.sh now                          # dump right now
-docker compose exec backup ls -l /var/lib/postgresql/backups          # list dumps
-docker compose cp backup:/var/lib/postgresql/backups ./backups        # copy them off the host
+docker compose exec app python manage.py backup_database     # dump right now
+docker compose exec app ls -l /backups                        # list dumps
+docker compose cp app:/backups ./backups                      # copy them off the host
 ```
 
 Restore a dump (replaces the current data; stop the app so nothing writes meanwhile):
 
 ```bash
 docker compose stop app
-docker compose exec -T backup sh -c 'pg_restore --clean --if-exists --no-owner -d "$PGDATABASE"' < backups/argus-20261029T013000Z.dump
+docker compose exec -T db sh -c 'pg_restore --clean --if-exists --no-owner -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < backups/argus-20261029T013000Z.dump
 docker compose start app
 ```
 

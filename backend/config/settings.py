@@ -6,6 +6,7 @@ see ``.env.example`` for all options.
 """
 
 import os
+from datetime import time
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -122,6 +123,14 @@ if JOB_QUEUE:
     INSTALLED_APPS.append("procrastinate.contrib.django")
 # Live updates for open pages (apps/core/live.py) need PostgreSQL's LISTEN/NOTIFY too.
 LIVE_EVENTS = JOB_QUEUE
+
+# Daily pg_dump by the job worker (apps/core/services/backups.py) into BACKUP_DIR, the
+# "backups" volume in the image (/backups); empty switches the nightly dump off.
+BACKUP_DIR = os.environ.get("BACKUP_DIR", "")
+# HH:MM in TIME_ZONE. The default avoids 02:00-03:00, which daylight saving time skips
+# or repeats once a year.
+BACKUP_TIME = time.fromisoformat(os.environ.get("BACKUP_TIME", "01:30"))
+BACKUP_KEEP_DAYS = int(os.environ.get("BACKUP_KEEP_DAYS", "14"))
 
 AUTH_USER_MODEL = "accounts.User"
 

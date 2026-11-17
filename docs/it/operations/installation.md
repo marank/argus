@@ -1,12 +1,11 @@
 # Installation
 
-Argus läuft als Docker-Compose-Projekt mit drei Diensten:
+Argus läuft als Docker-Compose-Projekt mit zwei Diensten:
 
 | Dienst | Aufgabe |
 | --- | --- |
-| `app` | Argus selbst: Weboberfläche, API, Hintergrundjobs und Live-Updates in einem Container |
+| `app` | Argus selbst: Weboberfläche, API, Hintergrundjobs, Live-Updates und die nächtliche Sicherung (siehe [Backups](./backups)) in einem Container |
 | `db` | PostgreSQL-Datenbank |
-| `backup` | Sichert die Datenbank jede Nacht, siehe [Backups](./backups) |
 
 ## Voraussetzungen
 
@@ -18,8 +17,8 @@ Es gibt zwei Wege:
 
 | Weg | Wann |
 | --- | --- |
-| [Mit fertigem Image](#mit-fertigem-image) | Der Server braucht nur zwei Dateien und Zugriff auf `ghcr.io`. Die nächtliche Sicherung richten Sie selbst ein. |
-| [Aus dem Repository bauen](#aus-dem-repository-bauen) | Das Image wird auf dem Server gebaut. Enthält die nächtliche Sicherung. |
+| [Mit fertigem Image](#mit-fertigem-image) | Empfohlen. Der Server braucht nur zwei Dateien und Zugriff auf `ghcr.io`. |
+| [Aus dem Repository bauen](#aus-dem-repository-bauen) | Für eigene Änderungen am Code. Das Image wird auf dem Server gebaut. |
 
 ## Mit fertigem Image
 
@@ -48,12 +47,8 @@ Versions-Tags wie `:1` entstehen, sobald eine Version im Repository getaggt ist 
    ```
 
    ```bash
-   docker compose up -d --no-build app
+   docker compose up -d
    ```
-
-::: warning Achtung
-Der Dienst `backup` braucht ein Skript aus dem Repository und läuft auf diesem Weg nicht mit. Richten Sie die Sicherung der Datenbank selbst ein, siehe [Backups](./backups#ohne-backup-dienst).
-:::
 
 ## Aus dem Repository bauen
 
@@ -68,7 +63,11 @@ Der Dienst `backup` braucht ein Skript aus dem Repository und läuft auf diesem 
 3. Image bauen und starten:
 
    ```bash
-   docker compose up --build -d
+   docker build -t argus:latest .
+   ```
+
+   ```bash
+   docker compose up -d
    ```
 
 ## Konfiguration anlegen

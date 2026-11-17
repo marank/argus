@@ -5,15 +5,17 @@ layout and the recipient's language. Delivery reads the mail settings at send ti
 so switching mail off also stops queued mails.
 """
 
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
+from django.conf import settings
 from django.utils import timezone, translation
 from procrastinate import JobContext, RetryStrategy
 from procrastinate.contrib.django import app
 
 from apps.core.models import MailSettings, Notification, NotificationLog
 from apps.core.notifications import NotificationEvent, link, mail_ready, send_mail
+from apps.core.services import backups
 from apps.core.services.reminders import send_due_reminders
 
 # Backs off from seconds to hours and gives up after about a day.
@@ -33,13 +35,13 @@ def send_notification(
     recipient: str = "",
 ) -> None:
     """With ``key`` (reminders) the notification counts as sent only once it was delivered."""
-    settings = MailSettings.load()
-    if not mail_ready(settings):
+    mail_settings = MailSettings.load()
+    if not mail_ready(mail_settings):
         return
     # Kinds the recipient can switch off; mails sent on purpose by IT are not among them.
-    manage_url = link(settings, "/profile/notifications") if event in NotificationEvent else ""
+    manage_url = link(mail_settings, "/profile/notifications") if event in NotificationEvent else ""
     with translation.override(language):
-        send_mail(settings, to, subject, body, url=url, manage_url=manage_url)
+        send_mail(mail_settings, to, subject, body, url=url, manage_url=manage_url)
     if key:
         NotificationLog.objects.get_or_create(event=event, key=key, recipient_id=UUID(recipient))
 
@@ -58,6 +60,16 @@ READ_NOTIFICATIONS_KEPT = timedelta(days=90)
 @app.task(queueing_lock="remove_read_notifications")
 def remove_read_notifications(timestamp: int) -> None:
     Notification.objects.filter(read_at__lt=timezone.now() - READ_NOTIFICATIONS_KEPT).delete()
+
+
+@app.periodic(cron=f"{settings.BACKUP_TIME.minute} * * * *")
+@app.task(queueing_lock="backup_database")
+def backup_database(timestamp: int) -> None:
+    """Daily at ``BACKUP_TIME``. Procrastinate's cron runs in UTC, so this job comes every
+    hour and dumps only in the hour that is ``BACKUP_TIME``'s hour in ``TIME_ZONE``."""
+    scheduled = timezone.localtime(datetime.fromtimestamp(timestamp, UTC))
+    if settings.BACKUP_DIR and scheduled.hour == settings.BACKUP_TIME.hour:
+        backups.backup_database()
 
 
 @app.periodic(cron="30 3 * * *")

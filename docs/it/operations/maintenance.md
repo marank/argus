@@ -2,10 +2,10 @@
 
 ## Auf eine neue Version aktualisieren
 
-1. Vorher sichern, bei der Installation aus dem Repository mit dem folgenden Befehl, sonst wie unter [Ohne Backup-Dienst](./backups#ohne-backup-dienst):
+1. Vorher sichern:
 
    ```bash
-   docker compose exec backup sh /backup.sh now
+   docker compose exec app python manage.py backup_database
    ```
 
 2. Neue Version starten, je nach [Installationsweg](./installation):
@@ -17,7 +17,7 @@
    ```
 
    ```bash
-   docker compose up -d --no-build app
+   docker compose up -d
    ```
 
    **Aus dem Repository:**
@@ -27,7 +27,11 @@
    ```
 
    ```bash
-   docker compose up --build -d
+   docker build -t argus:latest .
+   ```
+
+   ```bash
+   docker compose up -d
    ```
 
 
