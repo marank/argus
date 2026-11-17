@@ -196,8 +196,7 @@ async function cancelPickup() {
           :key="s"
           :class="{ active: step === s, past: STEPS.indexOf(step) > index }"
         >
-          <span class="num mono">{{ index + 1 }}</span
-          >{{ t(`terminal.steps.${s}`) }}
+          <span class="num mono">{{ index + 1 }}</span>{{ t(`terminal.steps.${s}`) }}
         </li>
       </ol>
       <!-- Leaves the pickup without saving anything; back to the list of pickups. -->
