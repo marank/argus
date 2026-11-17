@@ -40,7 +40,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 # --- 4. Runtime ------------------------------------------------------------------
 FROM python:${PYTHON_VERSION}-slim-trixie AS runtime
-# renovate: datasource=pypi depName=supervisor
 ARG SUPERVISOR_VERSION=4.3.0
 # pg_dump for the nightly backups; its major version must be at least the server's
 # (postgres image in compose.yml). Debian's own client lags behind, so it comes from

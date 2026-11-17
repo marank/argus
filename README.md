@@ -373,10 +373,10 @@ Repository settings on GitHub:
 
 1. **Protect `main`** (*Settings → Branches* or *Rules*): changes only by pull request,
    with the status checks `backend`, `frontend`, `docs`, `repository` and `image` required.
-2. **Renovate**: install the [Renovate GitHub app](https://github.com/apps/renovate) for
-   the repository; it reads `renovate.json`. Its dependency dashboard is an issue in the
-   repository; updates that need a decision (Django, Python, TypeScript majors) wait for
-   approval there.
+2. **Dependabot** (*Settings → Advanced Security*): switch on the dependency graph,
+   Dependabot alerts and security updates. Weekly version updates come from
+   `.github/dependabot.yml`. Not covered: `SUPERVISOR_VERSION` in the Dockerfile, the
+   Trivy image in the workflow and the pre-commit hooks (`pre-commit autoupdate`).
 3. **Package visibility**: after the first push, make the `argus` package public
    (*Packages → argus → Package settings*), so the image can be pulled without a login.
 
