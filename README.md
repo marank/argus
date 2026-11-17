@@ -52,12 +52,13 @@ job worker and supervisord; docker compose adds PostgreSQL.
 
 ```bash
 cp .env.example .env      # set APP_URLS, SECRET_KEY, ADMIN_PASSWORD, POSTGRES_PASSWORD
-docker build -t argus:latest .
+docker compose pull
 docker compose up -d
 ```
 
-A server needs only `compose.yml` and `.env`: with `ARGUS_IMAGE` set to a published
-image, `docker compose pull && docker compose up -d` runs Argus without the source code.
+A server needs only `compose.yml` and `.env`; it runs the published image
+`ghcr.io/marank/argus:latest`. To run your own build, set `ARGUS_IMAGE=argus:latest` in
+`.env` and run `docker build -t argus:latest .` before `docker compose up -d`.
 
 Argus is then available on `http://localhost:8080`, the Django admin on `/admin/`
 (user from `ADMIN_USERNAME` / `ADMIN_PASSWORD`, created on first start). On every
@@ -65,7 +66,7 @@ start the container waits for the database and applies migrations.
 
 | Variable | Purpose |
 | --- | --- |
-| `ARGUS_IMAGE` | Image to run (default `argus:latest`, built from this repository). Set a published image such as `ghcr.io/marank/argus:1` to run without the source code. |
+| `ARGUS_IMAGE` | Image to run (default `ghcr.io/marank/argus:latest`, the current `main`). `argus:latest` for an image built from this repository. |
 | `APP_URLS` | All URLs users open Argus under, comma separated. Allowed hosts, CSRF origins and secure cookies (all `https`) are derived from it. |
 | `TRUSTED_PROXIES` | Addresses or CIDR ranges of a TLS proxy in front; only these may pass on the client's address and scheme. |
 | `APP_PORT` | Host port (default `8080`). |

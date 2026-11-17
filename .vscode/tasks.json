@@ -230,10 +230,10 @@
     // --- Docker --------------------------------------------------------------
     {
       "label": "Docker: build and start",
-      "detail": "Build the image argus:latest, then docker compose up -d (uses .env)",
+      "detail": "Build the image argus:latest and run it with docker compose up -d (uses .env)",
       "type": "shell",
       "command": "docker build -t argus:latest . && docker compose up -d",
-      "options": { "cwd": "${workspaceFolder}" },
+      "options": { "cwd": "${workspaceFolder}", "env": { "ARGUS_IMAGE": "argus:latest" } },
       "problemMatcher": []
     },
     {

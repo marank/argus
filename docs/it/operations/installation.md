@@ -22,23 +22,11 @@ Es gibt zwei Wege:
 
 ## Mit fertigem Image
 
-Die CI veröffentlicht jede Version öffentlich unter `ghcr.io/marank/argus`:
-
-| Tag | Inhalt |
-| --- | --- |
-| `ghcr.io/marank/argus:1` | Neueste Version 1.x. Empfohlen: erhält Updates, aber keine inkompatiblen Änderungen. |
-| `ghcr.io/marank/argus:1.2.3` | Genau diese Version |
-| `ghcr.io/marank/argus:latest` | Aktueller Stand von `main` |
-
-Versions-Tags wie `:1` entstehen, sobald eine Version im Repository getaggt ist (z. B. `v1.0.0`). Bis dahin gibt es nur `:latest`.
+Die CI veröffentlicht Argus öffentlich als `ghcr.io/marank/argus:latest`, den aktuellen Stand von `main`. Dieses Image ist in `compose.yml` voreingestellt.
 
 1. Ein Verzeichnis anlegen, z. B. `/opt/argus`, und `compose.yml` und `.env.example` aus dem Repository hineinlegen.
 
-2. Konfiguration anlegen, siehe [Konfiguration anlegen](#konfiguration-anlegen), und das Image eintragen:
-
-   ```ini
-   ARGUS_IMAGE=ghcr.io/marank/argus:1
-   ```
+2. Konfiguration anlegen, siehe [Konfiguration anlegen](#konfiguration-anlegen).
 
 3. Image holen und Argus mit Datenbank starten:
 
@@ -58,7 +46,11 @@ Versions-Tags wie `:1` entstehen, sobald eine Version im Repository getaggt ist 
    git clone https://github.com/marank/argus.git /opt/argus
    ```
 
-2. Konfiguration anlegen, siehe [Konfiguration anlegen](#konfiguration-anlegen). `ARGUS_IMAGE` bleibt leer.
+2. Konfiguration anlegen, siehe [Konfiguration anlegen](#konfiguration-anlegen), und das selbst gebaute Image eintragen:
+
+   ```ini
+   ARGUS_IMAGE=argus:latest
+   ```
 
 3. Image bauen und starten:
 

@@ -10,7 +10,7 @@
 
 2. Neue Version starten, je nach [Installationsweg](./installation):
 
-   **Mit fertigem Image:** Mit einem Tag wie `:1` holt `pull` die neueste passende Version. Für einen Versionssprung tragen Sie vorher den neuen Tag in `ARGUS_IMAGE` ein.
+   **Mit fertigem Image:** `pull` holt den aktuellen Stand.
 
    ```bash
    docker compose pull app
