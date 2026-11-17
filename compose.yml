@@ -36,7 +36,7 @@ services:
     ports:
       - "${APP_PORT:-8080}:8080"
     volumes:
-      # Nightly database dumps (BACKUP_TIME, BACKUP_KEEP_DAYS); see README, "Backups".
+      # Nightly database dumps (BACKUP_TIME, BACKUP_KEEP_DAYS); see docs/en/it/operations/backups.md.
       - db-backups:/backups
     # Hardening: read-only root filesystem (only /tmp is writable for nginx/gunicorn
     # runtime files) and no privilege escalation via setuid binaries.

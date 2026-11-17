@@ -7,7 +7,7 @@ Ein Überblick darüber, wie Argus abgesichert ist und was der Betrieb dazu beit
 - Der `app`-Container läuft als unprivilegierter Benutzer, ohne Linux-Capabilities und mit schreibgeschütztem Dateisystem. Beschreibbar ist nur `/tmp` im Arbeitsspeicher.
 - `no-new-privileges` verhindert Rechteausweitung über setuid-Programme.
 - Code und Konfiguration im Image gehören `root`; die Anwendung kann sie lesen, aber nicht ändern.
-- Der `backup`-Dienst ist genauso eingeschränkt. Die Sicherungsdateien kann nur der Datenbankbenutzer lesen, denn sie enthalten Passwort-Hashes und personenbezogene Daten.
+- Die nächtliche Sicherung läuft im `app`-Container. Die Sicherungsdateien kann nur dessen Benutzer lesen, denn sie enthalten Passwort-Hashes und personenbezogene Daten.
 
 ## Im Browser
 

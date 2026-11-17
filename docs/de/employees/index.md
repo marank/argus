@@ -8,35 +8,35 @@ hero:
   actions:
     - theme: brand
       text: Erste Schritte
-      link: /employees/getting-started
+      link: /de/employees/getting-started
     - theme: alt
       text: Etwas anfordern
-      link: /employees/request
+      link: /de/employees/request
 
 features:
   - title: Anfordern
     details: Notebook, Headset, Toner oder Software auswählen, Zeitraum angeben, absenden.
-    link: /employees/request
+    link: /de/employees/request
     linkText: So geht's
   - title: Den Stand verfolgen
     details: Alle Anforderungen, Ihre Geräte und Ihre Software auf einen Blick.
-    link: /employees/overview
+    link: /de/employees/overview
     linkText: Meine Anforderungen
   - title: Abholen und zurückgeben
     details: Am Abholterminal prüfen und unterschreiben, befristete Geräte rechtzeitig zurückbringen.
-    link: /employees/pickup
+    link: /de/employees/pickup
     linkText: Ablauf ansehen
   - title: Probleme melden
     details: Defekt, Schaden oder Verlust direkt am Gerät melden und mit der IT schreiben.
-    link: /employees/report-issue
+    link: /de/employees/report-issue
     linkText: Problem melden
   - title: Konto und Einstellungen
     details: Passwort, Zwei-Faktor-Anmeldung, Benachrichtigungen, Sprache und Darstellung.
-    link: /employees/account
+    link: /de/employees/account
     linkText: Einstellungen
   - title: Häufige Fragen
     details: Abholtermin verpasst, Gerät länger nötig, Telefon verloren – die Antworten.
-    link: /employees/faq
+    link: /de/employees/faq
     linkText: Zur FAQ
 ---
 

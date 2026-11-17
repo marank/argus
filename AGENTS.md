@@ -2,11 +2,11 @@
 
 IT asset management. Django backend (`backend/`, API via Django Ninja), Vue 3 +
 TypeScript SPA (`frontend/`, Naive UI), one hardened Docker image. Read this before
-changing structure; `README.md` has setup, commands and the glossary of domain terms.
+changing structure; `docs/en/development/` has setup, commands and the glossary of domain terms.
 
 ## Commands
 
-VS Code tasks (`.vscode/tasks.json`) hold the everyday commands; the README lists the plain equivalents.
+VS Code tasks (`.vscode/tasks.json`) hold the everyday commands; `docs/en/development/` lists the plain equivalents.
 - **Dev: start all**: Django :8000 + Vite :5173 → http://localhost:5173. `seed_demo` fills the database.
 - **Check: all** runs everything CI runs and must pass before a push. If you change a check, change it in
   both `tasks.json` and `.github/workflows/build.yaml`.
@@ -28,7 +28,7 @@ VS Code tasks (`.vscode/tasks.json`) hold the everyday commands; the README list
 - API: under `/api/`, no trailing slashes, session auth + CSRF, UUIDs in paths. `/api/health` stays
   unauthenticated and exactly at that path (container health check, CI smoke test).
 - Configuration only via environment variables (`config/env.py` helpers); every new variable gets a
-  commented entry in `.env.example` and a row in the README table.
+  commented entry in `.env.example` and a row in `docs/{de,en}/it/operations/configuration.md`.
 - User-facing strings in English, wrapped in `gettext`; German goes into `backend/locale/de`.
 - mypy runs in strict mode (`[tool.mypy]` in `pyproject.toml`; tests need no annotations) and must
   pass: annotate all new code. Admin classes take their model (`admin.ModelAdmin[Asset]`; made
@@ -52,14 +52,19 @@ VS Code tasks (`.vscode/tasks.json`) hold the everyday commands; the README list
 
 ## Documentation
 
-- `docs/` holds the user and operator documentation (VitePress), served at `/docs/`. A change users
-  or operators notice (new feature, changed rule, new setting or variable) updates the matching page.
-- Content in German, file and folder names in English. Professional and direct: no filler, no
-  unnecessary detail. Use the exact UI labels from `frontend/src/i18n/locales/de`; edge cases go
-  into `::: info Gut zu wissen` boxes on the feature's page.
-- Three areas: `employees/`, `approvers/` (linkable for everyone, never link into `it/`) and `it/`
-  (IT work, `administration/`, `operations/`). Each area has its own sidebar in `.vitepress/config.mts`.
-- `pnpm build` in `docs/` must pass (dead links, anchors and IT links in the open areas fail it).
+- `docs/` holds the documentation (VitePress), served at `/docs/`. A change users or operators
+  notice (new feature, changed rule, new setting or variable) updates the matching page.
+- **Every page exists in German and English** under the same path in `docs/de/` and `docs/en/`;
+  change both in the same commit (the build fails when a counterpart is missing). New pages get a
+  German and English title in `SIDEBARS` in `.vitepress/config.mts`.
+- Professional and direct: no filler, no unnecessary detail. Use the exact UI labels from
+  `frontend/src/i18n/locales/de` and `.../en`; edge cases go into `::: info Gut zu wissen` /
+  `::: info Good to know` boxes on the feature's page. File and folder names in English.
+- Four areas per language: `employees/`, `approvers/` (linkable for everyone, never link into
+  `it/`), `it/` (IT work, `administration/`, `operations/`) and `development/` (contributors).
+  Each has its own sidebar and search.
+- `pnpm build` in `docs/` must pass (dead links, anchors, IT links in the open areas and missing
+  translations fail it).
 
 ## Docker / runtime
 
@@ -68,5 +73,5 @@ VS Code tasks (`.vscode/tasks.json`) hold the everyday commands; the README list
 - supervisord runs gunicorn, uvicorn (`/api/events`), the Procrastinate worker and nginx; nginx serves
   the SPA, `/django-static/`, and proxies `/api` and `/admin`.
 - The job worker dumps the database nightly into the `db-backups` volume (`/backups`,
-  `apps/core/services/backups.py`); see README "Backups". `compose.yml` must work with
+  `apps/core/services/backups.py`); see `docs/en/it/operations/backups.md`. `compose.yml` must work with
   `.env` alone, without any other file from the repository.

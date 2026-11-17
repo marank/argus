@@ -15,7 +15,7 @@ Thanks for helping. Bug reports, ideas and pull requests are welcome.
 
 1. Discuss larger changes in an issue first.
 2. Fork, branch from `main`, keep the change focused on one topic.
-3. Set up the project as in the [README](README.md#quick-start); `seed_demo` fills the
+3. Set up the project as in [Development setup](docs/en/development/index.md); `seed_demo` fills the
    database with demo data.
 4. Follow the conventions in [AGENTS.md](AGENTS.md): structure, services, UUID models,
    strict typing, i18n (English and German), no inline scripts.
@@ -23,7 +23,7 @@ Thanks for helping. Bug reports, ideas and pull requests are welcome.
 6. After model changes run **DB: make migrations**, after API changes **API: update types**,
    and commit the generated files.
 7. Update the user documentation in `docs/` (German) when users or operators notice the change.
-8. Run **Check: all** (or the commands under [Checks](README.md#checks)) before you push;
+8. Run **Check: all** (or the commands under [Checks and tests](docs/en/development/checks.md)) before you push;
    CI runs the same checks on the pull request.
 
 Commit messages: an imperative summary line in English ("Show the model on the device

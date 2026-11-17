@@ -1,13 +1,16 @@
 // Checks the built docs beyond VitePress' own dead-link check:
 // - every link with #anchor points to an id that exists on the target page;
 // - pages of the employee and approver areas never link into the IT area, so those
-//   areas can be shared with everyone.
+//   areas can be shared with everyone;
+// - every page exists in both languages (de/ and en/ under the same path).
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs'
 import { join, posix, relative, sep } from 'node:path'
 
 const root = process.argv[2]
 const dist = join(root, '.vitepress', 'dist')
-const PUBLIC_AREAS = ['employees/', 'approvers/']
+const LANGS = ['de', 'en']
+const PUBLIC_AREAS = LANGS.flatMap((lang) => [`${lang}/employees/`, `${lang}/approvers/`])
+const IT_AREAS = LANGS.map((lang) => `${lang}/it/`)
 const files = []
 const walk = (dir) => {
   for (const name of readdirSync(dir)) {
@@ -34,7 +37,7 @@ for (const file of files) {
         : posix.normalize(posix.join(posix.dirname(rel), path))
       : rel
     target = target.replace(/\.md$/, '')
-    if (PUBLIC_AREAS.some((area) => rel.startsWith(area)) && target.startsWith('it/')) {
+    if (PUBLIC_AREAS.some((area) => rel.startsWith(area)) && IT_AREAS.some((area) => target.startsWith(area))) {
       problems.push(`${rel}: ${href} leads into the IT area`)
     }
     if (!anchor) continue
@@ -45,6 +48,17 @@ for (const file of files) {
     }
   }
 }
+// Every page in one language has its counterpart in the other.
+const pages = new Set(files.map((file) => relative(root, file).split(sep).join('/')))
+for (const page of pages) {
+  const [lang, ...rest] = page.split('/')
+  if (!LANGS.includes(lang)) continue
+  for (const other of LANGS) {
+    const counterpart = [other, ...rest].join('/')
+    if (!pages.has(counterpart)) problems.push(`${page}: no ${other}/ version (${counterpart})`)
+  }
+}
+
 for (const problem of problems) console.log(problem)
 console.log(problems.length ? `${problems.length} problems` : 'links ok')
 process.exit(problems.length ? 1 : 0)

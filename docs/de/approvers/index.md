@@ -8,23 +8,23 @@ hero:
   actions:
     - theme: brand
       text: Genehmigen oder ablehnen
-      link: /approvers/approvals
+      link: /de/approvers/approvals
     - theme: alt
       text: Vertretung eintragen
-      link: /approvers/delegation
+      link: /de/approvers/delegation
 
 features:
   - title: Genehmigen oder ablehnen
     details: Offene Anforderungen prüfen, mit Kommentar genehmigen oder mit Begründung ablehnen.
-    link: /approvers/approvals
+    link: /de/approvers/approvals
     linkText: So geht's
   - title: Vertretung bei Abwesenheit
     details: Unter Self-Service → Vertretung festlegen, wer im Urlaub oder bei Krankheit für Sie entscheidet.
-    link: /approvers/delegation
+    link: /de/approvers/delegation
     linkText: Vertretung eintragen
   - title: Selbst etwas anfordern
     details: Wie alle Mitarbeitenden fordern Sie Geräte und Software im Self-Service an.
-    link: /employees/
+    link: /de/employees/
     linkText: Für Mitarbeitende
 ---
 

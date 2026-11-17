@@ -79,10 +79,10 @@ In `.env` mindestens diese Werte setzen:
 | `ADMIN_PASSWORD` | Passwort des ersten Administrators |
 | `POSTGRES_PASSWORD` | Passwort der Datenbank |
 
-Einen geeigneten `SECRET_KEY` erzeugt:
+Einen geeigneten Zufallswert für `SECRET_KEY` und `POSTGRES_PASSWORD` erzeugt:
 
 ```bash
-python3 -c "import secrets; print(secrets.token_urlsafe(50))"
+openssl rand -hex 32
 ```
 
 Alle weiteren Variablen stehen unter [Konfiguration](./configuration).

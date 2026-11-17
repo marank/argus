@@ -14,9 +14,9 @@ Alte `.xls`-Dateien und kennwortgeschützte Dateien lassen sich nicht lesen. Spe
 
 ## 2. Spalten zuordnen
 
-Ordnen Sie jedem Gerätefeld die passende Spalte zu. Argus schlägt Zuordnungen anhand gängiger Spaltennamen vor, z. B. „Seriennummer“, „SN“, „Hostname“ oder „Asset Tag“.
+Ordnen Sie jedem Gerätefeld die passende Spalte zu. Argus schlägt Zuordnungen anhand gängiger deutscher und englischer Spaltennamen vor, z. B. „Seriennummer“, „Serial number“, „SN“, „Hostname“ oder „Asset Tag“.
 
-Importierbar sind: Inventar-Nr., Seriennummer, Kennung, IMEI, MAC-Adresse, Gerätename, Modell, Status, Zustand, Standort, Mitarbeiter, Lieferant, Kaufdatum, Kaufpreis, Garantieende und Notizen.
+Importierbar sind: Inventar-Nr., Seriennummer, Kennung, IMEI, MAC-Adresse, Gerätename, Modell, Status, Zustand, Standort, Zugewiesen an (Mitarbeiter), Lieferant, Kaufdatum, Kaufpreis, Garantie bis und Notizen.
 
 ### Neue Geräte
 
@@ -55,7 +55,7 @@ Mit **{n} Geräte importieren** übernehmen Sie das Ergebnis.
 - **Modell:** Name, Herstellerbezeichnung, Artikelnummer oder EAN, auch „Hersteller Name“ in einer Zelle, z. B. „Handtec HT60“.
 - **Mitarbeiter:** Benutzername, E-Mail, „Nachname, Vorname“ oder „Vorname Nachname“.
 - **Standort, Lieferant:** Name, bei Standorten auch das Kürzel.
-- **Status, Zustand:** deutsche oder englische Bezeichnung, z. B. „Im Lager“.
+- **Status, Zustand:** deutsche oder englische Bezeichnung, z. B. „Im Lager“ oder „In stock“, oder der interne Wert wie `in_stock`.
 - **Datum:** z. B. `2026-03-31`, `31.03.2026` oder `31.03.26`. Eine Uhrzeit dahinter wird ignoriert.
 - **Preis:** `1.234,56` und `1,234.56`.
 - **Leere Zellen** und Platzhalter wie `-` oder `--` überschreiben nie einen vorhandenen Wert.

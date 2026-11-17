@@ -238,7 +238,7 @@
     },
     {
       "label": "Docker: backup now",
-      "detail": "Dump the database into the backups volume (see README, Backups)",
+      "detail": "Dump the database into the backups volume (see docs/en/it/operations/backups.md)",
       "type": "shell",
       "command": "docker compose exec app python manage.py backup_database",
       "problemMatcher": []

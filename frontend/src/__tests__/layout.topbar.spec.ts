@@ -294,6 +294,20 @@ describe('top bar', () => {
       open.mockRestore()
     })
 
+    it('opens the help in the interface language, IT staff in the IT area', async () => {
+      const open = vi.spyOn(window, 'open').mockReturnValue(null)
+      await menu()
+      await click(option('Help')!)
+      expect(open).toHaveBeenLastCalledWith('/docs/en/employees/', '_blank')
+      unmount?.()
+      document.body.innerHTML = ''
+      setLocale('de')
+      await menu(makeUser({ display_name: 'Ian IT', is_it_staff: true }))
+      await click(option('Hilfe')!)
+      expect(open).toHaveBeenLastCalledWith('/docs/de/it/', '_blank')
+      open.mockRestore()
+    })
+
     it('switches the language and stores it with the user', async () => {
       api.updatePreferences.mockResolvedValue(makeUser({ language: 'de' }))
       await menu()

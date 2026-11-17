@@ -64,9 +64,12 @@ async function onSelect(key: string) {
   const [kind, value] = key.split(':')
   if (kind === 'theme') await auth.changeTheme(value as ThemeMode)
   else if (kind === 'lang') await auth.changeLanguage(value as 'en' | 'de')
-  // IT staff land in the IT area; everyone else in the area for employees.
-  else if (kind === 'docs') window.open(auth.isItStaff ? '/docs/it/' : '/docs/employees/', '_blank')
-  else if (kind === 'admin') window.open('/admin/', '_blank')
+  // In the interface's language; IT staff land in the IT area, everyone else in the
+  // area for employees.
+  else if (kind === 'docs') {
+    const lang = locale.value === 'de' ? 'de' : 'en'
+    window.open(`/docs/${lang}/${auth.isItStaff ? 'it' : 'employees'}/`, '_blank')
+  } else if (kind === 'admin') window.open('/admin/', '_blank')
   else if (kind === 'appearance') router.push({ name: 'profile-appearance' })
   else if (kind === 'notifications') router.push({ name: 'profile-notifications' })
   else if (kind === 'security') router.push({ name: 'profile-security' })

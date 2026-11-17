@@ -205,6 +205,5 @@ if not DEBUG and (
     from django.core.exceptions import ImproperlyConfigured
 
     raise ImproperlyConfigured(
-        "Set SECRET_KEY to a long random value (at least 40 characters), e.g. "
-        '`python3 -c "import secrets; print(secrets.token_urlsafe(50))"`.'
+        "Set SECRET_KEY to a long random value (at least 40 characters), e.g. from `openssl rand -hex 32`."
     )
