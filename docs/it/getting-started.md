@@ -24,7 +24,7 @@ Die Details stehen unter [Anforderungen bearbeiten](./requests).
 | Situation | Weg |
 | --- | --- |
 | Jemand braucht sofort ein Gerät aus dem Regal | **Schnellzuweisung** auf der Geräteseite |
-| Mehrere bestimmte Geräte für jemanden bereitstellen | **Direkt ausgeben** in den Anforderungen |
+| Mehrere bestimmte Geräte für jemanden bereitstellen | **Direktausgabe** im Menü |
 | Gerät ist schon beim Mitarbeiter, aber nicht erfasst | **Als ausgegeben markieren**, Geräte später erfassen |
 | Gerät defekt, Ersatz nötig | **Ersetzen** auf der Geräteseite; der Gerätename geht mit |
 | Akku getauscht | **Service erfassen** auf der Geräteseite |

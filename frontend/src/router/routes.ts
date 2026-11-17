@@ -13,6 +13,8 @@ declare module 'vue-router' {
     approver?: boolean
     /** Area the user's roles must allow reading. */
     permission?: Schemas['ResourceKey']
+    /** With `permission`: the roles must allow changing that area, not only reading it. */
+    write?: boolean
     /** Pickup terminal pages (terminal account and IT staff). */
     terminal?: boolean
     /** i18n key of the page title. */
@@ -229,6 +231,13 @@ export const routes: RouteRecordRaw[] = [
         name: 'requests',
         component: () => import('@/views/requests/RequestListView.vue'),
         meta: { permission: 'requests', it: true, title: 'nav.requests' },
+      },
+      {
+        path: 'requests/direct',
+        name: 'direct-handout',
+        component: () => import('@/views/portal/NewRequestView.vue'),
+        props: { direct: true },
+        meta: { permission: 'requests', write: true, it: true, title: 'nav.directHandout' },
       },
       {
         path: 'requests/:id([0-9a-f-]{36})',

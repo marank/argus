@@ -261,6 +261,7 @@ export async function mountWithApp(
       { path: '/requests/:id', name: 'request', component: page },
       { path: '/requests/:id/protocol', name: 'handover-protocol', component: page },
       { path: '/portal/new', name: 'portal-new', component: page },
+      { path: '/requests/direct', name: 'direct-handout', component: page },
       { path: '/assets/:id', name: 'asset', component: page },
       { path: '/licenses/:id', name: 'license', component: page },
       { path: '/licenses', name: 'licenses', component: page },

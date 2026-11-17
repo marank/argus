@@ -321,7 +321,7 @@ onMounted(list.load)
   <div class="page">
     <PageHeader :title="t('requests.title')" :subtitle="t('requests.subtitle')">
       <template #actions>
-        <RouterLink v-if="canWrite" :to="{ name: 'portal-new', query: { mode: 'direct' } }">
+        <RouterLink v-if="canWrite" :to="{ name: 'direct-handout' }">
           <NButton>
             <template #icon><HandHelping :size="16" /></template>
             {{ t('requests.direct.action') }}

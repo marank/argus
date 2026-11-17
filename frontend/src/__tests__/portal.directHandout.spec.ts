@@ -132,8 +132,8 @@ function stock(overrides: Partial<Schemas['ConsumableOut']> = {}): Schemas['Cons
 const lookupResult = (assets: Schemas['AssetOut'][]) =>
   ({ kind: assets.length ? 'asset' : 'none', assets, models: [] }) satisfies Schemas['LookupOut']
 
-async function open(url = '/portal/new?mode=direct') {
-  return mountPage(NewRequestView, { url, user: IT_STAFF })
+async function open(url = '/requests/direct') {
+  return mountPage(NewRequestView, { url, user: IT_STAFF, props: { direct: true } })
 }
 
 const SCAN = 'Scan or search inventory or serial number'
@@ -169,18 +169,10 @@ describe('NewRequestView: direct hand-out', () => {
   })
   afterEach(unmountPages)
 
-  it('lets IT choose between a request and a direct hand-out', async () => {
-    const { router } = await open('/portal/new')
-    expect(bodyText()).toContain('What would you like to record?')
-    await click(document.body.querySelector('button.choice.direct')!)
-    expect(router.currentRoute.value.query).toEqual({ mode: 'direct' })
-  })
-
-  it('employees cannot hand out directly and go straight to the request', async () => {
-    await mountPage(NewRequestView, { url: '/portal/new?mode=direct', user: makeUser() })
+  it('starts a new request on its first step, also for IT', async () => {
+    await mountPage(NewRequestView, { url: '/portal/new', user: IT_STAFF })
     expect(bodyText()).toContain('What you choose in the next step shows up here.')
     expect(bodyText()).not.toContain('Direct hand-out')
-    expect(hasButton('Change type')).toBe(false)
   })
 
   it('browses what a group has in stock, without software and free text', async () => {
@@ -262,14 +254,14 @@ describe('NewRequestView: direct hand-out', () => {
 
   it('hands out the device it was opened from', async () => {
     api.getAsset.mockResolvedValue(device())
-    await open('/portal/new?mode=direct&asset=a1')
+    await open('/requests/direct?asset=a1')
     expect(api.getAsset).toHaveBeenCalledWith('a1')
     expect(cartLines()).toEqual(['NB-0001 ThinkPad T14'])
   })
 
   it('requests the model of the device it was opened from', async () => {
     api.getAsset.mockResolvedValue(device())
-    await open('/portal/new?mode=request&asset=a1')
+    await mountPage(NewRequestView, { url: '/portal/new?asset=a1', user: IT_STAFF })
     expect(cartLines()).toEqual(['ThinkPad T14'])
   })
 })

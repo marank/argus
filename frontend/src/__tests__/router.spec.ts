@@ -40,6 +40,12 @@ vi.mock('@/router/routes', () => {
     { path: '/', name: 'dashboard', component: page },
     { path: '/terminal', name: 'terminal', component: page, meta: { terminal: true } },
     { path: '/assets', name: 'assets', component: page, meta: { it: true, permission: 'assets' } },
+    {
+      path: '/assets/new',
+      name: 'asset-new',
+      component: page,
+      meta: { it: true, permission: 'assets', write: true },
+    },
     { path: '/reports', name: 'reports', component: page, meta: { it: true } },
     { path: '/approvals', name: 'approvals', component: page, meta: { approver: true } },
     { path: '/admin', name: 'admin', component: page, meta: { superuser: true } },
@@ -148,6 +154,13 @@ describe('router guard', () => {
     expect((await visit('/assets')).name).toBe('dashboard')
     signIn({ is_it_staff: true, permissions: { assets: 'read' } })
     expect((await visit('/assets')).name).toBe('assets')
+  })
+
+  it('needs the right to change the area where a page says so', async () => {
+    signIn({ is_it_staff: true, permissions: { assets: 'read' } })
+    expect((await visit('/assets/new')).name).toBe('dashboard')
+    signIn({ is_it_staff: true, permissions: { assets: 'write' } })
+    expect((await visit('/assets/new')).name).toBe('asset-new')
   })
 
   it('keeps approver pages for approvers', async () => {

@@ -86,11 +86,22 @@ describe('sidebar', () => {
 
     it('shows IT the areas their roles allow', async () => {
       await sidebar({ user: itStaff({ permissions: { requests: 'write', assets: 'read' } }) })
-      expect(menu()['IT operations']).toEqual(['Requests', 'Calendar', 'Devices', 'Service log'])
+      expect(menu()['IT operations']).toEqual([
+        'Requests',
+        'Direct hand-out',
+        'Calendar',
+        'Devices',
+        'Service log',
+      ])
       // Sections without a single readable entry disappear.
       expect(menu()['Procurement']).toBeUndefined()
       expect(menu()['Master data']).toBeUndefined()
       expect(menu()['Administration']).toBeUndefined()
+    })
+
+    it('offers the direct hand-out only with the right to change requests', async () => {
+      await sidebar({ user: itStaff({ permissions: { requests: 'read' } }) })
+      expect(menu()['IT operations']).toEqual(['Requests', 'Calendar'])
     })
 
     it('leaves out entries of switched-off modules', async () => {

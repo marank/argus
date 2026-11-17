@@ -18,6 +18,7 @@ const page = { render: () => null }
 const ROUTES = [
   { path: '/', name: 'dashboard', component: page },
   { path: '/portal/new', name: 'portal-new', component: page },
+  { path: '/requests/direct', name: 'direct-handout', component: page },
   { path: '/portal/requests', name: 'portal-requests', component: page },
   { path: '/portal/requests/:id', name: 'portal-request', component: page },
   { path: '/portal/approvals', name: 'portal-approvals', component: page },

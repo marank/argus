@@ -341,22 +341,6 @@ export default {
     action: 'Direkt ausgeben',
     subtitle:
       'Bestimmte Geräte aus dem Lager für einen Mitarbeiter bereitstellen – ohne Anforderung und Genehmigung.',
-    choose: 'Was möchten Sie erfassen?',
-    chooseRequest: 'Anforderung',
-    chooseRequestHint:
-      'Geräte aus dem Katalog anfordern – für sich oder im Namen eines Mitarbeiters.',
-    chooseDirectHint: 'Bestimmte Geräte aus dem Lager direkt für einen Mitarbeiter bereitstellen.',
-    requestPoints: {
-      catalog: 'Modelle aus dem Katalog wählen',
-      approval: 'Genehmigung durch die Abteilung, falls nötig',
-      confirm: 'IT bestätigt und stellt bereit',
-    },
-    directPoints: {
-      scan: 'Geräte scannen oder suchen',
-      noApproval: 'Ohne Genehmigung, sofort reserviert',
-      protocol: 'Ausgabe mit Übergabeprotokoll',
-    },
-    switch: 'Art wechseln',
     scan: 'Inventar- oder Seriennummer scannen oder suchen',
     inStock: 'im Lager',
     results: 'Treffer',

@@ -337,22 +337,6 @@ export default {
     action: 'Hand out directly',
     subtitle:
       'Set aside specific devices from stock for an employee – without a request or approval.',
-    choose: 'What would you like to record?',
-    chooseRequest: 'Request',
-    chooseRequestHint:
-      'Request devices from the catalog – for yourself or on behalf of an employee.',
-    chooseDirectHint: 'Provide specific devices from stock directly to an employee.',
-    requestPoints: {
-      catalog: 'Choose models from the catalog',
-      approval: 'Approved by the department if required',
-      confirm: 'IT confirms and prepares',
-    },
-    directPoints: {
-      scan: 'Scan or search devices',
-      noApproval: 'No approval, allocated right away',
-      protocol: 'Hand-out with a handover record',
-    },
-    switch: 'Change type',
     scan: 'Scan or search inventory or serial number',
     inStock: 'in stock',
     results: 'Results',

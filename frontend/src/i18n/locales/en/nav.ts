@@ -16,6 +16,7 @@ export default {
   eventLog: 'Service log',
   calendar: 'Calendar',
   requests: 'Requests',
+  directHandout: 'Direct hand-out',
   procurement: 'Procurement',
   needs: 'Demand',
   orders: 'Purchase orders',

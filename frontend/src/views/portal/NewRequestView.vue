@@ -1,14 +1,5 @@
 <script setup lang="ts">
-import {
-  ArrowLeftRight,
-  ArrowRight,
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  ClipboardList,
-  ScanLine,
-  X,
-} from '@lucide/vue'
+import { ArrowRight, ChevronLeft, ChevronRight, ClipboardList, X } from '@lucide/vue'
 import { NAlert, NButton, NDrawer, NSkeleton, useMessage } from 'naive-ui'
 import { useEventListener, useMediaQuery, watchDebounced } from '@vueuse/core'
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
@@ -18,7 +9,6 @@ import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vu
 import { assetsApi } from '@/api/inventory'
 import { portalApi, requestsApi } from '@/api/requests'
 import type { Schemas } from '@/api/types'
-import PageHeader from '@/components/common/PageHeader.vue'
 import CatalogBrowser from '@/components/requests/request/CatalogBrowser.vue'
 import ConsumableQuickPick from '@/components/requests/request/ConsumableQuickPick.vue'
 import DirectPicker from '@/components/requests/request/DirectPicker.vue'
@@ -52,48 +42,13 @@ const { busy, run } = useAction()
 const { date } = useFormat()
 
 /**
- * IT staff first choose between a request and a direct hand-out of specific
- * devices from stock (`?mode=direct`); everyone else only requests.
- * `?from=<id>` asks again for an earlier request: a request, prefilled.
+ * A request from the catalog, or (`direct`, its own page for IT) a direct hand-out of
+ * specific devices from stock. `?from=<id>` asks again for an earlier request, prefilled.
  */
+const props = defineProps<{ direct?: boolean }>()
+const direct = computed(() => props.direct)
+/** IT may record a request for someone else. */
 const canDirect = computed(() => auth.can('requests', 'write'))
-const mode = computed<'request' | 'direct' | null>(() => {
-  if (!canDirect.value || route.query.from) return 'request'
-  const value = route.query.mode
-  return value === 'direct' || value === 'request' ? value : null
-})
-const direct = computed(() => mode.value === 'direct')
-
-const choices = computed(() => [
-  {
-    mode: 'request' as const,
-    icon: ClipboardList,
-    title: t('requests.direct.chooseRequest'),
-    hint: t('requests.direct.chooseRequestHint'),
-    points: [
-      t('requests.direct.requestPoints.catalog'),
-      t('requests.direct.requestPoints.approval'),
-      t('requests.direct.requestPoints.confirm'),
-    ],
-  },
-  {
-    mode: 'direct' as const,
-    icon: ScanLine,
-    title: t('requests.direct.title'),
-    hint: t('requests.direct.chooseDirectHint'),
-    points: [
-      t('requests.direct.directPoints.scan'),
-      t('requests.direct.directPoints.noApproval'),
-      t('requests.direct.directPoints.protocol'),
-    ],
-  },
-])
-
-function choose(value: 'request' | 'direct' | null) {
-  // A device from the device page stays picked whichever way is chosen.
-  const asset = route.query.asset ? { asset: route.query.asset } : {}
-  router.replace({ query: value ? { mode: value, ...asset } : asset })
-}
 
 const catalog = ref<Schemas['CatalogCategoryOut'][] | null>(null)
 const cart = ref<CartLine[]>([])
@@ -107,9 +62,6 @@ const period = reactive<RequestPeriod>({
   start: today,
   pickup: today,
 })
-
-// The two modes fill the cart differently; switching starts over.
-watch(direct, () => (cart.value = []))
 
 onMounted(async () => {
   // The quick pick can be switched off; its endpoint is gone then.
@@ -171,12 +123,12 @@ function prefill(earlier: Schemas['AssetRequestOut']) {
 
 // From the device page: hand out that device, or request its model.
 watch(
-  [mode, () => route.query.asset, catalog],
-  async ([current, id, entries]) => {
-    if (typeof id !== 'string' || !current || (current === 'request' && !entries)) return
+  [() => route.query.asset, catalog],
+  async ([id, entries]) => {
+    if (typeof id !== 'string' || (!direct.value && !entries)) return
     const asset = await run(() => assetsApi.get(id))
     if (!asset) return
-    if (current === 'direct') addAsset(asset)
+    if (direct.value) addAsset(asset)
     else addModelOf(asset)
   },
   { immediate: true },
@@ -463,8 +415,6 @@ onBeforeRouteLeave(() => {
   return dirty.value ? confirmDiscard() : true
 })
 onBeforeRouteUpdate((to, from) => {
-  // Switching between request and direct hand-out starts over as well.
-  if (to.query.mode !== from.query.mode) return dirty.value ? confirmDiscard() : true
   return to.query.step === from.query.step || !closesCart()
 })
 /**
@@ -493,357 +443,195 @@ const header = computed(() =>
 </script>
 
 <template>
-  <div class="page" :class="{ flow: mode !== null }">
-    <template v-if="mode === null">
-      <PageHeader :title="t('requests.new.title')" :subtitle="t('requests.direct.choose')" />
-      <div class="choices">
-        <button
-          v-for="choice in choices"
-          :key="choice.mode"
-          type="button"
-          class="choice"
-          :class="choice.mode"
-          @click="choose(choice.mode)"
+  <div class="page flow">
+    <!-- Where one is and the ways out; the cart where it is not docked. -->
+    <header ref="head" class="wizard-head">
+      <div class="head-titles">
+        <span v-if="narrow" class="eyebrow">{{
+          t('requests.new.steps.ofShort', { n: STEPS.indexOf(step) + 1, total: STEPS.length })
+        }}</span>
+        <!-- The steps as a trail: the first one stays one click away. -->
+        <nav v-else class="eyebrow crumbs" :aria-label="header.title">
+          <span>{{ header.title }}</span>
+          <template v-for="(s, index) in STEPS" :key="s">
+            <ChevronRight :size="12" />
+            <button
+              type="button"
+              class="crumb"
+              :class="{ active: s === step }"
+              :aria-current="s === step ? 'step' : undefined"
+              @click="s === 'period' ? editDetails() : toCatalog()"
+            >
+              {{ index + 1 }} · {{ t(`requests.new.steps.${s}`) }}
+            </button>
+          </template>
+        </nav>
+        <Transition name="ar-fade" mode="out-in">
+          <strong :key="stepTitle" class="head-title">{{ stepTitle }}</strong>
+        </Transition>
+      </div>
+      <span class="head-side end">
+        <!-- Docked, the selection has no bar below: back to the details up here. -->
+        <NButton v-if="!cramped && step === 'catalog'" class="head-back" @click="toDetails">
+          <template #icon><ChevronLeft :size="16" /></template>
+          {{ t('common.back') }}
+        </NButton>
+        <!-- Leaves the request; asks first when something would be lost. -->
+        <NButton
+          quaternary
+          circle
+          class="close-button"
+          :title="t('requests.new.cancel')"
+          :aria-label="t('requests.new.cancel')"
+          @click="cancel"
         >
-          <span class="choice-head">
-            <span class="choice-icon"
-              ><component :is="choice.icon" :size="22" :stroke-width="1.6"
-            /></span>
-            <ArrowRight class="go" :size="18" />
-          </span>
-          <strong>{{ choice.title }}</strong>
-          <span class="muted">{{ choice.hint }}</span>
-          <ul class="points">
-            <li v-for="point in choice.points" :key="point">
-              <Check :size="14" :stroke-width="2.2" />{{ point }}
-            </li>
-          </ul>
-        </button>
-      </div>
-    </template>
+          <template #icon><X :size="20" /></template>
+        </NButton>
+      </span>
+    </header>
+    <NAlert v-if="previous" type="info" :bordered="false" class="again">
+      {{ t('requests.again.prefilled', { number: previous.number }) }}
+    </NAlert>
 
-    <template v-else>
-      <!-- Where one is and the ways out; the cart where it is not docked. -->
-      <header ref="head" class="wizard-head">
-        <div class="head-titles">
-          <span v-if="narrow" class="eyebrow">{{
-            t('requests.new.steps.ofShort', { n: STEPS.indexOf(step) + 1, total: STEPS.length })
-          }}</span>
-          <!-- The steps as a trail: the first one stays one click away. -->
-          <nav v-else class="eyebrow crumbs" :aria-label="header.title">
-            <span>{{ header.title }}</span>
-            <template v-for="(s, index) in STEPS" :key="s">
-              <ChevronRight :size="12" />
-              <button
-                type="button"
-                class="crumb"
-                :class="{ active: s === step }"
-                :aria-current="s === step ? 'step' : undefined"
-                @click="s === 'period' ? editDetails() : toCatalog()"
-              >
-                {{ index + 1 }} · {{ t(`requests.new.steps.${s}`) }}
-              </button>
-            </template>
-          </nav>
-          <Transition name="ar-fade" mode="out-in">
-            <strong :key="stepTitle" class="head-title">{{ stepTitle }}</strong>
-          </Transition>
-        </div>
-        <span class="head-side end">
-          <!-- Docked, the selection has no bar below: back to the details up here. -->
-          <NButton v-if="!cramped && step === 'catalog'" class="head-back" @click="toDetails">
-            <template #icon><ChevronLeft :size="16" /></template>
-            {{ t('common.back') }}
-          </NButton>
-          <NButton
-            v-if="canDirect"
-            quaternary
-            circle
-            :title="t('requests.direct.switch')"
-            @click="choose(null)"
-          >
-            <template #icon><ArrowLeftRight :size="16" /></template>
-          </NButton>
-          <!-- Leaves the request; asks first when something would be lost. -->
-          <NButton
-            quaternary
-            circle
-            class="close-button"
-            :title="t('requests.new.cancel')"
-            :aria-label="t('requests.new.cancel')"
-            @click="cancel"
-          >
-            <template #icon><X :size="20" /></template>
-          </NButton>
-        </span>
-      </header>
-      <NAlert v-if="previous" type="info" :bordered="false" class="again">
-        {{ t('requests.again.prefilled', { number: previous.number }) }}
-      </NAlert>
+    <div class="steps-body" :class="{ docked: !cramped }">
+      <div class="steps-main">
+        <!-- 1 · Period and purpose, with the way on right below the fields -->
+        <Transition :name="motion">
+          <div v-show="step === 'period'" class="step-panel first-step">
+            <section class="details-card">
+              <header>
+                <ClipboardList :size="16" />
+                <h2>{{ t('requests.new.steps.period') }}</h2>
+              </header>
+              <!-- What for first: that is what people think of, before dates. -->
+              <RequestPurposeCard
+                ref="purposeCard"
+                v-model="details"
+                plain
+                :missing="purposeMissing"
+                :can-choose-requester="canDirect"
+                :requester-placeholder="auth.user?.display_name"
+                :initial-requester="initialRequester"
+                @enter="toCatalog"
+              />
+              <RequestPeriodCard
+                v-model="period"
+                plain
+                :shows-availability="auth.can('requests')"
+              />
+              <footer class="details-foot">
+                <NButton
+                  type="primary"
+                  icon-placement="right"
+                  class="next-button"
+                  @click="toCatalog"
+                >
+                  {{ t('requests.new.steps.to.catalog') }}
+                  <template #icon><ArrowRight :size="16" /></template>
+                </NButton>
+              </footer>
+            </section>
+          </div>
+        </Transition>
 
-      <div class="steps-body" :class="{ docked: !cramped }">
-        <div class="steps-main">
-          <!-- 1 · Period and purpose, with the way on right below the fields -->
-          <Transition :name="motion">
-            <div v-show="step === 'period'" class="step-panel first-step">
-              <section class="details-card">
-                <header>
-                  <ClipboardList :size="16" />
-                  <h2>{{ t('requests.new.steps.period') }}</h2>
-                </header>
-                <!-- What for first: that is what people think of, before dates. -->
-                <RequestPurposeCard
-                  ref="purposeCard"
-                  v-model="details"
-                  plain
-                  :missing="purposeMissing"
-                  :can-choose-requester="canDirect"
-                  :requester-placeholder="auth.user?.display_name"
-                  :initial-requester="initialRequester"
-                  @enter="toCatalog"
+        <!-- 2 · Selection: groups and their content (a menu on a phone) -->
+        <Transition :name="motion">
+          <div v-show="step === 'catalog'" class="step-panel">
+            <NSkeleton v-if="!catalog" height="320px" />
+            <CatalogBrowser
+              v-else
+              ref="catalogPanel"
+              v-model:opened="catalogOpened"
+              :catalog="catalog"
+              :cart-counts="cartCounts"
+              :direct="direct"
+              :fitting="fitting"
+              @add="add"
+              @remove="remove"
+              @add-free-text="addFreeText"
+            >
+              <template #fitting>
+                <ConsumableQuickPick
+                  :groups="myConsumables"
+                  :catalog="catalog"
+                  :cart-counts="cartCounts"
+                  @add="add"
+                  @remove="remove"
                 />
-                <RequestPeriodCard
-                  v-model="period"
-                  plain
-                  :shows-availability="auth.can('requests')"
+              </template>
+              <template #direct="{ category }">
+                <DirectPicker
+                  :category="category"
+                  :cart-counts="cartCounts"
+                  @add-asset="addAsset"
+                  @add-consumable="addConsumable"
                 />
-                <footer class="details-foot">
-                  <NButton
-                    type="primary"
-                    icon-placement="right"
-                    class="next-button"
-                    @click="toCatalog"
-                  >
-                    {{ t('requests.new.steps.to.catalog') }}
-                    <template #icon><ArrowRight :size="16" /></template>
-                  </NButton>
-                </footer>
-              </section>
-            </div>
-          </Transition>
-
-          <!-- 2 · Selection: groups and their content (a menu on a phone) -->
-          <Transition :name="motion">
-            <div v-show="step === 'catalog'" class="step-panel">
-              <NSkeleton v-if="!catalog" height="320px" />
-              <CatalogBrowser
-                v-else
-                ref="catalogPanel"
-                v-model:opened="catalogOpened"
-                :catalog="catalog"
-                :cart-counts="cartCounts"
-                :direct="direct"
-                :fitting="fitting"
-                @add="add"
-                @remove="remove"
-                @add-free-text="addFreeText"
-              >
-                <template #fitting>
-                  <ConsumableQuickPick
-                    :groups="myConsumables"
-                    :catalog="catalog"
-                    :cart-counts="cartCounts"
-                    @add="add"
-                    @remove="remove"
-                  />
-                </template>
-                <template #direct="{ category }">
-                  <DirectPicker
-                    :category="category"
-                    :cart-counts="cartCounts"
-                    @add-asset="addAsset"
-                    @add-consumable="addConsumable"
-                  />
-                </template>
-              </CatalogBrowser>
-            </div>
-          </Transition>
-        </div>
-
-        <!-- Room enough: the cart stays in view next to the catalog. -->
-        <aside v-if="!cramped" class="cart-dock">
-          <RequestCartPanel
-            :key="mode"
-            v-model:lines="cart"
-            v-model:notes="details.notes"
-            :direct="direct"
-            :details="cartDetails"
-            :busy="busy"
-            @submit="submit"
-            @edit="editDetails"
-          />
-        </aside>
+              </template>
+            </CatalogBrowser>
+          </div>
+        </Transition>
       </div>
 
-      <NDrawer
-        v-if="cramped"
-        v-model:show="cartOpen"
-        :placement="narrow ? 'bottom' : 'right'"
-        :width="420"
-        height="88%"
-        class="cart-drawer"
-        :class="{ sheet: narrow }"
-      >
+      <!-- Room enough: the cart stays in view next to the catalog. -->
+      <aside v-if="!cramped" class="cart-dock">
         <RequestCartPanel
-          :key="mode"
           v-model:lines="cart"
           v-model:notes="details.notes"
           :direct="direct"
           :details="cartDetails"
           :busy="busy"
-          closable
           @submit="submit"
           @edit="editDetails"
-          @close="cartOpen = false"
         />
-      </NDrawer>
+      </aside>
+    </div>
 
-      <!--
+    <NDrawer
+      v-if="cramped"
+      v-model:show="cartOpen"
+      :placement="narrow ? 'bottom' : 'right'"
+      :width="420"
+      height="88%"
+      class="cart-drawer"
+      :class="{ sheet: narrow }"
+    >
+      <RequestCartPanel
+        v-model:lines="cart"
+        v-model:notes="details.notes"
+        :direct="direct"
+        :details="cartDetails"
+        :busy="busy"
+        closable
+        @submit="submit"
+        @edit="editDetails"
+        @close="cartOpen = false"
+      />
+    </NDrawer>
+
+    <!--
         Without the docked cart the way on must still be in plain sight: one step back, and
         the cart with the send button. At the thumb on a phone.
       -->
-      <div v-if="cramped && step === 'catalog'" class="next-bar">
-        <NButton class="back-button" @click="back">
-          <template #icon><ChevronLeft :size="16" /></template>
-          {{ t('common.back') }}
-        </NButton>
-        <NButton
-          :type="cartTotal ? 'primary' : 'default'"
-          icon-placement="right"
-          class="next-button cart-bar-button"
-          @click="cartOpen = true"
-        >
-          <span v-if="cartTotal" :key="cartTotal" class="cart-count mono">{{ cartTotal }}</span>
-          {{ t('requests.new.review') }}
-          <template #icon><ArrowRight :size="16" /></template>
-        </NButton>
-      </div>
-    </template>
+    <div v-if="cramped && step === 'catalog'" class="next-bar">
+      <NButton class="back-button" @click="back">
+        <template #icon><ChevronLeft :size="16" /></template>
+        {{ t('common.back') }}
+      </NButton>
+      <NButton
+        :type="cartTotal ? 'primary' : 'default'"
+        icon-placement="right"
+        class="next-button cart-bar-button"
+        @click="cartOpen = true"
+      >
+        <span v-if="cartTotal" :key="cartTotal" class="cart-count mono">{{ cartTotal }}</span>
+        {{ t('requests.new.review') }}
+        <template #icon><ArrowRight :size="16" /></template>
+      </NButton>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.choices {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 400px));
-  justify-content: center;
-  gap: 16px;
-}
-.choice {
-  --accent: var(--ar-primary);
-  position: relative;
-  display: grid;
-  grid-template-rows: auto auto 1fr auto;
-  align-content: start;
-  gap: 8px;
-  overflow: hidden;
-  padding: 22px 24px 20px;
-  border: 1px solid var(--ar-border);
-  border-radius: 3px;
-  background: var(--ar-surface);
-  color: var(--ar-text-muted);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease,
-    transform 0.15s ease;
-}
-.choice.direct {
-  --accent: var(--ar-violet);
-}
-/* A strip in the mode's colour that fills in on hover. */
-.choice::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto;
-  height: 3px;
-  background: var(--accent);
-  transform: scaleX(0.18);
-  transform-origin: left;
-  transition: transform 0.25s ease;
-}
-.choice:hover,
-.choice:focus-visible {
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--ar-border));
-  box-shadow: 0 6px 20px -12px color-mix(in srgb, var(--accent) 60%, transparent);
-  transform: translateY(-1px);
-}
-.choice:hover::before,
-.choice:focus-visible::before {
-  transform: scaleX(1);
-}
-.choice:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-.choice-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 6px;
-}
-.choice-icon {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 3px;
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  color: var(--accent);
-}
-.go {
-  color: var(--ar-text-subtle);
-  transition:
-    transform 0.15s ease,
-    color 0.15s ease;
-}
-.choice:hover .go,
-.choice:focus-visible .go {
-  color: var(--accent);
-  transform: translateX(3px);
-}
-.choice strong {
-  color: var(--ar-text);
-  font-size: 16px;
-  font-weight: 600;
-}
-.choice .muted {
-  line-height: 1.5;
-}
-.points {
-  display: grid;
-  gap: 6px;
-  margin: 8px 0 0;
-  padding: 12px 0 0;
-  border-top: 1px dashed var(--ar-border);
-  list-style: none;
-  font-size: 12.5px;
-}
-.points li {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  color: var(--ar-text);
-}
-.points svg {
-  flex: none;
-  margin-top: 2px;
-  color: var(--accent);
-}
-@media (prefers-reduced-motion: reduce) {
-  .choice,
-  .choice::before,
-  .go {
-    transition: none;
-  }
-}
-@media (max-width: 760px) {
-  .choices {
-    grid-template-columns: 1fr;
-  }
-}
 /*
  * The steps fill the content area: header on top, the step below, the cart docked on the
  * right where there is room. The header stays in view while a long step scrolls.

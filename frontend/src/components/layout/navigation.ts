@@ -8,6 +8,7 @@ import {
   ClipboardList,
   Factory,
   FolderTree,
+  HandHelping,
   Hash,
   KeyRound,
   LayoutDashboard,
@@ -39,6 +40,8 @@ export interface NavItem {
   approver?: boolean
   /** Hidden unless the user's roles allow reading this area. */
   permission?: Schemas['ResourceKey']
+  /** With `permission`: only if the roles allow changing that area. */
+  write?: boolean
   /** Only for administrators. */
   superuser?: boolean
   /** Shows a count from the menu counts on the right. */
@@ -132,6 +135,14 @@ export const NAVIGATION: NavSection[] = [
         label: 'nav.requests',
         icon: ListChecks,
         to: { name: 'requests' },
+      },
+      {
+        key: 'direct-handout',
+        permission: 'requests',
+        write: true,
+        label: 'nav.directHandout',
+        icon: HandHelping,
+        to: { name: 'direct-handout' },
       },
       {
         key: 'calendar',
@@ -304,7 +315,7 @@ export interface NavViewer {
   isItStaff: boolean
   isSuperuser: boolean
   isApprover: boolean
-  can: (area: Schemas['ResourceKey']) => boolean
+  can: (area: Schemas['ResourceKey'], level?: Schemas['PermissionLevel']) => boolean
 }
 
 /**
@@ -324,7 +335,7 @@ export function visibleNavigation(
         (item) =>
           (!item.module || isOn(item.module)) &&
           (!item.approver || viewer.isApprover) &&
-          (!item.permission || viewer.can(item.permission)) &&
+          (!item.permission || viewer.can(item.permission, item.write ? 'write' : 'read')) &&
           (!item.superuser || viewer.isSuperuser),
       ),
     }))

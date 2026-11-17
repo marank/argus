@@ -171,14 +171,13 @@ Zusätzlich schickt **An Rückgabe erinnern** dem Mitarbeiter sofort eine E-Mail
 
 ## Im Namen eines Mitarbeiters anfordern
 
-Unter **Neue Anforderung** wählen IT-Mitarbeitende zuerst die Art:
+Unter **Neue Anforderung** fordern Sie Geräte aus dem Katalog an, für sich oder unter **Anforderung für Mitarbeiter** im Namen eines anderen. Erfasst die IT eine Anforderung für jemand anderen, entfällt die Genehmigung.
 
-- **Anforderung**: Geräte aus dem Katalog anfordern, für sich oder unter **Anforderung für Mitarbeiter** im Namen eines anderen. Erfasst die IT eine Anforderung für jemand anderen, entfällt die Genehmigung.
-- **Direktausgabe**: siehe unten.
+Bestimmte Geräte aus dem Lager stellen Sie über die [Direktausgabe](#direktausgabe) bereit.
 
 ## Direktausgabe
 
-Mit **Direkt ausgeben** stellen Sie bestimmte Geräte aus dem Lager für einen Mitarbeiter bereit, ohne Anforderung und ohne Genehmigung:
+Unter **IT-Betrieb → Direktausgabe** (oder **Direkt ausgeben** in den Anforderungen) stellen Sie bestimmte Geräte aus dem Lager für einen Mitarbeiter bereit, ohne Anforderung und ohne Genehmigung. Der Menüpunkt erscheint nur mit Schreibrecht auf Anforderungen.
 
 1. Geräte scannen oder suchen, Verbrauchsmaterial hinzufügen.
 2. Mitarbeiter, Dauer und Zeitraum wählen.
