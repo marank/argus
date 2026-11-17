@@ -93,6 +93,10 @@ Sind alle Positionen zugewiesen, planen Sie mit **Abholbereit melden** die Über
 
 Dazu legen Sie Termin und **Abholort** fest; bei einer Lieferung nur das Datum. Der Wunschtermin des Mitarbeiters steht im Dialog.
 
+::: info Gut zu wissen
+Vorgeschlagen wird die nächste volle Stunde. Die Uhrzeit wählen Sie im Feld neben dem Datum in Viertelstunden zwischen 6 und 20 Uhr. Gibt es nur einen Abholort, ist er bereits eingetragen.
+:::
+
 - **Mitarbeiter benachrichtigen**: Der Mitarbeiter erhält Termin und Ort. Dafür müssen Termin und Ort angegeben sein. Bei einer Direktausgabe ist diese Option standardmäßig aus.
 - **Geräteprüfung am Terminal überspringen**: Das Terminal beginnt direkt mit „Wer holt ab?“.
 

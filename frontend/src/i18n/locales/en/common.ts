@@ -21,6 +21,7 @@ export default {
   search: 'Search…',
   reset: 'Reset',
   today: 'Today',
+  time: 'Time',
   resetValue: 'Reset',
   clear: 'Clear',
   refresh: 'Refresh',

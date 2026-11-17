@@ -21,6 +21,7 @@ export default {
   search: 'Suchen…',
   reset: 'Zurücksetzen',
   today: 'Heute',
+  time: 'Uhrzeit',
   resetValue: 'Zurücksetzen',
   clear: 'Leeren',
   refresh: 'Aktualisieren',

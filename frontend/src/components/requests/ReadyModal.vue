@@ -6,11 +6,12 @@ import { useI18n } from 'vue-i18n'
 import { locationsApi } from '@/api/masterdata'
 import { requestsApi } from '@/api/requests'
 import type { Schemas } from '@/api/types'
-import DateField from '@/components/common/DateField.vue'
+import DateTimeField from '@/components/common/DateTimeField.vue'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import { useAction } from '@/composables/useAction'
 import { useFormat } from '@/composables/useFormat'
 import type { Id } from '@/types/common'
+import { nextFullHour, onlyPickupPoint } from '@/utils/requests'
 
 import HandoverModeSelect from './HandoverModeSelect.vue'
 
@@ -26,7 +27,9 @@ const skipCheck = ref(false)
 const notify = ref(true)
 const when = ref<number | null>(null)
 const where = ref<Id | null>(null)
-watch(show, (visible) => {
+/** The location shown before the list has loaded: the planned one or the only one there is. */
+const whereInitial = ref<Schemas['LocationOut'] | null>(null)
+watch(show, async (visible) => {
   if (!visible) return
   const r = props.assetRequest
   mode.value = r.handover_mode
@@ -34,8 +37,21 @@ watch(show, (visible) => {
   // A direct hand-out is usually done with the employee there: no message by default.
   notify.value = r.origin !== 'direct'
   // The date set when confirming; the employee is told this one with the ready message.
-  when.value = r.pickup_at ? new Date(r.pickup_at).getTime() : null
+  // Without one, the next full hour; licenses alone need no date.
+  when.value = r.pickup_at
+    ? new Date(r.pickup_at).getTime()
+    : hasPhysical.value
+      ? nextFullHour()
+      : null
   where.value = r.pickup_location?.id ?? null
+  whereInitial.value = (r.pickup_location as Schemas['LocationOut'] | null) ?? null
+  if (!where.value && hasPhysical.value) {
+    const only = await onlyPickupPoint()
+    if (only && !where.value) {
+      where.value = only.id
+      whereInitial.value = only
+    }
+  }
 })
 
 /** Only devices and consumables are collected; a request of licenses alone is handed out at once. */
@@ -82,13 +98,7 @@ async function save() {
         :show-feedback="false"
       >
         <div class="when">
-          <DateField
-            v-model:value="when"
-            type="datetime"
-            :minutes="[0, 15, 30, 45]"
-            clearable
-            style="width: 100%"
-          />
+          <DateTimeField v-model:value="when" clearable />
           <small v-if="assetRequest.requested_pickup_date" class="muted wish">{{
             t('requests.wishHint', { date: weekday(assetRequest.requested_pickup_date) })
           }}</small>
@@ -105,7 +115,7 @@ async function save() {
           :fetcher="locationsApi.list"
           :params="{ is_pickup_point: true }"
           :label="(l) => l.full_name"
-          :initial="assetRequest.pickup_location as never"
+          :initial="whereInitial as never"
         />
       </NFormItem>
     </div>

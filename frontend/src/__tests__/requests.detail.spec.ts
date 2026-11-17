@@ -57,6 +57,7 @@ const api = vi.hoisted(() => {
       assign: fn(),
     },
     portal: { availability: fn() },
+    locations: vi.fn(async (): Promise<unknown> => ({ items: [], count: 0 })),
   }
 })
 
@@ -79,7 +80,7 @@ vi.mock('@/api/masterdata', async (importOriginal) => {
   const empty = { list: async () => ({ items: [], count: 0 }) }
   return {
     ...(await importOriginal<typeof import('@/api/masterdata')>()),
-    locationsApi: empty,
+    locationsApi: { list: api.locations },
     assetModelsApi: empty,
     suppliersApi: empty,
   }
@@ -302,6 +303,25 @@ describe('RequestDetailView', () => {
       control('switch', 'Notify the employee', openModal()).click()
       await flushPromises()
       expect(submit.disabled).toBe(false)
+    })
+
+    it('proposes the next full hour and the only pickup point', async () => {
+      api.locations.mockResolvedValue({ items: [PICKUP_POINT], count: 1 })
+      const request = allocatedRequest()
+      api.requests.markReady.mockResolvedValue({ ...request, status: 'ready' })
+      try {
+        await open(request)
+        await click('Ready for pickup')
+        const next = new Date()
+        next.setHours(next.getHours() + 1, 0, 0, 0)
+        await click('Ready for pickup')
+        expect(api.requests.markReady).toHaveBeenCalledWith(
+          REQUEST_ID,
+          expect.objectContaining({ pickup_at: next.toISOString(), pickup_location: 'loc-1' }),
+        )
+      } finally {
+        api.locations.mockResolvedValue({ items: [], count: 0 })
+      }
     })
 
     it('keeps the ready dialog open and shows why marking ready failed', async () => {

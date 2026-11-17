@@ -8,10 +8,10 @@ import { locationsApi } from '@/api/masterdata'
 import { requestsApi } from '@/api/requests'
 import type { Schemas } from '@/api/types'
 import EntitySelect from '@/components/common/EntitySelect.vue'
-import DateField from '@/components/common/DateField.vue'
+import DateTimeField from '@/components/common/DateTimeField.vue'
 import { useAction } from '@/composables/useAction'
 import { useFormat } from '@/composables/useFormat'
-import { itemLabel } from '@/utils/requests'
+import { itemLabel, nextFullHour, onlyPickupPoint } from '@/utils/requests'
 
 import HandoverModeSelect from './HandoverModeSelect.vue'
 
@@ -47,10 +47,12 @@ const form = reactive({
 function defaultPickup(): number {
   const day = props.assetRequest.requested_pickup_date ?? props.assetRequest.start_date
   const start = new Date(`${day}T09:00:00`)
-  return Math.max(start.getTime(), Date.now())
+  return Math.max(start.getTime(), nextFullHour())
 }
+/** The location shown before the list has loaded: the planned one or the only one there is. */
+const locationInitial = ref<Schemas['LocationOut'] | null>(null)
 
-watch(show, (visible) => {
+watch(show, async (visible) => {
   if (!visible) return
   const r = props.assetRequest
   editing.value = r.status === 'confirmed'
@@ -63,6 +65,14 @@ watch(show, (visible) => {
   form.handover_mode = r.handover_mode
   // As when marking it ready: a direct hand-out is usually done with the employee there.
   form.notify = r.origin !== 'direct'
+  locationInitial.value = (r.pickup_location as Schemas['LocationOut'] | null) ?? null
+  if (props.mode === 'schedule' && !form.pickup_location) {
+    const only = await onlyPickupPoint()
+    if (only && !form.pickup_location) {
+      form.pickup_location = only.id
+      locationInitial.value = only
+    }
+  }
 })
 
 /** Once the employee was told it is ready, a new message needs when and, unless IT delivers, where. */
@@ -159,13 +169,7 @@ async function save() {
       <div v-else class="cols">
         <NFormItem :label="t('requests.pickupAt')" :required="needsWhen">
           <div class="when">
-            <DateField
-              v-model:value="form.pickup_at"
-              type="datetime"
-              :minutes="[0, 15, 30, 45]"
-              clearable
-              style="width: 100%"
-            />
+            <DateTimeField v-model:value="form.pickup_at" clearable />
             <small v-if="assetRequest.requested_pickup_date" class="muted wish">{{
               t('requests.wishHint', { date: weekday(assetRequest.requested_pickup_date) })
             }}</small>
@@ -177,7 +181,7 @@ async function save() {
             :fetcher="locationsApi.list"
             :params="{ is_pickup_point: true }"
             :label="(l) => l.full_name"
-            :initial="assetRequest.pickup_location as never"
+            :initial="locationInitial as never"
           />
         </NFormItem>
       </div>

@@ -1,3 +1,4 @@
+import { locationsApi } from '@/api/masterdata'
 import type { Schemas } from '@/api/types'
 import { i18n } from '@/i18n'
 
@@ -65,4 +66,17 @@ export function handoverPlanned(
     !!assetRequest.pickup_at ||
     assetRequest.events.some((event) => ['rescheduled', 'ready'].includes(event.kind))
   )
+}
+
+/** Proposed handover time: the next full hour from now. */
+export function nextFullHour(now = new Date()): number {
+  const next = new Date(now)
+  next.setHours(now.getHours() + 1, 0, 0, 0)
+  return next.getTime()
+}
+
+/** The pickup point if there is only one, so the dialogs can fill it in. */
+export async function onlyPickupPoint(): Promise<Schemas['LocationOut'] | null> {
+  const page = await locationsApi.list({ is_pickup_point: true, page_size: 2 })
+  return page.items.length === 1 ? page.items[0]! : null
 }
