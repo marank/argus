@@ -6,7 +6,7 @@ import { ref, type VNodeChild } from 'vue'
 
 /**
  * Scan field with suggestions: typing searches after a short pause and lists the hits,
- * a click picks one. Enter picks a hit chosen with the arrow keys, else hands over the
+ * a click picks one. The hits close on Enter and reopen with the next keystroke. Enter picks a hit chosen with the arrow keys, else hands over the
  * typed or scanned code as is.
  */
 const props = defineProps<{
@@ -25,11 +25,17 @@ const search = useDebounceFn((q: string) => emit('search', q), 250)
 
 /** Whether an option was chosen with the arrow keys since the last keystroke. */
 const arrowed = ref(false)
+/**
+ * The hits only open while typing: not on focus, and not after Enter handed over the
+ * code, so they never cover the list below while that code is being processed.
+ */
+const typing = ref(false)
 
 /** Naive clears to null after an option was picked. */
 function onInput(value: string | null) {
   code.value = value ?? ''
   arrowed.value = false
+  typing.value = Boolean(code.value.trim())
   search(code.value.trim())
 }
 
@@ -43,6 +49,7 @@ function onKeydown(event: KeyboardEvent) {
   if (event.key !== 'Enter' || event.isComposing || arrowed.value) return
   event.preventDefault()
   event.stopPropagation()
+  typing.value = false
   const typed = code.value.trim()
   if (typed) emit('enter', typed)
 }
@@ -57,7 +64,7 @@ function onKeydown(event: KeyboardEvent) {
       :options="props.options"
       :placeholder="placeholder"
       :loading="loading"
-      :get-show="() => true"
+      :get-show="() => typing"
       :show-empty="Boolean(emptyText)"
       clear-after-select
       :render-label="props.renderLabel as never"
