@@ -64,7 +64,7 @@ jobs:
         working-directory: /
         run: apt-get update && apt-get install -y --no-install-recommends git ca-certificates
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Install dependencies
         # --locked also fails when uv.lock no longer matches pyproject.toml.
@@ -136,7 +136,7 @@ jobs:
         working-directory: /
         run: apt-get update && apt-get install -y --no-install-recommends git ca-certificates
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Install dependencies
         run: |
@@ -184,7 +184,7 @@ jobs:
         working-directory: /
         run: apt-get update && apt-get install -y --no-install-recommends git ca-certificates
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Install dependencies
         run: |
@@ -198,7 +198,7 @@ jobs:
   repository:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       # Secrets, critical fixable vulnerabilities in the lock files and HIGH/CRITICAL
       # Dockerfile misconfigurations fail; HIGH vulnerabilities are reported. The files
@@ -232,7 +232,7 @@ jobs:
       DOCKER_BUILDKIT: "1"
       PUSH: ${{ github.event_name != 'pull_request' }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Compute tags
         id: meta
