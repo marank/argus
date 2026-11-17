@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 
 import pytest
 from django.core.management import CommandError, call_command
-from django.db import connection
+from django.db import connections
 
 from apps.core import tasks
 from apps.core.services import backups
@@ -16,14 +16,14 @@ def database(monkeypatch):
     """Production-like connection details for pg_dump. The rest of the test database's
     settings stays: Django still uses them, e.g. when a test changes TIME_ZONE."""
     settings_dict = {
-        **connection.settings_dict,
+        **connections["default"].settings_dict,
         "NAME": "argus",
         "HOST": "db",
         "PORT": "5432",
         "USER": "argus",
         "PASSWORD": "secret",
     }
-    monkeypatch.setattr(connection, "settings_dict", settings_dict)
+    monkeypatch.setattr(connections["default"], "settings_dict", settings_dict)
     return settings_dict
 
 
@@ -132,7 +132,7 @@ def test_the_job_does_nothing_without_backup_dir(settings, pg_dump):
 
 @pytest.fixture
 def postgres(monkeypatch):
-    monkeypatch.setattr(connection, "vendor", "postgresql")
+    monkeypatch.setattr(connections["default"], "vendor", "postgresql")
 
 
 def test_the_command_dumps_now(backup_dir, pg_dump, postgres, capsys):
@@ -160,7 +160,7 @@ def test_the_command_needs_backup_dir(settings, postgres):
 
 
 def test_the_command_needs_postgresql(backup_dir, monkeypatch):
-    monkeypatch.setattr(connection, "vendor", "sqlite")
+    monkeypatch.setattr(connections["default"], "vendor", "sqlite")
 
     with pytest.raises(CommandError, match="PostgreSQL"):
         call_command("backup_database")
