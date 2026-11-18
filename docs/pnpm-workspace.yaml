@@ -1,3 +1,8 @@
 # esbuild ships its binary as an optional dependency; its install script is not needed.
 allowBuilds:
   esbuild: false
+
+# VitePress 1 asks for Vite 5, which gets no more security fixes (dev server only). Its Vue
+# plugin supports Vite 6, and VitePress works with it; drop this once VitePress 2 is stable.
+overrides:
+  vite: ^6.4.6

@@ -10,7 +10,7 @@ ARG NODE_VERSION=24
 FROM node:${NODE_VERSION}-alpine AS frontend
 WORKDIR /build
 RUN corepack enable
-COPY frontend/package.json frontend/pnpm-lock.yaml ./
+COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml ./
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile
 COPY frontend/ ./

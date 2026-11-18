@@ -1,0 +1,5 @@
+# Security fixes for transitive dependencies whose parents still pin an affected range.
+overrides:
+  # ESLint plugins and @vue/test-utils ask for minimatch 10, which has a denial of service
+  # in pattern expansion (fixed in 11.0.1, same API); 5.x for openapi-typescript is unaffected.
+  "minimatch@>=10.0.0 <11.0.1": ^11.0.1
