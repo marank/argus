@@ -183,7 +183,7 @@ def replace_asset(request: AuthedRequest, pk: UUID, payload: AssetReplaceIn) -> 
 @router.delete("/{uuid:pk}", response={204: None})
 def delete_asset(request: AuthedRequest, pk: UUID) -> Status[None]:
     try:
-        get_object_or_404(Asset, pk=pk).delete()
+        asset_service.delete_asset(get_object_or_404(Asset, pk=pk), request.user)
     except ProtectedError as exc:
         raise BusinessError(
             _("The device appears in requests or orders and cannot be deleted. Set it to “Retired” instead.")

@@ -1,3 +1,4 @@
+import activity from './activity'
 import auth from './auth'
 import calendar from './calendar'
 import common from './common'
@@ -16,6 +17,7 @@ import table from './table'
 import terminal from './terminal'
 
 export default {
+  activity,
   auth,
   calendar,
   common,

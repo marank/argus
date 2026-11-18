@@ -1,3 +1,4 @@
+from contextlib import nullcontext
 from typing import TYPE_CHECKING, Any, TypedDict
 from uuid import UUID
 
@@ -7,6 +8,8 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from apps.accounts.models import User
+from apps.activity.models import ActivityKind
+from apps.activity.services import log as activity
 from apps.core.exceptions import BusinessError
 from apps.core.models import NumberSequence
 from apps.core.services.numbering import next_number
@@ -121,9 +124,17 @@ def create_asset(data: dict[str, Any], user: User) -> Asset:
     _give_name(asset)
     _set_consumables(asset, consumables)
     _set_components(asset, components)
-    log_event(asset, AssetEventKind.CREATED, user)
-    if asset.assigned_to_id:
-        log_event(asset, AssetEventKind.ASSIGNED, user, related_user_id=asset.assigned_to_id)
+    with activity.muted():
+        log_event(asset, AssetEventKind.CREATED, user)
+        if asset.assigned_to_id:
+            log_event(asset, AssetEventKind.ASSIGNED, user, related_user_id=asset.assigned_to_id)
+    activity.log(
+        ActivityKind.ASSET_CREATED,
+        asset.pk,
+        activity.asset_label(asset),
+        user,
+        related_user_id=asset.assigned_to_id,
+    )
     return asset
 
 
@@ -185,12 +196,14 @@ def update_asset(asset: Asset, data: dict[str, Any], user: User) -> Asset:
                 asset.status = AssetStatus.IN_STOCK
 
     if asset.status != previous_status:
-        log_event(
-            asset,
-            AssetEventKind.STATUS_CHANGED,
-            user,
-            description=f"{AssetStatus(previous_status).label} → {asset.get_status_display()}",
-        )
+        # A new holder brings the status along; the activity log shows the hand-out alone.
+        with activity.muted() if asset.assigned_to_id != previous_user else nullcontext():
+            log_event(
+                asset,
+                AssetEventKind.STATUS_CHANGED,
+                user,
+                description=f"{AssetStatus(previous_status).label} → {asset.get_status_display()}",
+            )
     asset.full_clean()
     asset.save()
     _set_consumables(asset, consumables)
@@ -220,22 +233,27 @@ def replace_asset(asset: Asset, replacement: Asset, status: str, user: User) -> 
         raise BusinessError(_("The replaced device can go into stock, into repair or be retired."))
     name, holder = asset.name, asset.assigned_to_id
     location = asset.location_id or replacement.location_id
-    # The old device gives the name up first: only one device in use may have it.
-    update_asset(asset, {"name": "", "assigned_to": None, "status": status}, user)
-    update_asset(replacement, {"name": name, "assigned_to": holder, "location": location}, user)
-    log_event(
-        asset,
-        AssetEventKind.REPLACED,
+    replaces = _("Replaces %(asset)s") % {"asset": asset.inventory_number}
+    # One row in the activity log for the whole swap.
+    with activity.muted():
+        # The old device gives the name up first: only one device in use may have it.
+        update_asset(asset, {"name": "", "assigned_to": None, "status": status}, user)
+        update_asset(replacement, {"name": name, "assigned_to": holder, "location": location}, user)
+        log_event(
+            asset,
+            AssetEventKind.REPLACED,
+            user,
+            related_asset=replacement,
+            description=_("Replaced by %(asset)s") % {"asset": replacement.inventory_number},
+        )
+        log_event(replacement, AssetEventKind.REPLACED, user, related_asset=asset, description=replaces)
+    activity.log(
+        ActivityKind.ASSET_REPLACED,
+        replacement.pk,
+        activity.asset_label(replacement),
         user,
-        related_asset=replacement,
-        description=_("Replaced by %(asset)s") % {"asset": replacement.inventory_number},
-    )
-    log_event(
-        replacement,
-        AssetEventKind.REPLACED,
-        user,
-        related_asset=asset,
-        description=_("Replaces %(asset)s") % {"asset": asset.inventory_number},
+        related_user_id=holder,
+        detail=replaces,
     )
     return replacement
 
@@ -246,7 +264,18 @@ def bulk_create_assets(common: dict[str, Any], serial_numbers: list[str], user: 
     serials = [s.strip() for s in serial_numbers if s.strip()]
     if len(set(serials)) != len(serials):
         raise BusinessError(_("The list contains duplicate serial numbers."))
-    return [create_asset({**common, "serial_number": serial}, user) for serial in serials]
+    with activity.muted():
+        assets = [create_asset({**common, "serial_number": serial}, user) for serial in serials]
+    _log_created(assets, user)
+    return assets
+
+
+def _log_created(assets: list[Asset], user: User) -> None:
+    """Devices created together are one row in the activity log."""
+    if len(assets) == 1:
+        activity.log(ActivityKind.ASSET_CREATED, assets[0].pk, activity.asset_label(assets[0]), user)
+    elif assets:
+        activity.log(ActivityKind.ASSETS_CREATED, None, assets[0].model.full_name, user, quantity=len(assets))
 
 
 def series_sequence(model: AssetModel) -> NumberSequence:
@@ -281,7 +310,10 @@ def preview_series(model: AssetModel, count: int) -> SeriesPreview:
 def create_series(common: dict[str, Any], count: int, user: User) -> list[Asset]:
     """Create ``count`` identical devices numbered in a row from the category's sequence."""
     series_sequence(AssetModel.objects.select_related("category", "manufacturer").get(pk=common["model"]))
-    return [create_asset(common, user) for _ in range(count)]
+    with activity.muted():
+        assets = [create_asset(common, user) for _ in range(count)]
+    _log_created(assets, user)
+    return assets
 
 
 class Consumption(TypedDict):
@@ -319,11 +351,20 @@ def record_event(
         from apps.inventory.models import Consumable
 
         consumable = Consumable.objects.get(pk=consume["consumable_id"])
-        move_consumable(
-            consumable,
-            -consume["quantity"],
-            ConsumableMovement.Reason.CONSUMPTION,
-            user,
-            note=f"{asset.inventory_number}: {event.get_kind_display()}",
-        )
+        # Part of the device's event in the activity log.
+        with activity.muted():
+            move_consumable(
+                consumable,
+                -consume["quantity"],
+                ConsumableMovement.Reason.CONSUMPTION,
+                user,
+                note=f"{asset.inventory_number}: {event.get_kind_display()}",
+            )
     return event
+
+
+@transaction.atomic
+def delete_asset(asset: Asset, user: User) -> None:
+    label = activity.asset_label(asset)
+    asset.delete()
+    activity.log(ActivityKind.ASSET_DELETED, None, label, user)

@@ -14,7 +14,7 @@ The IT dashboard shows the current state of inventory, requests and procurement.
 | **Deadlines & reports** | Open problem reports, expiring licenses and warranties |
 | **Devices by status** | Distribution of all devices |
 | **Upcoming hand-outs** | What is to be handed out in the next few days, with overdue items highlighted |
-| **Recent activity** | The latest service log entries |
+| **Recent activity** | The last ten steps from all areas you may read; handing out several devices is one line. **Show all** opens [Activities](./activities) |
 
 Clicking any number takes you to the matching, filtered list.
 

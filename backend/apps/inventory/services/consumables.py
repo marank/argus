@@ -5,6 +5,8 @@ from django.db import transaction
 from django.utils.translation import gettext as _
 
 from apps.accounts.models import User
+from apps.activity.models import ActivityKind
+from apps.activity.services import log as activity
 from apps.core.exceptions import BusinessError
 from apps.inventory.models import Consumable, ConsumableMovement
 
@@ -51,9 +53,21 @@ def move_consumable(
         )
     item.quantity += delta
     item.save(update_fields=["quantity", "reserved_quantity", "updated_at"])
-    return ConsumableMovement.objects.create(
+    movement = ConsumableMovement.objects.create(
         consumable=item, delta=delta, reason=reason, performed_by=user, **fields
     )
+    # A request's or an order's step covers its movements in the activity log.
+    if movement.asset_request_id is None and movement.purchase_order_line_id is None:
+        activity.log(
+            ActivityKind(f"consumable_{reason}"),
+            item.pk,
+            activity.consumable_label(item),
+            user,
+            related_user_id=movement.recipient_id,
+            quantity=delta,
+            detail=movement.note,
+        )
+    return movement
 
 
 @transaction.atomic

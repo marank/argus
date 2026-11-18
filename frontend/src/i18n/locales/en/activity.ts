@@ -1,0 +1,16 @@
+export default {
+  title: 'Activities',
+  subtitle: 'What was done in requests, devices, stock, licenses, problem reports and orders.',
+  showAll: 'Show all',
+  occurredAt: 'Time',
+  area: 'Area',
+  object: 'Object',
+  kind: 'Activity',
+  actor: 'Performed by',
+  employee: 'Employee',
+  detail: 'Detail',
+  positions: '{count} item | {count} items',
+  devices: '{count} device | {count} devices',
+  units: '{count} unit | {count} units',
+  stock: '{count} units',
+}

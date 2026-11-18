@@ -3414,3 +3414,93 @@ msgstr "Die Vertretung hat schon begonnen; nur das Ende lässt sich noch ändern
 #: apps/accounts/services/delegations.py
 msgid "The end must not be in the past."
 msgstr "Das Ende darf nicht in der Vergangenheit liegen."
+
+msgid "Activity"
+msgstr "Aktivität"
+
+msgid "Licenses"
+msgstr "Lizenzen"
+
+msgid "Problem reports"
+msgstr "Meldungen"
+
+msgid "Orders"
+msgstr "Bestellungen"
+
+msgid "Devices created"
+msgstr "Geräte angelegt"
+
+msgid "Devices imported"
+msgstr "Geräte importiert"
+
+msgid "Device created"
+msgstr "Gerät angelegt"
+
+msgid "Device deleted"
+msgstr "Gerät gelöscht"
+
+msgid "Report taken into work"
+msgstr "Meldung in Bearbeitung genommen"
+
+msgid "Report reopened"
+msgstr "Meldung wieder geöffnet"
+
+msgid "Stock received"
+msgstr "Wareneingang gebucht"
+
+msgid "Stock issued"
+msgstr "Vom Lager ausgegeben"
+
+msgid "Stock returned"
+msgstr "Ins Lager zurückgebucht"
+
+msgid "Stock corrected"
+msgstr "Bestand korrigiert"
+
+msgid "Stock consumed"
+msgstr "Für Reparatur verbraucht"
+
+msgid "License created"
+msgstr "Lizenz angelegt"
+
+msgid "License deleted"
+msgstr "Lizenz gelöscht"
+
+msgid "Seat assigned"
+msgstr "Platz zugewiesen"
+
+msgid "Seat removed"
+msgstr "Platz entfernt"
+
+msgid "Order created"
+msgstr "Bestellung angelegt"
+
+msgid "Delivery received"
+msgstr "Lieferung eingegangen"
+
+msgid "Order cancelled"
+msgstr "Bestellung storniert"
+
+msgid "Order deleted"
+msgstr "Bestellung gelöscht"
+
+msgid "area"
+msgstr "Bereich"
+
+msgid "object"
+msgstr "Objekt"
+
+msgid "detail"
+msgstr "Detail"
+
+msgid "activity"
+msgstr "Aktivität"
+
+msgid "activities"
+msgstr "Aktivitäten"
+
+msgid "Device import"
+msgstr "Geräteimport"
+
+msgid "%(created)d new, %(updated)d changed"
+msgstr "%(created)d neu, %(updated)d geändert"

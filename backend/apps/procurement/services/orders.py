@@ -10,6 +10,8 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from apps.accounts.models import User
+from apps.activity.models import ActivityKind
+from apps.activity.services import log as activity
 from apps.core.exceptions import BusinessError
 from apps.inventory.models import AssetStatus, ConsumableMovement
 from apps.inventory.services import assets as asset_service
@@ -57,6 +59,7 @@ def create_order(data: dict[str, Any], lines: list[dict[str, Any]], user: User) 
     _apply(order, data)
     order.save()
     _save_lines(order, lines)
+    activity.log(ActivityKind.ORDER_CREATED, order.pk, activity.order_label(order), user, quantity=len(lines))
     return order
 
 
@@ -83,7 +86,7 @@ def _apply(order: PurchaseOrder, data: dict[str, Any]) -> None:
 
 @transaction.atomic
 def mark_ordered(
-    order: PurchaseOrder, order_date: date | None, expected_date: date | None, reference: str
+    order: PurchaseOrder, order_date: date | None, expected_date: date | None, reference: str, user: User
 ) -> PurchaseOrder:
     _require_status(order, Status.DRAFT)
     order.status = Status.ORDERED
@@ -91,15 +94,25 @@ def mark_ordered(
     order.expected_date = expected_date
     order.supplier_reference = reference
     order.save()
+    activity.log(ActivityKind.ORDER_PLACED, order.pk, activity.order_label(order), user, detail=reference)
     return order
 
 
 @transaction.atomic
-def cancel(order: PurchaseOrder) -> PurchaseOrder:
+def cancel(order: PurchaseOrder, user: User) -> PurchaseOrder:
     _require_status(order, Status.DRAFT, Status.ORDERED)
     order.status = Status.CANCELLED
     order.save()
+    activity.log(ActivityKind.ORDER_CANCELLED, order.pk, activity.order_label(order), user)
     return order
+
+
+@transaction.atomic
+def delete_order(order: PurchaseOrder, user: User) -> None:
+    _require_status(order, Status.DRAFT)
+    label = activity.order_label(order)
+    order.delete()
+    activity.log(ActivityKind.ORDER_DELETED, None, label, user)
 
 
 def _add_months(day: date, months: int) -> date:
@@ -119,7 +132,6 @@ def receive(order: PurchaseOrder, receipts: list[dict[str, Any]], user: User) ->
     # same open quantity.
     order = PurchaseOrder.objects.select_for_update().get(pk=order.pk)
     _require_status(order, Status.ORDERED, Status.PARTIALLY_RECEIVED)
-    today = timezone.localdate()
     order_lines = {
         line.pk: line
         for line in order.lines.select_for_update(of=("self",)).select_related(
@@ -127,6 +139,30 @@ def receive(order: PurchaseOrder, receipts: list[dict[str, Any]], user: User) ->
         )
     }
 
+    with activity.muted():
+        received = _book_receipts(order, order_lines, receipts, user)
+    if received:
+        activity.log(
+            ActivityKind.ORDER_RECEIVED, order.pk, activity.order_label(order), user, quantity=received
+        )
+    lines = list(order.lines.all())
+    if all(line.quantity_open == 0 for line in lines):
+        order.status = Status.RECEIVED
+    elif any(line.quantity_received for line in lines):
+        order.status = Status.PARTIALLY_RECEIVED
+    order.save()
+    return order
+
+
+def _book_receipts(
+    order: PurchaseOrder,
+    order_lines: dict[Any, PurchaseOrderLine],
+    receipts: list[dict[str, Any]],
+    user: User,
+) -> int:
+    """Books each delivered line; returns the number of units received."""
+    today = timezone.localdate()
+    received = 0
     for receipt in receipts:
         line = order_lines.get(receipt["line"])
         if line is None:
@@ -148,6 +184,7 @@ def receive(order: PurchaseOrder, receipts: list[dict[str, Any]], user: User) ->
         item = line.asset_request_item
         if item is not None and item.asset_request.status != AssetRequestStatus.CONFIRMED:
             item = None  # only confirmed requests get the delivered units
+        received += quantity
 
         if model.is_bulk:
             if not location_id:
@@ -189,11 +226,4 @@ def receive(order: PurchaseOrder, receipts: list[dict[str, Any]], user: User) ->
 
         line.quantity_received += quantity
         line.save(update_fields=["quantity_received"])
-
-    lines = list(order.lines.all())
-    if all(line.quantity_open == 0 for line in lines):
-        order.status = Status.RECEIVED
-    elif any(line.quantity_received for line in lines):
-        order.status = Status.PARTIALLY_RECEIVED
-    order.save()
-    return order
+    return received

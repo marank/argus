@@ -14,6 +14,7 @@ export default {
   licenses: 'Licenses',
   issues: 'Problem reports',
   eventLog: 'Service log',
+  activities: 'Activities',
   calendar: 'Calendar',
   requests: 'Requests',
   directHandout: 'Direct hand-out',

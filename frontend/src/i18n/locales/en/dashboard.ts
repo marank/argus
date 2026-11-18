@@ -17,6 +17,7 @@ export default {
   upcomingDays: 'Hand-outs (due and next {count} days)',
   overdueHandout: 'Hand-out overdue',
   recentActivity: 'Recent activity',
+  activityDevices: '{count} device | {count} devices',
   openRequests: 'Open requests',
   assignedDevices: 'Assigned devices',
   pickupReady: 'Ready to collect',

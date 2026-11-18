@@ -14,7 +14,7 @@ Das Dashboard der IT zeigt den aktuellen Stand von Inventar, Anforderungen und B
 | **Fristen & Meldungen** | Offene Meldungen, ablaufende Lizenzen und Garantien |
 | **Geräte nach Status** | Verteilung aller Geräte |
 | **Anstehende Ausgaben** | Was in den nächsten Tagen ausgegeben werden soll, Überfälliges markiert |
-| **Letzte Aktivitäten** | Die letzten Einträge aus dem Servicebuch |
+| **Letzte Aktivitäten** | Die letzten zehn Arbeitsschritte aus allen Bereichen, die Sie lesen dürfen; eine Ausgabe mehrerer Geräte ist eine Zeile. **Alle anzeigen** öffnet die [Aktivitäten](./activities) |
 
 Jede Zahl führt per Klick zur passenden, gefilterten Liste.
 

@@ -67,6 +67,7 @@ export async function mountPage(
         'assets',
         'license',
         'licenses',
+        'consumables',
         'order',
         'orders',
         'request',

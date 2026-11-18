@@ -17,6 +17,7 @@ export default {
   upcomingDays: 'Ausgaben (fällig und nächste {count} Tage)',
   overdueHandout: 'Ausgabe überfällig',
   recentActivity: 'Letzte Aktivitäten',
+  activityDevices: '{count} Gerät | {count} Geräte',
   openRequests: 'Offene Anforderungen',
   assignedDevices: 'Zugewiesene Geräte',
   pickupReady: 'Zur Abholung bereit',

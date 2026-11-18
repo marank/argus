@@ -212,6 +212,26 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/activities': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * List Activities
+     * @description Everything IT did, newest first: requests, devices, stock, licenses, reports, orders.
+     */
+    get: operations['apps_activity_api_activities_list_activities']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/approvals': {
     parameters: {
       query?: never
@@ -2756,6 +2776,107 @@ export interface components {
       requester: components['schemas']['UserRefOut']
       status: components['schemas']['AssetRequestStatus']
     }
+    /**
+     * ActivityArea
+     * @description Where a step happened; the values are the permission resources (``ResourceKey``).
+     * @enum {string}
+     */
+    ActivityArea: 'requests' | 'assets' | 'consumables' | 'licenses' | 'issues' | 'procurement'
+    /** ActivityFilter */
+    ActivityFilter: {
+      /** Actor */
+      actor?: string[] | null
+      /** Area */
+      area?: string[] | null
+      /** Kind */
+      kind?: string[] | null
+      /** Since */
+      since?: string | null
+      /** Until */
+      until?: string | null
+    }
+    /**
+     * ActivityKind
+     * @enum {string}
+     */
+    ActivityKind:
+      | 'request_created'
+      | 'request_direct'
+      | 'request_quick'
+      | 'request_approved'
+      | 'request_declined'
+      | 'request_confirmed'
+      | 'request_rejected'
+      | 'request_cancelled'
+      | 'request_assigned'
+      | 'request_allocated'
+      | 'request_ready'
+      | 'request_reopened'
+      | 'request_rescheduled'
+      | 'request_handed_out'
+      | 'request_returned'
+      | 'request_extended'
+      | 'request_reminded'
+      | 'request_completed'
+      | 'asset_created'
+      | 'assets_created'
+      | 'assets_imported'
+      | 'asset_status_changed'
+      | 'asset_assigned'
+      | 'asset_returned'
+      | 'asset_replaced'
+      | 'asset_component_replaced'
+      | 'asset_repair'
+      | 'asset_maintenance'
+      | 'asset_inspection'
+      | 'asset_note'
+      | 'asset_deleted'
+      | 'issue_reported'
+      | 'issue_in_progress'
+      | 'issue_reopened'
+      | 'issue_resolved'
+      | 'consumable_receipt'
+      | 'consumable_issue'
+      | 'consumable_return'
+      | 'consumable_adjustment'
+      | 'consumable_consumption'
+      | 'license_created'
+      | 'license_deleted'
+      | 'license_assigned'
+      | 'license_unassigned'
+      | 'order_created'
+      | 'order_placed'
+      | 'order_received'
+      | 'order_cancelled'
+      | 'order_deleted'
+    /**
+     * ActivityOut
+     * @description One step of IT's work. ``subject_id`` is empty for a deleted object or several devices.
+     */
+    ActivityOut: {
+      actor: components['schemas']['UserRefOut'] | null
+      area: components['schemas']['ActivityArea']
+      /** Detail */
+      detail: string
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      kind: components['schemas']['ActivityKind']
+      /**
+       * Occurred At
+       * Format: date-time
+       */
+      occurred_at: string
+      /** Quantity */
+      quantity: number | null
+      related_user: components['schemas']['UserRefOut'] | null
+      /** Subject Id */
+      subject_id: string | null
+      /** Subject Label */
+      subject_label: string
+    }
     /** AllocateIn */
     AllocateIn: {
       /**
@@ -5187,7 +5308,7 @@ export interface components {
       /** Orders To Place */
       orders_to_place: number
       /** Recent Events */
-      recent_events: components['schemas']['AssetEventWithAssetOut'][]
+      recent_events: components['schemas']['ActivityOut'][]
       /** Requests Mine */
       requests_mine: number
       /** Requests My Teams */
@@ -6581,6 +6702,13 @@ export interface components {
       model: components['schemas']['AssetModelRefOut']
       /** Valid Until */
       valid_until: string | null
+    }
+    /** PagedActivityOut */
+    PagedActivityOut: {
+      /** Count */
+      count: number
+      /** Items */
+      items: components['schemas']['ActivityOut'][]
     }
     /** PagedAssetEventWithAssetOut */
     PagedAssetEventWithAssetOut: {
@@ -8584,6 +8712,36 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['UserOut']
+        }
+      }
+    }
+  }
+  apps_activity_api_activities_list_activities: {
+    parameters: {
+      query?: {
+        area?: string[] | null
+        kind?: string[] | null
+        actor?: string[] | null
+        since?: string | null
+        until?: string | null
+        q?: string | null
+        ordering?: string | null
+        page?: number
+        page_size?: number | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PagedActivityOut']
         }
       }
     }

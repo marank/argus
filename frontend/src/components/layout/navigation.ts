@@ -1,4 +1,5 @@
 import {
+  Activity,
   AppWindow,
   Boxes,
   CalendarDays,
@@ -189,6 +190,12 @@ export const NAVIGATION: NavSection[] = [
         label: 'nav.eventLog',
         icon: Wrench,
         to: { name: 'event-log' },
+      },
+      {
+        key: 'activities',
+        label: 'nav.activities',
+        icon: Activity,
+        to: { name: 'activities' },
       },
     ],
   },

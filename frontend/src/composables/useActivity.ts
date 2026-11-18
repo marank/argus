@@ -1,0 +1,26 @@
+import { useI18n } from 'vue-i18n'
+
+import { useFormat } from '@/composables/useFormat'
+import type { Activity } from '@/types/activity'
+
+/** Texts of a row of the activity log, shared by the dashboard and the page. */
+export function useActivity() {
+  const { t } = useI18n()
+  const { enumLabel } = useFormat()
+
+  /** What the quantity counts: positions of a request or order, devices, delivered units, stock. */
+  const quantity = (row: Activity): string => {
+    const n = row.quantity
+    if (n === null) return ''
+    if (row.area === 'consumables') return t('activity.stock', { count: n > 0 ? `+${n}` : `${n}` })
+    if (row.kind === 'order_received') return t('activity.units', n)
+    if (row.area === 'assets') return t('activity.devices', n)
+    return t('activity.positions', n)
+  }
+
+  /** "Handed out · 3 positions" */
+  const summary = (row: Activity): string =>
+    [enumLabel('activityKind', row.kind), quantity(row)].filter(Boolean).join(' · ')
+
+  return { quantity, summary }
+}

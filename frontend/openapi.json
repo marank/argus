@@ -28,6 +28,233 @@
         "title": "ActiveAssetRequestOut",
         "type": "object"
       },
+      "ActivityArea": {
+        "description": "Where a step happened; the values are the permission resources (``ResourceKey``).",
+        "enum": [
+          "requests",
+          "assets",
+          "consumables",
+          "licenses",
+          "issues",
+          "procurement"
+        ],
+        "title": "ActivityArea",
+        "type": "string"
+      },
+      "ActivityFilter": {
+        "properties": {
+          "actor": {
+            "anyOf": [
+              {
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor"
+          },
+          "area": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "since": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Since"
+          },
+          "until": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Until"
+          }
+        },
+        "title": "ActivityFilter",
+        "type": "object"
+      },
+      "ActivityKind": {
+        "enum": [
+          "request_created",
+          "request_direct",
+          "request_quick",
+          "request_approved",
+          "request_declined",
+          "request_confirmed",
+          "request_rejected",
+          "request_cancelled",
+          "request_assigned",
+          "request_allocated",
+          "request_ready",
+          "request_reopened",
+          "request_rescheduled",
+          "request_handed_out",
+          "request_returned",
+          "request_extended",
+          "request_reminded",
+          "request_completed",
+          "asset_created",
+          "assets_created",
+          "assets_imported",
+          "asset_status_changed",
+          "asset_assigned",
+          "asset_returned",
+          "asset_replaced",
+          "asset_component_replaced",
+          "asset_repair",
+          "asset_maintenance",
+          "asset_inspection",
+          "asset_note",
+          "asset_deleted",
+          "issue_reported",
+          "issue_in_progress",
+          "issue_reopened",
+          "issue_resolved",
+          "consumable_receipt",
+          "consumable_issue",
+          "consumable_return",
+          "consumable_adjustment",
+          "consumable_consumption",
+          "license_created",
+          "license_deleted",
+          "license_assigned",
+          "license_unassigned",
+          "order_created",
+          "order_placed",
+          "order_received",
+          "order_cancelled",
+          "order_deleted"
+        ],
+        "title": "ActivityKind",
+        "type": "string"
+      },
+      "ActivityOut": {
+        "description": "One step of IT's work. ``subject_id`` is empty for a deleted object or several devices.",
+        "properties": {
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "area": {
+            "$ref": "#/components/schemas/ActivityArea"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ActivityKind"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "related_user": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "subject_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Id"
+          },
+          "subject_label": {
+            "title": "Subject Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "occurred_at",
+          "area",
+          "kind",
+          "subject_id",
+          "subject_label",
+          "actor",
+          "related_user",
+          "quantity",
+          "detail"
+        ],
+        "title": "ActivityOut",
+        "type": "object"
+      },
       "AllocateIn": {
         "properties": {
           "asset": {
@@ -6940,7 +7167,7 @@
           },
           "recent_events": {
             "items": {
-              "$ref": "#/components/schemas/AssetEventWithAssetOut"
+              "$ref": "#/components/schemas/ActivityOut"
             },
             "title": "Recent Events",
             "type": "array"
@@ -10471,6 +10698,27 @@
           "device"
         ],
         "title": "OwnLicenseOut",
+        "type": "object"
+      },
+      "PagedActivityOut": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ActivityOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items",
+          "count"
+        ],
+        "title": "PagedActivityOut",
         "type": "object"
       },
       "PagedAssetEventWithAssetOut": {
@@ -15300,6 +15548,187 @@
         "summary": "Reset Two Factor",
         "tags": [
           "users"
+        ]
+      }
+    },
+    "/api/activities": {
+      "get": {
+        "description": "Everything IT did, newest first: requests, devices, stock, licenses, reports, orders.",
+        "operationId": "apps_activity_api_activities_list_activities",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "area",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Area"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "actor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Actor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "since",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Since"
+            }
+          },
+          {
+            "in": "query",
+            "name": "until",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Until"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ordering",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ordering"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedActivityOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "ITStaffAuth": []
+          }
+        ],
+        "summary": "List Activities",
+        "tags": [
+          "activity"
         ]
       }
     },

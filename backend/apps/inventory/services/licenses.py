@@ -5,6 +5,8 @@ from django.db import transaction
 from django.utils.translation import gettext as _
 
 from apps.accounts.models import User
+from apps.activity.models import ActivityKind
+from apps.activity.services import log as activity
 from apps.core.api.crud import apply_input
 from apps.core.exceptions import BusinessError
 from apps.inventory.models import Asset, License, LicenseAssignment
@@ -13,8 +15,12 @@ AssignTo = License.AssignTo
 
 
 @transaction.atomic
-def save_license(license: License, data: dict[str, Any]) -> License:
+def save_license(license: License, data: dict[str, Any], user: User) -> License:
     """Create or update a license; seats and assignment type must fit the assignments."""
+    if license._state.adding:
+        license = apply_input(license, data)
+        activity.log(ActivityKind.LICENSE_CREATED, license.pk, activity.license_label(license), user)
+        return license
     if license.pk:
         used = license.assignments.count()
         if data.get("seats", license.seats) < used:
@@ -46,7 +52,25 @@ def assign_license(
         raise BusinessError(_("Already assigned."))
     if asset_id and not Asset.objects.filter(pk=asset_id).exists():
         raise BusinessError(_("Device not found."))
-    return LicenseAssignment.objects.create(license=license, assigned_by=user, note=note.strip(), **target)
+    seat = LicenseAssignment.objects.create(license=license, assigned_by=user, note=note.strip(), **target)
+    activity.log(
+        ActivityKind.LICENSE_ASSIGNED,
+        license.pk,
+        activity.license_label(license),
+        user,
+        related_user_id=user_id,
+        detail=seat.asset.inventory_number if seat.asset else "",
+    )
+    return seat
+
+
+@transaction.atomic
+def delete_license(license: License, user: User) -> None:
+    if license.assignments.exists():
+        raise BusinessError(_("Remove all assignments before deleting the license."))
+    label = activity.license_label(license)
+    license.delete()
+    activity.log(ActivityKind.LICENSE_DELETED, None, label, user)
 
 
 @transaction.atomic
@@ -61,5 +85,16 @@ def unassign_license(assignment: LicenseAssignment, user: User) -> None:
         .first()
     )
     if allocation:
+        # Taken back on the request; that step is the row in the activity log.
         workflow.release_from_elsewhere(allocation, user)
+    else:
+        license = assignment.license
+        activity.log(
+            ActivityKind.LICENSE_UNASSIGNED,
+            license.pk,
+            activity.license_label(license),
+            user,
+            related_user_id=assignment.user_id,
+            detail=assignment.asset.inventory_number if assignment.asset else "",
+        )
     LicenseAssignment.objects.filter(pk=assignment.pk).delete()

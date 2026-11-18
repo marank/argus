@@ -12,6 +12,7 @@ from django.utils.translation import gettext as _
 
 from apps.accounts.models import Team, User
 from apps.accounts.services import assignment
+from apps.activity.services import log as activity
 from apps.core.exceptions import BusinessError
 from apps.core.features import FeatureKey, is_enabled
 from apps.core.models import SiteSettings
@@ -653,7 +654,9 @@ def allocate_license(
         target = {"asset_id": asset.pk}
     else:
         target = {"user_id": asset_request.requester_id}
-    assignment = assign_license(license, user, note=asset_request.number, **target)
+    # The request's steps are its rows in the activity log.
+    with activity.muted():
+        assignment = assign_license(license, user, note=asset_request.number, **target)
     allocation = AssetRequestAllocation.objects.create(
         item=item, license=license, license_assignment=assignment, allocated_by=user
     )
@@ -1284,6 +1287,7 @@ def return_devices(
                     asset,
                     AssetEventKind.STATUS_CHANGED,
                     user,
+                    asset_request=asset_request,
                     description=_("Returned damaged from %(number)s") % {"number": asset_request.number},
                 )
         elif allocation.license_assignment:

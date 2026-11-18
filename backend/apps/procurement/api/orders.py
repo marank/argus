@@ -100,6 +100,7 @@ def mark_ordered(request: AuthedRequest, pk: UUID, payload: MarkOrderedIn) -> Pu
         payload.order_date,
         payload.expected_date,
         payload.supplier_reference,
+        request.user,
     )
     return get_order(request, pk)
 
@@ -113,11 +114,13 @@ def receive(request: AuthedRequest, pk: UUID, payload: ReceiveIn) -> PurchaseOrd
 
 @router.post("/{uuid:pk}/cancel", response=PurchaseOrderOut)
 def cancel(request: AuthedRequest, pk: UUID) -> PurchaseOrder:
-    order_service.cancel(get_object_or_404(PurchaseOrder, pk=pk))
+    order_service.cancel(get_object_or_404(PurchaseOrder, pk=pk), request.user)
     return get_order(request, pk)
 
 
 @router.delete("/{uuid:pk}", response={204: None})
 def delete_order(request: AuthedRequest, pk: UUID) -> Status[None]:
-    get_object_or_404(PurchaseOrder, pk=pk, status=PurchaseOrderStatus.DRAFT).delete()
+    order_service.delete_order(
+        get_object_or_404(PurchaseOrder, pk=pk, status=PurchaseOrderStatus.DRAFT), request.user
+    )
     return Status(204, None)

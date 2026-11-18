@@ -25,6 +25,8 @@ from django.utils.text import capfirst
 from django.utils.translation import gettext as _
 
 from apps.accounts.models import User
+from apps.activity.models import ActivityKind
+from apps.activity.services import log as activity
 from apps.core.exceptions import BusinessError
 from apps.inventory.models import Asset, AssetStatus
 from apps.inventory.services import assets as asset_service
@@ -427,13 +429,25 @@ def import_assets(
         raise BusinessError(_("A file can hold at most %(count)d devices.") % {"count": MAX_ROWS})
     with transaction.atomic():
         importer = _Importer(user, defaults or {}, match_by, existing, ignore_case)
-        results = [importer.row(index, cells) for index, cells in enumerate(rows, start=1)]
+        # The import is one row in the activity log, not one per device.
+        with activity.muted():
+            results = [importer.row(index, cells) for index, cells in enumerate(rows, start=1)]
+        counts = {action: sum(1 for r in results if r["action"] == action) for action in ImportAction.values}
         if dry_run:
             transaction.set_rollback(True)
             for result in results:
                 if result["action"] == ImportAction.CREATE:
                     result["asset_id"] = None  # rolled back
-    counts = {action: sum(1 for r in results if r["action"] == action) for action in ImportAction.values}
+        elif counts[ImportAction.CREATE] or counts[ImportAction.UPDATE]:
+            activity.log(
+                ActivityKind.ASSETS_IMPORTED,
+                None,
+                _("Device import"),
+                user,
+                quantity=counts[ImportAction.CREATE] + counts[ImportAction.UPDATE],
+                detail=_("%(created)d new, %(updated)d changed")
+                % {"created": counts[ImportAction.CREATE], "updated": counts[ImportAction.UPDATE]},
+            )
     return {
         "rows": results,
         "created": counts[ImportAction.CREATE],

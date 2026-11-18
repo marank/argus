@@ -6,10 +6,11 @@ from django.utils import timezone
 
 from apps.accounts.models import User
 from apps.accounts.services.assignment import assigned_q
+from apps.activity.models import Activity
+from apps.activity.services.log import visible
 from apps.core.models import SiteSettings
 from apps.inventory.models import (
     Asset,
-    AssetEvent,
     AssetIssue,
     AssetIssueStatus,
     AssetStatus,
@@ -45,7 +46,7 @@ class ITOverview(TypedDict):
     issues_mine: int
     warranty_expiring: int
     licenses_expiring: int
-    recent_events: list[AssetEvent]
+    recent_events: list[Activity]
 
 
 class ITOverviewPart(TypedDict, total=False):
@@ -66,7 +67,7 @@ class ITOverviewPart(TypedDict, total=False):
     issues_mine: int
     warranty_expiring: int
     licenses_expiring: int
-    recent_events: list[AssetEvent]
+    recent_events: list[Activity]
 
 
 class EmployeeOverview(TypedDict):
@@ -78,6 +79,8 @@ class EmployeeOverview(TypedDict):
 
 
 RETURNS_DUE_DAYS = 7
+# Rows of the activity log on the dashboard; the page "Activities" has all of them.
+RECENT_ACTIVITY = 10
 
 
 def it_overview(user: User) -> ITOverview:
@@ -113,9 +116,7 @@ def it_overview(user: User) -> ITOverview:
         .exclude(status=AssetStatus.RETIRED)
         .count(),
         "licenses_expiring": licenses_to_watch().count(),
-        "recent_events": list(
-            AssetEvent.objects.select_related("asset__model__manufacturer", "performed_by")[:10]
-        ),
+        "recent_events": list(visible(user)[:RECENT_ACTIVITY]),
     }
 
 

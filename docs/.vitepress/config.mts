@@ -62,6 +62,7 @@ const SIDEBARS: Record<Area, Group[]> = {
       text: { de: 'IT-Arbeitsplatz', en: 'IT workspace' },
       pages: [
         ['dashboard-calendar', { de: 'Dashboard und Kalender', en: 'Dashboard and calendar' }],
+        ['activities', { de: 'Aktivitäten', en: 'Activities' }],
         ['requests', { de: 'Anforderungen bearbeiten', en: 'Handling requests' }],
         ['terminal', { de: 'Abholterminal', en: 'Pickup terminal' }],
         ['devices', { de: 'Geräte', en: 'Devices' }],

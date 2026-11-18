@@ -1055,9 +1055,13 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:
 
     order(brueckner, [("Latitude 5450", 5)], notes="Replacement of the 2021 notebooks.")
     in_transit = order(brueckner, [("P2425H", 10), ("USB-C cable 2 m", 20)])
-    order_service.mark_ordered(in_transit, today - timedelta(days=3), today + timedelta(days=4), "AB-552190")
+    order_service.mark_ordered(
+        in_transit, today - timedelta(days=3), today + timedelta(days=4), "AB-552190", admin
+    )
     partial = order(supplier, [("ThinkPad Universal USB-C Dock", 6)])
-    order_service.mark_ordered(partial, today - timedelta(days=12), today - timedelta(days=2), "BE-77120")
+    order_service.mark_ordered(
+        partial, today - timedelta(days=12), today - timedelta(days=2), "BE-77120", admin
+    )
     line = partial.lines.first()
     assert line is not None  # the order was created with one line
     order_service.receive(
@@ -1066,11 +1070,13 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:
         it,
     )
     done = order(brueckner, [("TN-2420 toner", 5)])
-    order_service.mark_ordered(done, today - timedelta(days=40), today - timedelta(days=35), "AB-540033")
+    order_service.mark_ordered(
+        done, today - timedelta(days=40), today - timedelta(days=35), "AB-540033", admin
+    )
     done_line = done.lines.first()
     assert done_line is not None  # the order was created with one line
     order_service.receive(done, [{"line": done_line.pk, "quantity": 5, "location": storage.pk}], it)
-    order_service.cancel(order(supplier, [("iPad 10.9 (10th gen)", 4)], notes="Project postponed."))
+    order_service.cancel(order(supplier, [("iPad 10.9 (10th gen)", 4)], notes="Project postponed."), admin)
 
     # --- Problem reports -------------------------------------------------------
     def report(user: User, kind: str, description: str) -> AssetIssue:

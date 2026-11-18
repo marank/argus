@@ -290,7 +290,6 @@ export const WIDGETS: WidgetDef[] = [
   },
   {
     id: 'activity',
-    permission: 'assets',
     description: 'dashboard.widgets.activity',
     title: 'dashboard.recentActivity',
     icon: Activity,

@@ -4,7 +4,6 @@ from uuid import UUID
 
 from django.db.models import Count, Q, QuerySet
 from django.shortcuts import get_object_or_404
-from django.utils.translation import gettext as _
 from ninja import FilterLookup, FilterSchema, Query, Router, Status
 from ninja.pagination import paginate
 
@@ -12,7 +11,6 @@ from apps.accounts.permissions import ResourceKey
 from apps.core.api.pagination import Pagination
 from apps.core.api.querying import order, search
 from apps.core.api.security import AuthedRequest, permission_auth
-from apps.core.exceptions import BusinessError
 from apps.inventory.models import License
 from apps.inventory.schemas.license import LicenseAssignIn, LicenseDetailOut, LicenseIn, LicenseOut
 from apps.inventory.services import licenses as license_service
@@ -85,22 +83,19 @@ def get_license(request: AuthedRequest, pk: UUID) -> License:
 
 @router.post("", response={201: LicenseDetailOut})
 def create_license(request: AuthedRequest, payload: LicenseIn) -> Status[License]:
-    license = license_service.save_license(License(), payload.dict())
+    license = license_service.save_license(License(), payload.dict(), request.user)
     return Status(201, get_license(request, license.pk))
 
 
 @router.put("/{uuid:pk}", response=LicenseDetailOut)
 def update_license(request: AuthedRequest, pk: UUID, payload: LicenseIn) -> License:
-    license_service.save_license(get_object_or_404(License, pk=pk), payload.dict())
+    license_service.save_license(get_object_or_404(License, pk=pk), payload.dict(), request.user)
     return get_license(request, pk)
 
 
 @router.delete("/{uuid:pk}", response={204: None})
 def delete_license(request: AuthedRequest, pk: UUID) -> Status[None]:
-    license = get_object_or_404(License, pk=pk)
-    if license.assignments.exists():
-        raise BusinessError(_("Remove all assignments before deleting the license."))
-    license.delete()
+    license_service.delete_license(get_object_or_404(License, pk=pk), request.user)
     return Status(204, None)
 
 

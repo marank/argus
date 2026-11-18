@@ -4,6 +4,7 @@ from uuid import UUID
 from ninja import Router
 
 from apps.accounts.permissions import ResourceKey, can
+from apps.activity.schemas import ActivityOut
 from apps.core.api.security import AuthedRequest, it_staff_auth
 from apps.core.schemas.base import Schema
 from apps.dashboard.services.overview import (
@@ -13,7 +14,6 @@ from apps.dashboard.services.overview import (
     employee_overview,
     it_overview,
 )
-from apps.inventory.schemas.asset_event import AssetEventWithAssetOut
 
 router = Router(tags=["dashboard"])
 
@@ -34,7 +34,7 @@ class ITOverviewOut(Schema):
     issues_mine: int
     warranty_expiring: int
     licenses_expiring: int
-    recent_events: list[AssetEventWithAssetOut]
+    recent_events: list[ActivityOut]
 
 
 class PickupOut(Schema):
@@ -60,7 +60,7 @@ class EmployeeOverviewOut(Schema):
 
 # Figures each area contributes; they stay empty without the right to read the area.
 AREA_FIELDS: dict[ResourceKey, ITOverviewPart] = {
-    ResourceKey.ASSETS: {"asset_status": {}, "warranty_expiring": 0, "recent_events": []},
+    ResourceKey.ASSETS: {"asset_status": {}, "warranty_expiring": 0},
     ResourceKey.REQUESTS: {
         "requests_submitted": 0,
         "requests_to_prepare": 0,

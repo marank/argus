@@ -225,6 +225,13 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/inventory/EventLogView.vue'),
         meta: { permission: 'assets', it: true, title: 'nav.eventLog' },
       },
+      // Rows are filtered by the right to read each area.
+      {
+        path: 'activities',
+        name: 'activities',
+        component: () => import('@/views/activity/ActivityLogView.vue'),
+        meta: { it: true, title: 'nav.activities' },
+      },
       // IT: requests
       {
         path: 'requests',

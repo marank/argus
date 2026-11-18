@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Component } from 'vue'
 
 import type { Schemas } from '@/api/types'
+import ActivityWidget from '@/components/dashboard/widgets/ActivityWidget.vue'
 import AssetStatusWidget from '@/components/dashboard/widgets/AssetStatusWidget.vue'
 import DueReturnsWidget from '@/components/dashboard/widgets/DueReturnsWidget.vue'
 import ExpiringWidget from '@/components/dashboard/widgets/ExpiringWidget.vue'
@@ -508,6 +509,46 @@ describe('dashboard widgets', () => {
       // Other stored settings stay.
       expect(saved).toHaveBeenCalledWith({ text: 'Call Paul back', dates: 'full' })
       expect(pageText()).toContain('Saved')
+    })
+  })
+
+  describe('recent activity', () => {
+    const row = (overrides: Partial<Schemas['ActivityOut']>): Schemas['ActivityOut'] => ({
+      id: ID(1),
+      occurred_at: '2026-11-18T09:00:00Z',
+      area: 'requests',
+      kind: 'request_handed_out',
+      subject_id: ID(2),
+      subject_label: 'REQ-2026-0042 – Workshop',
+      actor: person(3, 'Ian'),
+      related_user: null,
+      quantity: 3,
+      detail: '',
+      ...overrides,
+    })
+
+    it('shows a hand-out as one line linking to the request', async () => {
+      const data = {
+        ...NO_DATA,
+        recent_events: [
+          row({}),
+          row({
+            id: ID(4),
+            area: 'assets',
+            kind: 'asset_deleted',
+            subject_id: null,
+            subject_label: 'NB-0001',
+            quantity: null,
+          }),
+        ],
+      }
+      await show(ActivityWidget, { data })
+      const handOut = link('REQ-2026-0042')
+      expect(handOut.textContent).toContain('Handed out · 3 items')
+      expect(handOut.getAttribute('href')).toContain(ID(2))
+      expect(pageText()).toContain('NB-0001')
+      expect(() => link('NB-0001')).toThrow('no link')
+      expect(link('Show all').getAttribute('href')).toBe('/activities')
     })
   })
 })

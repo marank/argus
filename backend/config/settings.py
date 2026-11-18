@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     "apps.requests",
     "apps.procurement",
     "apps.dashboard",
+    "apps.activity",
 ]
 
 MIDDLEWARE = [

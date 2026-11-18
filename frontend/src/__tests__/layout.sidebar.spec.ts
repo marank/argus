@@ -92,6 +92,7 @@ describe('sidebar', () => {
         'Calendar',
         'Devices',
         'Service log',
+        'Activities',
       ])
       // Sections without a single readable entry disappear.
       expect(menu()['Procurement']).toBeUndefined()
@@ -101,7 +102,7 @@ describe('sidebar', () => {
 
     it('offers the direct hand-out only with the right to change requests', async () => {
       await sidebar({ user: itStaff({ permissions: { requests: 'read' } }) })
-      expect(menu()['IT operations']).toEqual(['Requests', 'Calendar'])
+      expect(menu()['IT operations']).toEqual(['Requests', 'Calendar', 'Activities'])
     })
 
     it('leaves out entries of switched-off modules', async () => {

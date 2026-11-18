@@ -7,6 +7,8 @@ from django.utils.translation import gettext as _
 
 from apps.accounts.models import User
 from apps.accounts.services import assignment
+from apps.activity.models import ActivityKind
+from apps.activity.services import log as activity
 from apps.core.exceptions import BusinessError
 from apps.inventory.models import (
     Asset,
@@ -18,6 +20,12 @@ from apps.inventory.models import (
 )
 from apps.inventory.services import notifications
 from apps.inventory.services.events import log_event
+
+ISSUE_ACTIVITY = {
+    AssetIssueStatus.OPEN: ActivityKind.ISSUE_REOPENED,
+    AssetIssueStatus.IN_PROGRESS: ActivityKind.ISSUE_IN_PROGRESS,
+    AssetIssueStatus.RESOLVED: ActivityKind.ISSUE_RESOLVED,
+}
 
 
 @transaction.atomic
@@ -39,6 +47,14 @@ def report_issue(asset: Asset, user: User, kind: str, description: str) -> Asset
         user,
         related_user=user,
         description=f"{issue.get_kind_display()}: {description}",
+    )
+    activity.log(
+        ActivityKind.ISSUE_REPORTED,
+        issue.pk,
+        activity.issue_label(issue),
+        user,
+        related_user=user,
+        detail=description,
     )
     notifications.issue_reported(issue)
     return issue
@@ -89,6 +105,14 @@ def update_issue(issue: AssetIssue, user: User, status: str, message: str = "", 
     issue.resolved_at = timezone.now() if status == AssetIssueStatus.RESOLVED else None
     issue.save()
     _add_entry(issue, user, kind=AssetIssueEntryKind.STATUS, status=status)
+    activity.log(
+        ISSUE_ACTIVITY[AssetIssueStatus(status)],
+        issue.pk,
+        activity.issue_label(issue),
+        user,
+        related_user_id=issue.reported_by_id,
+        detail=message,
+    )
     if status == AssetIssueStatus.RESOLVED:
         log_event(
             issue.asset,

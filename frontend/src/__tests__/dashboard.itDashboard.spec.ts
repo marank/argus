@@ -163,7 +163,8 @@ describe('IT dashboard', () => {
       expect(text).not.toContain('Procurement & stock')
       expect(text).not.toContain('Deadlines & reports')
       expect(text).not.toContain('Devices by status')
-      expect(text).not.toContain('Recent activity')
+      // The activity log shows the rows of the readable areas.
+      expect(text).toContain('Recent activity')
     })
 
     it('leaves out cards and panels of switched-off modules', async () => {
