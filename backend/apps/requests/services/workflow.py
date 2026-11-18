@@ -12,6 +12,7 @@ from django.utils.translation import gettext as _
 
 from apps.accounts.models import Team, User
 from apps.accounts.services import assignment
+from apps.activity.models import ActivityKind
 from apps.activity.services import log as activity
 from apps.core.exceptions import BusinessError
 from apps.core.features import FeatureKey, is_enabled
@@ -1052,6 +1053,18 @@ def _record_hand_out(
     return asset_request
 
 
+def _log_one_step(asset_request: AssetRequest, kind: ActivityKind, user: User) -> None:
+    """A step made of several recorded parts is one row in the activity log."""
+    activity.log(
+        kind,
+        asset_request.pk,
+        activity.request_label(asset_request),
+        user,
+        related_user_id=asset_request.requester_id,
+        quantity=AssetRequestAllocation.objects.filter(item__asset_request=asset_request).count() or None,
+    )
+
+
 @transaction.atomic
 def prepare_direct(
     requester: User,
@@ -1068,6 +1081,20 @@ def prepare_direct(
     it ready and hands it out as usual. ``consumables`` maps each stock to the
     quantity taken.
     """
+    with activity.muted():
+        asset_request = _prepare_direct(requester, user, data, assets=assets, consumables=consumables)
+    _log_one_step(asset_request, ActivityKind.REQUEST_DIRECT, user)
+    return asset_request
+
+
+def _prepare_direct(
+    requester: User,
+    user: User,
+    data: dict[str, Any],
+    *,
+    assets: list[UUID],
+    consumables: dict[UUID, int] | None,
+) -> AssetRequest:
     consumables = consumables or {}
     if not assets and not consumables:
         raise BusinessError(_("Add at least one device to the request."))
@@ -1139,6 +1166,23 @@ def quick_assign(
     return date (reminders, overdue returns) and is taken back like any loan.
     A start date before today records an assignment that began earlier.
     """
+    with activity.muted():
+        asset_request = _quick_assign(
+            asset, requester, user, duration=duration, start_date=start_date, end_date=end_date
+        )
+    _log_one_step(asset_request, ActivityKind.REQUEST_QUICK, user)
+    return asset_request
+
+
+def _quick_assign(
+    asset: Asset,
+    requester: User,
+    user: User,
+    *,
+    duration: str,
+    start_date: date | None,
+    end_date: date | None,
+) -> AssetRequest:
     today = timezone.localdate()
     start_date = start_date or today
     if start_date > today:

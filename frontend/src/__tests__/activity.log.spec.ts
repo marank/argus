@@ -67,15 +67,24 @@ describe('activity log', () => {
           subject_label: 'NB-0042 · Dell Latitude',
           quantity: null,
         }),
+        activity({
+          id: 'r4',
+          area: 'consumables',
+          kind: 'consumable_adjustment',
+          subject_label: 'USB-C cable · Store',
+          quantity: -1,
+        }),
       ]),
     )
     await show()
-    const [handOut, stock, deleted] = rows()
+    const [handOut, stock, deleted, corrected] = rows()
     expect(handOut!.textContent).toContain('Handed out · 3 items')
     expect(handOut!.textContent).toContain('Ian Tech')
     expect(handOut!.textContent).toContain('Max Muster')
     expect(handOut!.querySelector('a')?.getAttribute('href')).toBe(`/request/${ID}`)
-    expect(stock!.textContent).toContain('Stock issued · -2 units')
+    // The step says the direction; only a correction shows its sign.
+    expect(stock!.textContent).toContain('Stock issued · 2 units')
+    expect(corrected!.textContent).toContain('Stock corrected · -1 units')
     expect(stock!.querySelector('a')?.getAttribute('href')).toBe('/consumables')
     // A deleted object has no page to open.
     expect(deleted!.textContent).toContain('NB-0042')

@@ -12,7 +12,10 @@ export function useActivity() {
   const quantity = (row: Activity): string => {
     const n = row.quantity
     if (n === null) return ''
-    if (row.area === 'consumables') return t('activity.stock', { count: n > 0 ? `+${n}` : `${n}` })
+    // The step already says the direction; only a correction needs its sign.
+    if (row.kind === 'consumable_adjustment')
+      return t('activity.stock', { count: n > 0 ? `+${n}` : `${n}` })
+    if (row.area === 'consumables') return t('activity.stock', { count: Math.abs(n) })
     if (row.kind === 'order_received') return t('activity.units', n)
     if (row.area === 'assets') return t('activity.devices', n)
     return t('activity.positions', n)

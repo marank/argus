@@ -31,6 +31,8 @@ def test_devices_created_together_are_one_row(it_client, fresh):
         None,
         sx58.full_name,
     )
+    numbers = [a["inventory_number"] for a in response.json()]
+    assert row.detail == f"{numbers[0]} – {numbers[-1]}"
 
     done = it_client.post(
         IMPORT, {"rows": ROWS, "defaults": {"location": str(warehouse.pk)}}, content_type=JSON

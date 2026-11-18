@@ -275,7 +275,14 @@ def _log_created(assets: list[Asset], user: User) -> None:
     if len(assets) == 1:
         activity.log(ActivityKind.ASSET_CREATED, assets[0].pk, activity.asset_label(assets[0]), user)
     elif assets:
-        activity.log(ActivityKind.ASSETS_CREATED, None, assets[0].model.full_name, user, quantity=len(assets))
+        activity.log(
+            ActivityKind.ASSETS_CREATED,
+            None,
+            assets[0].model.full_name,
+            user,
+            quantity=len(assets),
+            detail=f"{assets[0].inventory_number} – {assets[-1].inventory_number}",
+        )
 
 
 def series_sequence(model: AssetModel) -> NumberSequence:
