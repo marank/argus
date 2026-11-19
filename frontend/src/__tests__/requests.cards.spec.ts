@@ -1,8 +1,10 @@
 import { flushPromises } from '@vue/test-utils'
+import { NSelect } from 'naive-ui'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ApiError } from '@/api/client'
 import type { Schemas } from '@/api/types'
+import EntitySelect from '@/components/common/EntitySelect.vue'
 import AssignmentCard from '@/components/requests/AssignmentCard.vue'
 import HandoverCard from '@/components/requests/HandoverCard.vue'
 import RequestSteps from '@/components/requests/RequestSteps.vue'
@@ -272,6 +274,32 @@ describe('request detail cards', () => {
       document.body.querySelector<HTMLButtonElement>('.assignee-label button')!.click()
       await flushPromises()
       expect(api.assign).toHaveBeenCalledWith(REQUEST_ID, { team: null, assignee: IT_MAX.id })
+      expect(onUpdated).toHaveBeenCalledWith(updated)
+    })
+
+    it('saves team and person together with the save button', async () => {
+      const updated = makeRequest({
+        assigned_team: { id: 'team-1', code: 'support', name: 'IT-Support' },
+        assignee: JANE,
+      })
+      api.assign.mockResolvedValue(updated)
+      const onUpdated = vi.fn<(r: Schemas['AssetRequestOut']) => void>()
+      const { wrapper } = await card(AssignmentCard, makeRequest(), { onUpdated })
+      const save = () =>
+        document.body.querySelector<HTMLButtonElement>('.n-card-header__extra button')!
+      expect(save().disabled).toBe(true)
+
+      const [team, person] = wrapper.findAllComponents(EntitySelect)
+      team!.findComponent(NSelect).vm.$emit('update:value', 'team-1')
+      person!.findComponent(NSelect).vm.$emit('update:value', JANE.id)
+      await flushPromises()
+      expect(api.assign).not.toHaveBeenCalled()
+      expect(save().disabled).toBe(false)
+
+      save().click()
+      await flushPromises()
+      expect(api.assign).toHaveBeenCalledTimes(1)
+      expect(api.assign).toHaveBeenCalledWith(REQUEST_ID, { team: 'team-1', assignee: JANE.id })
       expect(onUpdated).toHaveBeenCalledWith(updated)
     })
 

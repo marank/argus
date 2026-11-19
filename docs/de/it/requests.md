@@ -25,7 +25,7 @@ Die Spalte **Abholung** zeigt den vereinbarten Termin. Steht dort **Wunsch**, gi
 
 Jede Anforderung hat ein **Team** und optional einen **Bearbeiter**. Neue Anforderungen gehen automatisch an das Team des ersten Modells oder seiner Kategorie, sonst an das Standard-Team. Benachrichtigungen über neue Anforderungen erhält dieses Team; ohne Team die ganze IT.
 
-Mit **Mir zuweisen** übernehmen Sie eine Anforderung. Weisen Sie sie jemand anderem zu, erhält diese Person eine Benachrichtigung. Mitarbeitende sehen die Zuständigkeit nicht.
+Team und Bearbeiter ändern Sie in der Karte **Zuständig** und übernehmen beides mit **Speichern**. Mit **Mir zuweisen** übernehmen Sie eine Anforderung sofort, ohne zu speichern. Weisen Sie sie jemand anderem zu, erhält diese Person eine Benachrichtigung. Mitarbeitende sehen die Zuständigkeit nicht.
 
 ## Bestätigen
 

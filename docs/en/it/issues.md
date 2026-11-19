@@ -17,7 +17,7 @@ By default, the list shows open problem reports and those in progress. At the to
 
 A new problem report goes to the team of the device model or its category, otherwise to the default team. The team receives the notification **New problem report**; without a team, all of IT does.
 
-Under **Responsible** you change the team and the person working on it. If someone else takes over, that person receives the notification **Assigned to me**. The employee does not see who is responsible.
+Under **Responsible** you change the team and the person working on it and apply both with **Save**; **Assign to me** saves right away. If someone else takes over, that person receives the notification **Assigned to me**. The employee does not see who is responsible.
 
 ## Handling
 

@@ -17,7 +17,7 @@ Standardmäßig zeigt die Liste offene Meldungen und Meldungen in Bearbeitung. O
 
 Eine neue Meldung geht an das Team des Gerätemodells oder seiner Kategorie, sonst an das Standard-Team. Das Team erhält die Benachrichtigung **Neue Problemmeldung**; ohne Team die ganze IT.
 
-Unter **Zuständig** ändern Sie Team und Bearbeiter. Wird jemand anderes Bearbeiter, erhält diese Person die Benachrichtigung **Mir zugewiesen**. Der Mitarbeiter sieht die Zuständigkeit nicht.
+Unter **Zuständig** ändern Sie Team und Bearbeiter und übernehmen beides mit **Speichern**; **Mir zuweisen** speichert sofort. Wird jemand anderes Bearbeiter, erhält diese Person die Benachrichtigung **Mir zugewiesen**. Der Mitarbeiter sieht die Zuständigkeit nicht.
 
 ## Bearbeiten
 

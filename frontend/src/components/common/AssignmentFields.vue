@@ -1,62 +1,43 @@
-<script setup lang="ts" generic="T">
+<script setup lang="ts">
 import { UserRoundPlus } from '@lucide/vue'
 import { NButton, NForm, NFormItemGi, NGrid } from 'naive-ui'
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { teamsApi, usersApi } from '@/api/accounts'
 import EntitySelect from '@/components/common/EntitySelect.vue'
-import { useAction } from '@/composables/useAction'
-import { useAuthStore } from '@/stores/auth'
+import type { AssignmentForm } from '@/composables/useAssignment'
 import type { Schemas } from '@/api/types'
 import type { Id } from '@/types/common'
 
 /**
  * Who is responsible for a request or a problem report: a team, a person, both or
- * neither. Every change is saved right away through `assign`.
+ * neither. The picks stay in `form` until the surrounding card saves them; only
+ * "Assign to me" saves right away.
  */
 const props = defineProps<{
   team: Schemas['TeamRefOut'] | null
   assignee: Schemas['UserRefOut'] | null
-  assign: (data: { team: Id | null; assignee: Id | null }) => Promise<T>
+  form: AssignmentForm
 }>()
-const emit = defineEmits<{ updated: [record: T] }>()
 const { t } = useI18n()
-const auth = useAuthStore()
-const { busy, run } = useAction()
 
-const team = ref<Id | null>(props.team?.id ?? null)
-const assignee = ref<Id | null>(props.assignee?.id ?? null)
 /** Members of the chosen team, listed first when picking a person. */
 const memberIds = ref(new Set<Id>())
 
 onMounted(async () => {
-  if (team.value)
-    memberIds.value = new Set((await teamsApi.get(team.value)).members.map((m) => m.id))
+  const team = props.form.team
+  if (team) memberIds.value = new Set((await teamsApi.get(team)).members.map((m) => m.id))
 })
 
-const isMine = computed(() => assignee.value === auth.user?.id)
-
-async function save() {
-  const updated = await run(() => props.assign({ team: team.value, assignee: assignee.value }))
-  if (updated) emit('updated', updated)
-  else {
-    team.value = props.team?.id ?? null
-    assignee.value = props.assignee?.id ?? null
-  }
-}
+/** The selects pick one entry; the shared model type also allows several. */
+const single = (value: Id | Id[] | null) => (Array.isArray(value) ? null : value)
 
 // The select lists full teams; the reference passed as `initial` has no members.
 function onTeam(selected: Schemas['TeamOut'] | Schemas['TeamRefOut'] | null) {
   memberIds.value = new Set(
     selected && 'members' in selected ? selected.members.map((m) => m.id) : [],
   )
-  save()
-}
-
-function assignToMe() {
-  assignee.value = auth.user!.id
-  save()
 }
 </script>
 
@@ -65,12 +46,13 @@ function assignToMe() {
     <NGrid :cols="2" :x-gap="12" :y-gap="8" item-responsive responsive="self">
       <NFormItemGi span="2 400:1" :label="t('common.assignment.team')">
         <EntitySelect
-          v-model="team"
+          :model-value="form.team"
+          @update:model-value="(v: Id | Id[] | null) => form.setTeam(single(v))"
           :fetcher="teamsApi.list"
           :label="(item: Schemas['TeamOut'] | Schemas['TeamRefOut']) => item.name"
           :initial="props.team"
           :placeholder="t('common.assignment.noTeam')"
-          :disabled="busy"
+          :disabled="form.busy"
           @select="onTeam"
         />
       </NFormItemGi>
@@ -78,22 +60,29 @@ function assignToMe() {
         <template #label>
           <span class="assignee-label">
             {{ t('common.assignment.assignee') }}
-            <NButton v-if="!isMine" text size="tiny" type="primary" @click="assignToMe">
+            <NButton
+              v-if="!form.isMine"
+              text
+              size="tiny"
+              type="primary"
+              :disabled="form.busy"
+              @click="form.assignToMe"
+            >
               <template #icon><UserRoundPlus :size="13" /></template>
               {{ t('common.assignment.assignToMe') }}
             </NButton>
           </span>
         </template>
         <EntitySelect
-          v-model="assignee"
+          :model-value="form.assignee"
+          @update:model-value="(v: Id | Id[] | null) => form.setAssignee(single(v))"
           :fetcher="usersApi.list"
           :params="{ is_staff: true, is_active: true }"
           :label="(item: Schemas['UserOut'] | Schemas['UserRefOut']) => item.display_name"
           :initial="props.assignee"
           :prefer="(item: Schemas['UserOut'] | Schemas['UserRefOut']) => memberIds.has(item.id)"
           :placeholder="t('common.assignment.nobody')"
-          :disabled="busy"
-          @select="save"
+          :disabled="form.busy"
         />
       </NFormItemGi>
     </NGrid>

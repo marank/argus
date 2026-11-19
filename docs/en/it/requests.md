@@ -25,7 +25,7 @@ The **Pickup** column shows the agreed date. **Preferred** means there is only t
 
 Every request has a **Team** and optionally an **Assignee**. New requests go automatically to the team of the first model or its category, otherwise to the default team. That team receives the notifications about new requests; without a team, all of IT does.
 
-**Assign to me** makes a request yours. If you assign it to someone else, that person receives a notification. Employees do not see who is responsible.
+Change the team and assignee in the **Responsible** card and apply both with **Save**. **Assign to me** makes a request yours right away, without saving. If you assign it to someone else, that person receives a notification. Employees do not see who is responsible.
 
 ## Confirming
 

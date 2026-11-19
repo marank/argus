@@ -379,7 +379,7 @@ describe('RequestDetailView', () => {
       expect(openModal().textContent).toContain('Edit quantities')
       expect(openModal().textContent).toContain('1 already allocated')
       expect(openModal().querySelector<HTMLInputElement>('.qty input')!.value).toBe('2')
-      expect(buttons('Save')).toHaveLength(1)
+      expect(buttons('Save', openModal())).toHaveLength(1)
     })
   })
 
