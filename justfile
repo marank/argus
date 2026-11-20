@@ -35,22 +35,24 @@ setup-docs:
 
 # --- Development ----------------------------------------------------------------------
 
+# `just dev-backend 8010 localhost`: another port, PostgreSQL from `just db-up`.
 # Django on :8000 (SQLite in backend/, no job worker)
 [working-directory: 'backend']
-dev-backend:
-    uv run python manage.py runserver 127.0.0.1:8000
+dev-backend port="8000" $DB_HOST=env("DB_HOST", ""):
+    uv run python manage.py runserver 127.0.0.1:{{port}}
 
-# Vite on :5173, proxying /api, /admin, /django-static and /docs
+# `just dev-frontend 5174 http://127.0.0.1:8010`: another port and backend.
+# Vite on :5173, proxying /api, /admin, /django-static and /docs to the backend
 [working-directory: 'frontend']
-dev-frontend:
-    pnpm dev
+dev-frontend port="5173" $BACKEND_URL=env("BACKEND_URL", "http://127.0.0.1:8000"):
+    pnpm dev --port {{port}} --strictPort
 
 # VitePress on :5175/docs/
 [working-directory: 'docs']
-dev-docs:
-    pnpm dev --port 5175
+dev-docs port="5175":
+    pnpm dev --port {{port}} --strictPort
 
-# Optional PostgreSQL like CI (compose.dev.yml); then run the backend with DB_HOST=localhost
+# Optional PostgreSQL like CI (compose.dev.yml); then `just dev-backend 8000 localhost`
 db-up:
     docker compose -f compose.dev.yml up -d
 

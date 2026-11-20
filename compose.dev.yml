@@ -1,7 +1,7 @@
 # PostgreSQL for native development only; the app itself runs natively (runserver, pnpm dev).
 # With it, the job queue and live updates work like in production (both need PostgreSQL):
 #   docker compose -f compose.dev.yml up -d
-#   DB_HOST=localhost just dev-backend
+#   just dev-backend 8000 localhost
 # Database and user are "argus" (the defaults in settings.py). Reachable from this machine
 # only, so it accepts any password; never use this file on a server.
 name: argus-dev

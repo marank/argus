@@ -38,14 +38,15 @@ pnpm dev                               # http://localhost:5173, proxies /api to 
 
 Local development needs no `.env`: the `justfile` sets `DEBUG=true`, and without
 `DB_HOST` Django uses a SQLite file (`backend/db.sqlite3`). Without `DEBUG=true` and a real
-`SECRET_KEY` Argus does not start, so calling `manage.py` directly needs `DEBUG=true` too. If the backend runs on another address, set
-`BACKEND_URL`, e.g. `BACKEND_URL=http://127.0.0.1:8010 pnpm dev`.
+`SECRET_KEY` Argus does not start, so calling `manage.py` directly needs `DEBUG=true` too.
+The recipes take other ports: `just dev-backend 8010` and
+`just dev-frontend 5174 http://127.0.0.1:8010` run a second pair next to the first one
+(as the configurations in `.claude/launch.json` do).
 
 ### With PostgreSQL
 
 SQLite is enough for most work. The job queue and live updates need PostgreSQL: start
-one with `docker compose -f compose.dev.yml up -d` and run the backend with
-`DB_HOST=localhost`. Without PostgreSQL, jobs (e.g. mails) run right after the request
+one with `just db-up` and run the backend with `just dev-backend 8000 localhost`. Without PostgreSQL, jobs (e.g. mails) run right after the request
 and pages do not update by themselves.
 
 ## Commands and VS Code tasks
