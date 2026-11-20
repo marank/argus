@@ -139,6 +139,9 @@ describe('NewRequestView', () => {
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date(2026, 9, 12, 10, 0))
     Object.values(api).forEach((mock) => mock.mockReset())
+    // The page asks for the availability with a delay: a call from the test before may still
+    // arrive after this reset, so it gets an answer, not undefined.
+    api.availability.mockResolvedValue({ categories: {}, models: {} })
     api.catalog.mockResolvedValue(catalog())
     api.myConsumables.mockResolvedValue([])
     api.create.mockResolvedValue(assetRequest({ id: 'r-new', number: 'R-2026-0100' }))
@@ -806,7 +809,6 @@ describe('NewRequestView', () => {
     })
 
     it('names the employee a replaced request is for, also before the person list loaded', async () => {
-      api.availability.mockResolvedValue({ categories: {}, models: {} })
       api.get.mockResolvedValue({
         ...earlier(),
         status: 'confirmed',
