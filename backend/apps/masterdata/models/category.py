@@ -192,11 +192,10 @@ class Category(TimeStampedModel):
             )
         if saved and self.children.exclude(kind=self.kind).exists():
             raise ValidationError({"kind": _("Change the type of the subcategories first.")})
-        if saved and self.kind != Category.objects.get(pk=self.pk).kind:
-            if self.asset_models.exists():
-                raise ValidationError(
-                    {"kind": _("The type cannot be changed while models belong to this category.")}
-                )
+        if saved and self.kind != Category.objects.get(pk=self.pk).kind and self.asset_models.exists():
+            raise ValidationError(
+                {"kind": _("The type cannot be changed while models belong to this category.")}
+            )
 
     def ancestors(self) -> list[Category]:
         chain, node = [], self.parent

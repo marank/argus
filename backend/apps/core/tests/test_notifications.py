@@ -22,7 +22,7 @@ JSON = "application/json"
 
 def submit(client: Client, days: int = 3) -> _MonkeyPatchedWSGIResponse:
     start = timezone.localdate() + timedelta(days=1)
-    response = client.post(
+    return client.post(
         "/api/requests",
         {
             "title": "Workshop",
@@ -33,7 +33,6 @@ def submit(client: Client, days: int = 3) -> _MonkeyPatchedWSGIResponse:
         },
         content_type=JSON,
     )
-    return response
 
 
 def recipients() -> set[str]:

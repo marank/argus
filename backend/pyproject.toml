@@ -21,6 +21,7 @@ dependencies = [
 dev = [
     "deptry>=0.25.1",
     "django-stubs>=6.1.2",
+    "import-linter>=2.17",
     "mypy>=2.4.1",
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
@@ -37,19 +38,53 @@ constraint-dependencies = ["pyasn1<0.7"]
 [tool.ruff]
 line-length = 110
 target-version = "py314"
+extend-exclude = ["*/migrations/*"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "DJ"]
+# Correctness, readability and safety: limits against tangled and deeply nested code
+# (C90), deliberately none against length (no statement limits, no max-lines).
+select = [
+    "E", "W", "F", "I", "UP", "B", "DJ", "SIM", "C4", "RET", "PIE", "PTH", "RUF",
+    "C90",  # cyclomatic complexity
+    "DTZ",  # timezone-aware datetimes only
+    "T20",  # no print()
+    "ERA",  # no commented-out code
+    "N",    # naming conventions
+    "S",    # security patterns (bandit)
+    "BLE",  # no blind `except Exception` without a reason
+]
+ignore = [
+    "S603", "S607",  # subprocess with fixed argument lists (pg_dump, makemessages) is intended
+    "RUF012",        # Django's class attributes (Meta.ordering, list_display) are lists by convention
+    "N806",          # `User = get_user_model()` and similar inside functions
+    # assert narrows types for mypy where an invariant guarantees the value (each one
+    # says which); no check that matters at runtime relies on it.
+    "S101",
+]
+# Typography in user-facing texts and docstrings.
+allowed-confusables = ["×", "–"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 15
+
+[tool.ruff.lint.isort]
+known-first-party = ["apps", "config"]
+
+[tool.ruff.lint.flake8-bugbear]
+# Ninja declares parameters with these in defaults.
+extend-immutable-calls = ["ninja.Query", "ninja.Path", "ninja.Body", "ninja.Form", "ninja.File"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S105", "S106"]          # passwords in fixtures
+"conftest.py" = ["S106"]                 # passwords in fixtures
+"scripts/**" = ["T201"]                   # command-line tools print their result
 
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "config.settings"
+DJANGO_SETTINGS_MODULE = "config.settings_test"
 python_files = ["test_*.py"]
 filterwarnings = ["ignore:(tagMap|typeMap) is deprecated:DeprecationWarning:ldap3"]
 # In parallel (pytest-xdist); more than 8 workers only add start-up time. One file: -n0.
 addopts = "-n auto --maxprocesses=8"
-
-[tool.ruff.lint.per-file-ignores]
-"**/migrations/*" = ["E501"]
 
 [tool.coverage.run]
 source = ["apps", "config"]
@@ -61,8 +96,9 @@ skip_covered = true
 show_missing = true
 
 [tool.deptry]
-# Tests may use dev dependencies (pytest) and what Django brings along (asgiref).
-extend_exclude = [".*/tests/", "conftest\\.py"]
+# Tests may use dev dependencies (pytest) and what Django brings along (asgiref); the CI
+# scripts bring their own (polib).
+extend_exclude = [".*/tests/", "conftest\\.py", "scripts/"]
 
 [tool.deptry.per_rule_ignores]
 # Used at runtime, never imported: the WSGI and ASGI servers.
@@ -85,9 +121,51 @@ disallow_incomplete_defs = false
 disallow_untyped_calls = false
 
 [[tool.mypy.overrides]]
+# scripts/check_translations.py runs with `uv run --with polib`; polib is no dependency.
+module = ["polib"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
 # No type information published for ldap3.
 module = ["ldap3", "ldap3.*"]
 ignore_missing_imports = true
 
 [tool.django-stubs]
-django_settings_module = "config.settings"
+django_settings_module = "config.settings_test"
+
+# Layers inside every app: api may use services and models; services may use models;
+# nothing imports api. `lint-imports` runs in `just check-backend`;
+# apps/core/tests/test_architecture.py fails when an app is missing here.
+[tool.importlinter]
+root_packages = ["apps", "config"]
+
+[[tool.importlinter.contracts]]
+name = "Layers inside each app"
+type = "layers"
+containers = [
+    "apps.accounts",
+    "apps.activity",
+    "apps.core",
+    "apps.dashboard",
+    "apps.inventory",
+    "apps.masterdata",
+    "apps.procurement",
+    "apps.requests",
+]
+layers = ["api", "(services)", "(models)"]
+
+[[tool.importlinter.contracts]]
+# core's models are the base of every app (UUIDModel, TimeStampedModel), so they must not
+# pull in an app built on them.
+name = "core models depend on no other app"
+type = "forbidden"
+source_modules = ["apps.core.models"]
+forbidden_modules = [
+    "apps.accounts",
+    "apps.activity",
+    "apps.dashboard",
+    "apps.inventory",
+    "apps.masterdata",
+    "apps.procurement",
+    "apps.requests",
+]

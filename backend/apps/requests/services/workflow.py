@@ -151,11 +151,15 @@ def submit(
         line.full_clean()
         if from_catalog:
             _require_requestable(line)
-        if line.category and not line.asset_model_id and not line.description:
-            if not line.category.allows_any_model:
-                raise BusinessError(
-                    _("Please choose a specific model for “%(category)s”.") % {"category": line.category}
-                )
+        if (
+            line.category
+            and not line.asset_model_id
+            and not line.description
+            and not line.category.allows_any_model
+        ):
+            raise BusinessError(
+                _("Please choose a specific model for “%(category)s”.") % {"category": line.category}
+            )
         line.save()
     asset_request.assigned_team = assignment.route(_item_team(item) for item in asset_request.items.all())
     if _needs_approval(asset_request, created_by):
@@ -853,8 +857,8 @@ def mark_ready(
     handover_mode: str | None = None,
     skip_device_check: bool = False,
     *,
-    pickup_at: datetime | None | Literal[_Keep.KEEP] = KEEP,
-    pickup_location_id: UUID | None | Literal[_Keep.KEEP] = KEEP,
+    pickup_at: datetime | Literal[_Keep.KEEP] | None = KEEP,
+    pickup_location_id: UUID | Literal[_Keep.KEEP] | None = KEEP,
     notify: bool = True,
 ) -> AssetRequest:
     """All devices are prepared. Pickup requests now show up on the pickup terminal.

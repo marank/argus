@@ -15,8 +15,7 @@ JSON = "application/json"
 @pytest.fixture
 def staff(demo) -> User:
     """An IT staff member without any role yet."""
-    user = User.objects.create_user("staff", password="argus-demo", is_staff=True)
-    return user
+    return User.objects.create_user("staff", password="argus-demo", is_staff=True)
 
 
 @pytest.fixture

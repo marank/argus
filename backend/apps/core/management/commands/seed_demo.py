@@ -53,7 +53,7 @@ from apps.procurement.services import orders as order_service
 from apps.requests.models import AssetRequest, HandoverMethod
 from apps.requests.services import workflow
 
-DEMO_PASSWORD = "argus-demo"
+DEMO_PASSWORD = "argus-demo"  # noqa: S105 - documented demo login, never production data
 
 CATEGORIES = [
     # code, name, icon, prefix, parent
@@ -546,10 +546,10 @@ EXTRA_DEVICE_COUNTS = {
 }
 
 
-def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:
+def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:  # noqa: C901 - a script in sections
     """Many more people, devices in all states with history, requests in every step,
     purchase orders, consumable movements, licenses and problem reports."""
-    rng = random.Random(42)
+    rng = random.Random(42)  # noqa: S311 - repeatable demo data, no secrets
     today = timezone.localdate()
     now = timezone.now()
     admin, it = base["admin"], base["it"]

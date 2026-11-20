@@ -2,6 +2,7 @@ import os
 import subprocess
 import time
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 from django.core.management import CommandError, call_command
@@ -42,8 +43,7 @@ def pg_dump(monkeypatch):
     def run(command, **kwargs):
         calls.append((command, kwargs))
         target = command[-1].removeprefix("--file=")
-        with open(target, "w") as f:
-            f.write("dump")
+        Path(target).write_text("dump")
         return subprocess.CompletedProcess(command, 0, "", "")
 
     monkeypatch.setattr(subprocess, "run", run)
@@ -72,7 +72,7 @@ def test_a_dump_is_written_under_its_final_name(backup_dir, pg_dump):
 
 def test_a_failed_dump_leaves_no_file(backup_dir, monkeypatch):
     def fail(command, **kwargs):
-        open(command[-1].removeprefix("--file="), "w").close()
+        Path(command[-1].removeprefix("--file=")).touch()
         raise subprocess.CalledProcessError(1, command, "", "connection refused\n")
 
     monkeypatch.setattr(subprocess, "run", fail)
@@ -114,7 +114,7 @@ def test_old_dumps_and_stale_partials_are_removed(backup_dir, pg_dump):
 )
 def test_the_job_dumps_only_in_the_hour_of_backup_time(backup_dir, pg_dump, settings, utc, dumps):
     settings.TIME_ZONE = "Europe/Berlin"
-    settings.BACKUP_TIME = datetime(2026, 1, 1, 1, 30).time()
+    settings.BACKUP_TIME = datetime(2026, 1, 1, 1, 30, tzinfo=UTC).time()
 
     tasks.backup_database(timestamp=int(utc.timestamp()))
 
@@ -123,7 +123,7 @@ def test_the_job_dumps_only_in_the_hour_of_backup_time(backup_dir, pg_dump, sett
 
 def test_the_job_does_nothing_without_backup_dir(settings, pg_dump):
     settings.BACKUP_DIR = ""
-    settings.BACKUP_TIME = datetime(2026, 1, 1, 0, 30).time()
+    settings.BACKUP_TIME = datetime(2026, 1, 1, 0, 30, tzinfo=UTC).time()
 
     tasks.backup_database(timestamp=int(datetime(2026, 1, 15, 0, 30, tzinfo=UTC).timestamp()))
 

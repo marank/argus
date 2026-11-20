@@ -1,9 +1,19 @@
+from datetime import date
+
 from django.conf import settings
 from django.db import models
 from django.db.models import F, Q
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from apps.core.models import TimeStampedModel
+
+
+class ApprovalDelegationQuerySet(models.QuerySet["ApprovalDelegation"]):
+    def running(self, today: date | None = None) -> ApprovalDelegationQuerySet:
+        """Delegations whose period includes ``today`` (default: the local date)."""
+        today = today or timezone.localdate()
+        return self.filter(Q(starts_on__lte=today) & (Q(ends_on__isnull=True) | Q(ends_on__gte=today)))
 
 
 class ApprovalDelegation(TimeStampedModel):
@@ -28,6 +38,8 @@ class ApprovalDelegation(TimeStampedModel):
     )
     starts_on = models.DateField(_("from"))
     ends_on = models.DateField(_("until"), null=True, blank=True, help_text=_("Empty: until removed."))
+
+    objects = ApprovalDelegationQuerySet.as_manager()
 
     class Meta:
         verbose_name = _("approval delegation")

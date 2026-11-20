@@ -6,13 +6,13 @@ from .event import AssetRequestEvent, AssetRequestEventKind
 from .handover import Handover, HandoverMethod
 
 __all__ = [
-    "DeviceReturn",
-    "Handover",
-    "HandoverMethod",
     "AssetRequest",
-    "AssetRequestStatus",
     "AssetRequestAllocation",
     "AssetRequestEvent",
     "AssetRequestEventKind",
     "AssetRequestItem",
+    "AssetRequestStatus",
+    "DeviceReturn",
+    "Handover",
+    "HandoverMethod",
 ]

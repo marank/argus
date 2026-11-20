@@ -10,7 +10,6 @@ IN_MEMORY_MAIL = {
     "ARGUS_EMAIL_BACKEND": "django.core.mail.backends.locmem.EmailBackend",
     "JOB_QUEUE": False,
 }
-FAST_PASSWORD_HASHING = {"PASSWORD_HASHERS": ["django.contrib.auth.hashers.MD5PasswordHasher"]}
 
 
 @pytest.fixture(scope="session")
@@ -18,7 +17,7 @@ def django_db_setup(django_db_setup, django_db_blocker):
     """Seeds the core demo data once per test database; every test rolls back on top of it.
 
     Seeding per test cost ~0.7 s each, most of the suite's run time."""
-    with django_db_blocker.unblock(), override_settings(**IN_MEMORY_MAIL, **FAST_PASSWORD_HASHING):
+    with django_db_blocker.unblock(), override_settings(**IN_MEMORY_MAIL):
         Command().seed_base()
 
 
@@ -32,12 +31,6 @@ def in_memory_mail(settings):
     """
     for name, value in IN_MEMORY_MAIL.items():
         setattr(settings, name, value)
-
-
-@pytest.fixture(autouse=True)
-def fast_password_hashing(settings):
-    """Tests create and log in users all the time; the real hasher would take seconds."""
-    settings.PASSWORD_HASHERS = FAST_PASSWORD_HASHING["PASSWORD_HASHERS"]
 
 
 @pytest.fixture

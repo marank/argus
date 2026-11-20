@@ -146,9 +146,12 @@ class User(AbstractUser):
     @property
     def is_approver(self) -> bool:
         """Approves requests for at least one department, or stands in for an approver today."""
-        from apps.accounts.services import delegations
-
-        return self.is_department_approver or delegations.is_delegate(self)
+        if self.is_department_approver:
+            return True
+        represented = self.received_delegations.running().filter(
+            approver__is_active=True, approver__approving_departments__isnull=False
+        )
+        return self.is_active and represented.exists()
 
     @property
     def is_department_approver(self) -> bool:

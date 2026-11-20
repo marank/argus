@@ -3,6 +3,7 @@ from string import Formatter
 
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from .base import TimeStampedModel
@@ -87,7 +88,7 @@ class NumberSequence(TimeStampedModel):
             raise ValidationError({"pattern": _("Invalid placeholder: %(error)s") % {"error": exc}}) from exc
 
     def current_period_key(self, on: date | None = None) -> str:
-        on = on or date.today()
+        on = on or timezone.localdate()
         match self.reset_period:
             case self.ResetPeriod.YEARLY:
                 return f"{on.year}"
@@ -97,7 +98,7 @@ class NumberSequence(TimeStampedModel):
                 return ""
 
     def format(self, value: int, on: date | None = None) -> str:
-        on = on or date.today()
+        on = on or timezone.localdate()
         return render_pattern(
             self.pattern,
             {

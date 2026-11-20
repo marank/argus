@@ -140,7 +140,7 @@ def _parse_date(text: str) -> date:
     head = re.split(r"[\sT]", text, maxsplit=1)[0]
     for fmt in DATE_FORMATS:
         try:
-            return datetime.strptime(head, fmt).date()
+            return datetime.strptime(head, fmt).date()  # noqa: DTZ007 - only the date is used
         except ValueError:
             continue
     raise RowError(_("“%(value)s” is not a date (e.g. 2026-03-31 or 31.03.2026).") % {"value": text})

@@ -10,26 +10,17 @@ from django.utils.translation import gettext as _
 from apps.accounts.models import ApprovalDelegation, User
 
 
-def _running(today: date | None = None) -> Q:
-    today = today or timezone.localdate()
-    return Q(starts_on__lte=today) & (Q(ends_on__isnull=True) | Q(ends_on__gte=today))
-
-
 def deciders(approvers: QuerySet[User]) -> QuerySet[User]:
     """The approvers plus their delegates whose delegation runs today (active accounts only)."""
-    delegations = ApprovalDelegation.objects.filter(_running(), approver__in=approvers).values("delegate")
+    delegations = ApprovalDelegation.objects.running().filter(approver__in=approvers).values("delegate")
     return User.objects.filter(Q(pk__in=approvers.values("pk")) | Q(pk__in=delegations), is_active=True)
 
 
 def represented(user: User) -> QuerySet[User]:
     """Active approvers that ``user`` decides for today as their delegate."""
-    approvers = ApprovalDelegation.objects.filter(_running(), delegate=user).values("approver")
+    approvers = ApprovalDelegation.objects.running().filter(delegate=user).values("approver")
     named = User.objects.filter(pk__in=approvers, is_active=True, approving_departments__isnull=False)
     return named.distinct()
-
-
-def is_delegate(user: User) -> bool:
-    return user.is_active and represented(user).exists()
 
 
 def current_and_future(approver: User) -> QuerySet[ApprovalDelegation]:

@@ -104,6 +104,6 @@ def send_test_mail(request: AuthedRequest, payload: TestMailIn) -> dict[str, str
             _("This test message confirms that Argus can send emails."),
             url=link(settings, "/"),
         )
-    except Exception as exc:  # noqa: BLE001 - report every SMTP problem to the admin
+    except Exception as exc:
         raise HttpError(502, _("Sending failed: %(error)s") % {"error": exc}) from exc
     return {"detail": _("Test email sent to %(to)s.") % {"to": payload.to}}

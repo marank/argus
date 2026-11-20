@@ -163,7 +163,7 @@ def send_email_code(user: User, code: str) -> bool:
         ) % {"name": user.first_name or user.username, "code": code, "minutes": EMAIL_CODE_TTL // 60}
         try:
             send_mail(settings, user.email, subject, body, code=code)
-        except Exception:  # noqa: BLE001 - the user is told the code did not go out
+        except Exception:
             logger.exception("Could not send sign-in code to %s", user.email)
             return False
     return True
