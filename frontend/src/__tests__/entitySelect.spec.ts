@@ -32,6 +32,15 @@ describe('EntitySelect', () => {
     expect(options.map((o) => o.label)).toEqual(['Beta', 'Alpha'])
   })
 
+  it('names a record passed as `initial` after its value, instead of showing its id', async () => {
+    const wrapper = mountSelect(null)
+    await flushPromises()
+    await wrapper.setProps({ modelValue: 'b' })
+    await wrapper.setProps({ initial: { id: 'b', name: 'Beta' } })
+    const options = wrapper.findComponent(NSelect).props('options') as { label: string }[]
+    expect(options.map((o) => o.label)).toEqual(['Beta', 'Alpha'])
+  })
+
   it('hands out only records loaded from the list', async () => {
     const wrapper = mountSelect({ id: 'b', name: 'Beta' })
     await flushPromises()

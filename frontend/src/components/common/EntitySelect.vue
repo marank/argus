@@ -1,7 +1,7 @@
 <script setup lang="ts" generic="T extends { id: Id }">
 import { useDebounceFn } from '@vueuse/core'
 import { NSelect, NTag, type SelectOption, type SelectRenderTag } from 'naive-ui'
-import { computed, h, onMounted, ref, watch } from 'vue'
+import { computed, h, onMounted, ref, shallowReactive, watch } from 'vue'
 
 import type { Id, ListParams, Page } from '@/types/common'
 
@@ -42,7 +42,9 @@ const open = ref(false)
 // Records loaded from the list; `select` only hands these out, as only they are complete.
 const known = new Map<Id, T>()
 // What `initial` named, for labels of selected records that were not loaded (yet).
-const initials = new Map<Id, T>()
+// Reactive: `initial` may arrive after the value (a form prefilled once loaded), and the
+// label must follow then instead of showing the bare id.
+const initials = shallowReactive(new Map<Id, T>())
 
 function remember(list: T[]) {
   for (const item of list) known.set(item.id, item)

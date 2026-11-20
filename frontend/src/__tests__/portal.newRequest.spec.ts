@@ -799,6 +799,21 @@ describe('NewRequestView', () => {
       )
     })
 
+    it('names the employee a replaced request is for, also before the person list loaded', async () => {
+      api.get.mockResolvedValue({
+        ...earlier(),
+        status: 'confirmed',
+        requester: { ...earlier().requester, id: 'u-jane', display_name: 'Jane Roe' },
+      })
+      await open({
+        url: '/portal/new?replace=r-old',
+        user: makeUser({ is_it_staff: true, permissions: { requests: 'write' } }),
+      })
+      const picker = document.body.querySelector('.n-base-selection')!
+      expect(picker.textContent).toContain('Jane Roe')
+      expect(picker.textContent).not.toContain('u-jane')
+    })
+
     it('sends the new request as a follow-up of the earlier one', async () => {
       api.get.mockResolvedValue(earlier())
       await open({ url: '/portal/new?from=r-old' })
