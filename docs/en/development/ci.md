@@ -8,9 +8,9 @@ scans it and, except for pull requests, pushes it to `ghcr.io/marank/argus` (`la
 `sha-…`, and `1.2.3`/`1.2`/`1` for tags). The push uses the workflow's `GITHUB_TOKEN`;
 no secrets are needed.
 
-Every Monday the workflow also runs on `main` without a change. The image's system
-packages are installed anew each day (build argument `APT_REFRESH`), so the weekly run
-publishes `latest` with Debian's security fixes, and a scan that finds a new critical
+Every Monday the workflow also runs on `main` without a change. Every build installs the
+image's system packages anew (`--no-cache-filter runtime`), so the weekly run publishes
+`latest` with Debian's security fixes, and a scan that finds a new critical
 vulnerability turns it red. Images of version tags are not rebuilt; a fix there needs
 a new release.
 

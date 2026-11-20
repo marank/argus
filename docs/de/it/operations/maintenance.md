@@ -27,10 +27,10 @@
    ```
 
    ```bash
-   docker build --pull --build-arg APT_REFRESH="$(date +%F)" -t argus:latest .
+   docker build --pull --no-cache-filter runtime -t argus:latest .
    ```
 
-   `--pull` holt das aktuelle Basis-Image, `APT_REFRESH` installiert die Systempakete neu, statt sie aus dem Build-Cache zu nehmen. So kommen Sicherheitsupdates (z. B. für nginx) mit.
+   `--pull` holt das aktuelle Basis-Image, `--no-cache-filter runtime` installiert die Systempakete neu, statt sie aus dem Build-Cache zu nehmen. So kommen Sicherheitsupdates (z. B. für nginx) mit.
 
    ```bash
    docker compose up -d

@@ -8,9 +8,9 @@ Wegwerf-PostgreSQL, scannt es und überträgt es, außer bei Pull Requests, nach
 `ghcr.io/marank/argus` (`latest`, `sha-…` und bei Tags `1.2.3`/`1.2`/`1`). Für den Push
 wird das `GITHUB_TOKEN` des Workflows verwendet; Secrets sind nicht nötig.
 
-Jeden Montag läuft der Workflow zusätzlich auf `main`, auch ohne Änderung. Die
-Systempakete des Images werden täglich neu installiert (Build-Argument `APT_REFRESH`),
-daher veröffentlicht der wöchentliche Lauf `latest` mit Debians Sicherheitsupdates, und
+Jeden Montag läuft der Workflow zusätzlich auf `main`, auch ohne Änderung. Jeder Build
+installiert die Systempakete des Images neu (`--no-cache-filter runtime`), daher
+veröffentlicht der wöchentliche Lauf `latest` mit Debians Sicherheitsupdates, und
 ein Scan, der eine neue kritische Lücke findet, färbt ihn rot. Images von Versions-Tags
 werden nicht neu gebaut; dort braucht eine Korrektur ein neues Release.
 
