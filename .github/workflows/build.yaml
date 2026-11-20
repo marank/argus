@@ -99,6 +99,8 @@ jobs:
       - name: Trust the checkout
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
+      # corepack comes with Node 24; Node 25+ no longer ships it: when this container moves
+      # on, install pnpm another way (the Dockerfile reads packageManager and uses npm).
       - name: Checks
         run: |
           corepack enable

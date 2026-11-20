@@ -8,8 +8,9 @@
 # --- 1. Frontend build ---------------------------------------------------------
 FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS frontend
 WORKDIR /build
-RUN corepack enable
 COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml ./
+# pnpm in the version of packageManager; through npm, as Node 25+ no longer ships corepack.
+RUN npm install -g "$(node -p "require('./package.json').packageManager")"
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile
 COPY frontend/ ./
@@ -19,8 +20,9 @@ RUN pnpm build
 # --- 2. Documentation ------------------------------------------------------------
 FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS docs
 WORKDIR /build
-RUN corepack enable
 COPY docs/package.json docs/pnpm-lock.yaml docs/pnpm-workspace.yaml ./
+# pnpm in the version of packageManager; through npm, as Node 25+ no longer ships corepack.
+RUN npm install -g "$(node -p "require('./package.json').packageManager")"
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store     pnpm install --frozen-lockfile
 COPY docs/ ./
 RUN pnpm build
