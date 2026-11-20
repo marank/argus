@@ -57,7 +57,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     BEHIND_PROXY=true \
     BACKUP_DIR=/backups
 
+# The build date in CI: a new value builds the layer below anew instead of reusing it from
+# the cache of the last image, so Debian's security fixes (nginx, the base image's own
+# packages) arrive within a day, not only with the next base image.
+ARG APT_REFRESH=""
 RUN apt-get update \
+    && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends nginx curl ca-certificates \
     && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc -o /usr/share/keyrings/pgdg.asc \
     && echo "deb [signed-by=/usr/share/keyrings/pgdg.asc] https://apt.postgresql.org/pub/repos/apt trixie-pgdg main" \
