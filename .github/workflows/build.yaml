@@ -85,7 +85,7 @@ jobs:
     permissions:
       contents: read
     container:
-      image: node:24-trixie-slim@sha256:af02d57b57719b9657a45199a79264a9437940cd55b3c7b3fc99615654f124a0
+      image: node:26-trixie-slim@sha256:e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc
     steps:
       - name: Install git
         run: apt-get update && apt-get install -y --no-install-recommends git ca-certificates
@@ -99,11 +99,11 @@ jobs:
       - name: Trust the checkout
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-      # corepack comes with Node 24; Node 25+ no longer ships it: when this container moves
-      # on, install pnpm another way (the Dockerfile reads packageManager and uses npm).
+      # pnpm in the version of packageManager (exact, like the Dockerfile); Node 25+ no
+      # longer ships corepack.
       - name: Checks
-        run: |
-          corepack enable
+        run: | # zizmor: ignore[adhoc-packages]
+          npm install -g "$(node -p "require('./frontend/package.json').packageManager")"
           npx --yes "rust-just@$JUST_VERSION" check-frontend
 
   # --- Docs: `just check-docs` (dead links, anchors, IT links in the open areas, translations)
@@ -112,7 +112,7 @@ jobs:
     permissions:
       contents: read
     container:
-      image: node:24-trixie-slim@sha256:af02d57b57719b9657a45199a79264a9437940cd55b3c7b3fc99615654f124a0
+      image: node:26-trixie-slim@sha256:e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc
     steps:
       - name: Install git
         run: apt-get update && apt-get install -y --no-install-recommends git ca-certificates
@@ -122,8 +122,8 @@ jobs:
           persist-credentials: false
 
       - name: Checks
-        run: |
-          corepack enable
+        run: | # zizmor: ignore[adhoc-packages]
+          npm install -g "$(node -p "require('./docs/package.json').packageManager")"
           npx --yes "rust-just@$JUST_VERSION" check-docs
 
   # --- Workflows: `just check-workflows` (actionlint, zizmor)
