@@ -1,6 +1,12 @@
 # Contributing to Argus
 
-Thanks for helping. Bug reports, ideas and pull requests are welcome.
+Thanks for your interest in Argus.
+
+> [!IMPORTANT]
+> Argus is still in active development, and its structure changes often. Until that
+> settles, **pull requests are not accepted**: they would mostly collide with ongoing
+> work, and pull requests opened anyway are closed without review. Bug reports and ideas
+> as issues are welcome. This note goes away once contributions are open.
 
 ## Issues
 
@@ -13,6 +19,8 @@ Thanks for helping. Bug reports, ideas and pull requests are welcome.
 
 ## Pull requests
 
+Not accepted for now (see above). Once they are, this is how a change gets in:
+
 1. Discuss larger changes in an issue first.
 2. Fork, branch from `main`, keep the change focused on one topic.
 3. Set up the project as in [Development setup](docs/en/development/index.md); `seed_demo` fills the
@@ -23,7 +31,7 @@ Thanks for helping. Bug reports, ideas and pull requests are welcome.
 6. After model changes run `just migrations` (**DB: make migrations**), after API changes
    `just api-types` (**API: update types**),
    and commit the generated files.
-7. Update the user documentation in `docs/` (German) when users or operators notice the change.
+7. Update the documentation in `docs/` (German and English) when users or operators notice the change.
 8. Run `just check` (**Check: all**, see [Checks and tests](docs/en/development/checks.md)) before you push;
    CI runs the same checks on the pull request.
 

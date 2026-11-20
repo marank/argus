@@ -141,7 +141,8 @@ The documentation is in [`docs/`](docs/) and inside every running instance at `/
 
 ## Contributing
 
-Bug reports, ideas and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
+Argus is still in active development, so pull requests are not accepted yet; bug reports
+and ideas are welcome as issues. See [CONTRIBUTING.md](CONTRIBUTING.md).
 To run Argus from source:
 
 ```bash
