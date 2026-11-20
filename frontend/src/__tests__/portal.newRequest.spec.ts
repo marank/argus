@@ -47,6 +47,12 @@ vi.mock('@/api/requests', async (importOriginal) => {
   }
 })
 
+// IT with write access picks the person a request is for; the list stays empty here.
+vi.mock('@/api/accounts', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/accounts')>()),
+  usersApi: { list: async () => ({ items: [], count: 0 }) },
+}))
+
 // Monday, 12 October 2026: the default period runs five days from today.
 const TODAY = '2026-10-12'
 const IN_FIVE_DAYS = '2026-10-16'
@@ -800,6 +806,7 @@ describe('NewRequestView', () => {
     })
 
     it('names the employee a replaced request is for, also before the person list loaded', async () => {
+      api.availability.mockResolvedValue({ categories: {}, models: {} })
       api.get.mockResolvedValue({
         ...earlier(),
         status: 'confirmed',
