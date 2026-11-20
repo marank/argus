@@ -24,7 +24,8 @@ class Command(BaseCommand):
             return
 
         User = get_user_model()
-        user = User.objects.filter(username=username).first()
+        # Usernames are unique regardless of case: "Admin" finds an existing "admin".
+        user = User.objects.filter(username__iexact=username).first()
         if user:
             if not (user.is_superuser and user.is_staff):
                 user.is_superuser = user.is_staff = True

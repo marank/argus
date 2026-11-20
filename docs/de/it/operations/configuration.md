@@ -17,10 +17,15 @@ Einstellungen, die sich im laufenden Betrieb ändern (Module, Fristen, E-Mail-Se
 | `SECRET_KEY` | – | Pflicht. Zufallswert mit mindestens 40 Zeichen, kein Platzhalter wie `change-me` |
 | `TIME_ZONE` | `Europe/Berlin` | Zeitzone für Termine, Erinnerungen und Backups |
 | `LOG_LEVEL` | `INFO` | `DEBUG`, `INFO`, `WARNING` oder `ERROR` |
-| `DEBUG` | `false` (mit `SECRET_KEY`) | Nur für die Entwicklung. Schaltet u. a. die API-Dokumentation unter `/api/docs` frei. |
+| `DEBUG` | `false` | Nur für die Entwicklung. Schaltet u. a. die API-Dokumentation unter `/api/docs` frei. |
+| `BEHIND_PROXY` | `true` im Image | Übernimmt das Schema (HTTPS) von nginx vor Django. Unverändert lassen. |
 
 ::: warning Achtung
 Jede Adresse, unter der Argus aufgerufen wird, muss in `APP_URLS` stehen, mit Schema, Host und ggf. Port. Fehlt eine, lehnt Argus Anfragen über diese Adresse ab.
+:::
+
+::: info Gut zu wissen
+Ja/Nein-Werte nehmen `true` oder `false` (auch `1`/`0`, `yes`/`no`, `on`/`off`). Mit einem anderen Wert oder einer Zahl oder Uhrzeit, die Argus nicht lesen kann, startet Argus nicht und nennt die Variable im Log.
 :::
 
 ## Erster Administrator
@@ -38,6 +43,8 @@ Jede Adresse, unter der Argus aufgerufen wird, muss in `APP_URLS` stehen, mit Sc
 | `POSTGRES_DB` | `argus` | Name der Datenbank |
 | `POSTGRES_USER` | `argus` | Datenbankbenutzer |
 | `POSTGRES_PASSWORD` | – | Pflicht. Passwort des Datenbankbenutzers |
+| `DB_HOST` | `db` (in `compose.yml` gesetzt) | Host des PostgreSQL-Servers. Ohne ihn nutzt Argus eine lokale SQLite-Datei (nur für die Entwicklung). |
+| `DB_PORT` | `5432` | Port des PostgreSQL-Servers |
 
 ## Backups
 

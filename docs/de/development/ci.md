@@ -30,14 +30,15 @@ git tag v1.2.3 && git push origin v1.2.3
    und Sicherheitsupdates einschalten. Wöchentliche Versionsupdates kommen aus
    `.github/dependabot.yml`, jedes Release erst, wenn es eine Woche alt ist. Nicht
    abgedeckt: `SUPERVISOR_VERSION` im Dockerfile; in `build.yaml` die Job-Container,
-   `TRIVY_IMAGE`, `POSTGRES_IMAGE` (zusammen mit `compose.yml`) und `JUST_VERSION`;
+   `TRIVY_IMAGE`, `POSTGRES_IMAGE` (gleiche Hauptversion wie `compose.yml`) und `JUST_VERSION`;
    `actionlint` und `zizmor` im `justfile`; die pre-commit-Hooks (`pre-commit autoupdate`).
 3. **Sichtbarkeit des Pakets**: Das Paket `argus` auf ghcr.io ist öffentlich, sodass das
    Image ohne Anmeldung geladen werden kann.
 
 Actions sind auf den Commit-SHA eines Releases festgelegt
-(`actions/checkout@<sha> # v7.0.1`), Images auf Tag und Digest, sodass ein verschobener Tag
-nicht ändern kann, was läuft. Workflows vergeben standardmäßig keine Berechtigungen; jeder
+(`actions/checkout@<sha> # v7.0.1`), Images im Dockerfile und in den Workflows auf Tag und Digest, sodass ein
+verschobener Tag nicht ändern kann, was läuft. `compose.yml` und `compose.dev.yml` nennen
+Images nur mit Tag, wie Betreiber es erwarten. Workflows vergeben standardmäßig keine Berechtigungen; jeder
 Job fordert an, was er braucht.
 
 Ein privater Spiegel auf Gitea oder anderswo ist ein Pull-Spiegel des GitHub-Repositorys;

@@ -4,6 +4,10 @@
 
 set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
 
+# Local development runs with debug on; the settings only enable it when DEBUG says so,
+# so an installation without it never does. Set DEBUG=false in the shell to try without.
+export DEBUG := env("DEBUG", "true")
+
 # Not seen by Dependabot: update by hand now and then (PyPI: actionlint-py, zizmor).
 actionlint := "1.7.12.25"
 zizmor := "1.32.0"
@@ -134,16 +138,17 @@ check-backend:
     uv run python scripts/check_licenses.py
     uv run python manage.py makemigrations --check --dry-run
     uv run python manage.py check --fail-level WARNING
-    uv run --with polib python scripts/check_translations.py
+    # CI runners set CI and always have gettext: missing tools fail there instead of being skipped.
+    uv run --with polib python scripts/check_translations.py {{ if env("CI", "") != "" { "--require-gettext" } else { "" } }}
     uv run python scripts/check_openapi.py
     uv run pytest -q --cov
 
 # Django's deploy checks with production settings behind a TLS proxy (deploy-check.env)
 [working-directory: 'backend']
-check-deploy:
+check-deploy $DEBUG="false":
     uv run --env-file deploy-check.env python manage.py check --deploy --fail-level WARNING
 
-# prettier, oxlint, eslint, knip, types, tests, API types, licenses, build, bundle size
+# prettier, oxlint, eslint, knip, types, tests, API types, licenses, build, bundle size, audit
 [working-directory: 'frontend']
 check-frontend:
     pnpm install --frozen-lockfile
@@ -153,6 +158,8 @@ check-frontend:
     pnpm check:licenses
     pnpm build-only
     pnpm size
+    # Runtime dependencies only: they end up in the bundle. Dev tools are kept current by Dependabot.
+    pnpm audit --prod
 
 # VitePress build: dead links, anchors, IT links in the open areas, missing translations
 [working-directory: 'docs']
@@ -175,6 +182,10 @@ docker-up $ARGUS_IMAGE="argus:latest":
 # Dump the database into the backups volume now (it is also dumped nightly)
 docker-backup:
     docker compose exec app python manage.py backup_database
+
+# Probe the running app container (docker/smoke-test, the same test CI runs on every image)
+docker-smoke-test:
+    docker compose exec -T app sh /app/docker/smoke-test
 
 docker-logs:
     docker compose logs -f app

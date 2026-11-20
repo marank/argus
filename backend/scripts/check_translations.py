@@ -4,11 +4,11 @@
 
 With the gettext tools installed, `makemessages` first adds the strings from the code to the
 .po files; they are put back afterwards, so the check changes nothing in the working tree.
-Without them (e.g. on Windows) only the committed .po files are checked, with a warning; CI
-always has them. The committed django.mo must match its .po file (`just compile-messages`).
+Without them (e.g. on Windows) only the committed .po files are checked, with a warning;
+`--require-gettext` (passed by the justfile in CI) fails instead. The committed django.mo
+must match its .po file (`just compile-messages`).
 """
 
-import os
 import shutil
 import subprocess
 import sys
@@ -68,7 +68,7 @@ def main() -> int:
     found = [line for path in PO_FILES for line in outdated_mo(path)]
     if shutil.which("xgettext"):
         found += collect_and_check()
-    elif os.environ.get("CI"):
+    elif "--require-gettext" in sys.argv:
         print("gettext tools (xgettext) missing", file=sys.stderr)
         return 1
     else:

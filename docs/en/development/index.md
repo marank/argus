@@ -22,11 +22,10 @@ is in [CONTRIBUTING.md](https://github.com/marank/argus/blob/main/CONTRIBUTING.m
 ## Run it locally
 
 ```bash
-cd backend
-uv sync
-uv run python manage.py migrate
-uv run python manage.py seed_demo      # optional demo data
-uv run python manage.py runserver
+just setup-backend
+just migrate
+just seed                              # optional demo data
+just dev-backend
 ```
 
 In a second terminal:
@@ -37,8 +36,9 @@ pnpm install
 pnpm dev                               # http://localhost:5173, proxies /api to :8000
 ```
 
-Local development needs no `.env`: without `SECRET_KEY` Django runs with debug on and a
-SQLite file (`backend/db.sqlite3`). If the backend runs on another address, set
+Local development needs no `.env`: the `justfile` sets `DEBUG=true`, and without
+`DB_HOST` Django uses a SQLite file (`backend/db.sqlite3`). Without `DEBUG=true` and a real
+`SECRET_KEY` Argus does not start, so calling `manage.py` directly needs `DEBUG=true` too. If the backend runs on another address, set
 `BACKEND_URL`, e.g. `BACKEND_URL=http://127.0.0.1:8010 pnpm dev`.
 
 ### With PostgreSQL

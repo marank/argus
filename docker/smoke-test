@@ -1,0 +1,44 @@
+#!/bin/sh
+# Smoke test of a running app container, run inside it; the one place for these probes:
+#   CI (build.yaml):  docker exec <container> sh /app/docker/smoke-test
+#   locally:          just docker-smoke-test   (against `docker compose up`)
+# Checks that nginx serves the SPA, static files, the docs and the API, that every
+# supervisord program runs (gunicorn, nginx, live updates, job worker), that a backup
+# can be written, that nothing runs as root and that the root filesystem is read-only.
+# Stops at the first failure.
+set -eu
+cd /app
+
+fail() { echo "smoke test failed: $*" >&2; exit 1; }
+probe() {
+  status=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8080$1") || true
+  [ "$status" = "$2" ] || fail "$1 answered $status instead of $2"
+  echo "$1 -> $2"
+}
+
+probe /api/health 200
+probe / 200
+# Unknown paths are client-side routes of the SPA.
+probe /some/client/route 200
+probe /django-static/admin/css/base.css 200
+probe /docs/ 200
+# Without a session the API and the live update stream (routed to uvicorn) refuse.
+probe /api/auth/me 401
+probe /api/events 401
+
+status=$(supervisorctl -c /app/docker/supervisord.conf status || true)
+echo "$status"
+[ -n "$status" ] || fail "supervisorctl gave no status"
+if echo "$status" | grep -v RUNNING >/dev/null; then fail "not every program is running"; fi
+
+# pg_dump in the image must accept the server's version and write into /backups.
+python manage.py backup_database || fail "backup"
+
+[ "$(id -u)" != 0 ] || fail "the container runs as root"
+if grep -l '^Uid:[[:space:]]*0[[:space:]]' /proc/[0-9]*/status 2>/dev/null | grep -q .; then
+  fail "a process runs as root"
+fi
+if touch /app/.probe 2>/dev/null; then fail "the root filesystem is writable"; fi
+touch /tmp/.probe && rm /tmp/.probe || fail "/tmp is not writable"
+
+echo "smoke test passed"

@@ -17,10 +17,15 @@ Settings that change during operation (modules, deadlines, email server) are not
 | `SECRET_KEY` | – | Required. Random value with at least 40 characters, no placeholder such as `change-me` |
 | `TIME_ZONE` | `Europe/Berlin` | Time zone for appointments, reminders and backups |
 | `LOG_LEVEL` | `INFO` | `DEBUG`, `INFO`, `WARNING` or `ERROR` |
-| `DEBUG` | `false` (with `SECRET_KEY`) | For development only. Among other things, enables the API documentation at `/api/docs`. |
+| `DEBUG` | `false` | For development only. Among other things, enables the API documentation at `/api/docs`. |
+| `BEHIND_PROXY` | `true` in the image | Takes the scheme (HTTPS) from nginx in front of Django. Leave it as it is. |
 
 ::: warning Caution
 Every address at which Argus is opened must be listed in `APP_URLS`, with scheme, host and port if needed. If one is missing, Argus rejects requests via that address.
+:::
+
+::: info Good to know
+Yes/no values take `true` or `false` (also `1`/`0`, `yes`/`no`, `on`/`off`). Argus does not start with any other value, or with a number or time it cannot read, and names the variable in the log.
 :::
 
 ## First administrator
@@ -38,6 +43,8 @@ Every address at which Argus is opened must be listed in `APP_URLS`, with scheme
 | `POSTGRES_DB` | `argus` | Name of the database |
 | `POSTGRES_USER` | `argus` | Database user |
 | `POSTGRES_PASSWORD` | – | Required. Password of the database user |
+| `DB_HOST` | `db` (set in `compose.yml`) | Host of the PostgreSQL server. Without it Argus uses a local SQLite file (development only). |
+| `DB_PORT` | `5432` | Port of the PostgreSQL server |
 
 ## Backups
 

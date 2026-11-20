@@ -29,13 +29,14 @@ git tag v1.2.3 && git push origin v1.2.3
    Dependabot alerts and security updates. Weekly version updates come from
    `.github/dependabot.yml`, each release only once it is a week old. Not covered:
    `SUPERVISOR_VERSION` in the Dockerfile; in `build.yaml` the job containers, `TRIVY_IMAGE`,
-   `POSTGRES_IMAGE` (together with `compose.yml`) and `JUST_VERSION`; `actionlint` and
+   `POSTGRES_IMAGE` (same major as `compose.yml`) and `JUST_VERSION`; `actionlint` and
    `zizmor` in the `justfile`; the pre-commit hooks (`pre-commit autoupdate`).
 3. **Package visibility**: the `argus` package on ghcr.io is public, so the image can be
    pulled without a login.
 
 Actions are pinned to the commit SHA of a release (`actions/checkout@<sha> # v7.0.1`) and
-images to tag and digest, so a moved tag cannot change what runs. Workflows grant no
+images in the Dockerfile and the workflows to tag and digest, so a moved tag cannot change what
+runs. `compose.yml` and `compose.dev.yml` name images by tag only, as operators expect. Workflows grant no
 permissions by default; each job asks for what it needs.
 
 A private mirror on Gitea or elsewhere is a pull mirror of the GitHub repository; it runs

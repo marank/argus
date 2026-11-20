@@ -1,19 +1,18 @@
 """Django settings for the Argus backend.
 
-Without any environment variables this is a local development setup (debug on,
-SQLite). In the container, docker compose passes the project's root ``.env``;
-see ``.env.example`` for all options.
+Without DB_HOST this runs on a local SQLite file; debug is on only with DEBUG=true,
+which the justfile sets for local development. In the container, docker compose passes
+the project's root ``.env``; see ``.env.example`` for all options. The environment is
+read only through ``config/env.py``.
 """
 
-import os
-from datetime import time
 from pathlib import Path
 from urllib.parse import urlsplit
 
 import django_stubs_ext
 from django.utils.translation import gettext_lazy as _
 
-from .env import env_bool, env_list
+from .env import env_bool, env_int, env_list, env_str, env_time
 
 # Makes Django's generic classes subscriptable at runtime (``admin.ModelAdmin[Asset]``),
 # as the type checker requires their type arguments.
@@ -21,10 +20,11 @@ django_stubs_ext.monkeypatch()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-dev-only-change-me")
-# Debug only by default where no secret key is set, i.e. local development: any real
-# installation sets SECRET_KEY and so runs without debug unless DEBUG says otherwise.
-DEBUG = env_bool("DEBUG", "SECRET_KEY" not in os.environ)
+SECRET_KEY = env_str("SECRET_KEY", "django-insecure-dev-only-change-me")
+# Debug only when asked for: the justfile sets DEBUG=true for local development. Without
+# it the placeholder key above is refused at the end of this file, so an installation
+# that forgets SECRET_KEY does not start instead of running with debug on.
+DEBUG = env_bool("DEBUG", False)
 
 # --- Public addresses -----------------------------------------------------------
 # APP_URLS lists every URL users open Argus under, e.g.
@@ -100,15 +100,15 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 # PostgreSQL when DB_HOST is set (docker compose), otherwise a local SQLite file.
-if os.environ.get("DB_HOST"):
+if DB_HOST := env_str("DB_HOST"):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "HOST": os.environ["DB_HOST"],
-            "PORT": os.environ.get("DB_PORT", "5432"),
-            "NAME": os.environ.get("POSTGRES_DB", "argus"),
-            "USER": os.environ.get("POSTGRES_USER", "argus"),
-            "PASSWORD": os.environ.get("POSTGRES_PASSWORD", ""),
+            "HOST": DB_HOST,
+            "PORT": env_int("DB_PORT", 5432),
+            "NAME": env_str("POSTGRES_DB", "argus"),
+            "USER": env_str("POSTGRES_USER", "argus"),
+            "PASSWORD": env_str("POSTGRES_PASSWORD"),
             "CONN_MAX_AGE": 60,
             "CONN_HEALTH_CHECKS": True,
         }
@@ -127,11 +127,11 @@ LIVE_EVENTS = JOB_QUEUE
 
 # Daily pg_dump by the job worker (apps/core/services/backups.py) into BACKUP_DIR, the
 # "backups" volume in the image (/backups); empty switches the nightly dump off.
-BACKUP_DIR = os.environ.get("BACKUP_DIR", "")
+BACKUP_DIR = env_str("BACKUP_DIR")
 # HH:MM in TIME_ZONE. The default avoids 02:00-03:00, which daylight saving time skips
 # or repeats once a year.
-BACKUP_TIME = time.fromisoformat(os.environ.get("BACKUP_TIME", "01:30"))
-BACKUP_KEEP_DAYS = int(os.environ.get("BACKUP_KEEP_DAYS", "14"))
+BACKUP_TIME = env_time("BACKUP_TIME", "01:30")
+BACKUP_KEEP_DAYS = env_int("BACKUP_KEEP_DAYS", 14)
 
 AUTH_USER_MODEL = "accounts.User"
 
@@ -162,7 +162,7 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = "en"
 LANGUAGES = [("en", _("English")), ("de", _("German"))]
 LOCALE_PATHS = [BASE_DIR / "locale"]
-TIME_ZONE = os.environ.get("TIME_ZONE", "Europe/Berlin")
+TIME_ZONE = env_str("TIME_ZONE", "Europe/Berlin")
 USE_I18N = True
 USE_TZ = True
 
@@ -193,7 +193,7 @@ LOGGING = {
     "handlers": {
         "console": {"class": "logging.StreamHandler", "formatter": "plain", "filters": ["hide_job_arguments"]}
     },
-    "root": {"handlers": ["console"], "level": os.environ.get("LOG_LEVEL", "INFO")},
+    "root": {"handlers": ["console"], "level": env_str("LOG_LEVEL", "INFO").upper()},
     "loggers": {"django.db.backends": {"level": "WARNING"}},
 }
 

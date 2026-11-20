@@ -15,8 +15,9 @@ tasks (`.vscode/tasks.json`) and CI only call its recipes, so a check is changed
   missing ones).
 - **API: update types** / `just api-types` after any API change: exports `frontend/openapi.json` and
   regenerates `frontend/src/api/schema.d.ts`; commit both (CI fails when they are out of date).
-- Actions are pinned to commit SHAs, images to tag + digest; Dependabot moves them. Not seen by
-  Dependabot: `TRIVY_IMAGE`, `POSTGRES_IMAGE` (with `compose.yml`), `JUST_VERSION` and the job
+- Actions are pinned to commit SHAs, images in the Dockerfile and CI to tag + digest; compose files
+  name images by tag only, as operators expect. Dependabot moves them. Not seen by
+  Dependabot: `TRIVY_IMAGE`, `POSTGRES_IMAGE` (same major as `compose.yml`), `JUST_VERSION` and the job
   containers in `build.yaml`; `actionlint`/`zizmor` in the `justfile`; `SUPERVISOR_VERSION` in the
   Dockerfile; pre-commit hooks.
 - Frontend package manager is **pnpm** only. Backend dependencies via `uv add` / `uv add --dev`.
@@ -86,3 +87,15 @@ tasks (`.vscode/tasks.json`) and CI only call its recipes, so a check is changed
 - The job worker dumps the database nightly into the `db-backups` volume (`/backups`,
   `apps/core/services/backups.py`); see `docs/en/it/operations/backups.md`. `compose.yml` must work with
   `.env` alone, without any other file from the repository.
+
+## House defaults
+
+Checked against checklist 1.0 (2026-11-20). Accepted deviations and settled judgements,
+one line each as `- ID: decision and reason` (IDs from the project-defaults checklist); the review
+does not report these again:
+
+- BE-11: settled, passes: `DEBUG` defaults to false (only the justfile sets it for development),
+  and without `DEBUG` the placeholder or a short `SECRET_KEY` stops the start (`config/settings.py`).
+- BE-13: settled, passes: the sign-in code and the test mail are sent within the request on purpose,
+  the user waits for them and must learn at once when they fail; the code must not end up in the
+  job table (`accounts/services/two_factor.py`, `core/api/mail_settings.py`).

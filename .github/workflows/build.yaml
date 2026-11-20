@@ -30,7 +30,7 @@ permissions: {}
 env:
   REGISTRY: ghcr.io
   # Started with `docker run`, so Dependabot does not see them: update tag and digest by hand
-  # (POSTGRES_IMAGE together with compose.yml).
+  # (POSTGRES_IMAGE: the same major as compose.yml, which names it by tag only).
   TRIVY_IMAGE: aquasec/trivy:0.76.0@sha256:2416d1f74045b57274df1a340eee6b510cacd73c66a6ccb8da092b117eb7d222
   POSTGRES_IMAGE: postgres:18-alpine@sha256:ff64c9e3bdf8e2120107d3559de8db314e8305f7e38c5105903c6295876738ff
   # The check jobs only run justfile recipes (`just check` locally). Not seen by Dependabot.
@@ -249,12 +249,11 @@ jobs:
             --label "org.opencontainers.image.created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             $TAG_ARGS .
 
-      # Start the image against a throwaway PostgreSQL (like compose.yml)
-      # and wait for the health endpoint, so an image that cannot boot (entrypoint,
-      # migrations, nginx/gunicorn) is never pushed. Then check that it stays up and
-      # that the job worker and the live update process (uvicorn) run: a program that
-      # keeps failing stops the container (docker/exit_on_fatal.py). Finally a backup:
-      # pg_dump must accept the server's version and write into a fresh volume.
+      # Start the image against a throwaway PostgreSQL (like compose.yml) and wait for
+      # the health endpoint, so an image that cannot boot (entrypoint, migrations,
+      # nginx/gunicorn) is never pushed. After a pause long enough for a crashing program
+      # to stop the container (docker/exit_on_fatal.py), docker/smoke-test probes it
+      # from inside: routes, every program running, a backup, no root, read-only.
       - name: Smoke test
         run: |
           TESTED="$IMAGE:sha-$SHORT_SHA"
@@ -284,23 +283,7 @@ jobs:
 
           # Long enough for supervisord to give up on a crashing program.
           sleep 20
-          docker exec "$NAME" curl -fsS http://127.0.0.1:8080/api/health
-          echo
-          # [x]yz: the pattern does not match the grep process itself.
-          for program in "[p]rocrastinate" "[u]vicorn"; do
-            if ! docker exec "$NAME" sh -c "grep -qa '$program' /proc/[0-9]*/cmdline"; then
-              echo "Not running: $program" >&2
-              exit 1
-            fi
-          done
-          # Routed by nginx to uvicorn; without a session the stream refuses.
-          status=$(docker exec "$NAME" curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/api/events)
-          if [ "$status" != 401 ]; then
-            echo "/api/events answered $status instead of 401" >&2
-            exit 1
-          fi
-          docker exec "$NAME" python manage.py backup_database
-          echo "Worker and live update stream are up"
+          docker exec "$NAME" sh /app/docker/smoke-test
 
       # Known vulnerabilities (OS packages, Python wheels) and secrets baked into the image.
       # Secrets and critical vulnerabilities with an available fix block the push; HIGH

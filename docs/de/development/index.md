@@ -22,11 +22,10 @@ vorschlagen, steht in [CONTRIBUTING.md](https://github.com/marank/argus/blob/mai
 ## Lokal starten
 
 ```bash
-cd backend
-uv sync
-uv run python manage.py migrate
-uv run python manage.py seed_demo      # optionale Demodaten
-uv run python manage.py runserver
+just setup-backend
+just migrate
+just seed                              # optionale Demodaten
+just dev-backend
 ```
 
 In einem zweiten Terminal:
@@ -37,8 +36,10 @@ pnpm install
 pnpm dev                               # http://localhost:5173, leitet /api an :8000 weiter
 ```
 
-Für die lokale Entwicklung ist keine `.env` nötig: Ohne `SECRET_KEY` läuft Django im
-Debug-Modus mit einer SQLite-Datei (`backend/db.sqlite3`). Läuft das Backend unter einer
+Für die lokale Entwicklung ist keine `.env` nötig: Das `justfile` setzt `DEBUG=true`, und
+ohne `DB_HOST` nutzt Django eine SQLite-Datei (`backend/db.sqlite3`). Ohne `DEBUG=true` und
+einen echten `SECRET_KEY` startet Argus nicht; wer `manage.py` direkt aufruft, setzt
+`DEBUG=true` daher selbst. Läuft das Backend unter einer
 anderen Adresse, setzen Sie `BACKEND_URL`, z. B. `BACKEND_URL=http://127.0.0.1:8010 pnpm dev`.
 
 ### Mit PostgreSQL

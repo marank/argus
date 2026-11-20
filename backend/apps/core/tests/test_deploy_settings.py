@@ -20,8 +20,13 @@ APP_URLS = "http://192.168.1.10:8080,https://[FD00::1]:8443"
 WEAK_KEYS = ["change-me", "short-but-not-a-placeholder", "django-insecure-" + "x" * 40]
 ENVIRONMENTS = {
     "nothing": {},
+    "debug": {"DEBUG": "true"},
     "secret key": {"SECRET_KEY": STRONG_KEY},
     "secret key and debug": {"SECRET_KEY": STRONG_KEY, "DEBUG": "true"},
+    "empty debug": {"SECRET_KEY": STRONG_KEY, "DEBUG": ""},
+    "misspelt debug": {"SECRET_KEY": STRONG_KEY, "DEBUG": "ture"},
+    "bad port": {"SECRET_KEY": STRONG_KEY, "DB_HOST": "db", "DB_PORT": "five"},
+    "bad backup time": {"SECRET_KEY": STRONG_KEY, "BACKUP_TIME": "1:30 am"},
     "app urls": {"SECRET_KEY": STRONG_KEY, "APP_URLS": APP_URLS},
 } | {f"weak key {key}": {"SECRET_KEY": key} for key in WEAK_KEYS}
 
@@ -29,7 +34,8 @@ ENVIRONMENTS = {
 # one per case took seconds each), and prints what each import gave as JSON.
 LOAD_EACH = """
 import importlib, json, os, sys
-base = {k: v for k, v in os.environ.items() if k not in {"SECRET_KEY", "DEBUG", "APP_URLS"}}
+names = {"SECRET_KEY", "DEBUG", "APP_URLS", "DB_HOST", "DB_PORT", "BACKUP_TIME"}
+base = {k: v for k, v in os.environ.items() if k not in names}
 results = {}
 for name, env in json.loads(sys.argv[1]).items():
     os.environ.clear()
@@ -57,10 +63,20 @@ def loaded():
     return json.loads(result.stdout)
 
 
-def test_debug_is_on_only_without_a_secret_key(loaded):
-    assert loaded["nothing"]["DEBUG"] is True
+def test_debug_is_on_only_when_set(loaded):
+    assert loaded["debug"]["DEBUG"] is True
     assert loaded["secret key"]["DEBUG"] is False
+    assert loaded["empty debug"]["DEBUG"] is False
     assert loaded["secret key and debug"]["DEBUG"] is True
+
+
+def test_without_secret_key_and_debug_argus_does_not_start(loaded):
+    assert loaded["nothing"] == {"error": "ImproperlyConfigured"}
+
+
+@pytest.mark.parametrize("case", ["misspelt debug", "bad port", "bad backup time"])
+def test_invalid_values_stop_the_start(loaded, case):
+    assert loaded[case] == {"error": "ImproperlyConfigured"}
 
 
 def test_app_urls_with_ip_addresses_are_allowed_hosts(loaded):
@@ -127,3 +143,13 @@ def test_set_password_asks_twice_without_the_option(demo, monkeypatch):
         call_command("set_password", "admin", stdout=StringIO())
     with pytest.raises(CommandError, match="no account"):
         call_command("set_password", "nobody", password="x", stdout=StringIO())
+
+
+def test_initial_administrator_matches_any_case(db, monkeypatch):
+    monkeypatch.setenv("ADMIN_USERNAME", "root")
+    monkeypatch.setenv("ADMIN_PASSWORD", "first")
+    call_command("ensure_superuser", stdout=StringIO())
+
+    monkeypatch.setenv("ADMIN_USERNAME", "Root")
+    call_command("ensure_superuser", stdout=StringIO())
+    assert User.objects.filter(username__iexact="root").count() == 1

@@ -145,7 +145,7 @@ Bug reports, ideas and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBU
 To run Argus from source:
 
 ```bash
-cd backend && uv sync && uv run python manage.py migrate && uv run python manage.py seed_demo && uv run python manage.py runserver
+just setup-backend && just migrate && just seed && just dev-backend
 ```
 
 ```bash
