@@ -9,7 +9,11 @@ const LESSER = /LGPL/i
 const ALLOW = {}
 
 const byLicense = JSON.parse(
-  execFileSync('pnpm', ['licenses', 'list', '--prod', '--json'], { encoding: 'utf8' }),
+  // On Windows pnpm is a .cmd script, which Node starts only through a shell (fixed arguments).
+  execFileSync('pnpm', ['licenses', 'list', '--prod', '--json'], {
+    encoding: 'utf8',
+    shell: process.platform === 'win32',
+  }),
 )
 const bad = []
 for (const [license, packages] of Object.entries(byLicense)) {

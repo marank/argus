@@ -146,6 +146,7 @@ function setHasHeader(value: boolean) {
 }
 
 /** The settings of the last import of a file with the same columns, or suggestions. */
+// eslint-disable-next-line complexity -- a ?? default per stored setting, no branching logic
 function applySettings(headers: string[]) {
   const stored = loadSettings(headers)
   mapping.value = stored?.mapping ?? suggestMapping(headers)

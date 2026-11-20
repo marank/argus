@@ -126,6 +126,7 @@ export function useSegmentedDateInput(root: Ref<HTMLElement | null>, format: () 
     }
   }
 
+  // eslint-disable-next-line complexity -- one branch per key
   function onKeydown(event: KeyboardEvent) {
     const input = event.target as HTMLInputElement
     if (!(input instanceof HTMLInputElement) || !inputs().includes(input)) return

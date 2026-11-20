@@ -5,7 +5,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { assetsApi, consumablesApi } from '@/api/inventory'
-import { loadComponentTypes } from '@/utils/components'
+import { loadComponentTypes } from '@/api/masterdata'
 import type { Schemas } from '@/api/types'
 import EntitySelect from '@/components/common/EntitySelect.vue'
 import ToggleRow from '@/components/common/ToggleRow.vue'

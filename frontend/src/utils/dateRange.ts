@@ -20,6 +20,7 @@ const pad = (n: number) => String(n).padStart(2, '0')
 const iso = (y: number, m: number, d: number) => `${y}-${pad(m)}-${pad(d)}`
 
 /** One day, or null if it is not a valid one. */
+// eslint-disable-next-line complexity -- one branch per accepted way of writing a day
 function parseDay(text: string, today: Date): string | null {
   const value = text.trim().toLowerCase()
   if (TODAY_WORDS.has(value)) return iso(today.getFullYear(), today.getMonth() + 1, today.getDate())
@@ -58,6 +59,7 @@ function parseDay(text: string, today: Date): string | null {
  * The range a text names: null for an empty text (no filter), undefined if it cannot be
  * read (or ends before it starts).
  */
+// eslint-disable-next-line complexity -- one branch per accepted way of writing a range
 export function parseDateRange(text: string, today = new Date()): DateRange | null | undefined {
   const value = text.trim()
   if (!value) return null

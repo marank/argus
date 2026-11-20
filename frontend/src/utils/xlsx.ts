@@ -120,6 +120,7 @@ function columnIndex(reference: string): number {
   return index - 1
 }
 
+// eslint-disable-next-line complexity -- one branch per SpreadsheetML cell type
 function readSheet(
   document: Document,
   strings: string[],

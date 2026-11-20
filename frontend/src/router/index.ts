@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router'
 
 import { onUnauthorized } from '@/api/client'
 import { i18n } from '@/i18n'
@@ -12,6 +12,22 @@ const router = createRouter({
   routes,
   scrollBehavior: () => ({ top: 0 }),
 })
+
+/** Whether a signed-in user (not the terminal) may open the page. */
+function mayOpen(
+  to: RouteLocationNormalized,
+  auth: ReturnType<typeof useAuthStore>,
+  features: ReturnType<typeof useFeaturesStore>,
+): boolean {
+  if ((to.meta.it || to.meta.terminal) && !auth.isItStaff) return false
+  if (to.meta.permission && !auth.can(to.meta.permission, to.meta.write ? 'write' : 'read')) {
+    return false
+  }
+  if (to.meta.approver && !auth.isApprover) return false
+  if (to.meta.superuser && !auth.isSuperuser) return false
+  // Pages of modules switched off in the site settings are not reachable.
+  return !to.meta.module || features.isOn(to.meta.module)
+}
 
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
@@ -32,23 +48,7 @@ router.beforeEach(async (to) => {
   if (auth.isTerminal) {
     return to.meta.terminal ? true : { name: 'terminal' }
   }
-  if ((to.meta.it || to.meta.terminal) && !auth.isItStaff) {
-    return { name: 'dashboard' }
-  }
-  if (to.meta.permission && !auth.can(to.meta.permission, to.meta.write ? 'write' : 'read')) {
-    return { name: 'dashboard' }
-  }
-  if (to.meta.approver && !auth.isApprover) {
-    return { name: 'dashboard' }
-  }
-  if (to.meta.superuser && !auth.isSuperuser) {
-    return { name: 'dashboard' }
-  }
-  // Pages of modules switched off in the site settings are not reachable.
-  if (to.meta.module && !features.isOn(to.meta.module)) {
-    return { name: 'dashboard' }
-  }
-  return true
+  return mayOpen(to, auth, features) ? true : { name: 'dashboard' }
 })
 
 router.afterEach((to, _from, failure) => {

@@ -11,9 +11,10 @@ import EntitySelect from '@/components/common/EntitySelect.vue'
 import DateTimeField from '@/components/common/DateTimeField.vue'
 import { useAction } from '@/composables/useAction'
 import { useFormat } from '@/composables/useFormat'
-import { itemLabel, nextFullHour, onlyPickupPoint } from '@/utils/requests'
+import { itemLabel, nextFullHour } from '@/utils/requests'
 
 import HandoverModeSelect from './HandoverModeSelect.vue'
+import { onlyPickupPoint } from './pickupPoint'
 
 /**
  * `confirm`: tell the employee the request is fine, possibly with fewer devices; editing a

@@ -11,9 +11,10 @@ import EntitySelect from '@/components/common/EntitySelect.vue'
 import { useAction } from '@/composables/useAction'
 import { useFormat } from '@/composables/useFormat'
 import type { Id } from '@/types/common'
-import { nextFullHour, onlyPickupPoint } from '@/utils/requests'
+import { nextFullHour } from '@/utils/requests'
 
 import HandoverModeSelect from './HandoverModeSelect.vue'
+import { onlyPickupPoint } from './pickupPoint'
 
 const props = defineProps<{ assetRequest: Schemas['AssetRequestOut'] }>()
 const show = defineModel<boolean>('show', { required: true })

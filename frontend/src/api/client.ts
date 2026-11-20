@@ -91,6 +91,7 @@ function errorMessage(body: unknown, status: number): string {
   return `HTTP ${status}`
 }
 
+// eslint-disable-next-line complexity -- the one place requests are built and errors mapped; each branch is short
 export async function request<T>(
   method: string,
   path: string,

@@ -16,6 +16,7 @@
     "lint:fix": "oxlint . --fix && eslint . --fix --cache",
     "format": "prettier --write --experimental-cli src/",
     "format:check": "prettier --check --experimental-cli src/",
+    "check": "pnpm format:check && pnpm lint && pnpm type-check && pnpm test:coverage",
     "check:licenses": "node scripts/check-licenses.mjs",
     "size": "size-limit",
     "api:types": "openapi-typescript openapi.json -o src/api/schema.d.ts && prettier --write --experimental-cli src/api/schema.d.ts"

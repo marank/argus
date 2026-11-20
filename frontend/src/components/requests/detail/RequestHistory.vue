@@ -73,6 +73,7 @@ function title(entry: Entry): string {
 const joined = (parts: (string | null | false)[]) => parts.filter(Boolean).join(' · ')
 
 /** The details worth a line: who for, which devices, which dates, what was said. */
+// eslint-disable-next-line complexity -- one case per event kind, each a few optional parts
 function details(entry: Entry): string[] {
   const event = entry.event
   const lines: (string | null)[] = []
