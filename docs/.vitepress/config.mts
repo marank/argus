@@ -246,7 +246,7 @@ export default defineConfig({
   // Page metadata as a separate script instead of inline: the CSP allows no inline scripts.
   metaChunk: true,
   transformHtml: (html, _id, { siteConfig }) => externalizeInlineScripts(html, siteConfig.outDir),
-  srcExclude: ['README.md', 'review-decisions.md'],
+  srcExclude: ['README.md'],
   vite: {
     plugins: [
       {
