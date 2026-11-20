@@ -6,13 +6,19 @@ changing structure; `docs/en/development/` has setup, commands and the glossary 
 
 ## Commands
 
-VS Code tasks (`.vscode/tasks.json`) hold the everyday commands; `docs/en/development/` lists the plain equivalents.
-- **Dev: start all**: Django :8000 + Vite :5173 → http://localhost:5173. `seed_demo` fills the database.
-- **Check: all** runs everything CI runs and must pass before a push. If you change a check, change it in
-  both `tasks.json` and `.github/workflows/build.yaml`.
-- **DB: make migrations** after model changes; commit the migrations (CI fails on missing ones).
-- **API: update types** after any API change: exports `frontend/openapi.json` and regenerates
-  `frontend/src/api/schema.d.ts`; commit both (CI fails when they are out of date).
+Every command lives in the `justfile` (`just` lists them; `uv tool install rust-just`). The VS Code
+tasks (`.vscode/tasks.json`) and CI only call its recipes, so a check is changed there and nowhere else.
+- **Dev: start all** / `just dev-backend` + `just dev-frontend`: Django :8000 + Vite :5173 →
+  http://localhost:5173. `just seed` fills the database.
+- **Check: all** / `just check` runs everything CI runs and must pass before a push.
+- **DB: make migrations** / `just migrations` after model changes; commit the migrations (CI fails on
+  missing ones).
+- **API: update types** / `just api-types` after any API change: exports `frontend/openapi.json` and
+  regenerates `frontend/src/api/schema.d.ts`; commit both (CI fails when they are out of date).
+- Actions are pinned to commit SHAs, images to tag + digest; Dependabot moves them. Not seen by
+  Dependabot: `TRIVY_IMAGE`, `POSTGRES_IMAGE` (with `compose.yml`), `JUST_VERSION` and the job
+  containers in `build.yaml`; `actionlint`/`zizmor` in the `justfile`; `SUPERVISOR_VERSION` in the
+  Dockerfile; pre-commit hooks.
 - Frontend package manager is **pnpm** only. Backend dependencies via `uv add` / `uv add --dev`.
 
 ## Backend rules
@@ -25,6 +31,10 @@ VS Code tasks (`.vscode/tasks.json`) hold the everyday commands; `docs/en/develo
   `manage.py check` fails (`core.E001`) otherwise. URLs and payloads carry these UUIDs. Order
   queries explicitly.
 - Business rules go in `services/`, not in API modules or a model's `save()`.
+- Layers per app: `api` → `services` → `models`, never back; `core`'s models import no other app
+  (import-linter in `pyproject.toml`; a new app is added to its contracts, a test checks that).
+- Complexity ≤ 15 per function (ruff `C90`, ESLint `complexity`), no length limits; above it, split
+  or add `noqa`/`eslint-disable` with the reason. Tests use `config/settings_test.py`.
 - API: under `/api/`, no trailing slashes, session auth + CSRF, UUIDs in paths. `/api/health` stays
   unauthenticated and exactly at that path (container health check, CI smoke test).
 - Configuration only via environment variables (`config/env.py` helpers); every new variable gets a
@@ -39,7 +49,8 @@ VS Code tasks (`.vscode/tasks.json`) hold the everyday commands; `docs/en/develo
 
 ## Frontend rules
 
-- API calls through the per-domain modules in `src/api/`; views per area in `src/views/`, shared
+- API calls through the per-domain modules in `src/api/` (only they use the HTTP client; `src/utils/`
+  stays pure, shared code never imports a view: ESLint `no-restricted-imports`); views per area in `src/views/`, shared
   pieces in `src/components/` and `src/composables/`.
 - Types of API payloads in `src/types/` are aliases of the generated schema types
   (`Schemas['AssetOut']` from `src/api/types.ts`), never hand-written copies. Never edit

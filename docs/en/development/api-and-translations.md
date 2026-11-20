@@ -3,15 +3,9 @@
 ## API types
 
 The frontend's types for API payloads are generated from the backend's OpenAPI schema.
-After changing an endpoint or a schema, run the VS Code task **API: update types**, or:
-
-```bash
-cd backend && uv run python manage.py export_openapi ../frontend/openapi.json
-```
-
-```bash
-cd frontend && pnpm api:types
-```
+After changing an endpoint or a schema, run `just api-types` (VS Code task
+**API: update types**). It exports `frontend/openapi.json` from Django and generates
+`frontend/src/api/schema.d.ts` from it.
 
 Commit `frontend/openapi.json` and `frontend/src/api/schema.d.ts`; CI fails when they do
 not match the code. `src/types/` refers to them (`Schemas['AssetOut']`), so a changed API
@@ -28,8 +22,10 @@ The interface is written in English and translated to German.
 and translated in `backend/locale/de`:
 
 ```bash
-cd backend
-uv run python manage.py makemessages -l de --ignore ".venv/*"
-# edit locale/de/LC_MESSAGES/django.po
-uv run python manage.py compilemessages
+just messages            # adds new strings to locale/de/LC_MESSAGES/django.po
+# translate them in django.po
+just compile-messages    # django.po -> django.mo
 ```
+
+Commit both files; `just check-backend` fails on untranslated or fuzzy entries and on a
+`django.mo` that does not match `django.po`. Both recipes need the gettext tools.

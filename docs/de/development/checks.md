@@ -1,21 +1,18 @@
 # Prüfungen und Tests
 
-Der VS-Code-Task **Check: all** führt dieselben Prüfungen aus wie die CI und muss vor einem
-Push bestehen. Von Hand:
+`just check` (VS-Code-Task **Check: all**) führt dieselben Prüfungen aus wie die CI und muss
+vor einem Push bestehen. Die Befehle stehen im `justfile`; die CI ruft dieselben Rezepte auf,
+eines pro Job:
 
-```bash
-cd backend && uv run ruff check . && uv run ruff format --check . && uv run mypy . && uv run deptry . && uv run pytest --cov
-```
+| Rezept | Prüft |
+| --- | --- |
+| `just check-backend` | ruff, mypy, deptry, Schichten, Lizenzen, Migrationen, Django-Checks, Übersetzungen, OpenAPI-Schema, Tests |
+| `just check-deploy` | `manage.py check --deploy` mit Produktionseinstellungen (`backend/deploy-check.env`) |
+| `just check-frontend` | prettier, oxlint, ESLint, knip, Typen, Tests, API-Typen, Lizenzen, Build, Bundle-Größe |
+| `just check-docs` | den Build der Dokumentation |
+| `just check-workflows` | die GitHub-Workflows (actionlint, zizmor) |
 
-```bash
-cd frontend && pnpm lint && pnpm format:check && pnpm type-check && pnpm test:coverage && pnpm check:licenses && pnpm build-only && pnpm size
-```
-
-```bash
-cd docs && pnpm build
-```
-
-`pnpm lint:fix` und `pnpm format` beheben, was sie können.
+`just fix` formatiert und behebt, was die Werkzeuge beheben können.
 
 ## Was sie sicherstellen
 
@@ -30,10 +27,22 @@ cd docs && pnpm build
   (`size-limit`; heben Sie es bewusst an, wenn eine Funktion es erfordert).
 - **Generierte Dateien:** Migrationen, `frontend/openapi.json` und
   `frontend/src/api/schema.d.ts` müssen zum Code passen.
+- **Lesbarkeit:** Grenzen für Verschachtelung, nicht für Länge. Zyklomatische Komplexität
+  höchstens 15 (ruff `C90`, ESLint `complexity`, wobei ein `switch` einmal zählt) und im
+  Frontend Verschachtelungstiefe höchstens 4. Eine Funktion über der Grenze bekommt einen
+  `noqa`- oder `eslint-disable`-Kommentar mit Begründung oder wird aufgeteilt.
+- **Schichten:** In jeder Backend-App darf `api` `services` und `models` importieren,
+  `services` darf `models` importieren, nie umgekehrt; die Modelle von `core` importieren
+  keine andere App (import-linter, Verträge in `pyproject.toml`). Im Frontend nutzt nur
+  `src/api/` den HTTP-Client, gemeinsame Komponenten und Composables importieren keine View,
+  und `src/utils/` bleibt rein (ESLint `no-restricted-imports`).
+- **Übersetzungen:** kein unübersetzter oder unscharfer (fuzzy) Eintrag in
+  `backend/locale/de`, und `django.mo` passt zu `django.po`
+  (`backend/scripts/check_translations.py`).
 
-Die CI führt zusätzlich `manage.py check --deploy` mit Produktionseinstellungen aus (HSTS
-und die HTTPS-Weiterleitung bleiben dem TLS-Proxy überlassen und sind in `settings.py`
-stummgeschaltet) sowie Trivy: Secrets, behebbare kritische Schwachstellen und
+`check --deploy` läuft mit Produktionseinstellungen; HSTS und die HTTPS-Weiterleitung
+bleiben dem TLS-Proxy überlassen und sind in `settings.py` stummgeschaltet. Die CI führt
+zusätzlich Trivy aus: Secrets, behebbare kritische Schwachstellen und
 Fehlkonfigurationen im Dockerfile lassen den Build fehlschlagen, sowohl im Repository als
 auch im gebauten Image; Schwachstellen der Stufe HIGH werden gemeldet.
 
@@ -48,9 +57,16 @@ uv tool run pre-commit install
 
 ## Backend-Tests
 
-Die Backend-Tests laufen parallel (pytest-xdist, bis zu 8 Worker). Für eine einzelne Datei
-oder einen einzelnen Test überspringt `-n0` den Start der Worker:
+Die Backend-Tests laufen parallel (pytest-xdist, bis zu 8 Worker) mit
+`config/settings_test.py`, sodass Variablen in der Umgebung sie nicht verändern. Für eine
+einzelne Datei oder einen einzelnen Test überspringt `-n0` den Start der Worker:
 
 ```bash
-uv run pytest -n0 apps/accounts/tests/test_roles.py
+just test-backend -n0 apps/accounts/tests/test_roles.py
 ```
+
+::: info Gut zu wissen
+Ohne die gettext-Werkzeuge (unter Windows üblich) prüft die Übersetzungsprüfung nur die
+committete `.po`-Datei und warnt, dass neue Zeichenketten im Code nicht erfasst sind; die
+CI hat sie. Unter Windows: `winget install mlocati.GetText`.
+:::

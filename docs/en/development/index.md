@@ -16,6 +16,7 @@ is in [CONTRIBUTING.md](https://github.com/marank/argus/blob/main/CONTRIBUTING.m
 
 - [uv](https://docs.astral.sh/uv/) (installs the right Python itself)
 - Node.js 22.18+ or 24.12+ and [pnpm](https://pnpm.io/)
+- [just](https://just.systems/) 1.38+ for the project's commands: `uv tool install rust-just`
 - Docker, only for PostgreSQL and for building the image
 
 ## Run it locally
@@ -47,19 +48,20 @@ one with `docker compose -f compose.dev.yml up -d` and run the backend with
 `DB_HOST=localhost`. Without PostgreSQL, jobs (e.g. mails) run right after the request
 and pages do not update by themselves.
 
-## VS Code tasks
+## Commands and VS Code tasks
 
-*Terminal → Run Task…* offers everything as tasks (`.vscode/tasks.json`), among them:
+The commands live in the `justfile`; `just` lists them. *Terminal → Run Task…* offers them
+as tasks (`.vscode/tasks.json`), among them:
 
-| Task | What it does |
-| --- | --- |
-| **Dev: start all** | Django on :8000 and Vite on :5173 |
-| **DB: start dev postgres** | PostgreSQL from `compose.dev.yml` |
-| **DB: seed demo data** | `seed_demo` |
-| **DB: make migrations** | after model changes |
-| **API: update types** | after API changes, see [API types and translations](./api-and-translations) |
-| **Check: all** | everything CI runs, see [Checks and tests](./checks) |
-| **Docker: build and start** | builds the image and starts it with `compose.yml` |
+| Task | Recipe | What it does |
+| --- | --- | --- |
+| **Dev: start all** | `just dev-backend`, `just dev-frontend` | Django on :8000 and Vite on :5173 |
+| **DB: start dev postgres** | `just db-up` | PostgreSQL from `compose.dev.yml` |
+| **DB: seed demo data** | `just seed` | `seed_demo` |
+| **DB: make migrations** | `just migrations` | after model changes |
+| **API: update types** | `just api-types` | after API changes, see [API types and translations](./api-and-translations) |
+| **Check: all** | `just check` | everything CI runs, see [Checks and tests](./checks) |
+| **Docker: build and start** | `just docker-up` | builds the image and starts it with `compose.yml` |
 
 ## Demo data
 

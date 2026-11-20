@@ -24,22 +24,29 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-permissions:
-  contents: read
+# Every job asks for what it needs.
+permissions: {}
 
 env:
   REGISTRY: ghcr.io
-  TRIVY_IMAGE: aquasec/trivy:0.76.0
+  # Started with `docker run`, so Dependabot does not see them: update tag and digest by hand
+  # (POSTGRES_IMAGE together with compose.yml).
+  TRIVY_IMAGE: aquasec/trivy:0.76.0@sha256:2416d1f74045b57274df1a340eee6b510cacd73c66a6ccb8da092b117eb7d222
+  POSTGRES_IMAGE: postgres:18-alpine@sha256:ff64c9e3bdf8e2120107d3559de8db314e8305f7e38c5105903c6295876738ff
+  # The check jobs only run justfile recipes (`just check` locally). Not seen by Dependabot.
+  JUST_VERSION: "1.59.0"
 
 jobs:
-  # --- Backend: ruff, mypy, deptry, licenses, migrations, pytest against PostgreSQL
+  # --- Backend: `just check-backend` against PostgreSQL, then `just check-deploy`
   backend:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     container:
-      image: ghcr.io/astral-sh/uv:python3.14-trixie-slim
+      image: ghcr.io/astral-sh/uv:python3.14-trixie-slim@sha256:da0f1f04404173d7d2fa158112e09624d5a80262efa86c89882b68389dfd44eb
     services:
       postgres:
-        image: postgres:18-alpine
+        image: postgres:18-alpine@sha256:ff64c9e3bdf8e2120107d3559de8db314e8305f7e38c5105903c6295876738ff
         env:
           POSTGRES_DB: argus
           POSTGRES_USER: argus
@@ -52,158 +59,98 @@ jobs:
     env:
       UV_LINK_MODE: copy
       UV_PYTHON_DOWNLOADS: never
-      SECRET_KEY: ci-only-not-secret
-      # With a SECRET_KEY set, debug would default to off; the tests expect the dev setup.
-      DEBUG: "true"
       DB_HOST: postgres
       POSTGRES_DB: argus
       POSTGRES_USER: argus
       POSTGRES_PASSWORD: argus
-    defaults:
-      run:
-        working-directory: backend
     steps:
-      # actions/checkout needs git inside the job image; the -slim images lack it.
-      # working-directory: / because backend/ or frontend/ does not exist yet.
-      - name: Install git
-        working-directory: /
-        run: apt-get update && apt-get install -y --no-install-recommends git ca-certificates
+      # actions/checkout needs git inside the job image (the -slim images lack it); the
+      # translation check needs gettext (makemessages).
+      - name: Install git and gettext
+        run: apt-get update && apt-get install -y --no-install-recommends git ca-certificates gettext
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - name: Install dependencies
-        # --locked also fails when uv.lock no longer matches pyproject.toml.
-        run: uv sync --locked
+      - name: Checks
+        run: uvx --from "rust-just==$JUST_VERSION" just check-backend
 
-      - name: Lint
-        run: |
-          uv run ruff check --output-format=concise .
-          uv run ruff format --check .
+      - name: Deploy checks
+        run: uvx --from "rust-just==$JUST_VERSION" just check-deploy
 
-      - name: Types (mypy)
-        run: uv run mypy .
-
-      - name: Dependencies (deptry)
-        run: uv run deptry .
-
-      # No GPL/AGPL/SSPL in production dependencies (LGPL is fine). Checked in a
-      # throwaway venv with only the production dependencies installed.
-      - name: Licenses
-        run: |
-          LICENSE_DIR=$(mktemp -d)
-          trap 'rm -rf "$LICENSE_DIR"' EXIT
-          uv export --locked --no-dev --no-hashes --format requirements.txt -o "$LICENSE_DIR/requirements.txt"
-          uv venv --quiet "$LICENSE_DIR/venv"
-          uv pip install --quiet --python "$LICENSE_DIR/venv" -r "$LICENSE_DIR/requirements.txt" pip-licenses
-          "$LICENSE_DIR/venv/bin/pip-licenses" --format=json \
-            --ignore-packages pip-licenses prettytable wcwidth \
-            | uv run python scripts/check_licenses.py
-
-      - name: Check for missing migrations
-        run: uv run python manage.py makemigrations --check --dry-run
-
-      # The frontend's generated types come from this file (pnpm api:types).
-      - name: OpenAPI schema up to date
-        run: |
-          uv run python manage.py export_openapi /tmp/openapi.json
-          cmp /tmp/openapi.json ../frontend/openapi.json \
-            || { echo "API changed: run the VS Code task 'API: update types' and commit both files" >&2; exit 1; }
-
-      - name: Django system checks
-        run: uv run python manage.py check
-
-      # Production settings as behind a TLS proxy: no warning may remain (HSTS and the
-      # https redirect belong to the proxy, see SILENCED_SYSTEM_CHECKS).
-      - name: Django deploy checks
-        env:
-          DEBUG: "false"
-          SECRET_KEY: ci-deploy-check-not-secret-but-long-and-random-enough-0123456789abcdef
-          APP_URLS: https://argus.example.com
-          BEHIND_PROXY: "true"
-        run: uv run python manage.py check --deploy --fail-level WARNING
-
-      # Coverage minimum: fail_under in pyproject.toml.
-      - name: Tests
-        run: uv run pytest -q --cov
-
-  # --- Frontend: lint (oxlint, eslint, knip), prettier, types, vitest, licenses, size
+  # --- Frontend: `just check-frontend`
   frontend:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     container:
-      image: node:24-trixie-slim
-    defaults:
-      run:
-        working-directory: frontend
+      image: node:24-trixie-slim@sha256:af02d57b57719b9657a45199a79264a9437940cd55b3c7b3fc99615654f124a0
     steps:
-      # actions/checkout needs git inside the job image; the -slim images lack it.
-      # working-directory: / because backend/ or frontend/ does not exist yet.
       - name: Install git
-        working-directory: /
         run: apt-get update && apt-get install -y --no-install-recommends git ca-certificates
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - name: Install dependencies
+      # The checkout belongs to the runner's user, the container runs as root; the check
+      # compares the generated API types with git.
+      - name: Trust the checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Checks
         run: |
           corepack enable
-          pnpm install --frozen-lockfile
+          npx --yes "rust-just@$JUST_VERSION" check-frontend
 
-      - name: API types up to date
-        run: |
-          cp src/api/schema.d.ts /tmp/schema.d.ts
-          pnpm api:types
-          cmp src/api/schema.d.ts /tmp/schema.d.ts \
-            || { echo "src/api/schema.d.ts does not match openapi.json: run pnpm api:types" >&2; exit 1; }
-
-      - name: Lint
-        run: |
-          pnpm lint
-          pnpm format:check
-
-      - name: Type-check
-        run: pnpm type-check
-
-      # Coverage minimum: thresholds in vitest.config.ts.
-      - name: Unit tests
-        run: pnpm test:coverage
-
-      - name: Licenses
-        run: pnpm check:licenses
-
-      # Budget in package.json ("size-limit"); the image build type-checks again.
-      - name: Bundle size
-        run: |
-          pnpm build-only
-          pnpm size
-
-  # --- Docs: VitePress build (fails on dead links, anchors and IT links in the employee areas) -------------------------------
+  # --- Docs: `just check-docs` (dead links, anchors, IT links in the open areas, translations)
   docs:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     container:
-      image: node:24-trixie-slim
-    defaults:
-      run:
-        working-directory: docs
+      image: node:24-trixie-slim@sha256:af02d57b57719b9657a45199a79264a9437940cd55b3c7b3fc99615654f124a0
     steps:
       - name: Install git
-        working-directory: /
         run: apt-get update && apt-get install -y --no-install-recommends git ca-certificates
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - name: Install dependencies
+      - name: Checks
         run: |
           corepack enable
-          pnpm install --frozen-lockfile
+          npx --yes "rust-just@$JUST_VERSION" check-docs
 
-      - name: Build
-        run: pnpm build
+  # --- Workflows: `just check-workflows` (actionlint, zizmor)
+  workflows:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    container:
+      image: ghcr.io/astral-sh/uv:python3.14-trixie-slim@sha256:da0f1f04404173d7d2fa158112e09624d5a80262efa86c89882b68389dfd44eb
+    steps:
+      - name: Install git
+        run: apt-get update && apt-get install -y --no-install-recommends git ca-certificates
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Checks
+        run: uvx --from "rust-just==$JUST_VERSION" just check-workflows
 
   # --- Repository: secrets, vulnerable dependencies, Dockerfile misconfiguration --
   repository:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       # Secrets, critical fixable vulnerabilities in the lock files and HIGH/CRITICAL
       # Dockerfile misconfigurations fail; HIGH vulnerabilities are reported. The files
@@ -228,7 +175,7 @@ jobs:
 
   # --- Image: build, smoke-test, scan, push -------------------------------------
   image:
-    needs: [backend, frontend, docs, repository]
+    needs: [backend, frontend, docs, workflows, repository]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -237,10 +184,11 @@ jobs:
       DOCKER_BUILDKIT: "1"
       PUSH: ${{ github.event_name != 'pull_request' }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Compute tags
-        id: meta
         # Context values go in via env, never straight into the script: tag names
         # may contain shell metacharacters.
         env:
@@ -270,9 +218,12 @@ jobs:
               fi
               ;;
           esac
-          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
-          echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
-          echo "tags=$TAGS" >> "$GITHUB_OUTPUT"
+          # For the later steps as environment variables, never expanded into their scripts.
+          {
+            echo "IMAGE=$IMAGE"
+            echo "SHORT_SHA=$SHORT_SHA"
+            echo "TAGS=$TAGS"
+          } >> "$GITHUB_ENV"
           echo "Tags: $TAGS"
 
       - name: Login
@@ -285,16 +236,16 @@ jobs:
       - name: Build
         run: |
           TAG_ARGS=""
-          for t in ${{ steps.meta.outputs.tags }}; do TAG_ARGS="$TAG_ARGS -t $t"; done
+          for t in $TAGS; do TAG_ARGS="$TAG_ARGS -t $t"; done
           # Reuse layers from the last pushed image when there is one, except for the
           # runtime stage: its system packages are installed anew, so security fixes are
           # not held back by the cache.
-          docker pull "${{ steps.meta.outputs.image }}:latest" || true
+          docker pull "$IMAGE:latest" || true
           docker build --pull --no-cache-filter runtime \
-            --cache-from "${{ steps.meta.outputs.image }}:latest" \
+            --cache-from "$IMAGE:latest" \
             --build-arg BUILDKIT_INLINE_CACHE=1 \
-            --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
-            --label "org.opencontainers.image.revision=${{ github.sha }}" \
+            --label "org.opencontainers.image.source=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
             --label "org.opencontainers.image.created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             $TAG_ARGS .
 
@@ -306,19 +257,19 @@ jobs:
       # pg_dump must accept the server's version and write into a fresh volume.
       - name: Smoke test
         run: |
-          IMAGE="${{ steps.meta.outputs.image }}:sha-${{ steps.meta.outputs.short_sha }}"
-          NAME="argus-smoke-${{ github.run_id }}"
+          TESTED="$IMAGE:sha-$SHORT_SHA"
+          NAME="argus-smoke-$GITHUB_RUN_ID"
           docker network create "$NAME"
           trap 'docker logs "$NAME" || true; docker rm -fv "$NAME" "$NAME-db" >/dev/null 2>&1 || true; docker network rm "$NAME" >/dev/null 2>&1 || true' EXIT
           docker run -d --name "$NAME-db" --network "$NAME" --network-alias db \
             -e POSTGRES_DB=argus -e POSTGRES_USER=argus -e POSTGRES_PASSWORD=argus \
-            postgres:18-alpine
+            "$POSTGRES_IMAGE"
           docker run -d --name "$NAME" --network "$NAME" \
             --read-only --tmpfs /tmp --security-opt no-new-privileges:true --cap-drop ALL \
             --mount type=volume,target=/backups \
             -e SECRET_KEY=ci-smoke-test-not-secret-but-long-enough-for-the-check -e DB_HOST=db \
             -e POSTGRES_DB=argus -e POSTGRES_USER=argus -e POSTGRES_PASSWORD=argus \
-            "$IMAGE"
+            "$TESTED"
           healthy=false
           for i in $(seq 1 45); do
             if docker exec "$NAME" curl -fsS http://127.0.0.1:8080/api/health; then
@@ -362,7 +313,7 @@ jobs:
               -v /var/run/docker.sock:/var/run/docker.sock \
               -v argus-trivy-cache:/root/.cache/trivy \
               "$TRIVY_IMAGE" image --no-progress --skip-version-check "$@" \
-              "${{ steps.meta.outputs.image }}:sha-${{ steps.meta.outputs.short_sha }}"
+              "$IMAGE:sha-$SHORT_SHA"
           }
           scan --scanners secret --exit-code 1
           scan --scanners vuln --severity CRITICAL --ignore-unfixed --exit-code 1
@@ -371,7 +322,7 @@ jobs:
       - name: Push
         if: env.PUSH == 'true'
         run: |
-          for t in ${{ steps.meta.outputs.tags }}; do docker push "$t"; done
+          for t in $TAGS; do docker push "$t"; done
 
       - name: Logout
         if: always() && env.PUSH == 'true'

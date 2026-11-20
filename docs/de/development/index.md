@@ -16,6 +16,7 @@ vorschlagen, steht in [CONTRIBUTING.md](https://github.com/marank/argus/blob/mai
 
 - [uv](https://docs.astral.sh/uv/) (installiert die passende Python-Version selbst)
 - Node.js 22.18+ oder 24.12+ und [pnpm](https://pnpm.io/)
+- [just](https://just.systems/) 1.38+ für die Befehle des Projekts: `uv tool install rust-just`
 - Docker, nur für PostgreSQL und zum Bauen des Images
 
 ## Lokal starten
@@ -47,19 +48,20 @@ PostgreSQL: Starten Sie eine Instanz mit `docker compose -f compose.dev.yml up -
 Backend mit `DB_HOST=localhost`. Ohne PostgreSQL laufen Jobs (z. B. E-Mails) direkt nach
 der Anfrage, und Seiten aktualisieren sich nicht von selbst.
 
-## VS-Code-Tasks
+## Befehle und VS-Code-Tasks
 
-*Terminal → Run Task…* bietet alles als Task an (`.vscode/tasks.json`), darunter:
+Die Befehle stehen im `justfile`; `just` listet sie auf. *Terminal → Run Task…* bietet sie
+als Tasks an (`.vscode/tasks.json`), darunter:
 
-| Task | Was er tut |
-| --- | --- |
-| **Dev: start all** | Django auf :8000 und Vite auf :5173 |
-| **DB: start dev postgres** | PostgreSQL aus `compose.dev.yml` |
-| **DB: seed demo data** | `seed_demo` |
-| **DB: make migrations** | nach Änderungen an Modellen |
-| **API: update types** | nach Änderungen an der API, siehe [API-Typen und Übersetzungen](./api-and-translations) |
-| **Check: all** | alles, was die CI ausführt, siehe [Prüfungen und Tests](./checks) |
-| **Docker: build and start** | baut das Image und startet es mit `compose.yml` |
+| Task | Rezept | Was er tut |
+| --- | --- | --- |
+| **Dev: start all** | `just dev-backend`, `just dev-frontend` | Django auf :8000 und Vite auf :5173 |
+| **DB: start dev postgres** | `just db-up` | PostgreSQL aus `compose.dev.yml` |
+| **DB: seed demo data** | `just seed` | `seed_demo` |
+| **DB: make migrations** | `just migrations` | nach Änderungen an Modellen |
+| **API: update types** | `just api-types` | nach Änderungen an der API, siehe [API-Typen und Übersetzungen](./api-and-translations) |
+| **Check: all** | `just check` | alles, was die CI ausführt, siehe [Prüfungen und Tests](./checks) |
+| **Docker: build and start** | `just docker-up` | baut das Image und startet es mit `compose.yml` |
 
 ## Demodaten
 

@@ -1,5 +1,6 @@
 {
   // Argus development tasks. Run via "Terminal → Run Task…" (Ctrl+Shift+P → Tasks: Run Task).
+  // Each one calls a recipe of the justfile, where the commands live (CI calls the same ones).
   "version": "2.0.0",
   "tasks": [
     // --- Development servers -------------------------------------------------
@@ -13,8 +14,7 @@
       "label": "Dev: backend",
       "detail": "Django runserver on :8000",
       "type": "shell",
-      "command": "uv run python manage.py runserver 127.0.0.1:8000",
-      "options": { "cwd": "${workspaceFolder}/backend" },
+      "command": "just dev-backend",
       "isBackground": true,
       "problemMatcher": []
     },
@@ -22,8 +22,7 @@
       "label": "Dev: frontend",
       "detail": "Vite dev server on :5173 (proxies /api and /admin to :8000)",
       "type": "shell",
-      "command": "pnpm dev",
-      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "command": "just dev-frontend",
       "isBackground": true,
       "problemMatcher": []
     },
@@ -31,8 +30,7 @@
       "label": "Dev: docs",
       "detail": "Documentation (VitePress) on :5175/docs/",
       "type": "shell",
-      "command": "pnpm dev --port 5175",
-      "options": { "cwd": "${workspaceFolder}/docs" },
+      "command": "just dev-docs",
       "isBackground": true,
       "problemMatcher": []
     },
@@ -40,29 +38,9 @@
     // --- Setup ---------------------------------------------------------------
     {
       "label": "Setup: install dependencies",
-      "detail": "uv sync + pnpm install",
-      "dependsOn": ["Setup: backend dependencies", "Setup: frontend dependencies", "Setup: docs dependencies"],
-      "problemMatcher": []
-    },
-    {
-      "label": "Setup: backend dependencies",
+      "detail": "uv sync + pnpm install (frontend and docs)",
       "type": "shell",
-      "command": "uv sync",
-      "options": { "cwd": "${workspaceFolder}/backend" },
-      "problemMatcher": []
-    },
-    {
-      "label": "Setup: frontend dependencies",
-      "type": "shell",
-      "command": "pnpm install",
-      "options": { "cwd": "${workspaceFolder}/frontend" },
-      "problemMatcher": []
-    },
-    {
-      "label": "Setup: docs dependencies",
-      "type": "shell",
-      "command": "pnpm install",
-      "options": { "cwd": "${workspaceFolder}/docs" },
+      "command": "just setup",
       "problemMatcher": []
     },
 
@@ -70,45 +48,39 @@
     {
       "label": "DB: migrate",
       "type": "shell",
-      "command": "uv run python manage.py migrate",
-      "options": { "cwd": "${workspaceFolder}/backend" },
+      "command": "just migrate",
       "problemMatcher": []
     },
     {
       "label": "DB: make migrations",
       "type": "shell",
-      "command": "uv run python manage.py makemigrations --no-header",
-      "options": { "cwd": "${workspaceFolder}/backend" },
+      "command": "just migrations",
       "problemMatcher": []
     },
     {
       "label": "DB: seed demo data",
       "detail": "Demo users (password argus-demo), devices and requests",
       "type": "shell",
-      "command": "uv run python manage.py seed_demo",
-      "options": { "cwd": "${workspaceFolder}/backend" },
+      "command": "just seed",
       "problemMatcher": []
     },
     {
       "label": "DB: reset and seed (deletes all data!)",
       "type": "shell",
-      "command": "uv run python manage.py flush --no-input && uv run python manage.py seed_demo",
-      "options": { "cwd": "${workspaceFolder}/backend" },
+      "command": "just --yes reset",
       "problemMatcher": []
     },
     {
       "label": "DB: create superuser",
       "type": "shell",
-      "command": "uv run python manage.py createsuperuser",
-      "options": { "cwd": "${workspaceFolder}/backend" },
+      "command": "just superuser",
       "problemMatcher": []
     },
-
     {
       "label": "DB: start dev postgres",
       "detail": "PostgreSQL on 127.0.0.1:5432 (compose.dev.yml); then run the backend with DB_HOST=localhost",
       "type": "shell",
-      "command": "docker compose -f compose.dev.yml up -d",
+      "command": "just db-up",
       "problemMatcher": []
     },
 
@@ -116,114 +88,96 @@
       "label": "API: update types",
       "detail": "After API changes: export openapi.json from Django, generate frontend/src/api/schema.d.ts; commit both",
       "type": "shell",
-      "command": "uv run python manage.py export_openapi ../frontend/openapi.json && cd ../frontend && pnpm api:types",
-      "options": { "cwd": "${workspaceFolder}/backend" },
+      "command": "just api-types",
       "problemMatcher": []
     },
 
     // --- Quality -------------------------------------------------------------
     {
       "label": "Check: all",
-      "detail": "Everything CI runs for backend, frontend and docs (reports only, fixes nothing)",
-      "dependsOn": ["Check: backend", "Check: deploy settings", "Check: frontend", "Check: docs"],
-      "dependsOrder": "sequence",
+      "detail": "Everything CI runs: backend, deploy settings, frontend, docs, workflows (reports only, fixes nothing)",
+      "type": "shell",
+      "command": "just check",
       "group": "test",
       "problemMatcher": []
     },
     {
       "label": "Check: backend",
-      "detail": "Same as the CI backend job: ruff, mypy, deptry, migrations, system checks, tests with coverage",
+      "detail": "ruff, mypy, deptry, import layers, licenses, migrations, system checks, translations, OpenAPI, tests",
       "type": "shell",
-      "command": "uv run ruff check . && uv run ruff format --check . && uv run mypy . && uv run deptry . && uv run python manage.py makemigrations --check --dry-run && uv run python manage.py check && uv run pytest -q --cov",
-      "options": { "cwd": "${workspaceFolder}/backend" },
+      "command": "just check-backend",
       "problemMatcher": []
     },
     {
       "label": "Check: deploy settings",
-      "detail": "Same as the CI step: manage.py check --deploy with production settings behind a TLS proxy",
+      "detail": "manage.py check --deploy with production settings behind a TLS proxy",
       "type": "shell",
-      "command": "uv run python manage.py check --deploy --fail-level WARNING",
-      "options": {
-        "cwd": "${workspaceFolder}/backend",
-        "env": {
-          "DEBUG": "false",
-          "SECRET_KEY": "ci-deploy-check-not-secret-but-long-and-random-enough-0123456789abcdef",
-          "APP_URLS": "https://argus.example.com",
-          "BEHIND_PROXY": "true"
-        }
-      },
+      "command": "just check-deploy",
       "problemMatcher": []
     },
     {
       "label": "Check: frontend",
-      "detail": "Same as the CI frontend job: oxlint, eslint, knip, prettier, type-check, tests with coverage, licenses, bundle size",
+      "detail": "prettier, oxlint, eslint, knip, types, tests with coverage, API types, licenses, bundle size",
       "type": "shell",
-      "command": "pnpm lint && pnpm format:check && pnpm type-check && pnpm test:coverage && pnpm check:licenses && pnpm build-only && pnpm size",
-      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "command": "just check-frontend",
       "problemMatcher": ["$tsc"]
     },
     {
       "label": "Check: docs",
-      "detail": "Same as the CI docs job: build the documentation (fails on dead links, anchors and IT links in the employee areas)",
+      "detail": "Build the documentation (fails on dead links, anchors and IT links in the employee areas)",
       "type": "shell",
-      "command": "pnpm build",
-      "options": { "cwd": "${workspaceFolder}/docs" },
+      "command": "just check-docs",
+      "problemMatcher": []
+    },
+    {
+      "label": "Check: workflows",
+      "detail": "GitHub workflows: actionlint and zizmor",
+      "type": "shell",
+      "command": "just check-workflows",
       "problemMatcher": []
     },
     {
       "label": "Test: backend",
       "type": "shell",
-      "command": "uv run pytest",
-      "options": { "cwd": "${workspaceFolder}/backend" },
+      "command": "just test-backend",
       "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Test: frontend",
+      "type": "shell",
+      "command": "just test-frontend",
+      "group": "test",
       "problemMatcher": []
     },
     {
       "label": "Lint: backend",
       "detail": "ruff format + ruff check --fix",
       "type": "shell",
-      "command": "uv run ruff format . && uv run ruff check --fix .",
-      "options": { "cwd": "${workspaceFolder}/backend" },
+      "command": "just fix-backend",
       "problemMatcher": []
-    },
-    {
-      "label": "Test: frontend",
-      "type": "shell",
-      "command": "pnpm test:unit --run",
-      "options": { "cwd": "${workspaceFolder}/frontend" },
-      "group": "test",
-      "problemMatcher": []
-    },
-    {
-      "label": "Check: frontend types",
-      "type": "shell",
-      "command": "pnpm type-check",
-      "options": { "cwd": "${workspaceFolder}/frontend" },
-      "problemMatcher": ["$tsc"]
     },
     {
       "label": "Lint: frontend",
       "detail": "prettier + oxlint + eslint (with --fix)",
       "type": "shell",
-      "command": "pnpm format && pnpm lint:fix",
-      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "command": "just fix-frontend",
       "problemMatcher": ["$eslint-stylish"]
     },
 
     // --- Translations --------------------------------------------------------
     {
       "label": "i18n: update backend messages",
-      "detail": "makemessages for German, then edit backend/locale/de/LC_MESSAGES/django.po",
+      "detail": "makemessages for German (needs gettext), then edit backend/locale/de/LC_MESSAGES/django.po",
       "type": "shell",
-      "command": "uv run python manage.py makemessages -l de --ignore '.venv/*' --no-wrap",
-      "options": { "cwd": "${workspaceFolder}/backend" },
+      "command": "just messages",
       "problemMatcher": []
     },
     {
       "label": "i18n: compile backend messages",
+      "detail": "django.po -> django.mo (needs gettext); commit both",
       "type": "shell",
-      "command": "uv run python manage.py compilemessages",
-      "options": { "cwd": "${workspaceFolder}/backend" },
+      "command": "just compile-messages",
       "problemMatcher": []
     },
 
@@ -232,29 +186,26 @@
       "label": "Docker: build and start",
       "detail": "Build the image argus:latest and run it with docker compose up -d (uses .env)",
       "type": "shell",
-      "command": "docker build -t argus:latest . && docker compose up -d",
-      "options": { "cwd": "${workspaceFolder}", "env": { "ARGUS_IMAGE": "argus:latest" } },
+      "command": "just docker-up",
       "problemMatcher": []
     },
     {
       "label": "Docker: backup now",
       "detail": "Dump the database into the backups volume (see docs/en/it/operations/backups.md)",
       "type": "shell",
-      "command": "docker compose exec app python manage.py backup_database",
+      "command": "just docker-backup",
       "problemMatcher": []
     },
     {
       "label": "Docker: stop",
       "type": "shell",
-      "command": "docker compose down",
-      "options": { "cwd": "${workspaceFolder}" },
+      "command": "just docker-down",
       "problemMatcher": []
     },
     {
       "label": "Docker: logs",
       "type": "shell",
-      "command": "docker compose logs -f app",
-      "options": { "cwd": "${workspaceFolder}" },
+      "command": "just docker-logs",
       "isBackground": true,
       "problemMatcher": []
     },
@@ -262,7 +213,6 @@
       "label": "Docker: Django shell",
       "type": "shell",
       "command": "docker compose exec app python manage.py shell",
-      "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": []
     }
   ]

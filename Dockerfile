@@ -1,13 +1,12 @@
-# syntax=docker/dockerfile:1.28
+# syntax=docker/dockerfile:1.28@sha256:bb22d9815c728170f72750f4e5b0d672e06176142e1d602c7e66c050100b7e5b
 #
 # Argus: one image with nginx (static frontend and documentation + reverse proxy), gunicorn (Django)
 # and supervisord keeping both alive. Runs as an unprivileged user on port 8080.
-
-ARG PYTHON_VERSION=3.14
-ARG NODE_VERSION=24
+#
+# Images are pinned by tag and the digest of their multi-platform index; Dependabot updates both.
 
 # --- 1. Frontend build ---------------------------------------------------------
-FROM node:${NODE_VERSION}-alpine AS frontend
+FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS frontend
 WORKDIR /build
 RUN corepack enable
 COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml ./
@@ -18,7 +17,7 @@ COPY frontend/ ./
 RUN pnpm build
 
 # --- 2. Documentation ------------------------------------------------------------
-FROM node:${NODE_VERSION}-alpine AS docs
+FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS docs
 WORKDIR /build
 RUN corepack enable
 COPY docs/package.json docs/pnpm-lock.yaml docs/pnpm-workspace.yaml ./
@@ -27,8 +26,8 @@ COPY docs/ ./
 RUN pnpm build
 
 # --- 3. Python dependencies ------------------------------------------------------
-FROM python:${PYTHON_VERSION}-slim-trixie AS backend
-COPY --from=ghcr.io/astral-sh/uv:0.13.4 /uv /usr/local/bin/uv
+FROM python:3.14-slim-trixie@sha256:9aaa474097d094040649f2162a627c0049b408f52138d980916788d80f04802f AS backend
+COPY --from=ghcr.io/astral-sh/uv:0.13.4@sha256:9f130421e930bfbdc563c00740466603f8723158e90297d07957c2294640262b /uv /usr/local/bin/uv
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
     UV_PYTHON_DOWNLOADS=never \
@@ -39,7 +38,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-install-project
 
 # --- 4. Runtime ------------------------------------------------------------------
-FROM python:${PYTHON_VERSION}-slim-trixie AS runtime
+FROM python:3.14-slim-trixie@sha256:9aaa474097d094040649f2162a627c0049b408f52138d980916788d80f04802f AS runtime
 ARG SUPERVISOR_VERSION=4.3.0
 # pg_dump for the nightly backups; its major version must be at least the server's
 # (postgres image in compose.yml). Debian's own client lags behind, so it comes from
