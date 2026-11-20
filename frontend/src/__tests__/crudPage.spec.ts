@@ -51,6 +51,14 @@ function makeResource() {
         fields: [
           { key: 'name', label: 'common.name', type: 'text', required: true },
           { key: 'is_active', label: 'common.active', type: 'switch' },
+          // Required, but only asked for while inactive.
+          {
+            key: 'code',
+            label: 'common.code',
+            type: 'text',
+            required: true,
+            visible: (form) => !form.is_active,
+          },
         ],
       },
       { fields: [{ key: 'notes', label: 'common.notes', type: 'textarea' }] },
@@ -136,6 +144,20 @@ describe('CrudPage', () => {
     expect(api.create).toHaveBeenCalledWith({ name: 'Globex', notes: '', is_active: true })
     // Saved: the list is fetched again.
     expect(api.list).toHaveBeenCalledTimes(2)
+  })
+
+  it('asks for a hidden required field only once it shows', async () => {
+    await page()
+    button('Manufacturer').click()
+    await flushPromises()
+    typeInto(drawerInput(), 'Globex')
+    await flushPromises()
+    // The code is hidden while active: it does not hold up saving.
+    expect(button('Save').disabled).toBe(false)
+
+    document.body.querySelector<HTMLElement>('.ar-form .n-switch')!.click()
+    await flushPromises()
+    expect(button('Save').disabled).toBe(true)
   })
 
   it('edits a record from its row', async () => {

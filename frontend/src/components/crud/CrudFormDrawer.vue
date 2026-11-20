@@ -120,10 +120,18 @@ const iconOptions = (field: { icons?: Record<string, Component>; group?: string 
 const renderIconLabel = (option: { label: string; icon: any }) =>
   h('span', { class: 'row' }, [h(option.icon, { size: 15 }), option.label])
 
+// Only what is shown counts: a required field hidden by another choice (or in a hidden
+// section) is not asked for and must not block saving.
 const missingRequired = computed(() =>
-  sectionFields(props.resource).some(
-    (f) => f.required && (form[f.key] === null || form[f.key] === '' || form[f.key] === undefined),
-  ),
+  props.resource.sections
+    .filter((section) => section.visible?.(form) ?? true)
+    .flatMap((section) => section.fields)
+    .some(
+      (f) =>
+        f.required &&
+        isFieldVisible(f, form) &&
+        (form[f.key] === null || form[f.key] === '' || form[f.key] === undefined),
+    ),
 )
 
 function span(field: FieldDef): number {
