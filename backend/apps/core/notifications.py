@@ -12,7 +12,9 @@ recipient's open tabs (``apps.core.live``).
 """
 
 import email.policy
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 from email.message import EmailMessage
 from enum import StrEnum
@@ -250,6 +252,19 @@ def mail_ready(settings: MailSettings) -> bool:
     return bool(settings.enabled and settings.host and settings.from_email)
 
 
+_muted: ContextVar[bool] = ContextVar("notifications_muted", default=False)
+
+
+@contextmanager
+def muted() -> Iterator[None]:
+    """Sends nothing inside: the caller tells whoever needs to know about the whole step."""
+    token = _muted.set(True)
+    try:
+        yield
+    finally:
+        _muted.reset(token)
+
+
 def notify(
     event: NotificationEvent | DirectNotification,
     recipients: Iterable[User],
@@ -272,6 +287,8 @@ def notify(
     from apps.core.live import publish
     from apps.core.models import MailSettings, Notification, NotificationLog
 
+    if _muted.get():
+        return
     settings = MailSettings.load()
     if isinstance(event, DirectNotification):
         by_mail, in_app = mail_ready(settings), True

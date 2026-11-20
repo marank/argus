@@ -15,6 +15,7 @@ class AssetRequestEventKind(models.TextChoices):
     CONFIRMED = "confirmed", _("Confirmed")
     REJECTED = "rejected", _("Rejected")
     CANCELLED = "cancelled", _("Cancelled")
+    REPLACED = "replaced", _("Replaced")
     ASSIGNED = "assigned", _("Assignment changed")
     ALLOCATED = "allocated", _("Allocated")
     RELEASED = "released", _("Allocation removed")
@@ -46,6 +47,7 @@ class AssetRequestEvent(UUIDModel):
         AssetRequestEventKind.CONFIRMED,
         AssetRequestEventKind.REJECTED,
         AssetRequestEventKind.CANCELLED,
+        AssetRequestEventKind.REPLACED,
         AssetRequestEventKind.READY,
         AssetRequestEventKind.RESCHEDULED,
         AssetRequestEventKind.HANDED_OUT,

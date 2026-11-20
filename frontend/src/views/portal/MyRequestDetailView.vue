@@ -54,6 +54,12 @@ const showReturns = computed(() => {
   )
 })
 
+/** IT recorded a new request in its place: that one goes on, so this one is not asked again. */
+const replacedBy = computed(() => {
+  const event = assetRequest.value?.events.find((e) => e.kind === 'replaced')
+  return event?.kind === 'replaced' ? (event.data.by ?? '') : null
+})
+
 /** Still open: the employee can withdraw it (at the end of the page, away from a slip). */
 const cancellable = computed(
   () =>
@@ -128,7 +134,10 @@ const columns: DataTableColumns<Schemas['AssetRequestItemOut']> = [
         /></template>
         <template #actions>
           <RouterLink
-            v-if="['rejected', 'cancelled', 'completed'].includes(assetRequest.status)"
+            v-if="
+              replacedBy === null &&
+              ['rejected', 'cancelled', 'completed'].includes(assetRequest.status)
+            "
             :to="{ name: 'portal-new', query: { from: assetRequest.id } }"
           >
             <NButton :type="assetRequest.status === 'completed' ? 'default' : 'primary'">
@@ -151,6 +160,9 @@ const columns: DataTableColumns<Schemas['AssetRequestItemOut']> = [
           }}
           <br />
           {{ t('requests.new.submittedNext') }}
+        </NAlert>
+        <NAlert v-if="replacedBy" type="info" :bordered="false">
+          {{ t('requests.replace.replacedHint', { number: replacedBy }) }}
         </NAlert>
         <NCard size="small"><RequestSteps :assetRequest="assetRequest" /></NCard>
         <div class="layout">

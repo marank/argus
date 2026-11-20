@@ -117,6 +117,7 @@ export default {
     request_confirmed: 'Bestätigt',
     request_rejected: 'Abgelehnt',
     request_cancelled: 'Storniert',
+    request_replaced: 'Ersetzt',
     request_assigned: 'Zuständigkeit geändert',
     request_allocated: 'Zugeordnet',
     request_ready: 'Abholbereit',

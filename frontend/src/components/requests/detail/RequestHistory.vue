@@ -125,6 +125,9 @@ function details(entry: Entry): string[] {
       if (event.data.previous && event.data.end_date)
         lines.push(`${date(event.data.previous)} → ${date(event.data.end_date)}`)
       break
+    case 'replaced':
+      if (event.data.by) lines.push(t('requests.replace.by', { number: event.data.by }))
+      break
   }
   if (entry.items.length) lines.push(entry.items.join(', '))
   // Handed out or taken back outside the system: the lines without a recorded device.

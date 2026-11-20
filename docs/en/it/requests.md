@@ -45,6 +45,21 @@ While the request is **Confirmed**, you change the quantities with **Edit**. A q
 
 The employee is notified in both cases.
 
+## Replacing
+
+If the employee needs something else or more afterwards, replace the request as long as it is not handed out: **Replace** (under ⋮) opens the cart with the request's details and lines, for a direct hand-out with its devices. Change what is needed and send it.
+
+- The old request is cancelled; its history shows **Replaced** with the new number. The employee gets no email.
+- The new request shows **Follows** with the old number and keeps who is responsible and the planned handover.
+- If the old request was confirmed, so is the new one. Allocated devices move to the matching new line; whatever no longer fits goes back to the pool.
+- The approval carries over: if the old request was waiting for the department, the new one waits too and the approvers are notified. If it was already approved, the new one stays approved. A waiting request cannot be replaced by a direct hand-out.
+- For a direct hand-out the cart names what it cannot take over (devices still missing on a line, license seats); pick them again if needed.
+- IT gets no notification about a new request.
+
+::: info Good to know
+Cancelling only happens on sending. If you leave the cart, the request stays as it is.
+:::
+
 ## Custom requests
 
 Lines that are not in the catalog are marked as **Custom request**. Before you allocate devices, decide:

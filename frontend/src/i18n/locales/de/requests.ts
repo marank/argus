@@ -290,6 +290,14 @@ export default {
     },
     received: 'Sie vertreten {name} bei Genehmigungen ({period}).',
   },
+  replace: {
+    action: 'Ersetzen',
+    prefilled:
+      'Ersetzt {number}. Ändern Sie, was nötig ist; beim Absenden wird {number} storniert und diese Anforderung tritt an ihre Stelle. Der Mitarbeiter erhält keine Mail.',
+    by: 'Ersetzt durch {number}',
+    notCarried: 'Nicht übernommen, bei Bedarf neu auswählen: {items}.',
+    replacedHint: 'Die IT hat diese Anforderung durch {number} ersetzt.',
+  },
   again: {
     action: 'Erneut anfordern',
     prefilled:
@@ -320,6 +328,7 @@ export default {
       confirmed: 'Von der IT bestätigt',
       rejected: 'Von der IT abgelehnt',
       cancelled: 'Storniert',
+      replaced: 'Ersetzt',
       assigned: 'Zuständigkeit geändert',
       nobody: 'Niemand',
       allocated: '{count} Position zugewiesen | {count} Positionen zugewiesen',

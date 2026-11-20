@@ -247,6 +247,11 @@ class AllocationData(Schema):
     items: list[str] = []
 
 
+class ReplacedData(Schema):
+    # The number of the request IT recorded in its place.
+    by: str | None = None
+
+
 class NoData(Schema):
     pass
 
@@ -302,6 +307,11 @@ class AllocationEventOut(AssetRequestEventBase):
     data: AllocationData
 
 
+class ReplacedEventOut(AssetRequestEventBase):
+    kind: Literal[AssetRequestEventKind.REPLACED]
+    data: ReplacedData
+
+
 class PlainEventOut(AssetRequestEventBase):
     kind: Literal[
         AssetRequestEventKind.CANCELLED,
@@ -322,6 +332,7 @@ type AssetRequestEventOut = Annotated[
     | HandOutEventOut
     | ReturnEventOut
     | AllocationEventOut
+    | ReplacedEventOut
     | PlainEventOut,
     Field(discriminator="kind"),
 ]
@@ -420,6 +431,7 @@ class AssetRequestIn(Schema):
     items: list[AssetRequestItemIn] = Field(..., min_length=1, max_length=100)
     requester: UUID | None = Field(None, description="IT only: create on behalf of an employee")
     follows: UUID | None = Field(None, description="The earlier request this one asks again for")
+    replaces: UUID | None = Field(None, description="IT only: an open request this one takes the place of")
 
 
 class ConfirmItemIn(Schema):
@@ -502,6 +514,7 @@ class DirectRequestIn(Schema):
     requester: UUID | None = Field(None, description="Left out: the current user")
     assets: list[UUID] = []
     consumables: list[DirectConsumableIn] = []
+    replaces: UUID | None = Field(None, description="An open request this one is recorded in place of")
 
 
 class QuickAssignIn(Schema):

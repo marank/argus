@@ -13,6 +13,7 @@ import {
   catalogModel,
   field,
   mountPage,
+  requestItem,
   unmountPages,
 } from './portalHelpers'
 
@@ -20,6 +21,7 @@ const api = vi.hoisted(() => ({
   catalog: vi.fn<(...args: unknown[]) => Promise<unknown>>(),
   createDirect: vi.fn<(...args: unknown[]) => Promise<unknown>>(),
   create: vi.fn<(...args: unknown[]) => Promise<unknown>>(),
+  get: vi.fn<(...args: unknown[]) => Promise<unknown>>(),
   getAsset: vi.fn<(...args: unknown[]) => Promise<unknown>>(),
   listAssets: vi.fn<(...args: unknown[]) => Promise<unknown>>(),
   listConsumables: vi.fn<(...args: unknown[]) => Promise<unknown>>(),
@@ -36,7 +38,12 @@ vi.mock('@/api/requests', async (importOriginal) => {
       availability: async () => ({ categories: {}, models: {} }),
       myConsumables: async () => [],
     },
-    requestsApi: { ...original.requestsApi, create: api.create, createDirect: api.createDirect },
+    requestsApi: {
+      ...original.requestsApi,
+      create: api.create,
+      createDirect: api.createDirect,
+      get: api.get,
+    },
   }
 })
 vi.mock('@/api/inventory', async (importOriginal) => {
@@ -249,6 +256,68 @@ describe('NewRequestView: direct hand-out', () => {
     )
     expect(api.createDirect.mock.calls[0]![0]).not.toHaveProperty('items')
     expect(router.currentRoute.value.name).toBe('request')
+    expect(router.currentRoute.value.params.id).toBe('r-direct')
+  })
+
+  it('picks the devices of a direct hand-out again to replace it', async () => {
+    const allocation = (
+      overrides: Partial<Schemas['AllocationOut']>,
+    ): Schemas['AllocationOut'] => ({
+      id: 'al1',
+      asset: null,
+      consumable: null,
+      license: null,
+      quantity: 1,
+      allocated_by: null,
+      allocated_at: '2026-01-01T00:00:00Z',
+      handout_note: '',
+      handed_out_at: null,
+      returned_at: null,
+      device_return: null,
+      returned_damaged: false,
+      return_note: '',
+      category_icon: 'laptop',
+      ...overrides,
+    })
+    const { id, inventory_number, model, name, serial_number, status } = device()
+    api.get.mockResolvedValue(
+      assetRequest({
+        id: 'r-old',
+        number: 'R-2026-0009',
+        origin: 'direct',
+        status: 'confirmed',
+        items: [
+          requestItem({
+            quantity_missing: 0,
+            allocations: [
+              allocation({
+                asset: { id, inventory_number, model, name, serial_number, status } as never,
+              }),
+              allocation({
+                id: 'al2',
+                consumable: { id: 's1', model: stock().model } as never,
+                quantity: 2,
+              }),
+            ],
+          }),
+          // A device was taken off this line again: the cart cannot hold the gap.
+          requestItem({ id: 'i2', label: 'Headset', quantity_missing: 1 }),
+        ],
+      }),
+    )
+    api.createDirect.mockResolvedValue({ id: 'r-direct', number: 'R-2026-0010' })
+    const { router } = await open('/requests/direct?replace=r-old')
+    expect(bodyText()).toContain('Replaces R-2026-0009')
+    expect(cartLines()).toEqual(['NB-0001 ThinkPad T14', 'Logitech Mouse'])
+    expect(bodyText()).toContain('Not taken over, pick again if still needed: 1× Headset.')
+    await click(button('Submit request'))
+    expect(api.createDirect).toHaveBeenCalledWith(
+      expect.objectContaining({
+        assets: ['a1'],
+        consumables: [{ consumable: 's1', quantity: 2 }],
+        replaces: 'r-old',
+      }),
+    )
     expect(router.currentRoute.value.params.id).toBe('r-direct')
   })
 

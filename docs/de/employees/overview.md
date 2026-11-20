@@ -29,7 +29,7 @@ Den Schritt **Genehmigung** gibt es nur, wenn die Anforderung genehmigt werden m
 | **Ausgegeben** | Sie haben die Geräte, die Rückgabe steht noch aus. |
 | **Abgeschlossen** | Dauerhaft ausgegeben oder alles zurückgegeben. |
 | **Abgelehnt** | Ihre Abteilung oder die IT hat abgelehnt; die Begründung steht in der Anforderung. |
-| **Storniert** | Sie oder die IT haben die Anforderung zurückgezogen. |
+| **Storniert** | Sie oder die IT haben die Anforderung zurückgezogen. Hat die IT sie geändert, nennt die Anforderung die neue Nummer; es geht dort weiter. |
 
 Darunter sehen Sie:
 

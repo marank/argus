@@ -2808,6 +2808,7 @@ export interface components {
       | 'request_confirmed'
       | 'request_rejected'
       | 'request_cancelled'
+      | 'request_replaced'
       | 'request_assigned'
       | 'request_allocated'
       | 'request_ready'
@@ -3850,6 +3851,7 @@ export interface components {
       | components['schemas']['HandOutEventOut']
       | components['schemas']['ReturnEventOut']
       | components['schemas']['AllocationEventOut']
+      | components['schemas']['ReplacedEventOut']
       | components['schemas']['PlainEventOut']
     /** AssetRequestFilter */
     AssetRequestFilter: {
@@ -3894,6 +3896,11 @@ export interface components {
        * @default
        */
       notes: string
+      /**
+       * Replaces
+       * @description IT only: an open request this one takes the place of
+       */
+      replaces?: string | null
       /** Requested Pickup Date */
       requested_pickup_date?: string | null
       /**
@@ -5005,6 +5012,11 @@ export interface components {
        * @default
        */
       notes: string
+      /**
+       * Replaces
+       * @description An open request this one is recorded in place of
+       */
+      replaces?: string | null
       /** Requested Pickup Date */
       requested_pickup_date?: string | null
       /**
@@ -7149,6 +7161,31 @@ export interface components {
     RejectIn: {
       /** Comment */
       comment: string
+    }
+    /** ReplacedData */
+    ReplacedData: {
+      /** By */
+      by: string | null
+    }
+    /** ReplacedEventOut */
+    ReplacedEventOut: {
+      actor: components['schemas']['UserRefOut'] | null
+      /**
+       * At
+       * Format: date-time
+       */
+      at: string
+      data: components['schemas']['ReplacedData']
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'replaced'
     }
     /** RequestCandidatesOut */
     RequestCandidatesOut: {

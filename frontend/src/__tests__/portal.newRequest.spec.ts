@@ -629,6 +629,7 @@ describe('NewRequestView', () => {
         requested_pickup_date: TODAY,
         requester: null,
         follows: null,
+        replaces: null,
         items: [
           {
             category: 'c-laptops',
@@ -770,6 +771,34 @@ describe('NewRequestView', () => {
       expect(field('e.g. training, new hire, stocktaking').value).toBe('Trade fair')
     })
 
+    it('replaces an open request with its confirmed lines', async () => {
+      const [air, touch] = earlier().items
+      api.get.mockResolvedValue({
+        ...earlier(),
+        status: 'confirmed',
+        items: [
+          { ...air!, quantity_confirmed: 1 },
+          { ...touch!, quantity_confirmed: 0 },
+        ],
+      })
+      await open({ url: '/portal/new?replace=r-old' })
+      expect(bodyText()).toContain('Replaces R-2026-0007')
+      expect(bodyText()).not.toContain('Prefilled from')
+      // Not confirmed at all: the line is left out.
+      expect(cartLines()).toEqual(['MacBook Air'])
+      await click(button('Submit request'))
+      expect(api.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Trade fair',
+          follows: null,
+          replaces: 'r-old',
+          items: [
+            { category: null, asset_model: 'm-air', description: '', quantity: 1, note: 'Silver' },
+          ],
+        }),
+      )
+    })
+
     it('sends the new request as a follow-up of the earlier one', async () => {
       api.get.mockResolvedValue(earlier())
       await open({ url: '/portal/new?from=r-old' })
@@ -783,6 +812,7 @@ describe('NewRequestView', () => {
         requested_pickup_date: TODAY,
         requester: null,
         follows: 'r-old',
+        replaces: null,
         items: [
           { category: null, asset_model: 'm-air', description: '', quantity: 2, note: 'Silver' },
           {

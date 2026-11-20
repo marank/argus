@@ -26,6 +26,7 @@ class ActivityKind(models.TextChoices):
     REQUEST_CONFIRMED = "request_confirmed", _("Confirmed")
     REQUEST_REJECTED = "request_rejected", _("Rejected")
     REQUEST_CANCELLED = "request_cancelled", _("Cancelled")
+    REQUEST_REPLACED = "request_replaced", _("Replaced")
     REQUEST_ASSIGNED = "request_assigned", _("Assignment changed")
     REQUEST_ALLOCATED = "request_allocated", _("Allocated")
     REQUEST_READY = "request_ready", _("Ready for pickup")

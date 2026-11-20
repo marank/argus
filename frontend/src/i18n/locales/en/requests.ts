@@ -287,6 +287,14 @@ export default {
     },
     received: 'You approve on behalf of {name} ({period}).',
   },
+  replace: {
+    action: 'Replace',
+    prefilled:
+      'Replaces {number}. Change what is needed; on sending, {number} is cancelled and this request takes its place. The employee gets no email.',
+    by: 'Replaced by {number}',
+    notCarried: 'Not taken over, pick again if still needed: {items}.',
+    replacedHint: 'IT replaced this request with {number}.',
+  },
   again: {
     action: 'Request again',
     prefilled: 'Prefilled from {number}. Review the details; submitting creates a new request.',
@@ -316,6 +324,7 @@ export default {
       confirmed: 'Confirmed by IT',
       rejected: 'Rejected by IT',
       cancelled: 'Cancelled',
+      replaced: 'Replaced',
       assigned: 'Assignment changed',
       nobody: 'Nobody',
       allocated: '{count} item allocated | {count} items allocated',

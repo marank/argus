@@ -119,7 +119,7 @@ def list_asset_requests(
 
 @router.post("", response={201: AssetRequestOut})
 def create_asset_request(request: AuthedRequest, payload: AssetRequestIn) -> Status[AssetRequest]:
-    data = payload.dict(exclude={"items", "requester", "follows"})
+    data = payload.dict(exclude={"items", "requester", "follows", "replaces"})
     requester = request.user
     may_record = can(request.user, ResourceKey.REQUESTS, PermissionLevel.WRITE)
     if payload.requester and may_record:
@@ -130,9 +130,19 @@ def create_asset_request(request: AuthedRequest, payload: AssetRequestIn) -> Sta
             visible_asset_requests(request).filter(pk=payload.follows, requester=requester).first()
         )
     items = [item.dict() for item in payload.items]
-    asset_request = workflow.submit(
-        requester, data, items, created_by=request.user, from_catalog=not may_record
-    )
+
+    def create(follows: AssetRequest | None = None) -> AssetRequest:
+        fields = {**data, "follows": follows} if follows else data
+        return workflow.submit(requester, fields, items, created_by=request.user, from_catalog=not may_record)
+
+    if payload.replaces:
+        # Who may replace is a permission, like recording on someone's behalf.
+        if not may_record:
+            raise BusinessError(_("Only IT can replace a request."))
+        with transaction.atomic():
+            asset_request = workflow.replace(get_for_update(payload.replaces), request.user, create)
+    else:
+        asset_request = create()
     return Status(201, get_asset_request(request, asset_request.pk))
 
 
@@ -140,13 +150,24 @@ def create_asset_request(request: AuthedRequest, payload: AssetRequestIn) -> Sta
 def create_direct(request: AuthedRequest, payload: DirectRequestIn) -> Status[AssetRequest]:
     """A request with specific devices from stock: confirmed and allocated right away."""
     requester = _employee(payload.requester) if payload.requester else request.user
-    asset_request = workflow.prepare_direct(
-        requester,
-        request.user,
-        payload.dict(exclude={"requester", "assets", "consumables"}),
-        assets=payload.assets,
-        consumables={c.consumable: c.quantity for c in payload.consumables},
-    )
+    data = payload.dict(exclude={"requester", "assets", "consumables", "replaces"})
+
+    def create(follows: AssetRequest | None = None) -> AssetRequest:
+        return workflow.prepare_direct(
+            requester,
+            request.user,
+            {**data, "follows": follows} if follows else data,
+            assets=payload.assets,
+            consumables={c.consumable: c.quantity for c in payload.consumables},
+        )
+
+    if payload.replaces:
+        with transaction.atomic():
+            asset_request = workflow.replace(
+                get_for_update(payload.replaces), request.user, create, direct=True
+            )
+    else:
+        asset_request = create()
     return Status(201, get_asset_request(request, asset_request.pk))
 
 

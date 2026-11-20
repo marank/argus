@@ -219,6 +219,18 @@ describe('RequestDetailView', () => {
       await click('Cancel')
       expect(api.requests.cancel).not.toHaveBeenCalled()
     })
+
+    it('is replaced in the request cart, a direct hand-out in its own', async () => {
+      const { router } = await open(makeRequest())
+      await menu('Replace')
+      expect(router.currentRoute.value.name).toBe('portal-new')
+      expect(router.currentRoute.value.query).toEqual({ replace: REQUEST_ID })
+      unmount?.()
+
+      const direct = await open(makeRequest({ origin: 'direct', status: 'confirmed' }))
+      await menu('Replace')
+      expect(direct.router.currentRoute.value.name).toBe('direct-handout')
+    })
   })
 
   describe('a confirmed request', () => {
@@ -471,6 +483,7 @@ describe('RequestDetailView', () => {
       expect(await moreActions()).toEqual([
         'Change handover',
         'Back to preparation',
+        'Replace',
         'Cancel request',
       ])
     })

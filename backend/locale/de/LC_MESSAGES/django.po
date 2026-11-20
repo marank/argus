@@ -2050,6 +2050,18 @@ msgstr "Geliefert"
 msgid "Cancelled"
 msgstr "Storniert"
 
+msgid "Replaced"
+msgstr "Ersetzt"
+
+msgid "Only IT can replace a request."
+msgstr "Nur die IT kann eine Anforderung ersetzen."
+
+msgid "A request can only be replaced for the same employee."
+msgstr "Eine Anforderung kann nur für denselben Mitarbeiter ersetzt werden."
+
+msgid "A request awaiting approval cannot become a direct hand-out."
+msgstr "Eine Anforderung, die auf Genehmigung wartet, kann keine Direktausgabe werden."
+
 #: apps/procurement/models/purchase_order.py:22
 #: apps/requests/models/asset_request.py:72
 msgid "number"

@@ -112,6 +112,7 @@ export default {
     request_confirmed: 'Confirmed',
     request_rejected: 'Rejected',
     request_cancelled: 'Cancelled',
+    request_replaced: 'Replaced',
     request_assigned: 'Assignment changed',
     request_allocated: 'Allocated',
     request_ready: 'Ready for pickup',

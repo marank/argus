@@ -191,6 +191,25 @@ describe('MyRequestDetailView', () => {
     },
   )
 
+  it('points to the new request instead of asking again when IT replaced it', async () => {
+    await open(
+      assetRequest({
+        status: 'cancelled',
+        events: [
+          {
+            id: 'e1',
+            kind: 'replaced',
+            at: '2026-11-20T10:00:00Z',
+            actor: null,
+            data: { by: 'R-2026-0043' },
+          },
+        ],
+      }),
+    )
+    expect(bodyText()).toContain('IT replaced this request with R-2026-0043.')
+    expect(bodyText()).not.toContain('Request again')
+  })
+
   it('confirms a request just submitted, mentioning the approval it waits for', async () => {
     await open(assetRequest({ status: 'pending_approval' }), '/portal/requests/r1?created=1')
     expect(bodyText()).toContain(

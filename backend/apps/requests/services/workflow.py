@@ -1,12 +1,13 @@
 """State transitions of a request, from submission to return."""
 
+from collections.abc import Callable
 from datetime import date, datetime, time
 from enum import Enum
 from typing import Any, Final, Literal
 from uuid import UUID
 
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import F, Q
 from django.utils import formats, timezone
 from django.utils.translation import gettext as _
 
@@ -17,6 +18,7 @@ from apps.activity.services import log as activity
 from apps.core.exceptions import BusinessError
 from apps.core.features import FeatureKey, is_enabled
 from apps.core.models import SiteSettings
+from apps.core.notifications import muted as muted_notifications
 from apps.inventory.models import (
     Asset,
     AssetEventKind,
@@ -225,14 +227,116 @@ def _item_team(item: AssetRequestItem) -> Team | None:
 
 @transaction.atomic
 def cancel(asset_request: AssetRequest, user: User) -> AssetRequest:
+    _end_cancelled(asset_request, user, AssetRequestEventKind.CANCELLED)
+    notifications.request_cancelled(asset_request, user)
+    return asset_request
+
+
+def _end_cancelled(asset_request: AssetRequest, user: User, kind: str, **data: object) -> None:
+    """Withdraw an open request: what was set aside goes back, the step is noted."""
     _require_status(asset_request, *AssetRequest.CANCELLABLE_STATUSES)
-    _release_all(asset_request)
+    _release_all(asset_request, user)
     asset_request.status = AssetRequestStatus.CANCELLED
     asset_request.completed_at = timezone.now()
     asset_request.save()
-    record(asset_request, AssetRequestEventKind.CANCELLED, user)
-    notifications.request_cancelled(asset_request, user)
-    return asset_request
+    record(asset_request, kind, user, **data)
+
+
+@transaction.atomic
+def replace(
+    old: AssetRequest,
+    user: User,
+    create: Callable[[AssetRequest], AssetRequest],
+    *,
+    direct: bool = False,
+) -> AssetRequest:
+    """IT changes an open request by recording a new one in its place, e.g. when the
+    employee calls for another device. ``create(old)`` records it (as a request or a direct
+    hand-out) following the old one. The old one ends as replaced, without a mail to the
+    employee; IT is not told of a new request either.
+
+    The new request keeps who is responsible, the planned handover (a pickup date only
+    while it is ahead) and the department's approval: still waiting, so is the new one;
+    already approved, it stays approved. Was the old one confirmed, so is the new one, and
+    devices allocated to it move to the line of the new request they fit; the rest is
+    given back. A direct hand-out picks its devices again, so they are given back first.
+    """
+    _require_status(old, *AssetRequest.CANCELLABLE_STATUSES)
+    waiting = old.status == AssetRequestStatus.PENDING_APPROVAL
+    if direct and waiting:
+        raise BusinessError(_("A request awaiting approval cannot become a direct hand-out."))
+    if direct:
+        _release_all(old, user)
+    # One step: in the activity log the replacement, not every part of it.
+    with activity.muted(), muted_notifications():
+        new = create(old)
+        if new.requester_id != old.requester_id:
+            raise BusinessError(_("A request can only be replaced for the same employee."))
+        _carry_over(old, new)
+        confirmed = old.status in (AssetRequestStatus.CONFIRMED, AssetRequestStatus.READY)
+        if confirmed and new.status == AssetRequestStatus.SUBMITTED:
+            _confirm_as_recorded(new, user)
+        new.save()
+        if not direct:
+            _take_over(old, new)
+    _end_cancelled(old, user, AssetRequestEventKind.REPLACED, by=new.number)
+    if new.status == AssetRequestStatus.PENDING_APPROVAL:
+        notifications.approval_requested(new)
+    return new
+
+
+def _carry_over(old: AssetRequest, new: AssetRequest) -> None:
+    """What the new request keeps of the one it replaces (saved by the caller)."""
+    new.assigned_team = old.assigned_team or new.assigned_team
+    new.assignee = old.assignee or new.assignee
+    # A pickup date that has passed is planned anew.
+    if old.pickup_at and old.pickup_at > timezone.now():
+        new.pickup_at = old.pickup_at
+    new.pickup_location = old.pickup_location
+    new.handover_mode, new.it_comment = old.handover_mode, old.it_comment
+    # The department's decision applies to the new request as it did to the old one.
+    new.approval, new.approver = old.approval, old.approver
+    new.approval_decided_at, new.approval_comment = old.approval_decided_at, old.approval_comment
+    if old.status == AssetRequestStatus.PENDING_APPROVAL:
+        new.status = AssetRequestStatus.PENDING_APPROVAL
+    elif new.status == AssetRequestStatus.PENDING_APPROVAL:
+        new.status = AssetRequestStatus.SUBMITTED
+
+
+def _confirm_as_recorded(asset_request: AssetRequest, user: User) -> None:
+    """IT recorded the lines itself, so it confirms them as they are (no mail; saved by
+    the caller)."""
+    asset_request.items.update(quantity_confirmed=F("quantity_requested"))
+    asset_request.status = AssetRequestStatus.CONFIRMED
+    asset_request.handled_by = user
+    asset_request.confirmed_at = timezone.now()
+    record(asset_request, AssetRequestEventKind.CONFIRMED, user)
+
+
+def _allocated_model(allocation: AssetRequestAllocation) -> AssetModel:
+    thing = allocation.asset or allocation.consumable or allocation.license
+    assert thing is not None  # clean(): exactly one of asset, consumable, license
+    return thing.model
+
+
+def _take_over(old: AssetRequest, new: AssetRequest) -> None:
+    """Move what was allocated to the old request to the new line it fits, as far as the
+    line takes it; free-text lines take nothing until IT assigns a model."""
+    lines = [line for line in new.items.all() if not line.is_free_text]
+    room = {line.pk: line.quantity_target for line in lines}
+    allocations = AssetRequestAllocation.objects.filter(
+        item__asset_request=old, handed_out_at__isnull=True
+    ).select_related("asset__model", "consumable__model", "license__model")
+    for allocation in allocations:
+        model = _allocated_model(allocation)
+        line = next(
+            (each for each in lines if room[each.pk] >= allocation.quantity and _matches(each, model)),
+            None,
+        )
+        if line:
+            allocation.item = line
+            allocation.save(update_fields=["item"])
+            room[line.pk] -= allocation.quantity
 
 
 # --- Department approval -----------------------------------------------------

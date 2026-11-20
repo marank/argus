@@ -29,7 +29,7 @@ The **Approval** step only appears if the request has to be approved.
 | **Handed out** | You have the devices; the return is still outstanding. |
 | **Completed** | Handed out permanently or everything returned. |
 | **Rejected** | Your department or IT has rejected it; the reason is in the request. |
-| **Cancelled** | You or IT withdrew the request. |
+| **Cancelled** | You or IT withdrew the request. If IT changed it, the request names the new number; it continues there. |
 
 Below that you see:
 

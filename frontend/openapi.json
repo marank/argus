@@ -124,6 +124,7 @@
           "request_confirmed",
           "request_rejected",
           "request_cancelled",
+          "request_replaced",
           "request_assigned",
           "request_allocated",
           "request_ready",
@@ -3202,6 +3203,7 @@
             "released": "#/components/schemas/AllocationEventOut",
             "reminded": "#/components/schemas/PlainEventOut",
             "reopened": "#/components/schemas/PlainEventOut",
+            "replaced": "#/components/schemas/ReplacedEventOut",
             "rescheduled": "#/components/schemas/ScheduleEventOut",
             "returned": "#/components/schemas/ReturnEventOut"
           },
@@ -3231,6 +3233,9 @@
           },
           {
             "$ref": "#/components/schemas/AllocationEventOut"
+          },
+          {
+            "$ref": "#/components/schemas/ReplacedEventOut"
           },
           {
             "$ref": "#/components/schemas/PlainEventOut"
@@ -3436,6 +3441,19 @@
             "default": "",
             "title": "Notes",
             "type": "string"
+          },
+          "replaces": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "IT only: an open request this one takes the place of",
+            "title": "Replaces"
           },
           "requested_pickup_date": {
             "anyOf": [
@@ -6416,6 +6434,19 @@
             "default": "",
             "title": "Notes",
             "type": "string"
+          },
+          "replaces": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "An open request this one is recorded in place of",
+            "title": "Replaces"
           },
           "requested_pickup_date": {
             "anyOf": [
@@ -11963,6 +11994,67 @@
           "comment"
         ],
         "title": "RejectIn",
+        "type": "object"
+      },
+      "ReplacedData": {
+        "properties": {
+          "by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "By"
+          }
+        },
+        "required": [
+          "by"
+        ],
+        "title": "ReplacedData",
+        "type": "object"
+      },
+      "ReplacedEventOut": {
+        "properties": {
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ReplacedData"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "replaced",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "at",
+          "actor",
+          "kind",
+          "data"
+        ],
+        "title": "ReplacedEventOut",
         "type": "object"
       },
       "RequestCandidatesOut": {

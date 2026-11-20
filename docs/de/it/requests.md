@@ -45,6 +45,21 @@ Solange die Anforderung **Bestätigt** ist, ändern Sie die Mengen über **Bearb
 
 Der Mitarbeiter wird in beiden Fällen benachrichtigt.
 
+## Ersetzen
+
+Braucht der Mitarbeiter nachträglich etwas anderes oder zusätzlich, ersetzen Sie die Anforderung, solange sie nicht ausgegeben ist: **Ersetzen** (unter ⋮) öffnet den Warenkorb mit den Angaben und Positionen der Anforderung, bei einer Direktausgabe mit ihren Geräten. Ändern Sie, was nötig ist, und senden Sie ab.
+
+- Die alte Anforderung wird storniert, im Verlauf steht **Ersetzt** mit der Nummer der neuen. Der Mitarbeiter erhält keine Mail.
+- Die neue Anforderung zeigt **Folgt auf** mit der alten Nummer und übernimmt Zuständigkeit und geplante Übergabe.
+- War die alte Anforderung bestätigt, ist es die neue auch. Zugewiesene Geräte wandern auf die passende neue Position; was nicht mehr passt, geht zurück in den Pool.
+- Die Genehmigung gilt weiter: Wartete die alte Anforderung auf die Abteilung, wartet die neue ebenfalls, und die Genehmigenden werden benachrichtigt. War sie schon genehmigt, bleibt die neue genehmigt. Eine wartende Anforderung kann nicht als Direktausgabe ersetzt werden.
+- Bei einer Direktausgabe nennt der Warenkorb, was er nicht übernehmen kann (noch fehlende Geräte einer Position, Lizenzplätze); wählen Sie es bei Bedarf neu aus.
+- Die IT erhält keine Benachrichtigung über eine neue Anforderung.
+
+::: info Gut zu wissen
+Erst beim Absenden wird storniert. Brechen Sie im Warenkorb ab, bleibt die Anforderung unverändert.
+:::
+
 ## Sonderwünsche
 
 Positionen, die nicht im Katalog stehen, sind als **Sonderwunsch** markiert. Bevor Sie Geräte zuweisen, entscheiden Sie:

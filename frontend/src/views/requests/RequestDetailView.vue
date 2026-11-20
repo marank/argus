@@ -10,6 +10,7 @@ import {
   Mail,
   PackageCheck,
   PackageOpen,
+  Replace,
   ShoppingCart,
   Undo2,
   UserCheck,
@@ -26,6 +27,7 @@ import {
   type DropdownOption,
 } from 'naive-ui'
 import { computed, h, onMounted, ref, type Component } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
 import { portalApi, requestsApi } from '@/api/requests'
@@ -57,6 +59,7 @@ import { useAuthStore } from '@/stores/auth'
 const props = defineProps<{ id: Id }>()
 const { t } = useI18n()
 // Without the right to change requests, the page is for viewing only.
+const router = useRouter()
 const canWrite = computed(() => useAuthStore().can('requests', 'write'))
 const confirm = useConfirm()
 const { busy, run } = useAction()
@@ -283,7 +286,9 @@ const menuOptions = computed<DropdownOption[]>(() => {
   if (canRemind.value && !assetRequest.value?.is_overdue)
     options.push(option('remind', t('requests.actions.remind'), Mail))
   if (['pending_approval', 'submitted', 'confirmed', 'ready'].includes(s ?? '')) {
-    if (options.length) options.push({ type: 'divider', key: 'cancel-divider' })
+    // Changed on the phone, say: recorded anew in its place.
+    options.push(option('replace', t('requests.replace.action'), Replace))
+    options.push({ type: 'divider', key: 'cancel-divider' })
     options.push(option('cancel', t('requests.actions.cancel'), Ban, true))
   }
   return options
@@ -295,6 +300,11 @@ function onMenu(key: string) {
   else if (key === 'reopen') reopen()
   else if (key === 'cancel') cancel()
   else if (key === 'remind') remind()
+  else if (key === 'replace')
+    router.push({
+      name: assetRequest.value?.origin === 'direct' ? 'direct-handout' : 'portal-new',
+      query: { replace: props.id },
+    })
 }
 
 async function cancel() {

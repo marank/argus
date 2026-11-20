@@ -75,6 +75,10 @@ onMounted(async () => {
     const earlier = await run(() => requestsApi.get(route.query.from as string))
     if (earlier) prefill(earlier)
   }
+  if (typeof route.query.replace === 'string') {
+    const open = await run(() => requestsApi.get(route.query.replace as string))
+    if (open) prefillReplacement(open)
+  }
 })
 
 /** Purpose, for whom, and the message to IT; sent with period and cart. */
@@ -119,6 +123,70 @@ function prefill(earlier: Schemas['AssetRequestOut']) {
     notes: earlier.notes,
     requester: initialRequester.value?.id ?? null,
   })
+}
+
+/**
+ * IT changes an open request by recording it anew: sending cancels it and puts this one in
+ * its place (`replaces`). Lines as confirmed, the period as it was (from today at the
+ * earliest); a direct hand-out brings its devices and stocks along.
+ */
+const replacing = ref<Schemas['AssetRequestOut'] | null>(null)
+/**
+ * What a direct hand-out had that its cart cannot hold, to pick again: units still
+ * missing on a line, and license seats.
+ */
+const notCarried = ref<string[]>([])
+
+function prefillReplacement(open: Schemas['AssetRequestOut']) {
+  prefill(open)
+  previous.value = null
+  replacing.value = open
+  const quantity = (item: Schemas['AssetRequestItemOut']) =>
+    item.quantity_confirmed ?? item.quantity_requested
+  cart.value = direct.value
+    ? open.items.flatMap((item) => item.allocations.flatMap(allocatedLine))
+    : cart.value
+        .map((line, i) => ({ ...line, quantity: quantity(open.items[i]!) }))
+        .filter((line) => line.quantity > 0)
+  notCarried.value = direct.value
+    ? open.items.flatMap((item) => [
+        ...(item.quantity_missing ? [`${item.quantity_missing}× ${itemLabel(item)}`] : []),
+        ...item.allocations.flatMap((a) => (a.license ? [a.license.model.full_name] : [])),
+      ])
+    : []
+  // Keep the end and the pickup wish instead of moving them along with the start.
+  const end = fromIsoDate(open.end_date)
+  if (end && end >= period.range[0]) period.range = [period.range[0], end]
+  const wish = fromIsoDate(open.requested_pickup_date)
+  if (wish && wish >= period.start) period.pickup = wish
+}
+
+/** A device or stock of a direct hand-out, as the cart holds it when picked anew. */
+function allocatedLine(allocation: Schemas['AllocationOut']): CartLine[] {
+  if (allocation.asset)
+    return [
+      {
+        key: `a${allocation.asset.id}`,
+        label: allocation.asset.model.full_name,
+        code: allocation.asset.inventory_number,
+        asset: allocation.asset.id,
+        quantity: 1,
+        note: '',
+        available: null,
+      },
+    ]
+  if (allocation.consumable)
+    return [
+      {
+        key: `s${allocation.consumable.id}`,
+        label: allocation.consumable.model.full_name,
+        consumable: allocation.consumable.id,
+        quantity: allocation.quantity,
+        note: '',
+        available: null,
+      },
+    ]
+  return []
 }
 
 // From the device page: hand out that device, or request its model.
@@ -272,8 +340,12 @@ async function submit() {
   const data = requestInput(period, details, cart.value)
   const assetRequest = await run(() =>
     direct.value
-      ? requestsApi.createDirect(directInput(data))
-      : requestsApi.create({ ...data, follows: previous.value?.id ?? null }),
+      ? requestsApi.createDirect({ ...directInput(data), replaces: replacing.value?.id ?? null })
+      : requestsApi.create({
+          ...data,
+          follows: previous.value?.id ?? null,
+          replaces: replacing.value?.id ?? null,
+        }),
   )
   if (!assetRequest) return
   submitted.value = true
@@ -491,6 +563,12 @@ const header = computed(() =>
     </header>
     <NAlert v-if="previous" type="info" :bordered="false" class="again">
       {{ t('requests.again.prefilled', { number: previous.number }) }}
+    </NAlert>
+    <NAlert v-if="replacing" type="warning" :bordered="false" class="again">
+      {{ t('requests.replace.prefilled', { number: replacing.number }) }}
+      <template v-if="notCarried.length">
+        <br />{{ t('requests.replace.notCarried', { items: notCarried.join(', ') }) }}
+      </template>
     </NAlert>
 
     <div class="steps-body" :class="{ docked: !cramped }">
