@@ -14,6 +14,7 @@ from apps.core.api.security import AuthedRequest, permission_auth
 from apps.inventory.models import Asset, AssetEvent
 from apps.inventory.schemas.asset_event import AssetEventIn, AssetEventOut, AssetEventWithAssetOut
 from apps.inventory.services import assets as asset_service
+from apps.inventory.services import events as event_service
 
 router = Router(tags=["asset events"], auth=permission_auth(ResourceKey.ASSETS))
 
@@ -97,5 +98,10 @@ def create_asset_event(request: AuthedRequest, pk: UUID, payload: AssetEventIn) 
 
 @router.delete("/events/{uuid:pk}", response={204: None})
 def delete_event(request: AuthedRequest, pk: UUID) -> Status[None]:
-    get_object_or_404(AssetEvent, pk=pk, kind__in=AssetEvent.MANUAL_KINDS).delete()
+    event = get_object_or_404(
+        AssetEvent.objects.select_related("asset__model__manufacturer"),
+        pk=pk,
+        kind__in=AssetEvent.MANUAL_KINDS,
+    )
+    event_service.delete_event(event, request.user)
     return Status(204, None)

@@ -24,6 +24,8 @@ elif echo "${APP_URLS:-}" | grep -q 'https://'; then
     echo "Warning: APP_URLS has https URLs but TRUSTED_PROXIES is empty; set it to the TLS proxy's address." >&2
 fi
 
+# Production settings that are plainly wrong stop the start here, not at the first request.
+python manage.py check --deploy --fail-level ERROR
 python manage.py wait_for_db --timeout 60
 python manage.py migrate --noinput
 python manage.py ensure_superuser

@@ -1,5 +1,7 @@
 from typing import Any
 
+from django.db import transaction
+
 from apps.accounts.models import User
 from apps.activity.models import ActivityKind
 from apps.activity.services import log as activity
@@ -26,3 +28,14 @@ def log_event(asset: Asset, kind: str, user: User | None = None, **fields: Any) 
             detail=event.description,
         )
     return event
+
+
+@transaction.atomic
+def delete_event(event: AssetEvent, user: User) -> None:
+    """Remove a manual entry from the asset's log; the activity log keeps who removed it."""
+    asset = event.asset
+    description = event.description
+    event.delete()
+    activity.log(
+        ActivityKind.ASSET_EVENT_DELETED, asset.pk, activity.asset_label(asset), user, detail=description
+    )

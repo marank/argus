@@ -49,6 +49,7 @@ class ActivityKind(models.TextChoices):
     ASSET_MAINTENANCE = "asset_maintenance", _("Maintenance")
     ASSET_INSPECTION = "asset_inspection", _("Inspection")
     ASSET_NOTE = "asset_note", _("Note")
+    ASSET_EVENT_DELETED = "asset_event_deleted", _("History entry deleted")
     ASSET_DELETED = "asset_deleted", _("Device deleted")
     ISSUE_REPORTED = "issue_reported", _("Problem reported")
     ISSUE_IN_PROGRESS = "issue_in_progress", _("Report taken into work")

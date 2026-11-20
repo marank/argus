@@ -95,12 +95,16 @@ tasks (`.vscode/tasks.json`) and CI only call its recipes, so a check is changed
 
 ## House defaults
 
-Checked against checklist 1.0 (2026-11-20). Accepted deviations and settled judgements,
+Checked against checklist 1.7 (2026-11-20). Accepted deviations and settled judgements,
 one line each as `- ID: decision and reason` (IDs from the project-defaults checklist); the review
 does not report these again:
 
+- Releases: release-please
+- Contributions: team only
 - BE-11: settled, passes: `DEBUG` defaults to false (only the justfile sets it for development),
   and without `DEBUG` the placeholder or a short `SECRET_KEY` stops the start (`config/settings.py`).
+- FE-05: accepted for now: frontend coverage floor is 88/86/79/82 (lines/statements/functions/
+  branches, `frontend/vitest.config.ts`); raise it with new tests until it reaches 90/90/85/85.
 - BE-13: settled, passes: the sign-in code and the test mail are sent within the request on purpose,
   the user waits for them and must learn at once when they fail; the code must not end up in the
   job table (`accounts/services/two_factor.py`, `core/api/mail_settings.py`).

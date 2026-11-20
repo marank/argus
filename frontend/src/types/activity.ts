@@ -48,6 +48,7 @@ export const ACTIVITY_KINDS = allValues<ActivityKind>({
   asset_maintenance: true,
   asset_inspection: true,
   asset_note: true,
+  asset_event_deleted: true,
   asset_deleted: true,
   issue_reported: true,
   issue_in_progress: true,

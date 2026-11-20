@@ -140,6 +140,7 @@ export default {
     asset_maintenance: 'Wartung',
     asset_inspection: 'Prüfung',
     asset_note: 'Notiz',
+    asset_event_deleted: 'Historieneintrag gelöscht',
     asset_deleted: 'Gerät gelöscht',
     issue_reported: 'Problem gemeldet',
     issue_in_progress: 'In Bearbeitung genommen',

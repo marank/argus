@@ -72,6 +72,23 @@ def test_deleted_device_keeps_its_label(it_client, fresh):
     assert (row.kind, row.subject_id, row.subject_label) == ("asset_deleted", None, label)
 
 
+def test_deleted_history_entry_is_logged(it_client, fresh):
+    asset = Asset.objects.create(model=AssetModel.objects.get(name="SX58"))
+    note = it_client.post(
+        f"/api/inventory/assets/{asset.pk}/events",
+        {"kind": "note", "description": "Display scratched"},
+        content_type=JSON,
+    ).json()
+    assert it_client.delete(f"/api/inventory/events/{note['id']}").status_code == 204
+    assert not asset.events.exists()
+    row = Activity.objects.get(kind="asset_event_deleted")
+    assert (row.subject_id, row.detail, row.actor) == (
+        asset.pk,
+        "Display scratched",
+        User.objects.get(username="it"),
+    )
+
+
 def test_stock_moved_by_hand(it_client, fresh):
     consumable = Consumable.objects.filter(quantity__gt=1).first()
     assert consumable is not None

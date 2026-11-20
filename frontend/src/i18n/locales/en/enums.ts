@@ -135,6 +135,7 @@ export default {
     asset_maintenance: 'Maintenance',
     asset_inspection: 'Inspection',
     asset_note: 'Note',
+    asset_event_deleted: 'History entry deleted',
     asset_deleted: 'Device deleted',
     issue_reported: 'Problem reported',
     issue_in_progress: 'Taken into work',

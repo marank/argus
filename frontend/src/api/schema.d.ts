@@ -2831,6 +2831,7 @@ export interface components {
       | 'asset_maintenance'
       | 'asset_inspection'
       | 'asset_note'
+      | 'asset_event_deleted'
       | 'asset_deleted'
       | 'issue_reported'
       | 'issue_in_progress'
