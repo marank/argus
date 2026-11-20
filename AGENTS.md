@@ -20,6 +20,11 @@ tasks (`.vscode/tasks.json`) and CI only call its recipes, so a check is changed
   Dependabot: `TRIVY_IMAGE`, `POSTGRES_IMAGE` (same major as `compose.yml`), `JUST_VERSION` and the job
   containers in `build.yaml`; `actionlint`/`zizmor` in the `justfile`; `SUPERVISOR_VERSION` in the
   Dockerfile; pre-commit hooks.
+- Commit messages and pull request titles are **Conventional Commits** (`feat:`, `fix:`, `docs:`,
+  `refactor:`, `test:`, `build:`, `ci:`, `chore:`; `!` for breaking changes): release-please
+  (`.github/workflows/release.yaml`) makes the version and `CHANGELOG.md` from them, and pull
+  requests are squash-merged with their title. Never edit `CHANGELOG.md` or the release-please
+  manifest by hand.
 - Frontend package manager is **pnpm** only. Backend dependencies via `uv add` / `uv add --dev`.
 
 ## Backend rules

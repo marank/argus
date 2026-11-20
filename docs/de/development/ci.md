@@ -15,11 +15,25 @@ veröffentlicht der wöchentliche Lauf `latest` mit Debians Sicherheitsupdates, 
 ein Scan, der eine neue kritische Lücke findet, färbt ihn rot. Images von Versions-Tags
 werden nicht neu gebaut; dort braucht eine Korrektur ein neues Release.
 
-Ein Release ist ein Versions-Tag auf `main`:
+## Releases
 
-```bash
-git tag v1.2.3 && git push origin v1.2.3
-```
+Releases kommen von release-please (`.github/workflows/release.yaml`). Aus den
+Commit-Nachrichten auf `main` hält es einen Pull Request „chore(main): release X.Y.Z“ mit
+der nächsten Version und `CHANGELOG.md` aktuell. Wird er gemergt, setzt es den Tag
+`vX.Y.Z`, legt das GitHub-Release an und baut das Image mit den Versions-Tags.
+
+Die Commit-Nachrichten bestimmen die Version, daher sind sie
+[Conventional Commits](https://www.conventionalcommits.org/): `feat:` ergibt ein
+Minor-Release, `fix:` ein Patch-Release, `feat!:` oder eine Fußzeile `BREAKING CHANGE:` ein
+Major-Release (vor 1.0 ein Minor-Release). `docs:`, `refactor:`, `test:`, `build:`, `ci:`
+und `chore:` ergeben kein Release und stehen nicht im Changelog. Dependabot schreibt
+`fix(deps):` für alles, was im Image oder bei Betreibern landet, und `chore(deps):` für
+Entwicklungswerkzeuge und CI.
+
+::: info Gut zu wissen
+Pull Requests werden mit *Squash and merge* übernommen: Der Titel des Pull Requests wird
+zum Commit auf `main` und muss daher ein Conventional Commit sein.
+:::
 
 ## Repository-Einstellungen auf GitHub
 
@@ -32,7 +46,11 @@ git tag v1.2.3 && git push origin v1.2.3
    abgedeckt: `SUPERVISOR_VERSION` im Dockerfile; in `build.yaml` die Job-Container,
    `TRIVY_IMAGE`, `POSTGRES_IMAGE` (gleiche Hauptversion wie `compose.yml`) und `JUST_VERSION`;
    `actionlint` und `zizmor` im `justfile`; die pre-commit-Hooks (`pre-commit autoupdate`).
-3. **Sichtbarkeit des Pakets**: Das Paket `argus` auf ghcr.io ist öffentlich, sodass das
+3. **Releases** (*Settings → Actions → General*): *Allow GitHub Actions to create and
+   approve pull requests* einschalten, sonst kann release-please seinen Pull Request nicht
+   öffnen. Unter *Settings → General → Pull Requests* nur *Squash merging* erlauben, mit
+   dem Titel des Pull Requests als Standard-Commit-Nachricht.
+4. **Sichtbarkeit des Pakets**: Das Paket `argus` auf ghcr.io ist öffentlich, sodass das
    Image ohne Anmeldung geladen werden kann.
 
 Actions sind auf den Commit-SHA eines Releases festgelegt

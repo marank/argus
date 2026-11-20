@@ -35,8 +35,12 @@ Not accepted for now (see above). Once they are, this is how a change gets in:
 8. Run `just check` (**Check: all**, see [Checks and tests](docs/en/development/checks.md)) before you push;
    CI runs the same checks on the pull request.
 
-Commit messages: an imperative summary line in English ("Show the model on the device
-page"), a blank line, then what changed and why.
+Commit messages and pull request titles are [Conventional Commits](https://www.conventionalcommits.org/)
+in English, since release-please makes versions and the changelog from them:
+`type(scope): imperative summary` (`feat(requests): show the model on the device page`),
+a blank line, then what changed and why. Types: `feat`, `fix`, `perf`, `docs`, `refactor`,
+`test`, `build`, `ci`, `chore`; `!` after the type or a `BREAKING CHANGE:` footer marks a
+breaking change. See [CI and releases](docs/en/development/ci.md#releases).
 
 ## License
 

@@ -1,9 +1,15 @@
 # Weekly dependency updates, minor and patch versions in one pull request per area. A release
 # is only taken once it is a week old, so a compromised one is usually pulled before it arrives.
+# Commit messages are Conventional Commits (release-please reads them): fix(deps) for what
+# ends up in the image or with operators, chore(deps) for development tools and CI.
 version: 2
 updates:
   - package-ecosystem: uv
     directory: /backend
+    # Runtime updates end up in the image: a fix, so release-please makes a patch release.
+    commit-message:
+      prefix: "fix(deps)"
+      prefix-development: "chore(deps)"
     schedule:
       interval: weekly
     cooldown:
@@ -14,6 +20,10 @@ updates:
 
   - package-ecosystem: npm
     directory: /frontend
+    # Runtime updates end up in the image: a fix, so release-please makes a patch release.
+    commit-message:
+      prefix: "fix(deps)"
+      prefix-development: "chore(deps)"
     schedule:
       interval: weekly
     cooldown:
@@ -22,12 +32,15 @@ updates:
       frontend:
         update-types: [minor, patch]
     ignore:
-      # Follows the Node major of the images (node:24 in the Dockerfile and CI).
+      # Stays on Node 24 types while development may run on Node 24 (the images run 26).
       - dependency-name: "@types/node"
         update-types: [version-update:semver-major]
 
   - package-ecosystem: npm
     directory: /docs
+    # Only builds the documentation site: no release of its own.
+    commit-message:
+      prefix: "chore(deps)"
     schedule:
       interval: weekly
     cooldown:
@@ -38,6 +51,9 @@ updates:
 
   - package-ecosystem: docker
     directory: /
+    # Base images of the image: a fix, so release-please makes a patch release.
+    commit-message:
+      prefix: "fix(deps)"
     schedule:
       interval: weekly
     cooldown:
@@ -45,6 +61,9 @@ updates:
 
   - package-ecosystem: docker-compose
     directory: /
+    # What operators run with compose.yml.
+    commit-message:
+      prefix: "fix(deps)"
     schedule:
       interval: weekly
     cooldown:
@@ -56,6 +75,8 @@ updates:
 
   - package-ecosystem: github-actions
     directory: /
+    commit-message:
+      prefix: "chore(deps)"
     schedule:
       interval: weekly
     cooldown:

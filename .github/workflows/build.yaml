@@ -4,7 +4,8 @@
 # No secrets needed: the push uses the workflow's GITHUB_TOKEN.
 #
 # Pull requests (also from forks) only run the checks and a test build; pushes to main
-# and version tags (v1.2.3) also push the image. Once a week main is built and pushed
+# and version tags (v1.2.3) also push the image. release.yaml calls this workflow with the
+# version after release-please has tagged a release. Once a week main is built and pushed
 # again even without a change, so the image gets Debian's security fixes and a scan
 # that finds new vulnerabilities turns the run red.
 name: build
@@ -19,6 +20,12 @@ on:
     # Mondays 03:17 UTC (off the full hour, when GitHub's scheduler is busiest).
     - cron: "17 3 * * 1"
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      version:
+        description: Release version (1.2.3) to tag the image with
+        type: string
+        required: true
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -198,7 +205,13 @@ jobs:
           REF: ${{ github.ref }}
           REF_NAME: ${{ github.ref_name }}
           SHA: ${{ github.sha }}
+          RELEASE: ${{ inputs.version }}
         run: |
+          # Called by release.yaml: tag like a pushed version tag.
+          if [ -n "$RELEASE" ]; then
+            REF="refs/tags/v$RELEASE"
+            REF_NAME="v$RELEASE"
+          fi
           IMAGE=$(echo "$REGISTRY/$REPO" | tr 'A-Z' 'a-z')
           SHORT_SHA=$(echo "$SHA" | cut -c1-12)
           TAGS="$IMAGE:sha-$SHORT_SHA"

@@ -14,11 +14,24 @@ image's system packages anew (`--no-cache-filter runtime`), so the weekly run pu
 vulnerability turns it red. Images of version tags are not rebuilt; a fix there needs
 a new release.
 
-A release is a version tag on `main`:
+## Releases
 
-```bash
-git tag v1.2.3 && git push origin v1.2.3
-```
+Releases come from release-please (`.github/workflows/release.yaml`). From the commit
+messages on `main` it keeps a pull request "chore(main): release X.Y.Z" up to date with
+the next version and `CHANGELOG.md`. Merging it tags `vX.Y.Z`, creates the GitHub release
+and builds the image with the version tags.
+
+The commit messages decide the version, so they are
+[Conventional Commits](https://www.conventionalcommits.org/): `feat:` makes a minor
+release, `fix:` a patch release, `feat!:` or a `BREAKING CHANGE:` footer a major one
+(before 1.0 a minor one). `docs:`, `refactor:`, `test:`, `build:`, `ci:` and `chore:` make
+no release and stay out of the changelog. Dependabot writes `fix(deps):` for what ends up
+in the image or with operators and `chore(deps):` for development tools and CI.
+
+::: info Good to know
+Pull requests are merged with *Squash and merge*: the pull request's title becomes the
+commit on `main`, so the title has to be a Conventional Commit.
+:::
 
 ## Repository settings on GitHub
 
@@ -31,7 +44,11 @@ git tag v1.2.3 && git push origin v1.2.3
    `SUPERVISOR_VERSION` in the Dockerfile; in `build.yaml` the job containers, `TRIVY_IMAGE`,
    `POSTGRES_IMAGE` (same major as `compose.yml`) and `JUST_VERSION`; `actionlint` and
    `zizmor` in the `justfile`; the pre-commit hooks (`pre-commit autoupdate`).
-3. **Package visibility**: the `argus` package on ghcr.io is public, so the image can be
+3. **Releases** (*Settings → Actions → General*): switch on *Allow GitHub Actions to
+   create and approve pull requests*, or release-please cannot open its pull request.
+   Under *Settings → General → Pull Requests* allow only *squash merging*, with the pull
+   request title as the default commit message.
+4. **Package visibility**: the `argus` package on ghcr.io is public, so the image can be
    pulled without a login.
 
 Actions are pinned to the commit SHA of a release (`actions/checkout@<sha> # v7.0.1`) and
