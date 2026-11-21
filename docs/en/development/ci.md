@@ -28,8 +28,9 @@ The commit messages decide the version, so they are
 [Conventional Commits](https://www.conventionalcommits.org/): `feat:` makes a minor
 release, `fix:` a patch release, `feat!:` or a `BREAKING CHANGE:` footer a major one
 (before 1.0 a minor one). `docs:`, `refactor:`, `test:`, `build:`, `ci:` and `chore:` make
-no release and stay out of the changelog. Dependabot writes `fix(deps):` for what ends up
-in the image or with operators and `chore(deps):` for development tools and CI.
+no release and stay out of the changelog. Dependabot writes `deps:` for what ends up in
+the image or with operators (a patch release, listed under *Dependencies*) and
+`chore(deps):` for development tools and CI.
 
 ::: info Good to know
 Pull requests are merged with *Squash and merge*: the pull request's title becomes the

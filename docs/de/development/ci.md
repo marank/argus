@@ -31,8 +31,8 @@ Die Commit-Nachrichten bestimmen die Version, daher sind sie
 Minor-Release, `fix:` ein Patch-Release, `feat!:` oder eine Fußzeile `BREAKING CHANGE:` ein
 Major-Release (vor 1.0 ein Minor-Release). `docs:`, `refactor:`, `test:`, `build:`, `ci:`
 und `chore:` ergeben kein Release und stehen nicht im Changelog. Dependabot schreibt
-`fix(deps):` für alles, was im Image oder bei Betreibern landet, und `chore(deps):` für
-Entwicklungswerkzeuge und CI.
+`deps:` für alles, was im Image oder bei Betreibern landet (ein Patch-Release, im
+Changelog unter *Dependencies*), und `chore(deps):` für Entwicklungswerkzeuge und CI.
 
 ::: info Gut zu wissen
 Pull Requests werden mit *Squash and merge* übernommen: Der Titel des Pull Requests wird
