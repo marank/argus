@@ -22,8 +22,10 @@ fails 180 days before (`backend/scripts/check_eol.py`). CI runs it in the weekly
 - **Coverage:** at least 90 % in the backend (`fail_under` in `pyproject.toml`); a floor at
   today's level in the frontend (`vitest.config.ts`, about 88 % of lines; raise it as
   tests are added).
-- **Licenses:** no GPL, AGPL or SSPL in production dependencies
-  (`backend/scripts/check_licenses.py`, `frontend/scripts/check-licenses.mjs`).
+- **Licenses:** production dependencies must be compatible with AGPL-3.0-or-later.
+  Permissive licenses, LGPL, GPL-3.0 and AGPL-3.0 are fine; GPL-2.0-only, a GPL without
+  a version and SSPL are not (`backend/scripts/check_licenses.py`,
+  `frontend/scripts/check-licenses.mjs`; exceptions checked by hand go into `ALLOW`).
 - **Unused code:** `pnpm lint` includes knip (unused files, exports and dependencies;
   `knip.jsonc`).
 - **Bundle size:** the built bundle must stay within the budget in `package.json`

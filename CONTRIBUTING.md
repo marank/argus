@@ -45,5 +45,6 @@ breaking change. See [CI and releases](docs/en/development/ci.md#releases).
 ## License
 
 Argus is licensed under the [AGPL-3.0-or-later](LICENSE). By submitting a contribution
-you agree that it is licensed under the same terms. Dependencies must not be under
-GPL, AGPL or SSPL (checked in CI).
+you agree that it is licensed under the same terms. Dependencies must be compatible
+with it: permissive licenses, LGPL, GPL-3.0 and AGPL-3.0 are fine, GPL-2.0-only and SSPL
+are not (checked in CI).

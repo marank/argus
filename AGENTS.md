@@ -54,7 +54,8 @@ tasks (`.vscode/tasks.json`) and CI only call its recipes, so a check is changed
   subscriptable at runtime in settings). Endpoints behind auth take
   `request: AuthedRequest` (`apps/core/api/security.py`), so `request.user` is a `User`.
   `# type: ignore` only with an error code and a reason.
-- Backend coverage must stay ≥ 90 %. No GPL/AGPL/SSPL dependencies (CI license check).
+- Backend coverage must stay ≥ 90 %. Production dependencies must be compatible with
+  AGPL-3.0-or-later: no GPL-2.0-only or SSPL (CI license check).
 
 ## Frontend rules
 

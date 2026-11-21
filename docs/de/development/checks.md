@@ -24,8 +24,10 @@ Sicherheitsupdates mehr bekommen, und schlägt 180 Tage vorher fehl
 - **Coverage:** mindestens 90 % im Backend (`fail_under` in `pyproject.toml`); im Frontend
   eine Untergrenze auf dem heutigen Stand (`vitest.config.ts`, etwa 88 % der Zeilen;
   heben Sie sie an, wenn Tests hinzukommen).
-- **Lizenzen:** kein GPL, AGPL oder SSPL in Produktionsabhängigkeiten
-  (`backend/scripts/check_licenses.py`, `frontend/scripts/check-licenses.mjs`).
+- **Lizenzen:** Produktionsabhängigkeiten müssen mit der AGPL-3.0-or-later vereinbar sein.
+  Permissive Lizenzen, LGPL, GPL-3.0 und AGPL-3.0 sind erlaubt, GPL-2.0-only, GPL ohne
+  Version und SSPL nicht (`backend/scripts/check_licenses.py`,
+  `frontend/scripts/check-licenses.mjs`; von Hand geprüfte Ausnahmen in `ALLOW`).
 - **Ungenutzter Code:** `pnpm lint` enthält knip (ungenutzte Dateien, Exporte und
   Abhängigkeiten; `knip.jsonc`).
 - **Bundle-Größe:** Das gebaute Bundle muss im Budget aus `package.json` bleiben

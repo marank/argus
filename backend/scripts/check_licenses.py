@@ -1,10 +1,12 @@
-"""Fail if a production dependency has a strong copyleft license (GPL, AGPL, SSPL).
+"""Fail if a production dependency has a license incompatible with Argus' AGPL-3.0-or-later.
 
     uv run python scripts/check_licenses.py        (in backend/; part of `just check-backend`)
 
 Installs only the production dependencies from uv.lock into a throwaway venv, reads
-their licenses with pip-licenses and checks them. LGPL is fine: it doesn't bind an
-application that merely uses the library (e.g. psycopg).
+their licenses with pip-licenses and checks them. Permissive licenses, LGPL, GPL-3.0 and
+AGPL-3.0 are compatible (GPLv3 and AGPLv3 section 13), and so is GPL-2.0 "or later".
+Incompatible: GPL-2.0-only, a GPL without a version (check it by hand and add it to ALLOW)
+and SSPL. Alternatives ("MIT OR GPL-2.0", several classifiers) pass if one of them does.
 """
 
 import json
@@ -14,9 +16,12 @@ import sys
 import tempfile
 from pathlib import Path
 
-# Whole tokens only, so "LGPL" doesn't count as "GPL".
-FORBIDDEN = re.compile(r"(?<![A-Za-z])(A?GPL|SSPL)(?=$|[^A-Za-z]|v\d)|GNU (Affero )?General Public", re.I)
+SSPL = re.compile(r"SSPL|Server Side Public", re.I)
 LESSER = re.compile(r"LGPL|Lesser General Public|Library General Public", re.I)
+# Whole tokens only, so "LGPL" doesn't count as "GPL".
+GPL = re.compile(r"(?<![A-Za-z])A?GPL|General Public License", re.I)
+V3_OR_LATER = re.compile(r"v3|(?<![\d.])3(\.0)?(?![\d.])|or[- ]later|\+", re.I)
+ALTERNATIVES = re.compile(r"\s+OR\s+|;\s*", re.I)
 
 # Packages whose metadata is wrong or ambiguous, after checking them by hand: the package
 # name as key, the reason as value.
@@ -61,16 +66,32 @@ def production_licenses() -> list[dict[str, str]]:
     return licenses
 
 
+def compatible(license_: str) -> bool:
+    for alternative in ALTERNATIVES.split(license_.strip("() ")):
+        parts = re.split(r"\s+AND\s+", alternative.strip("() "), flags=re.I)
+        if all(compatible_part(part) for part in parts):
+            return True
+    return False
+
+
+def compatible_part(license_: str) -> bool:
+    if SSPL.search(license_):
+        return False
+    if LESSER.search(license_) or not GPL.search(license_):
+        return True
+    return bool(V3_OR_LATER.search(license_))
+
+
 def main() -> int:
     bad = []
     for pkg in production_licenses():
         name, license_ = pkg["Name"], pkg.get("License", "")
         if name.lower() in ALLOW:
             continue
-        if FORBIDDEN.search(license_) and not LESSER.search(license_):
+        if not compatible(license_):
             bad.append(f"{name} {pkg.get('Version', '')}: {license_}")
     for line in bad:
-        print(f"forbidden license: {line}")
+        print(f"incompatible license: {line}")
     if not bad:
         print("licenses ok")
     return 1 if bad else 0
