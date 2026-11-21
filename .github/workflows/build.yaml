@@ -50,7 +50,7 @@ jobs:
     permissions:
       contents: read
     container:
-      image: ghcr.io/astral-sh/uv:python3.14-trixie-slim@sha256:da0f1f04404173d7d2fa158112e09624d5a80262efa86c89882b68389dfd44eb
+      image: ghcr.io/astral-sh/uv:python3.15-trixie-slim@sha256:980d6aa868431fd4ef2b32481e934ef5ee3b662c5decade3aa2d7e7ffb8075e4
     services:
       postgres:
         image: postgres:18-alpine@sha256:ff64c9e3bdf8e2120107d3559de8db314e8305f7e38c5105903c6295876738ff
@@ -139,7 +139,7 @@ jobs:
     permissions:
       contents: read
     container:
-      image: ghcr.io/astral-sh/uv:python3.14-trixie-slim@sha256:da0f1f04404173d7d2fa158112e09624d5a80262efa86c89882b68389dfd44eb
+      image: ghcr.io/astral-sh/uv:python3.15-trixie-slim@sha256:980d6aa868431fd4ef2b32481e934ef5ee3b662c5decade3aa2d7e7ffb8075e4
     steps:
       - name: Install git
         run: apt-get update && apt-get install -y --no-install-recommends git ca-certificates
@@ -150,6 +150,25 @@ jobs:
 
       - name: Checks
         run: uvx --from "rust-just==$JUST_VERSION" just check-workflows
+
+  # --- End of support: `just check-eol`, only in the weekly run -------------------
+  # Updates Dependabot ignores (PostgreSQL majors) or doesn't offer (base image majors)
+  # come up here: the run turns red 180 days before a platform's support ends. Not a
+  # dependency of `image`, so it never stops the weekly rebuild.
+  eol:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    container:
+      image: ghcr.io/astral-sh/uv:python3.15-trixie-slim@sha256:980d6aa868431fd4ef2b32481e934ef5ee3b662c5decade3aa2d7e7ffb8075e4
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check
+        run: uvx --from "rust-just==$JUST_VERSION" just check-eol
 
   # --- Repository: secrets, vulnerable dependencies, Dockerfile misconfiguration --
   repository:

@@ -11,6 +11,8 @@ tasks (`.vscode/tasks.json`) and CI only call its recipes, so a check is changed
 - **Dev: start all** / `just dev-backend` + `just dev-frontend`: Django :8000 + Vite :5173 →
   http://localhost:5173. `just seed` fills the database.
 - **Check: all** / `just check` runs everything CI runs and must pass before a push.
+  `just check-eol` (weekly in CI, not in `check`) fails 180 days before Python, Debian, Node.js,
+  PostgreSQL or Django lose security support: that is how ignored majors come up.
 - **DB: make migrations** / `just migrations` after model changes; commit the migrations (CI fails on
   missing ones).
 - **API: update types** / `just api-types` after any API change: exports `frontend/openapi.json` and

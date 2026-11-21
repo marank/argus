@@ -12,7 +12,10 @@ Every Monday the workflow also runs on `main` without a change. Every build inst
 image's system packages anew (`--no-cache-filter runtime`), so the weekly run publishes
 `latest` with Debian's security fixes, and a scan that finds a new critical
 vulnerability turns it red. Images of version tags are not rebuilt; a fix there needs
-a new release.
+a new release. The weekly run also has the job `eol` (`just check-eol`): it turns red
+180 days before Python, Debian, Node.js, PostgreSQL or Django lose security support, so
+major upgrades Dependabot leaves out (PostgreSQL) come up in time. It is not required
+for `image`.
 
 ## Releases
 

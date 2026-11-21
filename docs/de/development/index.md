@@ -8,7 +8,7 @@ vorschlagen, steht in [CONTRIBUTING.md](https://github.com/marank/argus/blob/mai
 
 | Teil          | Technik                                                            |
 | ------------- | ------------------------------------------------------------------ |
-| Backend       | Python 3.14 · Django 6.1 · Django Ninja · verwaltet mit `uv`       |
+| Backend       | Python 3.15 · Django 6.1 · Django Ninja · verwaltet mit `uv`       |
 | Frontend      | Vue 3.5 · TypeScript · Vite · Naive UI · Pinia · vue-i18n · `pnpm` |
 | Dokumentation | VitePress (diese Seite), `pnpm`                                    |
 

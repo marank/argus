@@ -11,6 +11,10 @@ before a push. The commands live in the `justfile`; CI calls the same recipes, o
 | `just check-docs` | the documentation build |
 | `just check-workflows` | the GitHub workflows (actionlint, zizmor) |
 
+`just check-eol` is not part of `just check`: it asks endoflife.date when Python, Debian,
+Node.js, PostgreSQL and Django in the versions Argus uses stop getting security fixes, and
+fails 180 days before (`backend/scripts/check_eol.py`). CI runs it in the weekly build.
+
 `just fix` formats and fixes what the tools can.
 
 ## What they enforce

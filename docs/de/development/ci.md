@@ -13,7 +13,11 @@ Jeden Montag läuft der Workflow zusätzlich auf `main`, auch ohne Änderung. Je
 installiert die Systempakete des Images neu (`--no-cache-filter runtime`), daher
 veröffentlicht der wöchentliche Lauf `latest` mit Debians Sicherheitsupdates, und
 ein Scan, der eine neue kritische Lücke findet, färbt ihn rot. Images von Versions-Tags
-werden nicht neu gebaut; dort braucht eine Korrektur ein neues Release.
+werden nicht neu gebaut; dort braucht eine Korrektur ein neues Release. Der wöchentliche
+Lauf hat zusätzlich den Job `eol` (`just check-eol`): Er wird 180 Tage bevor Python,
+Debian, Node.js, PostgreSQL oder Django keine Sicherheitsupdates mehr bekommen rot, damit
+Hauptversions-Upgrades, die Dependabot auslässt (PostgreSQL), rechtzeitig auffallen.
+`image` hängt nicht von ihm ab.
 
 ## Releases
 

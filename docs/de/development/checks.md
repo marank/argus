@@ -12,6 +12,11 @@ eines pro Job:
 | `just check-docs` | den Build der Dokumentation |
 | `just check-workflows` | die GitHub-Workflows (actionlint, zizmor) |
 
+`just check-eol` gehört nicht zu `just check`: Es fragt bei endoflife.date ab, wann Python,
+Debian, Node.js, PostgreSQL und Django in den Versionen, die Argus verwendet, keine
+Sicherheitsupdates mehr bekommen, und schlägt 180 Tage vorher fehl
+(`backend/scripts/check_eol.py`). Die CI führt es im wöchentlichen Build aus.
+
 `just fix` formatiert und behebt, was die Werkzeuge beheben können.
 
 ## Was sie sicherstellen

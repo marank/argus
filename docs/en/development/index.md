@@ -8,7 +8,7 @@ is in [CONTRIBUTING.md](https://github.com/marank/argus/blob/main/CONTRIBUTING.m
 
 | Part     | Stack                                                              |
 | -------- | ------------------------------------------------------------------ |
-| Backend  | Python 3.14 · Django 6.1 · Django Ninja · managed by `uv`          |
+| Backend  | Python 3.15 · Django 6.1 · Django Ninja · managed by `uv`          |
 | Frontend | Vue 3.5 · TypeScript · Vite · Naive UI · Pinia · vue-i18n · `pnpm` |
 | Docs     | VitePress (this site), `pnpm`                                      |
 
