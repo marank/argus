@@ -8,8 +8,8 @@ Under **IT operations → Requests**, IT handles all requests: confirming them, 
 | --- | --- |
 | **Awaiting approval** | Nothing. The department decides first. |
 | **Submitted** | Review, then **Confirm** or **Reject**. |
-| **Confirmed** | Allocate devices, order what is missing, then **Ready for pickup**. |
-| **Ready for pickup** | Let the employee collect the devices at the terminal, or **Hand out**. |
+| **Confirmed** | Allocate devices, order what is missing, then **Finish preparation**. |
+| **Ready for handover** | Let the employee collect the devices at the terminal, or **Hand out**. |
 | **Handed out** | On return, **Take back**; if needed, **Extend loan**. |
 | **Completed** | Nothing more. Permanent hand-outs can still be taken back. |
 
@@ -34,7 +34,7 @@ Change the team and assignee in the **Responsible** card and apply both with **S
 - If the stock does not cover a line, reduce the quantity. A quantity of 0 removes the line.
 - Under **Comment from IT** you can leave the employee a message.
 
-The employee receives a notification. When and where they get the devices is set later, when you mark the request ready for pickup.
+The employee receives a notification. When and where they get the devices is set later, when you finish the preparation.
 
 While the request is **Confirmed**, you change the quantities with **Edit**. A quantity cannot go below the number of devices already allocated. The employee is not notified again.
 
@@ -78,6 +78,8 @@ After confirming, you allocate specific devices to each line. The progress is sh
 
 Allocated devices have the status **Reserved** and are no longer available for other requests. To remove an allocation, use the round button on the line.
 
+Next to each allocated device is who allocated it; hover over it to see when. This way several people from IT can prepare one request together.
+
 ### Consumables
 
 You tick off consumables (**Tick off as set aside**). The whole quantity comes from **one** storage location. If several locations are available, choose one. If no single location has enough, Argus reports "Not enough in stock".
@@ -96,14 +98,14 @@ If there is no free license, create one or increase the seats under [Licenses](.
 
 If the stock is not enough, **Order missing** creates a purchase order for the open lines. On goods receipt, the delivered devices are allocated directly to this request, see [Procurement](./procurement).
 
-## Marking ready for pickup
+## Finishing the preparation
 
-Once all lines are allocated, you plan the handover with **Ready for pickup**.
+Once all lines are allocated, **Finish preparation** completes the preparation and plans the handover. The request is then **Ready for handover**.
 
 | Handover type | Process |
 | --- | --- |
-| **Pickup with signature** | The employee collects the devices at the [pickup terminal](./terminal) and signs there. |
 | **Simple pickup** | The employee collects the devices without signing. IT then records under **Hand out** who received them. |
+| **Pickup with signature** | The employee collects the devices at the [pickup terminal](./terminal) and signs there. |
 | **Delivered by IT** | IT brings the devices over and then records the hand-out. |
 
 You also set the date, time and **Pickup location**; for a delivery, only the date. The employee's preferred date is shown in the dialog.
@@ -115,14 +117,14 @@ The next full hour is suggested. You choose the time in the field next to the da
 - **Notify the employee**: The employee receives the date and place. This requires a date and a place. For a direct hand-out, this option is off by default.
 - **Skip the device check at the terminal**: The terminal starts directly with "Who collects?".
 
-Whoever marks the request ready for pickup is shown as **Prepared by** on the request and is suggested at the terminal as the person handing out.
+Whoever finishes the preparation is shown as **Prepared by** on the request and is suggested at the terminal as the person handing out.
 
-You change date, place and type later with **Change handover** (under ⋮). If the request is already ready for pickup and notification is switched on, the employee is told about the change.
+You change date, place and type later with **Change handover** (under ⋮). If the request is already **Ready for handover** and notification is switched on, the employee is told about the change.
 
 **Back to preparation** (under ⋮) takes the request off the pickup terminal. The allocated devices stay allocated.
 
 ::: info Good to know
-- If you remove an allocation from a request that is ready for pickup, it goes back to **Confirmed**.
+- If you remove an allocation from a request that is **Ready for handover**, it goes back to **Confirmed**.
 - If the request contains only software, the button is called **Release licenses**. The request then counts as handed out immediately.
 :::
 
@@ -197,7 +199,7 @@ Under **IT operations → Direct hand-out** (or **Hand out directly** in the req
 1. Scan or search devices, add consumables.
 2. Choose the employee, duration and period.
 3. The request is created directly as **Confirmed**, with all devices allocated.
-4. Continue as usual with **Ready for pickup** and **Hand out**, or at the terminal.
+4. Continue as usual with **Finish preparation** and **Hand out**, or at the terminal.
 
 In the list, direct hand-outs carry the badge **direct**.
 
@@ -207,9 +209,13 @@ The fastest option for a single device: **Quick assignment** on the page of a de
 
 ## History
 
-The **History** of a request shows every step with date and person: approval, confirmation, allocations, marking ready for pickup, hand-out, extensions, reminders and returns. Employees see only the entries relevant to them.
+The **History** of a request shows every step with date and person: approval, confirmation, allocations, finishing the preparation, hand-out, extensions, reminders and returns. Employees see only the entries relevant to them.
+
+The entry **Preparation finished** lists the devices. If people other than the one who finished it allocated devices, it says who allocated which, e.g. "Allocated by Anna Smith: NB-0012".
+
+Every single allocation and removal, also during the preparation, is in the [detailed history](./activities#detailed-history): the link at the top right of the **History** card.
 
 ::: info Good to know
 - If Argus reports "This is not possible while the request is …", a colleague has usually edited the request at the same time. Reload the page.
-- Employees can cancel a request as long as it has not been handed out, even when it is already ready for pickup.
+- Employees can cancel a request as long as it has not been handed out, even when it is already ready for handover.
 :::

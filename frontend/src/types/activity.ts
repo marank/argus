@@ -28,6 +28,7 @@ export const ACTIVITY_KINDS = allValues<ActivityKind>({
   request_replaced: true,
   request_assigned: true,
   request_allocated: true,
+  request_released: true,
   request_ready: true,
   request_reopened: true,
   request_rescheduled: true,

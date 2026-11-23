@@ -35,8 +35,8 @@ Unter **Einstellungen → Benachrichtigungen** schalten Sie jede Benachrichtigun
 | **Anforderung bestätigt** | Die IT hat bestätigt, mit Kommentar |
 | **Anforderung abgelehnt** | Die IT oder der Genehmiger hat abgelehnt, mit Begründung |
 | **Von der IT storniert** | Die IT hat die Anforderung storniert |
-| **Abholbereit** | Mit Termin und Ort; die IT kann sie im Einzelfall weglassen |
-| **Übergabe geändert** | Termin, Ort oder Art haben sich nach der Abholbereit-Meldung geändert |
+| **Geräte bereit** | Mit Termin und Ort; die IT kann sie im Einzelfall weglassen |
+| **Übergabe geändert** | Termin, Ort oder Art haben sich nach Abschluss der Vorbereitung geändert |
 | **Ausgegeben** | Was ausgegeben wurde und bis wann es zurück muss |
 | **Leihfrist verlängert** | Mit neuem Rückgabedatum |
 | **Zurückgenommen** | Was zurückgenommen wurde und was noch aussteht |

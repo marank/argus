@@ -24,7 +24,7 @@ Positionen, die der Bestand abdeckt, sind ausgeblendet. Sie lassen sich einblend
 Verbrauchsmaterial, dessen Bestand unter dem Mindestbestand liegt, mit dem bereits bestellten Anteil.
 
 ::: info Gut zu wissen
-- Anforderungen **In Genehmigung** erscheinen noch nicht, abholbereite und spätere nicht mehr.
+- Anforderungen **In Genehmigung** erscheinen noch nicht, solche, die bereit zur Übergabe sind, und spätere nicht mehr.
 - Jede Position wird für sich berechnet. Ein freies Gerät kann deshalb mehrere Anforderungen gleichzeitig als gedeckt erscheinen lassen.
 - Bei „beliebiges Modell“ zählen nur Modelle der Kategorie selbst, nicht ihrer Unterkategorien.
 - Sonderwünsche zählen erst gegen den Bestand, wenn ihnen ein Modell zugeordnet ist.
@@ -72,7 +72,7 @@ Teillieferungen buchen Sie nacheinander. Die Bestellung steht dann auf **Teilwei
 
 ### Direkt an die wartende Anforderung
 
-Gehört eine Position zu einer Anforderung mit Status **Bestätigt**, weist Argus die gelieferten Geräte und das Material direkt dieser Anforderung zu. Die Geräte sind dann **Reserviert**, und die Anforderung kann abholbereit gemeldet werden.
+Gehört eine Position zu einer Anforderung mit Status **Bestätigt**, weist Argus die gelieferten Geräte und das Material direkt dieser Anforderung zu. Die Geräte sind dann **Reserviert**, und die Vorbereitung der Anforderung kann abgeschlossen werden.
 
 Steht die Anforderung nicht mehr auf **Bestätigt**, geht die Ware ins Lager.
 

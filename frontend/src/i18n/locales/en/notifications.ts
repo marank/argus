@@ -16,11 +16,12 @@ export default {
   request_confirmedHelp: 'Includes the IT comment, if any.',
   request_rejected: 'Request declined',
   request_rejectedHelp: 'Includes the reason given by IT or the approver, if any.',
-  request_ready: 'Ready for pickup',
-  request_readyHelp: 'Includes pickup time and location. IT can leave it out in a given case.',
+  request_ready: 'Devices ready',
+  request_readyHelp:
+    'Includes time and place of the handover. IT can leave it out in a given case.',
   request_rescheduled: 'Handover changed',
   request_rescheduledHelp:
-    'Time, place or kind of handover changed after the ready message. IT can leave it out in a given case.',
+    'Time, place or kind of handover changed after the preparation was finished. IT can leave it out in a given case.',
   request_handed_out: 'Handed out',
   request_handed_outHelp: 'What you received and when it is due back – for your records.',
   request_extended: 'Loan extended',

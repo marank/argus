@@ -36,7 +36,7 @@ Haben Sie Telefon und Backup-Codes verloren, setzt die IT Ihre Zwei-Faktor-Anmel
 
 ## Benachrichtigungen
 
-Argus benachrichtigt Sie per E-Mail und über die Glocke oben rechts, z. B. wenn Ihre Anforderung bestätigt wurde, die Geräte abholbereit sind oder eine Rückgabe ansteht.
+Argus benachrichtigt Sie per E-Mail und über die Glocke oben rechts, z. B. wenn Ihre Anforderung bestätigt wurde, die Geräte bereit sind oder eine Rückgabe ansteht.
 
 Unter **Benachrichtigungen** legen Sie für jede Art fest, ob Sie sie per E-Mail, in der App oder gar nicht erhalten. Was die IT grundsätzlich abgeschaltet hat, erscheint dort nicht.
 

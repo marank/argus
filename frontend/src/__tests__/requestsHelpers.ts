@@ -265,6 +265,7 @@ export async function mountWithApp(
       { path: '/assets/:id', name: 'asset', component: page },
       { path: '/licenses/:id', name: 'license', component: page },
       { path: '/licenses', name: 'licenses', component: page },
+      { path: '/activities', name: 'activities', component: page },
     ],
   })
   await router.push(url)

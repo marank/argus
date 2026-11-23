@@ -3,6 +3,7 @@ export default {
   subtitle:
     'Was in Anforderungen, Geräten, Lager, Lizenzen, Meldungen und Bestellungen getan wurde.',
   showAll: 'Alle anzeigen',
+  onlyFor: 'Nur Aktivitäten zu',
   occurredAt: 'Zeitpunkt',
   area: 'Bereich',
   object: 'Objekt',

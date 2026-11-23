@@ -58,6 +58,10 @@ function period(r: Request): string {
 /** What there is to do, in one sentence: where and when to pick up, or since when overdue. */
 function todoText(r: Request): string {
   if (r.is_overdue) return t('requests.mine.next.overdue', { date: date(r.end_date) })
+  if (r.handover_mode === 'delivery')
+    return r.pickup_at
+      ? t('requests.mine.next.deliveryAt', { date: weekday(r.pickup_at) })
+      : t('requests.mine.next.delivery')
   if (!r.pickup_at) return t('requests.mine.next.ready')
   return isPast(r.pickup_at)
     ? t('requests.mine.next.readyMissed', { date: weekday(r.pickup_at) })
@@ -98,7 +102,11 @@ function todoText(r: Request): string {
             <span class="text">
               <span class="todo-head">
                 <strong class="action">{{
-                  r.is_overdue ? t('requests.mine.action.return') : t('requests.mine.action.pickup')
+                  r.is_overdue
+                    ? t('requests.mine.action.return')
+                    : r.handover_mode === 'delivery'
+                      ? t('requests.mine.action.delivery')
+                      : t('requests.mine.action.pickup')
                 }}</strong>
                 <span class="title">{{ r.title }}</span>
               </span>

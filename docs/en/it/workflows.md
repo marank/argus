@@ -10,7 +10,7 @@ The central workflows in Argus. The details are on the linked pages.
 | [Approve](../approvers/approvals), if needed | Approver | **Submitted** |
 | [Confirm](./requests#confirming) | IT | **Confirmed** |
 | [Allocate devices](./requests#allocating-devices) | IT | **Confirmed**, devices reserved |
-| [Mark ready for pickup](./requests#marking-ready-for-pickup) | IT | **Ready for pickup** |
+| [Finish preparation](./requests#finishing-the-preparation) | IT | **Ready for handover** |
 | [Pick up](./terminal) or [hand out](./requests#handing-out) | Employee or IT | **Handed out** (temporary) or **Completed** (permanent) |
 | [Take back](./requests#taking-back), for temporary ones | IT | **Completed** |
 

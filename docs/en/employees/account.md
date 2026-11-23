@@ -36,7 +36,7 @@ If you have lost both your phone and your backup codes, IT resets your two-facto
 
 ## Notifications
 
-Argus notifies you by email and via the bell at the top right, e.g. when your request has been confirmed, the devices are ready for pickup or a return is due.
+Argus notifies you by email and via the bell at the top right, e.g. when your request has been confirmed, the devices are ready or a return is due.
 
 Under **Notifications** you decide for each kind whether you get it by email, in the app or not at all. Anything IT has switched off entirely does not appear there.
 

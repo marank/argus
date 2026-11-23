@@ -297,7 +297,7 @@ describe('IT dashboard', () => {
       const labels = [...document.body.querySelectorAll('.card-edit .eyebrow')]
         .map((l) => l.textContent?.trim())
         .slice(4, 8)
-      expect(labels).toEqual(['To prepare', 'To confirm', 'Ready for pickup', 'Overdue returns'])
+      expect(labels).toEqual(['To prepare', 'To confirm', 'Ready for handover', 'Overdue returns'])
       await click('Done')
       expect(savedLayout().find((w) => w.id === 'requests')?.card_order).toEqual([
         'to_prepare',

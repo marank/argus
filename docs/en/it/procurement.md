@@ -24,7 +24,7 @@ Lines covered by the stock are hidden. You can show them, but not order them.
 Consumables whose stock is below the minimum stock, with the share already ordered.
 
 ::: info Good to know
-- Requests **Awaiting approval** do not appear yet; requests that are ready for pickup or further along no longer appear.
+- Requests **Awaiting approval** do not appear yet; requests that are ready for handover or further along no longer appear.
 - Each line is calculated on its own. One free device can therefore make several requests appear covered at the same time.
 - For "any model", only models of the category itself count, not those of its subcategories.
 - Custom requests only count against the stock once a model is linked to them.
@@ -72,7 +72,7 @@ Book partial deliveries one after another. The order then stays **Partially rece
 
 ### Directly to the waiting request
 
-If a line belongs to a request with the status **Confirmed**, Argus allocates the delivered devices and material directly to that request. The devices are then **Reserved**, and the request can be marked ready for pickup.
+If a line belongs to a request with the status **Confirmed**, Argus allocates the delivered devices and material directly to that request. The devices are then **Reserved**, and the preparation of the request can be finished.
 
 If the request is no longer **Confirmed**, the goods go into stock.
 

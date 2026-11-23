@@ -21,6 +21,8 @@ class ActivityFilter(FilterSchema):
     area: Annotated[list[str] | None, FilterLookup("area__in")] = None
     kind: Annotated[list[str] | None, FilterLookup("kind__in")] = None
     actor: Annotated[list[UUID] | None, FilterLookup("actor_id__in")] = None
+    # The steps of one request, device, order, ...: its "detailed history".
+    subject: Annotated[UUID | None, FilterLookup("subject_id")] = None
     since: Annotated[date | None, FilterLookup("occurred_at__date__gte")] = None
     until: Annotated[date | None, FilterLookup("occurred_at__date__lte")] = None
 

@@ -4,7 +4,7 @@ export default {
   employeeSubtitle: 'Your requests and devices at a glance.',
   toConfirm: 'To confirm',
   toPrepare: 'To prepare',
-  readyForPickup: 'Ready for pickup',
+  readyForPickup: 'Ready for handover',
   overdue: 'Overdue returns',
   ordersToPlace: 'Orders to place',
   ordersInTransit: 'Orders in transit',

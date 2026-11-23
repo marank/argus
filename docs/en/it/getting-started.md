@@ -4,7 +4,7 @@ The path of a request, from arrival to return, and where to look in your daily w
 
 ## Your workspace
 
-- **Dashboard**: What needs doing: to confirm, to prepare, ready for pickup, overdue. Every number leads to the matching list. Adjust it with **Customize dashboard**, see [Dashboard and calendar](./dashboard-calendar).
+- **Dashboard**: What needs doing: to confirm, to prepare, ready for handover, overdue. Every number leads to the matching list. Adjust it with **Customize dashboard**, see [Dashboard and calendar](./dashboard-calendar).
 - **Bell** at the top right: notifications, e.g. new requests for your team.
 - **Scanner**: A scan on any page opens the device. See [Scanning](./scanning).
 
@@ -13,7 +13,7 @@ The path of a request, from arrival to return, and where to look in your daily w
 1. **Arrival**: The request appears under **IT operations → Requests** with the status **Submitted**. Your team receives a notification.
 2. **Confirm**: Open the request, check availability, **Confirm**. If something is missing, reduce the quantity or order more.
 3. **Allocate devices**: Scan devices or use **Allocate all automatically**. The devices are then reserved.
-4. **Ready for pickup**: Choose the handover type, date and pickup point. The employee is notified.
+4. **Finish preparation**: Choose the handover type, date and pickup point. The employee is notified.
 5. **Handover**: The employee signs at the pickup terminal, or you record the handover with **Hand out**.
 6. **Return**: For temporary requests, you take the devices back with **Take back**, defective ones with the **Damaged** checkbox ticked.
 

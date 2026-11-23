@@ -3,13 +3,13 @@ import { HandHelping, PenLine, Truck } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import type { Schemas } from '@/api/types'
 
-/** Large options: pickup with signature at the terminal, simple pickup, or delivery by IT. */
+/** Large options: simple pickup, pickup with signature at the terminal, or delivery by IT. */
 const model = defineModel<Schemas['HandoverMode']>({ required: true })
 const { t } = useI18n()
 
 const options = [
-  { value: 'pickup' as const, icon: PenLine },
   { value: 'collect' as const, icon: HandHelping },
+  { value: 'pickup' as const, icon: PenLine },
   { value: 'delivery' as const, icon: Truck },
 ]
 </script>

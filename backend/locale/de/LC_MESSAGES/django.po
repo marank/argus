@@ -2312,10 +2312,14 @@ msgstr "Zugewiesen"
 msgid "Allocation removed"
 msgstr "Zuweisung entfernt"
 
-#: apps/requests/models/event.py:28
-#: apps/requests/models/asset_request.py:32
-msgid "Ready for pickup"
-msgstr "Abholbereit"
+#: apps/requests/models/asset_request.py:20
+msgid "Ready for handover"
+msgstr "Bereit zur Übergabe"
+
+#: apps/requests/models/event.py:22
+#: apps/activity/models/activity.py:32
+msgid "Preparation finished"
+msgstr "Vorbereitung abgeschlossen"
 
 #: apps/requests/models/event.py:29
 msgid "Back in preparation"
@@ -2525,7 +2529,7 @@ msgstr "Abholort"
 
 #: apps/requests/models/asset_request.py:128
 msgid "Pickup requests appear on the pickup terminal once they are ready."
-msgstr "Abholungen erscheinen am Abholterminal, sobald sie abholbereit sind."
+msgstr "Abholungen erscheinen am Abholterminal, sobald die Vorbereitung abgeschlossen ist."
 
 #: apps/requests/models/asset_request.py:131
 msgid "skip device check"
@@ -2675,8 +2679,8 @@ msgstr "Kommentar der IT: %(comment)s"
 
 #: apps/requests/services/notifications.py:119
 #, python-format
-msgid "Ready for pickup: %(number)s"
-msgstr "Abholbereit: %(number)s"
+msgid "Your devices are ready: %(number)s"
+msgstr "Ihre Geräte sind bereit: %(number)s"
 
 #: apps/requests/services/notifications.py:120
 #, python-format
@@ -3519,3 +3523,16 @@ msgstr "Geräteimport"
 
 msgid "%(created)d new, %(updated)d changed"
 msgstr "%(created)d neu, %(updated)d geändert"
+
+#: apps/activity/models/activity.py:32
+msgid "Allocation removed"
+msgstr "Zuweisung entfernt"
+
+#: apps/requests/services/workflow.py
+msgid "automatically"
+msgstr "automatisch"
+
+#: apps/procurement/services/orders.py
+#, python-format
+msgid "from order %(number)s"
+msgstr "aus Bestellung %(number)s"

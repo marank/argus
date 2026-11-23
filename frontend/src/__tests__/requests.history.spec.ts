@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
+import { createMemoryHistory, createRouter } from 'vue-router'
 
 import type { Schemas } from '@/api/types'
 import RequestHistory from '@/components/requests/detail/RequestHistory.vue'
@@ -17,6 +18,7 @@ const NO_SCHEDULE = {
   pickup_at: null,
   pickup_location: null,
   notified: null,
+  allocated_by: [],
 }
 
 /** The history's entries as shown, newest first: title (with actor) and detail lines. */
@@ -92,11 +94,48 @@ describe('RequestHistory', () => {
         notified: false,
       }),
     )
-    expect(entry!.title).toBe('Marked ready for pickup · Max IT')
+    expect(entry!.title).toBe('Preparation finished · Max IT')
     expect(entry!.lines).toEqual([
       'Pickup with signature · HQ / IT desk · Employee not notified',
       'INV-001',
     ])
+  })
+
+  it('names who allocated what when others prepared it too', () => {
+    const [entry] = history(
+      event('ready', {
+        ...NO_SCHEDULE,
+        items: ['INV-001', 'INV-002'],
+        allocated_by: [
+          { name: 'Jane Doe', items: ['INV-001'] },
+          { name: 'Max IT', items: ['INV-002'] },
+        ],
+      }),
+    )
+    expect(entry!.lines).toEqual(['Allocated by Jane Doe: INV-001', 'Allocated by Max IT: INV-002'])
+  })
+
+  it('names who added a device when marked ready again', () => {
+    const [entry] = history(
+      event('ready', {
+        ...NO_SCHEDULE,
+        added: ['INV-005'],
+        removed: ['INV-001'],
+        allocated_by: [{ name: 'Jane Doe', items: ['INV-005'] }],
+      }),
+    )
+    expect(entry!.lines).toEqual(['Added by Jane Doe: INV-005', 'Removed: INV-001'])
+  })
+
+  it('keeps the plain list when the one who finished it allocated everything', () => {
+    const [entry] = history(
+      event('ready', {
+        ...NO_SCHEDULE,
+        items: ['INV-001'],
+        allocated_by: [{ name: 'Max IT', items: ['INV-001'] }],
+      }),
+    )
+    expect(entry!.lines).toEqual(['INV-001'])
   })
 
   it('lists only what changed when marked ready again', () => {
@@ -172,5 +211,26 @@ describe('RequestHistory', () => {
   it('shows steps without details, also without an actor', () => {
     const [entry] = history(event('completed', {}, { actor: null }))
     expect(entry).toEqual({ title: 'Completed', lines: [] })
+  })
+
+  it('links IT to the activity log of the request, with every allocation', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/activities', name: 'activities', component: { render: () => null } }],
+    })
+    const request = makeRequest({ events: [] })
+    const wrapper = mount(RequestHistory, {
+      props: { assetRequest: request, activityLink: true },
+      global: { plugins: [i18n, router] },
+    })
+    const link = wrapper.find('a.activity-link')
+    expect(link.text()).toBe('Detailed history')
+    expect(link.attributes('href')).toBe(`/activities?subject=${request.id}`)
+    // Not for employees and approvers.
+    const plain = mount(RequestHistory, {
+      props: { assetRequest: request },
+      global: { plugins: [i18n] },
+    })
+    expect(plain.find('a.activity-link').exists()).toBe(false)
   })
 })

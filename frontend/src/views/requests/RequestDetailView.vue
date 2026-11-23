@@ -436,7 +436,7 @@ async function cancel() {
               :availability="itemAvailability"
               @updated="(r) => (assetRequest = r)"
             />
-            <RequestHistory :assetRequest="assetRequest" />
+            <RequestHistory :assetRequest="assetRequest" activity-link />
           </div>
           <div class="stack">
             <AssignmentCard :assetRequest="assetRequest" @updated="(r) => (assetRequest = r)" />

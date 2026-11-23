@@ -17,7 +17,7 @@ class AssetRequestStatus(models.TextChoices):
     PENDING_APPROVAL = "pending_approval", _("Awaiting approval")
     SUBMITTED = "submitted", _("Submitted")
     CONFIRMED = "confirmed", _("Confirmed")
-    READY = "ready", _("Ready for pickup")
+    READY = "ready", _("Ready for handover")
     HANDED_OUT = "handed_out", _("Handed out")
     COMPLETED = "completed", _("Completed")
     REJECTED = "rejected", _("Rejected")

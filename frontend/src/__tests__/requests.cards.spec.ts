@@ -245,7 +245,7 @@ describe('request detail cards', () => {
         'Approval',
         'Submitted',
         'Confirmed',
-        'Ready for pickup',
+        'Ready',
         'Handed out',
         'Completed',
       ])
@@ -254,12 +254,7 @@ describe('request detail cards', () => {
 
     it('ends with the hand-out for a permanent request', async () => {
       await card(RequestSteps, makeRequest({ duration: 'permanent', status: 'confirmed' }))
-      expect(steps().map((s) => s.title)).toEqual([
-        'Submitted',
-        'Confirmed',
-        'Ready for pickup',
-        'Handed out',
-      ])
+      expect(steps().map((s) => s.title)).toEqual(['Submitted', 'Confirmed', 'Ready', 'Handed out'])
       expect(steps().find((s) => s.current)?.title).toBe('Confirmed')
     })
   })

@@ -97,7 +97,13 @@ async function scan(code: string) {
 }
 
 const rows = () => [...document.body.querySelectorAll('.row')]
-const rowTexts = () => rows().map((r) => r.textContent!.replace(/\s+/g, ' ').trim())
+/** A row's text without who allocated it (checked on its own). */
+const rowTexts = () =>
+  rows().map((r) => {
+    const row = r.cloneNode(true) as HTMLElement
+    row.querySelectorAll('.by').forEach((by) => by.remove())
+    return row.textContent!.replace(/\s+/g, ' ').trim()
+  })
 
 describe('PreparationPanel', () => {
   let unmount: (() => void) | null = null
@@ -154,6 +160,10 @@ describe('PreparationPanel', () => {
     ])
     expect(document.body.querySelectorAll('.row.open')).toHaveLength(1)
     expect(screen()).toContain('1 of 2 ready')
+    // Who allocated the device, with when on hover.
+    const by = document.body.querySelector<HTMLElement>('.row .by')!
+    expect(by.textContent).toBe('Max IT')
+    expect(by.title).toMatch(/^Allocated by Max IT on /)
   })
 
   it('only shows what the request holds outside preparation', async () => {

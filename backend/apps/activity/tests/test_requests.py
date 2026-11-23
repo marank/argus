@@ -9,7 +9,7 @@ from apps.activity.models import Activity
 from apps.inventory.models import Asset, AssetStatus
 from apps.masterdata.models import Category
 from apps.requests.models import AssetRequest
-from apps.requests.tests.flow import JSON, prepare
+from apps.requests.tests.flow import JSON, laptops, prepare, submit
 
 
 def test_hand_out_and_return_are_one_row_each(employee_client, it_client, fresh):
@@ -64,3 +64,43 @@ def test_direct_hand_out_and_quick_assignment_are_one_row_each(it_client, fresh)
         ("request_direct", 2, UUID(direct.json()["id"])),
         ("request_quick", 1, UUID(quick.json()["id"])),
     ]
+
+
+def test_each_allocation_and_removal_is_a_row_of_its_own(employee_client, it_client, admin_client, fresh):
+    """The request's history lists the result; the activity log has every step and who took it."""
+    response = submit(
+        employee_client, [{"category": str(Category.objects.get(code="laptops").pk), "quantity": 2}]
+    )
+    rid = response.json()["id"]
+    url = f"/api/requests/{rid}"
+    it_client.post(f"{url}/confirm", {}, content_type=JSON)
+    item = AssetRequest.objects.get(pk=rid).items.get()
+    first, second = (
+        Asset.objects.filter(model__category=item.category, status=AssetStatus.IN_STOCK)
+        .select_related("model")
+        .order_by("inventory_number")[:2]
+    )
+    body = it_client.post(
+        f"{url}/allocations", {"item": str(item.pk), "asset": str(first.pk)}, content_type=JSON
+    ).json()
+    admin_client.post(
+        f"{url}/allocations", {"item": str(item.pk), "asset": str(second.pk)}, content_type=JSON
+    )
+    admin_client.delete(f"{url}/allocations/{body['items'][0]['allocations'][0]['id']}")
+
+    rows = it_client.get("/api/activities", {"subject": rid, "ordering": "occurred_at"}).json()["items"]
+    assert [(r["kind"], r["actor"]["username"], r["detail"]) for r in rows] == [
+        ("request_created", "employee", ""),
+        ("request_confirmed", "it", ""),
+        ("request_allocated", "it", f"{first.inventory_number} · {first.model.full_name}"),
+        ("request_allocated", "admin", f"{second.inventory_number} · {second.model.full_name}"),
+        ("request_released", "admin", f"{first.inventory_number} · {first.model.full_name}"),
+    ]
+    assert {r["subject_id"] for r in rows} == {rid}
+
+
+def test_automatic_allocation_says_so(employee_client, it_client, fresh):
+    rid = prepare(employee_client, it_client, laptops())
+    allocated = Activity.objects.get(kind="request_allocated", subject_id=rid)
+    assert allocated.detail.endswith("(automatically)")
+    assert allocated.actor is not None and allocated.actor.username == "it"

@@ -9,7 +9,7 @@ Das Dashboard der IT zeigt den aktuellen Stand von Inventar, Anforderungen und B
 | Widget | Inhalt |
 | --- | --- |
 | **Meine Arbeit** | Offene Anforderungen nach Zuständigkeit: mir zugewiesen, meine Teams, nicht zugewiesen; dazu meine Meldungen |
-| **Anforderungen** | Zu bestätigen, vorzubereiten, abholbereit, überfällige Rückgaben |
+| **Anforderungen** | Zu bestätigen, vorzubereiten, bereit zur Übergabe, überfällige Rückgaben |
 | **Beschaffung & Bestand** | Zu bestellen, bestellt und unterwegs, unter Mindestbestand |
 | **Fristen & Meldungen** | Offene Meldungen, ablaufende Lizenzen und Garantien |
 | **Geräte nach Status** | Verteilung aller Geräte |

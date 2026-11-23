@@ -2,6 +2,7 @@ export default {
   title: 'Activities',
   subtitle: 'What was done in requests, devices, stock, licenses, problem reports and orders.',
   showAll: 'Show all',
+  onlyFor: 'Only activities of',
   occurredAt: 'Time',
   area: 'Area',
   object: 'Object',

@@ -8,8 +8,8 @@ All statuses in Argus at a glance.
 | --- | --- | --- |
 | **Awaiting approval** | Waiting for the department | The approver decides |
 | **Submitted** | With IT | IT confirms or rejects |
-| **Confirmed** | IT has committed and is preparing | IT assigns devices, marks it ready for pickup |
-| **Ready for pickup** | Devices are ready | Pickup or hand-out |
+| **Confirmed** | IT has committed and is preparing | IT assigns devices, finishes the preparation |
+| **Ready for handover** | Devices are ready | Pickup or hand-out |
 | **Handed out** | Temporary loan in progress | Return |
 | **Completed** | Handed out permanently or everything returned | – |
 | **Rejected** | Rejected by IT or the department | Request again if needed |

@@ -98,6 +98,18 @@
             ],
             "title": "Since"
           },
+          "subject": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
           "until": {
             "anyOf": [
               {
@@ -127,6 +139,7 @@
           "request_replaced",
           "request_assigned",
           "request_allocated",
+          "request_released",
           "request_ready",
           "request_reopened",
           "request_rescheduled",
@@ -533,6 +546,29 @@
           "category_icon"
         ],
         "title": "AllocationOut",
+        "type": "object"
+      },
+      "AllocatorData": {
+        "properties": {
+          "items": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "name": {
+            "default": "",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "items"
+        ],
+        "title": "AllocatorData",
         "type": "object"
       },
       "Approval": {
@@ -12561,6 +12597,14 @@
             "title": "Added",
             "type": "array"
           },
+          "allocated_by": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AllocatorData"
+            },
+            "title": "Allocated By",
+            "type": "array"
+          },
           "handover_mode": {
             "anyOf": [
               {
@@ -12629,7 +12673,8 @@
           "notified",
           "items",
           "added",
-          "removed"
+          "removed",
+          "allocated_by"
         ],
         "title": "ScheduleData",
         "type": "object"
@@ -15705,6 +15750,23 @@
                 }
               ],
               "title": "Actor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject"
             }
           },
           {

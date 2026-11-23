@@ -90,8 +90,8 @@ describe('own notification settings', () => {
 
   it('shows a channel switched off site-wide as off and locked', async () => {
     await page()
-    expect(state('Ready for pickup: Email')).toEqual({ on: false, locked: true })
-    expect(state('Ready for pickup: In the app')).toEqual({ on: true, locked: false })
+    expect(state('Devices ready: Email')).toEqual({ on: false, locked: true })
+    expect(state('Devices ready: In the app')).toEqual({ on: true, locked: false })
   })
 
   it('shows what the user switched off', async () => {

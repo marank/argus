@@ -96,7 +96,7 @@ A model that has devices, stock, licenses, purchase orders or requests cannot be
 
 Locations form a hierarchy, e.g. "Munich / Building A / Room 2.14". **Kind**: **Site**, **Building**, **Room** or **Storage**.
 
-**Pickup point** makes a location selectable as the pickup point when marking a request ready for pickup.
+**Pickup point** makes a location selectable as the pickup point when finishing the preparation of a request.
 
 A location with sublocations or consumable stock cannot be deleted.
 

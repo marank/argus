@@ -9,7 +9,7 @@ The IT dashboard shows the current state of inventory, requests and procurement.
 | Widget | Content |
 | --- | --- |
 | **My work** | Open requests by responsibility: assigned to me, my teams, unassigned; plus my problem reports |
-| **Requests** | To confirm, to prepare, ready for pickup, overdue returns |
+| **Requests** | To confirm, to prepare, ready for handover, overdue returns |
 | **Procurement & stock** | To order, ordered and on the way, below minimum stock |
 | **Deadlines & reports** | Open problem reports, expiring licenses and warranties |
 | **Devices by status** | Distribution of all devices |

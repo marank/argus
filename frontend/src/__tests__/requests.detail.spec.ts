@@ -130,7 +130,7 @@ describe('RequestDetailView', () => {
       await open(makeRequest())
       expect(buttons('Confirm')).toHaveLength(1)
       expect(buttons('Reject')).toHaveLength(1)
-      expect(buttons('Ready for pickup')).toEqual([])
+      expect(buttons('Finish preparation')).toEqual([])
       expect(screen()).toContain('Check the availability of the items, then confirm or reject')
     })
 
@@ -236,7 +236,7 @@ describe('RequestDetailView', () => {
   describe('a confirmed request', () => {
     it('cannot be marked ready while devices are missing, but they can be ordered', async () => {
       await open(makeRequest({ status: 'confirmed', items: [makeItem({ quantity_confirmed: 1 })] }))
-      expect(buttons('Ready for pickup')).toEqual([])
+      expect(buttons('Finish preparation')).toEqual([])
       expect(buttons('Order missing')).toHaveLength(1)
       expect(screen()).toContain('Allocate specific devices')
     })
@@ -248,11 +248,11 @@ describe('RequestDetailView', () => {
       })
       api.requests.markReady.mockResolvedValue({ ...request, status: 'ready' })
       await open(request)
-      expect(screen()).toContain('Everything is allocated. Plan the handover')
+      expect(screen()).toContain('Everything is allocated. Finish the preparation')
 
-      await click('Ready for pickup')
+      await click('Finish preparation')
       expect(openModal().textContent).toContain('How will the devices reach the employee?')
-      await click('Ready for pickup')
+      await click('Finish preparation')
 
       expect(api.requests.markReady).toHaveBeenCalledWith(REQUEST_ID, {
         handover_mode: 'pickup',
@@ -268,8 +268,8 @@ describe('RequestDetailView', () => {
       const request = allocatedRequest({ origin: 'direct' })
       api.requests.markReady.mockResolvedValue({ ...request, status: 'ready' })
       await open(request)
-      await click('Ready for pickup')
-      await click('Ready for pickup')
+      await click('Finish preparation')
+      await click('Finish preparation')
       expect(api.requests.markReady).toHaveBeenCalledWith(
         REQUEST_ID,
         expect.objectContaining({ notify: false }),
@@ -283,7 +283,7 @@ describe('RequestDetailView', () => {
       })
       api.requests.markReady.mockResolvedValue({ ...request, status: 'ready' })
       await open(request)
-      await click('Ready for pickup')
+      await click('Finish preparation')
       expect(openModal().textContent).toContain('Skip the device check')
 
       const delivery = [...openModal().querySelectorAll<HTMLElement>('[role="radio"]')].find((b) =>
@@ -294,7 +294,7 @@ describe('RequestDetailView', () => {
       expect(openModal().textContent).toContain('Delivery on')
       expect(openModal().textContent).not.toContain('Pickup location')
       expect(openModal().textContent).not.toContain('Skip the device check')
-      await click('Ready for pickup')
+      await click('Finish preparation')
 
       expect(api.requests.markReady).toHaveBeenCalledWith(
         REQUEST_ID,
@@ -304,10 +304,10 @@ describe('RequestDetailView', () => {
 
     it('asks for date and place before telling the employee', async () => {
       await open(allocatedRequest())
-      await click('Ready for pickup')
+      await click('Finish preparation')
       expect(openModal().textContent).toContain('Enter date and place to notify the employee.')
       const submit = [...openModal().querySelectorAll('button')].find((b) =>
-        b.textContent?.includes('Ready for pickup'),
+        b.textContent?.includes('Finish preparation'),
       )!
       expect(submit.disabled).toBe(true)
 
@@ -323,10 +323,10 @@ describe('RequestDetailView', () => {
       api.requests.markReady.mockResolvedValue({ ...request, status: 'ready' })
       try {
         await open(request)
-        await click('Ready for pickup')
+        await click('Finish preparation')
         const next = new Date()
         next.setHours(next.getHours() + 1, 0, 0, 0)
-        await click('Ready for pickup')
+        await click('Finish preparation')
         expect(api.requests.markReady).toHaveBeenCalledWith(
           REQUEST_ID,
           expect.objectContaining({ pickup_at: next.toISOString(), pickup_location: 'loc-1' }),
@@ -341,8 +341,8 @@ describe('RequestDetailView', () => {
       await open(
         allocatedRequest({ pickup_at: '2026-11-02T08:00:00.000Z', pickup_location: PICKUP_POINT }),
       )
-      await click('Ready for pickup')
-      await click('Ready for pickup')
+      await click('Finish preparation')
+      await click('Finish preparation')
       expect(screen()).toContain('INV-001 is no longer available.')
       expect(openModal().textContent).toContain('How will the devices reach the employee?')
       expect(buttons('Hand out')).toEqual([])

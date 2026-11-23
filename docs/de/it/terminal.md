@@ -28,7 +28,7 @@ Das Modul **Abholterminal** muss in den [Einstellungen](./administration/setting
 
 ## Welche Abholungen erscheinen
 
-Das Terminal listet alle Anforderungen, die **Abholbereit** sind und als Übergabeart **Abholung mit Unterschrift** haben. Die nächste Abholung steht oben. Die Liste aktualisiert sich selbst.
+Das Terminal listet alle Anforderungen, die **Bereit zur Übergabe** sind und als Übergabeart **Abholung mit Unterschrift** haben. Die nächste Abholung steht oben. Die Liste aktualisiert sich selbst.
 
 Gesucht wird nach Name oder Anforderungsnummer; ein Tipp auf den Namen startet die Abholung.
 
@@ -51,7 +51,7 @@ Die Geräte werden in jedem Fall dem Mitarbeiter zugeordnet, der sie angefordert
 
 ### 3. Unterschreiben
 
-Das Terminal zeigt, wer die Geräte entgegennimmt und wer aus der IT sie ausgibt. Vorgeschlagen ist die Person, die die Anforderung abholbereit gemeldet hat; über **Ändern** lässt sich jemand anderes aus der IT wählen. Im Protokoll steht die hier gewählte Person.
+Das Terminal zeigt, wer die Geräte entgegennimmt und wer aus der IT sie ausgibt. Vorgeschlagen ist die Person, die die Vorbereitung abgeschlossen hat; über **Ändern** lässt sich jemand anderes aus der IT wählen. Im Protokoll steht die hier gewählte Person.
 
 Der Mitarbeiter unterschreibt im Feld und tippt auf **Unterschreiben und abschließen**. Die Anforderung ist damit ausgegeben; der Mitarbeiter erhält eine Bestätigung.
 

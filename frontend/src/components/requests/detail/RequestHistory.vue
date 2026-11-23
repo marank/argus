@@ -2,12 +2,16 @@
 import { NCard, NTimeline, NTimelineItem } from 'naive-ui'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { RouterLink } from 'vue-router'
 
 import type { Schemas } from '@/api/types'
 import { useFormat } from '@/composables/useFormat'
 
-/** What happened to the request, newest first, as the backend recorded it. */
-const props = defineProps<{ assetRequest: Schemas['AssetRequestOut'] }>()
+/**
+ * What happened to the request, newest first, as the backend recorded it. For IT,
+ * `activityLink` links the activity log of the request: every allocation and removal, with who did it.
+ */
+const props = defineProps<{ assetRequest: Schemas['AssetRequestOut']; activityLink?: boolean }>()
 const { t } = useI18n()
 const { date, dateTime, weekday, enumLabel } = useFormat()
 
@@ -72,6 +76,10 @@ function title(entry: Entry): string {
 
 const joined = (parts: (string | null | false)[]) => parts.filter(Boolean).join(' · ')
 
+/** Someone other than who finished the preparation allocated part of it. */
+const byOthers = (entry: Entry, groups: { name?: string }[]) =>
+  groups.some((group) => (group.name || undefined) !== entry.by)
+
 /** The details worth a line: who for, which devices, which dates, what was said. */
 // eslint-disable-next-line complexity -- one case per event kind, each a few optional parts
 function details(entry: Entry): string[] {
@@ -107,6 +115,17 @@ function details(entry: Entry): string[] {
           d.notified === false && t('handover.notNotified'),
         ]),
       )
+      if (byOthers(entry, d.allocated_by)) {
+        // Prepared by more than the person who finished it: who allocated what.
+        const key = d.items.length ? 'allocatedBy' : 'addedBy'
+        for (const group of d.allocated_by)
+          lines.push(
+            `${t(`requests.detail.event.${key}`, { name: group.name || '?' })}: ${group.items.join(', ')}`,
+          )
+        if (d.removed.length)
+          lines.push(`${t('requests.detail.event.removed')}: ${d.removed.join(', ')}`)
+        return lines.filter((line): line is string => !!line)
+      }
       // Ready again after a change: only what changed (the first time lists everything).
       if (d.added.length) lines.push(`${t('requests.detail.event.added')}: ${d.added.join(', ')}`)
       if (d.removed.length)
@@ -145,6 +164,14 @@ function details(entry: Entry): string[] {
 
 <template>
   <NCard :title="t('requests.detail.history')" size="small">
+    <template v-if="activityLink" #header-extra>
+      <RouterLink
+        :to="{ name: 'activities', query: { subject: assetRequest.id } }"
+        class="activity-link"
+      >
+        {{ t('requests.detail.activityLog') }}
+      </RouterLink>
+    </template>
     <NTimeline size="medium">
       <NTimelineItem
         v-for="entry in entries"
@@ -165,6 +192,9 @@ function details(entry: Entry): string[] {
 </template>
 
 <style scoped>
+.activity-link {
+  font-size: 12.5px;
+}
 .by {
   font-weight: 400;
 }

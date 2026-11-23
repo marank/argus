@@ -35,8 +35,8 @@ Under **Settings → Notifications**, you switch each notification on or off per
 | **Request confirmed** | IT has confirmed, with a comment |
 | **Request declined** | IT or the approver has declined, with a reason |
 | **Cancelled by IT** | IT has cancelled the request |
-| **Ready for pickup** | With time and place; IT can leave it out in individual cases |
-| **Handover changed** | Time, place or type changed after the ready-for-pickup notice |
+| **Devices ready** | With time and place; IT can leave it out in individual cases |
+| **Handover changed** | Time, place or type changed after the preparation was finished |
 | **Handed out** | What was handed out and when it must be returned |
 | **Loan extended** | With the new return date |
 | **Taken back** | What was taken back and what is still outstanding |

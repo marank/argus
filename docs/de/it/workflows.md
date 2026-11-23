@@ -10,7 +10,7 @@ Die zentralen Abläufe in Argus. Die Details stehen auf den verlinkten Seiten.
 | [Genehmigen](../approvers/approvals), falls nötig | Genehmiger | **Eingereicht** |
 | [Bestätigen](./requests#bestatigen) | IT | **Bestätigt** |
 | [Geräte zuweisen](./requests#gerate-zuweisen) | IT | **Bestätigt**, Geräte reserviert |
-| [Abholbereit melden](./requests#abholbereit-melden) | IT | **Abholbereit** |
+| [Vorbereitung abschließen](./requests#vorbereitung-abschliessen) | IT | **Bereit zur Übergabe** |
 | [Abholen](./terminal) oder [Ausgeben](./requests#ausgeben) | Mitarbeiter oder IT | **Ausgegeben** (befristet) oder **Abgeschlossen** (dauerhaft) |
 | [Zurücknehmen](./requests#zurucknehmen), bei befristeten | IT | **Abgeschlossen** |
 

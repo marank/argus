@@ -28,7 +28,7 @@ The **Pickup terminal** module must be switched on in the [Settings](./administr
 
 ## Which pickups appear
 
-The terminal lists all requests that are **Ready for pickup** and have **Pickup with signature** as their handover type. The next pickup is at the top. The list updates itself.
+The terminal lists all requests that are **Ready for handover** and have **Pickup with signature** as their handover type. The next pickup is at the top. The list updates itself.
 
 You can search by name or request number; tapping the name starts the pickup.
 
@@ -51,7 +51,7 @@ In every case, the devices are assigned to the employee who requested them.
 
 ### 3. Sign
 
-The terminal shows who receives the devices and who from IT hands them out. The person who marked the request ready for pickup is suggested; with **Change** you can select someone else from IT. The person selected here appears in the record.
+The terminal shows who receives the devices and who from IT hands them out. The person who finished the preparation is suggested; with **Change** you can select someone else from IT. The person selected here appears in the record.
 
 The employee signs in the field and taps **Sign and finish**. The request is then handed out; the employee receives a confirmation.
 

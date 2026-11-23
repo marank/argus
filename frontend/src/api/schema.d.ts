@@ -2792,6 +2792,8 @@ export interface components {
       kind?: string[] | null
       /** Since */
       since?: string | null
+      /** Subject */
+      subject?: string | null
       /** Until */
       until?: string | null
     }
@@ -2811,6 +2813,7 @@ export interface components {
       | 'request_replaced'
       | 'request_assigned'
       | 'request_allocated'
+      | 'request_released'
       | 'request_ready'
       | 'request_reopened'
       | 'request_rescheduled'
@@ -2979,6 +2982,19 @@ export interface components {
       returned_at: string | null
       /** Returned Damaged */
       returned_damaged: boolean
+    }
+    /** AllocatorData */
+    AllocatorData: {
+      /**
+       * Items
+       * @default []
+       */
+      items: string[]
+      /**
+       * Name
+       * @default
+       */
+      name: string
     }
     /**
      * Approval
@@ -7423,6 +7439,11 @@ export interface components {
        * @default []
        */
       added: string[]
+      /**
+       * Allocated By
+       * @default []
+       */
+      allocated_by: components['schemas']['AllocatorData'][]
       handover_mode: components['schemas']['HandoverMode'] | null
       /**
        * Items
@@ -8760,6 +8781,7 @@ export interface operations {
         area?: string[] | null
         kind?: string[] | null
         actor?: string[] | null
+        subject?: string | null
         since?: string | null
         until?: string | null
         q?: string | null

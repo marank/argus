@@ -202,6 +202,12 @@ class DecisionData(Schema):
     comment: str | None = None
 
 
+class AllocatorData(Schema):
+    # Empty when the account no longer exists.
+    name: str = ""
+    items: list[str] = []
+
+
 class ScheduleData(Schema):
     handover_mode: AssetRequest.HandoverMode | None = None
     pickup_at: datetime | None = None
@@ -212,6 +218,8 @@ class ScheduleData(Schema):
     items: list[str] = []
     added: list[str] = []
     removed: list[str] = []
+    # Who allocated what ``items`` or ``added`` names, in order of the lines.
+    allocated_by: list[AllocatorData] = []
 
 
 class AssignmentData(Schema):

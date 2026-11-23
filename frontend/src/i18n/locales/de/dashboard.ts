@@ -4,7 +4,7 @@ export default {
   employeeSubtitle: 'Ihre Anforderungen und Geräte auf einen Blick.',
   toConfirm: 'Zu bestätigen',
   toPrepare: 'Vorzubereiten',
-  readyForPickup: 'Abholbereit',
+  readyForPickup: 'Bereit zur Übergabe',
   overdue: 'Überfällige Rückgaben',
   ordersToPlace: 'Zu bestellen',
   ordersInTransit: 'Bestellt, unterwegs',

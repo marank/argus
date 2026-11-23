@@ -8,8 +8,8 @@ Unter **IT-Betrieb → Anforderungen** bearbeitet die IT alle Anforderungen: bes
 | --- | --- |
 | **In Genehmigung** | Nichts. Die Abteilung entscheidet zuerst. |
 | **Eingereicht** | Prüfen, dann **Bestätigen** oder **Ablehnen**. |
-| **Bestätigt** | Geräte zuweisen, fehlende bestellen, dann **Abholbereit melden**. |
-| **Abholbereit** | Geräte am Terminal abholen lassen oder **Ausgeben**. |
+| **Bestätigt** | Geräte zuweisen, fehlende bestellen, dann **Vorbereitung abschließen**. |
+| **Bereit zur Übergabe** | Geräte am Terminal abholen lassen oder **Ausgeben**. |
 | **Ausgegeben** | Bei Rückgabe **Zurücknehmen**, bei Bedarf **Leihfrist verlängern**. |
 | **Abgeschlossen** | Nichts mehr. Dauerhafte Ausgaben lassen sich trotzdem zurücknehmen. |
 
@@ -34,7 +34,7 @@ Team und Bearbeiter ändern Sie in der Karte **Zuständig** und übernehmen beid
 - Deckt der Bestand eine Position nicht, reduzieren Sie die Menge. Mit Menge 0 streichen Sie eine Position.
 - Unter **Kommentar der IT** hinterlassen Sie dem Mitarbeiter eine Nachricht.
 
-Der Mitarbeiter erhält eine Benachrichtigung. Wann und wo er die Geräte bekommt, legen Sie später beim Abholbereit-Melden fest.
+Der Mitarbeiter erhält eine Benachrichtigung. Wann und wo er die Geräte bekommt, legen Sie später beim Abschließen der Vorbereitung fest.
 
 Solange die Anforderung **Bestätigt** ist, ändern Sie die Mengen über **Bearbeiten**. Unter die Zahl bereits zugewiesener Geräte lässt sich eine Menge nicht senken. Der Mitarbeiter wird dabei nicht erneut benachrichtigt.
 
@@ -78,6 +78,8 @@ Nach dem Bestätigen weisen Sie jeder Position konkrete Geräte zu. Der Fortschr
 
 Zugewiesene Geräte haben den Status **Reserviert** und stehen nicht mehr für andere Anforderungen zur Verfügung. Eine Zuweisung entfernen Sie mit dem runden Button an der Position.
 
+Neben jedem zugewiesenen Gerät steht, wer es zugewiesen hat; mit der Maus darüber auch wann. So können mehrere aus der IT eine Anforderung gemeinsam vorbereiten.
+
 ### Verbrauchsmaterial
 
 Verbrauchsmaterial haken Sie ab (**Als bereitgelegt abhaken**). Die gesamte Menge kommt aus **einem** Lagerort. Liegen mehrere Lagerorte zur Wahl, wählen Sie einen. Reicht kein einzelner Lagerort, meldet Argus „Nicht genug auf Lager“.
@@ -96,14 +98,14 @@ Gibt es keine freie Lizenz, legen Sie eine an oder erhöhen die Plätze unter [L
 
 Reicht der Bestand nicht, legt **Fehlendes bestellen** eine Bestellung für die offenen Positionen an. Beim Wareneingang werden die gelieferten Geräte dieser Anforderung direkt zugewiesen, siehe [Beschaffung](./procurement).
 
-## Abholbereit melden
+## Vorbereitung abschließen {#vorbereitung-abschliessen}
 
-Sind alle Positionen zugewiesen, planen Sie mit **Abholbereit melden** die Übergabe.
+Sind alle Positionen zugewiesen, schließen Sie mit **Vorbereitung abschließen** die Vorbereitung ab und planen die Übergabe. Die Anforderung ist dann **Bereit zur Übergabe**.
 
 | Art der Übergabe | Ablauf |
 | --- | --- |
-| **Abholung mit Unterschrift** | Der Mitarbeiter holt die Geräte am [Abholterminal](./terminal) ab und unterschreibt dort. |
 | **Einfache Abholung** | Der Mitarbeiter holt die Geräte ohne Unterschrift ab. Die IT erfasst danach unter **Ausgeben**, wer sie entgegengenommen hat. |
+| **Abholung mit Unterschrift** | Der Mitarbeiter holt die Geräte am [Abholterminal](./terminal) ab und unterschreibt dort. |
 | **Lieferung durch IT** | Die IT bringt die Geräte vorbei und erfasst danach die Ausgabe. |
 
 Dazu legen Sie Termin und **Abholort** fest; bei einer Lieferung nur das Datum. Der Wunschtermin des Mitarbeiters steht im Dialog.
@@ -115,14 +117,14 @@ Vorgeschlagen wird die nächste volle Stunde. Die Uhrzeit wählen Sie im Feld ne
 - **Mitarbeiter benachrichtigen**: Der Mitarbeiter erhält Termin und Ort. Dafür müssen Termin und Ort angegeben sein. Bei einer Direktausgabe ist diese Option standardmäßig aus.
 - **Geräteprüfung am Terminal überspringen**: Das Terminal beginnt direkt mit „Wer holt ab?“.
 
-Wer die Anforderung abholbereit meldet, steht als **Bereitgestellt von** auf der Anforderung und wird am Terminal als ausgebende Person vorgeschlagen.
+Wer die Vorbereitung abschließt, steht als **Bereitgestellt von** auf der Anforderung und wird am Terminal als ausgebende Person vorgeschlagen.
 
-Termin, Ort und Art ändern Sie später über **Übergabe ändern** (unter ⋮). Ist die Anforderung bereits abholbereit und die Benachrichtigung eingeschaltet, erfährt der Mitarbeiter von der Änderung.
+Termin, Ort und Art ändern Sie später über **Übergabe ändern** (unter ⋮). Ist die Anforderung bereits **Bereit zur Übergabe** und die Benachrichtigung eingeschaltet, erfährt der Mitarbeiter von der Änderung.
 
 **Zurück in Vorbereitung** (unter ⋮) nimmt die Anforderung vom Abholterminal. Die zugewiesenen Geräte bleiben erhalten.
 
 ::: info Gut zu wissen
-- Entfernen Sie eine Zuweisung bei einer abholbereiten Anforderung, geht sie zurück auf **Bestätigt**.
+- Entfernen Sie eine Zuweisung bei einer Anforderung, die **Bereit zur Übergabe** ist, geht sie zurück auf **Bestätigt**.
 - Enthält die Anforderung nur Software, heißt der Button **Lizenzen freigeben**. Die Anforderung gilt damit sofort als ausgegeben.
 :::
 
@@ -197,7 +199,7 @@ Unter **IT-Betrieb → Direktausgabe** (oder **Direkt ausgeben** in den Anforder
 1. Geräte scannen oder suchen, Verbrauchsmaterial hinzufügen.
 2. Mitarbeiter, Dauer und Zeitraum wählen.
 3. Die Anforderung entsteht direkt als **Bestätigt** mit allen Geräten zugewiesen.
-4. Weiter wie gewohnt mit **Abholbereit melden** und **Ausgeben** oder am Terminal.
+4. Weiter wie gewohnt mit **Vorbereitung abschließen** und **Ausgeben** oder am Terminal.
 
 In der Liste tragen Direktausgaben die Markierung **direkt**.
 
@@ -207,9 +209,13 @@ Die schnellste Variante für ein einzelnes Gerät: **Schnellzuweisung** auf der 
 
 ## Verlauf
 
-Der **Verlauf** einer Anforderung zeigt jeden Schritt mit Datum und Person: Genehmigung, Bestätigung, Zuweisungen, Abholbereit-Meldung, Ausgabe, Verlängerungen, Erinnerungen und Rücknahmen. Mitarbeitende sehen nur die für sie relevanten Einträge.
+Der **Verlauf** einer Anforderung zeigt jeden Schritt mit Datum und Person: Genehmigung, Bestätigung, Zuweisungen, Abschluss der Vorbereitung, Ausgabe, Verlängerungen, Erinnerungen und Rücknahmen. Mitarbeitende sehen nur die für sie relevanten Einträge.
+
+Der Eintrag **Vorbereitung abgeschlossen** nennt die Geräte. Haben andere als die abschließende Person Geräte zugewiesen, steht dort, wer welche zugewiesen hat, z. B. „Zugewiesen von Anna Muster: NB-0012“.
+
+Jede einzelne Zuweisung und Entfernung, auch während der Vorbereitung, zeigt der [Detailverlauf](./activities#detailverlauf): der Link oben rechts in der Karte **Verlauf**.
 
 ::: info Gut zu wissen
 - Meldet Argus „Das ist nicht möglich, solange die Anforderung … ist“, hat meist ein Kollege die Anforderung gleichzeitig bearbeitet. Laden Sie die Seite neu.
-- Mitarbeitende können eine Anforderung stornieren, solange sie nicht ausgegeben ist, auch wenn sie schon abholbereit ist.
+- Mitarbeitende können eine Anforderung stornieren, solange sie nicht ausgegeben ist, auch wenn sie schon bereit zur Übergabe ist.
 :::

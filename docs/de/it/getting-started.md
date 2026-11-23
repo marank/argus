@@ -4,7 +4,7 @@ Der Weg einer Anforderung, vom Eingang bis zur Rückgabe, und wo Sie im Alltag h
 
 ## Der Arbeitsplatz
 
-- **Dashboard**: Was zu tun ist: zu bestätigen, vorzubereiten, abholbereit, überfällig. Jede Zahl führt zur passenden Liste. Passen Sie es mit **Dashboard anpassen** an, siehe [Dashboard und Kalender](./dashboard-calendar).
+- **Dashboard**: Was zu tun ist: zu bestätigen, vorzubereiten, bereit zur Übergabe, überfällig. Jede Zahl führt zur passenden Liste. Passen Sie es mit **Dashboard anpassen** an, siehe [Dashboard und Kalender](./dashboard-calendar).
 - **Glocke** oben rechts: Benachrichtigungen, z. B. neue Anforderungen Ihres Teams.
 - **Scanner**: Ein Scan auf einer beliebigen Seite öffnet das Gerät. Siehe [Scannen](./scanning).
 
@@ -13,7 +13,7 @@ Der Weg einer Anforderung, vom Eingang bis zur Rückgabe, und wo Sie im Alltag h
 1. **Eingang**: Die Anforderung erscheint unter **IT-Betrieb → Anforderungen** mit Status **Eingereicht**. Ihr Team erhält eine Benachrichtigung.
 2. **Bestätigen**: Anforderung öffnen, Verfügbarkeit prüfen, **Bestätigen**. Fehlt etwas, reduzieren Sie die Menge oder bestellen es nach.
 3. **Geräte zuweisen**: Geräte scannen oder **Alle automatisch zuteilen**. Die Geräte sind danach reserviert.
-4. **Abholbereit melden**: Übergabeart, Termin und Abholort wählen. Der Mitarbeiter wird benachrichtigt.
+4. **Vorbereitung abschließen**: Übergabeart, Termin und Abholort wählen. Der Mitarbeiter wird benachrichtigt.
 5. **Übergabe**: Der Mitarbeiter unterschreibt am Abholterminal, oder Sie erfassen die Übergabe mit **Ausgeben**.
 6. **Rücknahme**: Bei befristeten Anforderungen nehmen Sie die Geräte mit **Zurücknehmen** zurück, defekte mit Haken **Defekt**.
 

@@ -6,6 +6,7 @@ import type { Schemas } from '@/api/types'
 import DateRangeInput from '@/components/table/DateRangeInput.vue'
 import ActivityLogView from '@/views/activity/ActivityLogView.vue'
 
+import { button, click } from './dom'
 import { addFilter, mountPage, page, stubPickers, userRef } from './inventoryHelpers'
 
 const ID = '0192f0c4-6a3e-7b4d-9a1e-000000000001'
@@ -37,8 +38,8 @@ describe('activity log', () => {
     vi.restoreAllMocks()
   })
 
-  async function show() {
-    const result = await mountPage(ActivityLogView, {}, {})
+  async function show(url?: string) {
+    const result = await mountPage(ActivityLogView, {}, { url })
     unmount = () => result.wrapper.unmount()
     return result
   }
@@ -103,5 +104,37 @@ describe('activity log', () => {
     expect(list).toHaveBeenLastCalledWith(
       expect.objectContaining({ since: '2026-11-01', until: '2026-11-18', page: 1 }),
     )
+  })
+
+  it('names the device of each allocation and removal', async () => {
+    vi.spyOn(activityApi, 'list').mockResolvedValue(
+      page([
+        activity({ kind: 'request_released', quantity: null, detail: 'NB-0012 · ThinkPad T14' }),
+        activity({
+          id: 'r2',
+          kind: 'request_allocated',
+          quantity: null,
+          detail: 'NB-0013 · ThinkPad T14 (automatically)',
+        }),
+      ]),
+    )
+    await show()
+    const [released, allocated] = rows()
+    expect(released!.textContent).toContain('Allocation removed · NB-0012 · ThinkPad T14')
+    expect(allocated!.textContent).toContain('Allocated · NB-0013 · ThinkPad T14 (automatically)')
+  })
+
+  it('shows only the steps of one request when linked from it, until asked for all', async () => {
+    const list = vi.spyOn(activityApi, 'list').mockResolvedValue(page([activity()]))
+    const { router } = await show(`/?subject=${ID}`)
+    expect(list).toHaveBeenCalledWith(expect.objectContaining({ subject: ID }))
+    const bar = document.body.querySelector('.subject')!
+    expect(bar.textContent).toContain('Only activities of')
+    expect(bar.querySelector('a')?.textContent).toBe('REQ-2026-0042 – Workshop')
+
+    await click(button('Show all'))
+    expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ subject: null }))
+    expect(document.body.querySelector('.subject')).toBeNull()
+    expect(router.currentRoute.value.query.subject).toBeUndefined()
   })
 })

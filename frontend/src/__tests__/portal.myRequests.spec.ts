@@ -92,6 +92,25 @@ describe('MyRequestsView', () => {
     )
   })
 
+  it('says IT brings the devices when it delivers them', async () => {
+    api.list.mockResolvedValue(
+      page([
+        requestListItem({
+          id: 'r-deliver',
+          title: 'Workshop',
+          status: 'ready',
+          handover_mode: 'delivery',
+          pickup_at: null,
+        }),
+      ]),
+    )
+    await mountPage(MyRequestsView)
+    expect(todoLine('Workshop').querySelector('.action')!.textContent).toBe('Delivery')
+    expect(todoLine('Workshop').querySelector('.todo-text')!.textContent).toBe(
+      'IT brings the devices to you.',
+    )
+  })
+
   it('lists the rest in progress below, what comes next first, with its status', async () => {
     api.list.mockResolvedValue(page(scenario()))
     await mountPage(MyRequestsView)

@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { NButton } from 'naive-ui'
 import { computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import { usersApi } from '@/api/accounts'
 import { activityApi } from '@/api/activity'
@@ -18,6 +19,8 @@ import { ACTIVITY_AREAS, ACTIVITY_KINDS, activityTarget, type Activity } from '@
 const { t } = useI18n()
 const { dateTime, enumLabel } = useFormat()
 const { summary } = useActivity()
+const route = useRoute()
+const router = useRouter()
 
 const filters = computed<TableFilter[]>(() => [
   {
@@ -136,15 +139,44 @@ const list = useList(activityApi.list, {
   live: ['request', 'issue', 'asset', 'license', 'consumable', 'order'],
   ordering: '-occurred_at',
   groupOrdering: view.groupOrdering,
-  filters: { area: [], kind: [], actor: [], since: null, until: null },
+  filters: {
+    area: [],
+    kind: [],
+    actor: [],
+    since: null,
+    until: null,
+    // The steps of one object, e.g. the "detailed history" of a request.
+    subject: typeof route.query.subject === 'string' ? route.query.subject : null,
+  },
 })
 onMounted(list.load)
+
+/** The object all rows are about while the list shows only its steps. */
+const subjectRow = computed(() =>
+  list.filters.subject
+    ? (list.rows.value.find((a) => a.subject_id === list.filters.subject) ?? null)
+    : null,
+)
+
+const SubjectLabel = () => (subjectRow.value ? subject(subjectRow.value) : '')
+
+function showAll() {
+  list.setFilter('subject', null)
+  router.replace({ query: { ...route.query, subject: undefined } })
+}
 </script>
 
 <template>
   <div class="page">
     <PageHeader :title="t('activity.title')" :subtitle="t('activity.subtitle')" />
     <div class="stack">
+      <div v-if="list.filters.subject" class="subject">
+        <span>{{ t('activity.onlyFor') }}</span>
+        <strong><SubjectLabel /></strong>
+        <NButton text size="small" type="primary" @click="showAll">
+          {{ t('activity.showAll') }}
+        </NButton>
+      </div>
       <TableToolbar
         v-model:search="list.search.value"
         :list="list"
@@ -155,3 +187,12 @@ onMounted(list.load)
     </div>
   </div>
 </template>
+
+<style scoped>
+.subject {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+}
+</style>

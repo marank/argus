@@ -115,6 +115,44 @@ def test_preparing_leaves_no_trace(employee_client, it_client):
     assert laptop.events.count() == device_history
 
 
+def test_ready_notes_who_allocated_what(employee_client, it_client, admin_client):
+    """Two people preparing one request: the step says who allocated which device."""
+    url, item, (first, second) = _confirmed_laptops(employee_client, it_client, quantity=2)
+    it_client.post(f"{url}/allocations", {"item": str(item.pk), "asset": str(first.pk)}, content_type=JSON)
+    admin_client.post(
+        f"{url}/allocations", {"item": str(item.pk), "asset": str(second.pk)}, content_type=JSON
+    )
+    body = it_client.post(
+        f"{url}/ready", {"handover_mode": "collect", **handover_plan()}, content_type=JSON
+    ).json()
+
+    ready = body["events"][-1]
+    assert ready["actor"]["display_name"] == User.objects.get(username="it").display_name
+    assert ready["data"]["allocated_by"] == [
+        {"name": User.objects.get(username="it").display_name, "items": [first.inventory_number]},
+        {"name": User.objects.get(username="admin").display_name, "items": [second.inventory_number]},
+    ]
+
+
+def test_ready_again_names_who_allocated_the_added(employee_client, it_client, admin_client):
+    url, item, (first, second) = _confirmed_laptops(employee_client, it_client)
+    body = it_client.post(
+        f"{url}/allocations", {"item": str(item.pk), "asset": str(first.pk)}, content_type=JSON
+    ).json()
+    it_client.post(f"{url}/ready", {"handover_mode": "collect", **handover_plan()}, content_type=JSON)
+    admin_client.delete(f"{url}/allocations/{body['items'][0]['allocations'][0]['id']}")
+    admin_client.post(
+        f"{url}/allocations", {"item": str(item.pk), "asset": str(second.pk)}, content_type=JSON
+    )
+    body = it_client.post(
+        f"{url}/ready", {"handover_mode": "collect", **handover_plan()}, content_type=JSON
+    ).json()
+
+    assert body["events"][-1]["data"]["allocated_by"] == [
+        {"name": User.objects.get(username="admin").display_name, "items": [second.inventory_number]}
+    ]
+
+
 def test_ready_again_lists_what_changed(employee_client, it_client):
     url, item, (first, second) = _confirmed_laptops(employee_client, it_client)
     device_history = first.events.count()

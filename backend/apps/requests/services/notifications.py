@@ -139,7 +139,7 @@ def request_decided(asset_request: AssetRequest) -> None:
 
 def request_ready(asset_request: AssetRequest) -> None:
     def render(user: object) -> tuple[str, str]:
-        subject = _("Ready for pickup: %(number)s") % {"number": asset_request.number}
+        subject = _("Your devices are ready: %(number)s") % {"number": asset_request.number}
         body = _("Everything for “%(title)s” is ready.") % {"title": asset_request.title}
         pickup = _pickup(asset_request)
         return subject, "\n\n".join(part for part in (body, pickup, _items(asset_request)) if part)

@@ -648,7 +648,8 @@ def _hand_out_late(allocation: AssetRequestAllocation, user: User) -> AssetReque
         )
     allocation.handed_out_at = since
     allocation.save(update_fields=["handed_out_at"])
-    record(asset_request, AssetRequestEventKind.ALLOCATED, user, items=[allocation_label(allocation)])
+    with activity.muted():  # the row comes from _allocated, with the device
+        record(asset_request, AssetRequestEventKind.ALLOCATED, user, items=[allocation_label(allocation)])
     if not any(item.quantity_missing for item in asset_request.items.all()):
         asset_request.devices_unrecorded = False
         asset_request.save(update_fields=["devices_unrecorded", "updated_at"])
@@ -656,7 +657,9 @@ def _hand_out_late(allocation: AssetRequestAllocation, user: User) -> AssetReque
 
 
 @transaction.atomic
-def allocate_asset(item: AssetRequestItem, asset: Asset, user: User) -> AssetRequestAllocation:
+def allocate_asset(
+    item: AssetRequestItem, asset: Asset, user: User, *, note: str = ""
+) -> AssetRequestAllocation:
     item = _lock_item(item)
     asset_request = item.asset_request
     _require_allocatable(asset_request)
@@ -676,11 +679,11 @@ def allocate_asset(item: AssetRequestItem, asset: Asset, user: User) -> AssetReq
         )
 
     # Set aside only: the device's history starts with the hand-out, the request's lists
-    # the devices once it is ready.
+    # the devices once it is ready. The activity log has each step.
     asset.status = AssetStatus.RESERVED
     asset.save(update_fields=["status", "updated_at"])
     allocation = AssetRequestAllocation.objects.create(item=item, asset=asset, allocated_by=user)
-    return _hand_out_late(allocation, user) if _records_late(asset_request) else allocation
+    return _allocated(allocation, user, note)
 
 
 def _open_device_lines(asset_request: AssetRequest) -> list[AssetRequestItem]:
@@ -716,7 +719,7 @@ def allocate_scanned(asset_request: AssetRequest, asset: Asset, user: User) -> A
 
 @transaction.atomic
 def allocate_consumable(
-    item: AssetRequestItem, consumable: Consumable, quantity: int, user: User
+    item: AssetRequestItem, consumable: Consumable, quantity: int, user: User, *, note: str = ""
 ) -> AssetRequestAllocation:
     item = _lock_item(item)
     _require_allocatable(item.asset_request)
@@ -733,12 +736,12 @@ def allocate_consumable(
     allocation = AssetRequestAllocation.objects.create(
         item=item, consumable=consumable, quantity=quantity, allocated_by=user
     )
-    return _hand_out_late(allocation, user) if _records_late(item.asset_request) else allocation
+    return _allocated(allocation, user, note)
 
 
 @transaction.atomic
 def allocate_license(
-    item: AssetRequestItem, license: License, user: User, asset: Asset | None = None
+    item: AssetRequestItem, license: License, user: User, asset: Asset | None = None, *, note: str = ""
 ) -> AssetRequestAllocation:
     """Give the requester a seat of ``license`` (or one of their devices, for device licenses)."""
     item = _lock_item(item)
@@ -769,7 +772,34 @@ def allocate_license(
     allocation = AssetRequestAllocation.objects.create(
         item=item, license=license, license_assignment=assignment, allocated_by=user
     )
-    return _hand_out_late(allocation, user) if _records_late(asset_request) else allocation
+    return _allocated(allocation, user, note)
+
+
+def _allocated(allocation: AssetRequestAllocation, user: User, note: str) -> AssetRequestAllocation:
+    _log_allocation(ActivityKind.REQUEST_ALLOCATED, allocation, user, note)
+    if _records_late(allocation.item.asset_request):
+        return _hand_out_late(allocation, user)
+    return allocation
+
+
+def _log_allocation(
+    kind: ActivityKind, allocation: AssetRequestAllocation, user: User, note: str = ""
+) -> None:
+    """One row in the activity log per device, consumable or seat set aside or taken out again.
+
+    The request's history only lists the result when the preparation is finished; the
+    activity log keeps every step, with who did it.
+    """
+    asset_request = allocation.item.asset_request
+    what = activity.asset_label(allocation.asset) if allocation.asset else allocation_label(allocation)
+    activity.log(
+        kind,
+        asset_request.pk,
+        activity.request_label(asset_request),
+        user,
+        related_user_id=asset_request.requester_id,
+        detail=f"{what} ({note})" if note else what,
+    )
 
 
 @transaction.atomic
@@ -780,6 +810,7 @@ def auto_allocate(asset_request: AssetRequest, user: User, item_id: UUID | None 
     if item_id:
         items = items.filter(pk=item_id)
     allocated = 0
+    automatic = str(_("automatically"))
     for item in items:
         if item.is_free_text:
             continue  # needs a decision by IT first
@@ -790,19 +821,19 @@ def auto_allocate(asset_request: AssetRequest, user: User, item_id: UUID | None 
                 if item.quantity_missing < 1:
                     break
                 if not license.assignments.filter(user=asset_request.requester).exists():
-                    allocate_license(item, license, user)
+                    allocate_license(item, license, user, note=automatic)
                     allocated += 1
             continue
         for asset in pool_assets(**filters).order_by("condition", "inventory_number"):
             if item.quantity_missing < 1:
                 break
-            allocate_asset(item, asset, user)
+            allocate_asset(item, asset, user, note=automatic)
             allocated += 1
         for consumable in pool_consumables(**filters):
             missing = item.quantity_missing
             take = min(missing, consumable.available_quantity)
             if take > 0:
-                allocate_consumable(item, consumable, take, user)
+                allocate_consumable(item, consumable, take, user, note=automatic)
                 allocated += take
     return allocated
 
@@ -811,7 +842,9 @@ def auto_allocate(asset_request: AssetRequest, user: User, item_id: UUID | None 
 def remove_allocation(allocation: AssetRequestAllocation, user: User) -> None:
     asset_request = allocation.item.asset_request
     _require_status(asset_request, AssetRequestStatus.CONFIRMED, AssetRequestStatus.READY)
-    # Not noted: marking it ready again lists what changed.
+    # Not in the request's history (finishing the preparation again lists what changed),
+    # but in the activity log.
+    _log_allocation(ActivityKind.REQUEST_RELEASED, allocation, user)
     _release(allocation, user)
     allocation.delete()
     if asset_request.status == AssetRequestStatus.READY:
@@ -901,23 +934,24 @@ def mark_ready(
     return asset_request
 
 
-def _ready_items(asset_request: AssetRequest) -> dict[str, list[str]]:
+def _ready_items(asset_request: AssetRequest) -> dict[str, object]:
     """What a ready step notes about the allocation.
 
     Allocating while preparing is not noted step by step (scanning, taking out, scanning
     again); the first time it is ready lists everything, a later time only what changed.
-    ``allocated`` keeps the whole list to compare with next time.
+    ``allocated`` keeps the whole list to compare with next time; ``allocated_by`` says
+    who allocated what the step lists, since that need not be who finishes it.
     """
-    current = [
-        allocation_label(a)
-        for a in AssetRequestAllocation.objects.filter(item__asset_request=asset_request)
-        .select_related("asset", "consumable", "license")
+    allocations = list(
+        AssetRequestAllocation.objects.filter(item__asset_request=asset_request)
+        .select_related("asset", "consumable", "license", "allocated_by")
         .order_by("item__position", "allocated_at")
-    ]
+    )
+    current = [allocation_label(a) for a in allocations]
     earlier = asset_request.events.filter(kind=AssetRequestEventKind.READY).order_by("-at").first()
     before = (earlier.data.get("allocated") or earlier.data.get("items")) if earlier else None
     if before is None:
-        return {"items": current, "allocated": current}
+        return {"items": current, "allocated": current, "allocated_by": _allocators(allocations, current)}
     remaining = list(before)
     added: list[str] = []
     for label in current:
@@ -925,7 +959,28 @@ def _ready_items(asset_request: AssetRequest) -> dict[str, list[str]]:
             remaining.remove(label)
         else:
             added.append(label)
-    return {"added": added, "removed": remaining, "allocated": current}
+    return {
+        "added": added,
+        "removed": remaining,
+        "allocated": current,
+        "allocated_by": _allocators(allocations, added),
+    }
+
+
+def _allocators(allocations: list[AssetRequestAllocation], listed: list[str]) -> list[dict[str, object]]:
+    """``listed`` grouped by who allocated it, in order: [{"name": "Anna", "items": [...]}]."""
+    wanted = list(listed)
+    chosen: list[AssetRequestAllocation] = []
+    # Newest first: of equal labels, the later allocation is the one ``added`` names.
+    for allocation in reversed(allocations):
+        if allocation_label(allocation) in wanted:
+            wanted.remove(allocation_label(allocation))
+            chosen.append(allocation)
+    groups: dict[str, list[str]] = {}
+    for allocation in reversed(chosen):
+        name = allocation.allocated_by.display_name if allocation.allocated_by else ""
+        groups.setdefault(name, []).append(allocation_label(allocation))
+    return [{"name": name, "items": items} for name, items in groups.items()]
 
 
 @transaction.atomic

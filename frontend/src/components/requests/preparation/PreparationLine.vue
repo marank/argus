@@ -9,6 +9,7 @@ import { requestsApi } from '@/api/requests'
 import type { Schemas } from '@/api/types'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { useAction } from '@/composables/useAction'
+import { useFormat } from '@/composables/useFormat'
 import { showError } from '@/composables/useErrorPopover'
 import { categoryIcon } from '@/utils/icons'
 import { isReturnable, itemLabel } from '@/utils/requests'
@@ -33,6 +34,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ updated: [assetRequest: Schemas['AssetRequestOut']] }>()
 const { t } = useI18n()
+const { dateTime } = useFormat()
 const { busy, run } = useAction()
 const message = useMessage()
 
@@ -300,6 +302,17 @@ async function assignSeat(data: Partial<Omit<Schemas['AllocateIn'], 'item'>>) {
           <span v-if="allocation.handout_note" class="note" :title="allocation.handout_note">{{
             allocation.handout_note
           }}</span>
+          <span
+            v-if="allocation.allocated_by"
+            class="muted small by"
+            :title="
+              t('requests.allocation.allocatedBy', {
+                name: allocation.allocated_by.display_name,
+                date: dateTime(allocation.allocated_at),
+              })
+            "
+            >{{ allocation.allocated_by.display_name }}</span
+          >
           <StatusTag
             v-if="allocation.returned_at"
             group="assetStatus"
@@ -470,6 +483,10 @@ async function assignSeat(data: Partial<Omit<Schemas['AllocateIn'], 'item'>>) {
 }
 .small {
   font-size: 11.5px;
+}
+.by {
+  flex: none;
+  white-space: nowrap;
 }
 .note {
   max-width: 200px;

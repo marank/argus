@@ -8,8 +8,8 @@ Alle Status in Argus auf einen Blick.
 | --- | --- | --- |
 | **In Genehmigung** | Wartet auf die Abteilung | Genehmiger entscheidet |
 | **Eingereicht** | Liegt bei der IT | IT bestätigt oder lehnt ab |
-| **Bestätigt** | IT hat zugesagt, bereitet vor | IT weist Geräte zu, meldet abholbereit |
-| **Abholbereit** | Geräte liegen bereit | Abholung oder Ausgabe |
+| **Bestätigt** | IT hat zugesagt, bereitet vor | IT weist Geräte zu, schließt die Vorbereitung ab |
+| **Bereit zur Übergabe** | Geräte liegen bereit | Abholung oder Ausgabe |
 | **Ausgegeben** | Befristete Ausleihe läuft | Rückgabe |
 | **Abgeschlossen** | Dauerhaft ausgegeben oder alles zurück | – |
 | **Abgelehnt** | Von der IT oder der Abteilung abgelehnt | Ggf. erneut anfordern |

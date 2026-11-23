@@ -7,7 +7,7 @@ The page shows all your requests in three sections:
 | Section | Content |
 | --- | --- |
 | **To do** | What you should do now: **Pick up** when devices are ready, and **Bring back** when a return is overdue. |
-| **In progress** | Open requests, those ready for pickup first. |
+| **In progress** | Open requests, those ready for handover first. |
 | **Closed** | Completed, rejected and cancelled requests (collapsed). |
 
 The number next to the menu entry shows how many requests are open.
@@ -16,7 +16,7 @@ The number next to the menu entry shows how many requests are open.
 
 The detail page shows the progress at the top:
 
-**Approval** → **Submitted** → **Confirmed** → **Ready for pickup** → **Handed out** → **Completed**
+**Approval** → **Submitted** → **Confirmed** → **Ready for handover** → **Handed out** → **Completed**
 
 The **Approval** step only appears if the request has to be approved.
 
@@ -25,7 +25,7 @@ The **Approval** step only appears if the request has to be approved.
 | **Awaiting approval** | Your department has not decided yet. |
 | **Submitted** | The request is with IT. |
 | **Confirmed** | IT has agreed and is preparing the devices. |
-| **Ready for pickup** | The devices are ready for you. |
+| **Ready for handover** | The devices are ready for you, or IT brings them to you. |
 | **Handed out** | You have the devices; the return is still outstanding. |
 | **Completed** | Handed out permanently or everything returned. |
 | **Rejected** | Your department or IT has rejected it; the reason is in the request. |
@@ -41,7 +41,7 @@ Below that you see:
 
 ### Cancelling
 
-At the end of the detail page there is **Cancel request**. This works as long as the devices have not been handed out yet, so also when they are already ready for pickup. Devices that were already prepared go back into stock.
+At the end of the detail page there is **Cancel request**. This works as long as the devices have not been handed out yet, so also when they are already ready for handover. Devices that were already prepared go back into stock.
 
 You cannot change a request once it is submitted. Cancel it and request again, or message IT.
 
@@ -65,10 +65,10 @@ Here you find all licenses assigned to you personally or to one of your devices.
 
 Your dashboard shows at a glance:
 
-- open requests, requests ready for pickup and your devices
+- open requests, requests ready for handover and your devices
 - what is ready for pickup
 - returns that are overdue or due in the next 7 days
 
 ## Notifications
 
-Argus notifies you by email and via the bell at the top right, e.g. when your request has been confirmed, the devices are ready for pickup or a return is due. You choose which messages you get in the user menu under **Notifications**, see [Account and settings](./account#notifications).
+Argus notifies you by email and via the bell at the top right, e.g. when your request has been confirmed, the devices are ready or a return is due. You choose which messages you get in the user menu under **Notifications**, see [Account and settings](./account#notifications).

@@ -96,7 +96,7 @@ Ein Modell, zu dem Geräte, Bestände, Lizenzen, Bestellungen oder Anforderungen
 
 Standorte bilden eine Hierarchie, z. B. „München / Haus A / Raum 2.14“. **Art**: **Standort**, **Gebäude**, **Raum** oder **Lager**.
 
-**Abholort** macht einen Standort beim Abholbereit-Melden als Abholort wählbar.
+**Abholort** macht einen Standort beim Abschließen der Vorbereitung als Abholort wählbar.
 
 Ein Standort mit untergeordneten Standorten oder Verbrauchsmaterial-Bestand lässt sich nicht löschen.
 

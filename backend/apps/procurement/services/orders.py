@@ -163,6 +163,7 @@ def _book_receipts(
     """Books each delivered line; returns the number of units received."""
     today = timezone.localdate()
     received = 0
+    received_note = _("from order %(number)s") % {"number": order.number}
     for receipt in receipts:
         line = order_lines.get(receipt["line"])
         if line is None:
@@ -201,7 +202,7 @@ def _book_receipts(
             if item is not None:
                 take = min(quantity, item.quantity_missing)
                 if take:
-                    workflow.allocate_consumable(item, consumable, take, user)
+                    workflow.allocate_consumable(item, consumable, take, user, note=received_note)
         elif model.is_software:
             pass  # Seats are recorded as a license under Licenses, not as devices.
         else:
@@ -222,7 +223,7 @@ def _book_receipts(
                     user,
                 )
                 if item is not None and item.quantity_missing:
-                    workflow.allocate_asset(item, asset, user)
+                    workflow.allocate_asset(item, asset, user, note=received_note)
 
         line.quantity_received += quantity
         line.save(update_fields=["quantity_received"])

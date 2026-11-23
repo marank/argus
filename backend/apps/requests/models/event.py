@@ -19,7 +19,7 @@ class AssetRequestEventKind(models.TextChoices):
     ASSIGNED = "assigned", _("Assignment changed")
     ALLOCATED = "allocated", _("Allocated")
     RELEASED = "released", _("Allocation removed")
-    READY = "ready", _("Ready for pickup")
+    READY = "ready", _("Preparation finished")
     REOPENED = "reopened", _("Back in preparation")
     RESCHEDULED = "rescheduled", _("Handover changed")
     HANDED_OUT = "handed_out", _("Handed out")
