@@ -61,6 +61,25 @@ def widget_options(value: object) -> dict[str, Any]:
     return value
 
 
+def _clean_widget(entry: dict[Any, Any], widget_id: str) -> Widget:
+    """The widget of an entry whose id was checked, with defaults for invalid values."""
+    widget: Widget = {
+        "id": widget_id,
+        "visible": bool(entry.get("visible", True)),
+        "size": WidgetSize(entry["size"]) if entry.get("size") in WidgetSize else WidgetSize.LARGE,
+        "height": (
+            WidgetHeight(entry["height"]) if entry.get("height") in WidgetHeight else WidgetHeight.AUTO
+        ),
+        "hidden_cards": card_keys(entry.get("hidden_cards")),
+        "card_order": card_keys(entry.get("card_order")),
+        "options": widget_options(entry.get("options")),
+    }
+    kind = entry.get("widget")
+    if isinstance(kind, str) and 0 < len(kind) <= 50:
+        widget["widget"] = kind
+    return widget
+
+
 def clean(value: object) -> Layout:
     """Keeps only well-formed widget entries."""
     widgets: list[Widget] = []
@@ -73,19 +92,5 @@ def clean(value: object) -> Layout:
         if not isinstance(widget_id, str) or not widget_id or len(widget_id) > 50 or widget_id in seen:
             continue
         seen.add(widget_id)
-        widget: Widget = {
-            "id": widget_id,
-            "visible": bool(entry.get("visible", True)),
-            "size": WidgetSize(entry["size"]) if entry.get("size") in WidgetSize else WidgetSize.LARGE,
-            "height": (
-                WidgetHeight(entry["height"]) if entry.get("height") in WidgetHeight else WidgetHeight.AUTO
-            ),
-            "hidden_cards": card_keys(entry.get("hidden_cards")),
-            "card_order": card_keys(entry.get("card_order")),
-            "options": widget_options(entry.get("options")),
-        }
-        kind = entry.get("widget")
-        if isinstance(kind, str) and 0 < len(kind) <= 50:
-            widget["widget"] = kind
-        widgets.append(widget)
+        widgets.append(_clean_widget(entry, widget_id))
     return {"widgets": widgets[:50]} if widgets else {}

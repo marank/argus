@@ -128,7 +128,7 @@ test-frontend *args:
 # Everything CI checks; must pass before a push
 check: check-backend check-deploy check-frontend check-docs check-workflows
 
-# ruff, mypy, deptry, import layers, licenses, migrations, Django checks, translations, OpenAPI, tests
+# ruff, mypy, cognitive complexity, deptry, import layers, licenses, migrations, Django checks, translations, OpenAPI, tests
 [working-directory: 'backend']
 check-backend:
     uv sync --locked
@@ -137,6 +137,7 @@ check-backend:
     uv run mypy .
     uv run deptry .
     uv run lint-imports
+    uv run complexipy --failed
     uv run python scripts/check_licenses.py
     uv run python manage.py makemigrations --check --dry-run
     uv run python manage.py check --fail-level WARNING

@@ -12,7 +12,7 @@ Demo accounts (development only):
 import random
 from argparse import ArgumentParser
 from datetime import timedelta
-from typing import Any, Protocol, TypedDict
+from typing import Any, NamedTuple, Protocol, TypedDict
 
 from django.core.management.base import BaseCommand, CommandError, OutputWrapper
 from django.db import transaction
@@ -138,6 +138,38 @@ class DemoBase(TypedDict):
     make_user: MakeUser
 
 
+def _category_sequence(code: str, name: str, prefix: str | None) -> NumberSequence | None:
+    """The inventory number sequence of a category; none without a prefix."""
+    if not prefix:
+        return None
+    return NumberSequence.objects.create(
+        code=f"category-{code}", name=name, prefix=prefix, pattern="{prefix}-{seq}", padding=4
+    )
+
+
+def _create_categories() -> dict[str, Category]:
+    """The categories of the core set, by code."""
+    categories: dict[str, Category] = {}
+    for index, (code, name, icon, prefix, parent) in enumerate(CATEGORIES):
+        categories[code] = Category.objects.create(
+            model_choice=(
+                ModelChoice.SPECIFIC_ONLY
+                if code in ("mde-accessories", "consumables", *SOFTWARE_CATEGORIES)
+                else ModelChoice.ANY_OR_SPECIFIC
+            ),
+            is_accessory=code in ("mde-accessories", "consumables"),
+            kind=CategoryKind.SOFTWARE if code in SOFTWARE_CATEGORIES else CategoryKind.HARDWARE,
+            code=code,
+            name=name,
+            item_name=ITEM_NAMES.get(code, ""),
+            icon=icon,
+            number_sequence=_category_sequence(code, name, prefix),
+            parent=categories[parent] if parent else None,
+            sort_order=index * 10,
+        )
+    return categories
+
+
 class Command(BaseCommand):
     help = "Create demo data for local development."
 
@@ -203,33 +235,7 @@ class Command(BaseCommand):
         )
         Supplier.objects.create(name="Scanova Partner GmbH", customer_number="Z-5521")
 
-        categories: dict[str, Category] = {}
-        for index, (code, name, icon, prefix, parent) in enumerate(CATEGORIES):
-            sequence = None
-            if prefix:
-                sequence = NumberSequence.objects.create(
-                    code=f"category-{code}",
-                    name=name,
-                    prefix=prefix,
-                    pattern="{prefix}-{seq}",
-                    padding=4,
-                )
-            categories[code] = Category.objects.create(
-                model_choice=(
-                    ModelChoice.SPECIFIC_ONLY
-                    if code in ("mde-accessories", "consumables", *SOFTWARE_CATEGORIES)
-                    else ModelChoice.ANY_OR_SPECIFIC
-                ),
-                is_accessory=code in ("mde-accessories", "consumables"),
-                kind=CategoryKind.SOFTWARE if code in SOFTWARE_CATEGORIES else CategoryKind.HARDWARE,
-                code=code,
-                name=name,
-                item_name=ITEM_NAMES.get(code, ""),
-                icon=icon,
-                number_sequence=sequence,
-                parent=categories[parent] if parent else None,
-                sort_order=index * 10,
-            )
+        categories = _create_categories()
 
         # What the further number on the label is called, and the battery as a tracked part.
         categories["mde"].identifier_label = "CN"
@@ -546,18 +552,45 @@ EXTRA_DEVICE_COUNTS = {
 }
 
 
-def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:  # noqa: C901 - a script in sections
+class _ExtraLocations(NamedTuple):
+    munich_storage: Location
+    munich_desk: Location
+    goods_in: Location
+
+
+def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:
     """Many more people, devices in all states with history, requests in every step,
     purchase orders, consumable movements, licenses and problem reports."""
     rng = random.Random(42)  # noqa: S311 - repeatable demo data, no secrets
-    today = timezone.localdate()
-    now = timezone.now()
-    admin, it = base["admin"], base["it"]
-    categories, models = base["categories"], base["models"]
-    storage, warehouse, hq = base["storage"], base["warehouse"], base["hq"]
-    supplier = base["supplier"]
 
-    # --- Organisation ----------------------------------------------------------
+    departments, people = _seed_organisation(base)
+    by_name = {user.username: user for user in people}
+    locations = _seed_locations(base)
+    brueckner = _seed_catalog(base)
+    _seed_teams(base, by_name["jkoch"])
+    devices = _seed_devices(base, rng, locations.munich_storage)
+    laptops = _assign_work_equipment(base, devices, people, by_name)
+    _seed_device_states(base, devices)
+    _seed_service_history(base, rng, devices, laptops)
+    _seed_consumables(base, rng, people, by_name, locations.munich_storage)
+    _seed_licenses(base, devices, people, by_name, brueckner)
+    steps = _RequestSteps(base["it"])
+    _seed_requests(base, steps, by_name, locations.munich_desk)
+    _seed_approval_requests(base, steps, departments, by_name)
+    _seed_procurement(base, brueckner, locations.goods_in)
+    _seed_issues(base, by_name)
+
+    stdout.write(
+        f"Extended demo data: {User.objects.count()} users, {Asset.objects.count()} devices, "
+        f"{Department.objects.count()} departments."
+    )
+
+
+# --- Organisation ----------------------------------------------------------------
+
+
+def _seed_organisation(base: DemoBase) -> tuple[dict[str, Department], list[User]]:
+    """Departments by name, and the people in the order of ``EXTRA_PEOPLE``."""
     departments = {}
     for name, code, cost_center, sort_order in EXTRA_DEPARTMENTS:
         department, _ = Department.objects.get_or_create(name=name, defaults={"code": code})
@@ -583,6 +616,11 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:  # noqa: C901 - a
     # Someone who does not want reminder mails.
     by_name["mschmidt"].notification_settings = {"return_reminder": False}
     by_name["mschmidt"].save()
+    _seed_support_role(by_name["jkoch"])
+    return departments, people
+
+
+def _seed_support_role(member: User) -> None:
     # Support handles the daily work and only looks up the catalog; the rest is hidden.
     support_role = Role.objects.create(
         name="IT support",
@@ -610,8 +648,10 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:  # noqa: C901 - a
             ),
         },
     )
-    support_role.members.add(by_name["jkoch"])
+    support_role.members.add(member)
 
+
+def _seed_locations(base: DemoBase) -> _ExtraLocations:
     munich = Location.objects.create(name="Branch Munich", code="MUC", kind=LocationKind.SITE)
     munich_storage = Location.objects.create(
         name="IT cabinet", code="MUC-IT", kind=LocationKind.STORAGE, parent=munich
@@ -619,31 +659,35 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:  # noqa: C901 - a
     munich_desk = Location.objects.create(
         name="Reception", code="MUC-00", kind=LocationKind.ROOM, parent=munich, is_pickup_point=True
     )
-    Location.objects.create(name="Meeting room Atlas", code="HQ-2-11", kind=LocationKind.ROOM, parent=hq)
-    goods_in = Location.objects.create(
-        name="Goods receipt", code="WH-GR", kind=LocationKind.ROOM, parent=warehouse
+    Location.objects.create(
+        name="Meeting room Atlas", code="HQ-2-11", kind=LocationKind.ROOM, parent=base["hq"]
     )
+    goods_in = Location.objects.create(
+        name="Goods receipt", code="WH-GR", kind=LocationKind.ROOM, parent=base["warehouse"]
+    )
+    return _ExtraLocations(munich_storage, munich_desk, goods_in)
 
+
+# --- Catalog ---------------------------------------------------------------------
+
+
+def _seed_catalog(base: DemoBase) -> Supplier:
+    """Suppliers, categories and models; returns the second main supplier."""
+    categories, models, supplier = base["categories"], base["models"], base["supplier"]
     brueckner = Supplier.objects.create(
         name="Brückner Systemhaus GmbH", customer_number="C-88213", email="orders@brueckner.example"
     )
     Supplier.objects.create(name="Amazon Business", website="https://www.amazon.de/business")
 
-    # --- Catalog ---------------------------------------------------------------
     start = Category.objects.count() * 10
     for index, (code, name, icon, prefix, parent, singular, kind) in enumerate(EXTRA_CATEGORIES):
-        sequence = None
-        if prefix:
-            sequence = NumberSequence.objects.create(
-                code=f"category-{code}", name=name, prefix=prefix, pattern="{prefix}-{seq}", padding=4
-            )
         categories[code] = Category.objects.create(
             code=code,
             name=name,
             icon=icon,
             kind=kind,
             item_name=singular,
-            number_sequence=sequence,
+            number_sequence=_category_sequence(code, name, prefix),
             parent=categories.get(parent) if parent else None,
             model_choice=(
                 ModelChoice.ANY_OR_SPECIFIC
@@ -666,12 +710,18 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:  # noqa: C901 - a
             default_supplier=brueckner if maker in ("Dell", "Brother", "LG") else supplier,
         )
     models["HL-L2350DW"].compatible_with.add(models["TN-2420 toner"])
+    return brueckner
 
-    # --- Teams -------------------------------------------------------------------
+
+# --- Teams -----------------------------------------------------------------------
+
+
+def _seed_teams(base: DemoBase, jkoch: User) -> None:
     # Support gets everything not routed elsewhere; software requests go to the
     # license team, Ledgerline has its own. Requests from the basic data above stay
     # unassigned, so every tab of the lists has something to show.
-    jkoch = by_name["jkoch"]
+    admin, it = base["admin"], base["it"]
+    categories, models = base["categories"], base["models"]
     support = Team.objects.create(name="IT-Support", code="SUP", is_default=True, sort_order=10)
     support.members.add(it, jkoch)
     software = Team.objects.create(name="Software & Lizenzen", code="SW", sort_order=20)
@@ -688,41 +738,62 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:  # noqa: C901 - a
             models["ThinkPad Universal USB-C Dock"], models["USB-C cable 2 m"]
         )
 
-    # --- Devices ---------------------------------------------------------------
+
+# --- Devices ---------------------------------------------------------------------
+
+
+def _seed_devices(base: DemoBase, rng: random.Random, munich_storage: Location) -> dict[str, list[Asset]]:
+    """The devices of ``EXTRA_DEVICE_COUNTS``, by the names used there."""
     devices: dict[str, list[Asset]] = {}
     for model_index, (name, count) in enumerate(EXTRA_DEVICE_COUNTS.items(), start=50):
-        model = models[name.removeprefix("LG ")]
-        devices[name] = []
-        for i in range(count):
-            age = rng.randint(30, 1000)
-            location = munich_storage if i % 5 == 4 else storage
-            devices[name].append(
-                asset_service.create_asset(
-                    {
-                        "model": model.pk,
-                        "serial_number": f"{model.manufacturer.name[:2].upper()}{model_index:03d}{i:04d}",
-                        "location": location.pk,
-                        "supplier": model.default_supplier_id,
-                        "purchase_date": today - timedelta(days=age),
-                        "purchase_price": model.list_price,
-                        "warranty_until": today
-                        - timedelta(days=age)
-                        + timedelta(days=30 * model.warranty_months),
-                        "condition": rng.choice(
-                            [
-                                Asset.Condition.NEW,
-                                Asset.Condition.GOOD,
-                                Asset.Condition.GOOD,
-                                Asset.Condition.WORN,
-                            ]
-                        ),
-                        "name": f"NB-{model_index}{i:02d}" if model.category.code == "laptops" else "",
-                    },
-                    admin,
-                )
+        model = base["models"][name.removeprefix("LG ")]
+        devices[name] = [
+            _create_device(
+                base, rng, model, model_index, i, munich_storage if i % 5 == 4 else base["storage"]
             )
+            for i in range(count)
+        ]
+    return devices
 
-    # Work equipment: most people have a laptop, a monitor and a mouse.
+
+def _create_device(
+    base: DemoBase,
+    rng: random.Random,
+    model: AssetModel,
+    model_index: int,
+    i: int,
+    location: Location,
+) -> Asset:
+    age = rng.randint(30, 1000)
+    today = timezone.localdate()
+    return asset_service.create_asset(
+        {
+            "model": model.pk,
+            "serial_number": f"{model.manufacturer.name[:2].upper()}{model_index:03d}{i:04d}",
+            "location": location.pk,
+            "supplier": model.default_supplier_id,
+            "purchase_date": today - timedelta(days=age),
+            "purchase_price": model.list_price,
+            "warranty_until": today - timedelta(days=age) + timedelta(days=30 * model.warranty_months),
+            "condition": rng.choice(
+                [
+                    Asset.Condition.NEW,
+                    Asset.Condition.GOOD,
+                    Asset.Condition.GOOD,
+                    Asset.Condition.WORN,
+                ]
+            ),
+            "name": f"NB-{model_index}{i:02d}" if model.category.code == "laptops" else "",
+        },
+        base["admin"],
+    )
+
+
+def _assign_work_equipment(
+    base: DemoBase, devices: dict[str, list[Asset]], people: list[User], by_name: dict[str, User]
+) -> list[Asset]:
+    """Work equipment: most people have a laptop, a monitor and a mouse. Returns the laptops."""
+    it = base["it"]
     laptops = devices["Latitude 5450"][:8] + devices["ThinkPad X1 Carbon Gen 12"][:3]
     for user, laptop in zip(people, laptops, strict=False):
         asset_service.update_asset(laptop, {"assigned_to": user.pk}, it)
@@ -734,8 +805,12 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:  # noqa: C901 - a
         asset_service.update_asset(dock, {"assigned_to": user.pk}, it)
     asset_service.update_asset(devices["HL-L2350DW"][0], {"assigned_to": by_name["bschmitt"].pk}, it)
     asset_service.update_asset(devices["iPad 10.9 (10th gen)"][0], {"assigned_to": by_name["lweber"].pk}, it)
+    return laptops
 
-    # Devices in other states.
+
+def _seed_device_states(base: DemoBase, devices: dict[str, list[Asset]]) -> None:
+    """Devices in other states."""
+    it = base["it"]
     in_repair = devices["Latitude 5450"][8]
     asset_service.update_asset(in_repair, {"status": AssetStatus.IN_REPAIR}, it)
     asset_service.record_event(
@@ -761,7 +836,13 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:  # noqa: C901 - a
         it,
     )
 
-    # Service history spread over the last year.
+
+def _seed_service_history(
+    base: DemoBase, rng: random.Random, devices: dict[str, list[Asset]], laptops: list[Asset]
+) -> None:
+    """Service history spread over the last year."""
+    it = base["it"]
+    now = timezone.now()
     history = [
         (AssetEventKind.INSPECTION, "Annual electrical safety inspection (DGUV V3) passed.", "", None),
         (AssetEventKind.MAINTENANCE, "Firmware and BIOS updated.", "", None),
@@ -794,9 +875,20 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:  # noqa: C901 - a
             },
             it,
         )
-    devices["ThinkPad Universal USB-C Dock"][0].consumables.add(models["USB-C cable 2 m"])
+    devices["ThinkPad Universal USB-C Dock"][0].consumables.add(base["models"]["USB-C cable 2 m"])
 
-    # --- Consumables -----------------------------------------------------------
+
+# --- Consumables -----------------------------------------------------------------
+
+
+def _seed_consumables(
+    base: DemoBase,
+    rng: random.Random,
+    people: list[User],
+    by_name: dict[str, User],
+    munich_storage: Location,
+) -> None:
+    admin, it, storage = base["admin"], base["it"], base["storage"]
     stock = {}
     for name, location, quantity, minimum in [
         ("USB-C cable 2 m", storage, 30, 10),
@@ -805,7 +897,7 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:  # noqa: C901 - a
         ("SX5x Battery 4680 mAh", munich_storage, 2, 2),
     ]:
         consumable, _ = Consumable.objects.get_or_create(
-            model=models[name], location=location, defaults={"min_quantity": minimum}
+            model=base["models"][name], location=location, defaults={"min_quantity": minimum}
         )
         move_consumable(consumable, quantity, ConsumableMovement.Reason.RECEIPT, admin, note="Initial stock")
         stock[name] = consumable
@@ -822,7 +914,19 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:  # noqa: C901 - a
         note="Stocktaking difference",
     )
 
-    # --- Licenses --------------------------------------------------------------
+
+# --- Licenses --------------------------------------------------------------------
+
+
+def _seed_licenses(
+    base: DemoBase,
+    devices: dict[str, list[Asset]],
+    people: list[User],
+    by_name: dict[str, User],
+    brueckner: Supplier,
+) -> None:
+    it, models, supplier = base["it"], base["models"], base["supplier"]
+    today = timezone.localdate()
     windows = License.objects.create(
         model=models["Windows 11 Pro"],
         reference="Volume license 2025",
@@ -867,8 +971,21 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:  # noqa: C901 - a
     for user in people[:18]:
         license_service.assign_license(m365, it, user_id=user.pk)
 
-    # --- Requests in every step ------------------------------------------------
+
+# --- Requests in every step ------------------------------------------------------
+
+
+class _RequestSteps:
+    """Moves demo requests through the workflow, IT acting."""
+
+    def __init__(self, it: User) -> None:
+        self.it = it
+        self.today = timezone.localdate()
+        self.now = timezone.now()
+        self.service_desk = Location.objects.get(code="HQ-IT-00")
+
     def submit(
+        self,
         user: User,
         title: str,
         items: list[dict[str, Any]],
@@ -880,40 +997,45 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:  # noqa: C901 - a
         data: dict[str, Any] = {
             "title": title,
             "duration": duration,
-            "start_date": today + timedelta(days=start),
+            "start_date": self.today + timedelta(days=start),
             "notes": notes,
         }
         if duration == "temporary":
-            data["end_date"] = today + timedelta(days=start + days - 1)
+            data["end_date"] = self.today + timedelta(days=start + days - 1)
         return workflow.submit(user, data, items, created_by=user, allow_past_start=start < 0)
 
-    def confirm(asset_request: AssetRequest, comment: str = "") -> AssetRequest:
-        return workflow.confirm(asset_request, it, {}, comment)
-
-    service_desk = Location.objects.get(code="HQ-IT-00")
+    def confirm(self, asset_request: AssetRequest, comment: str = "") -> AssetRequest:
+        return workflow.confirm(asset_request, self.it, {}, comment)
 
     def mark_ready(
+        self,
         asset_request: AssetRequest,
         pickup_days: int = 1,
         location: Location | None = None,
         notify: bool = True,
     ) -> AssetRequest:
-        pickup = now.replace(hour=10, minute=0, second=0, microsecond=0) + timedelta(days=pickup_days)
-        workflow.auto_allocate(asset_request, it)
+        pickup = self.now.replace(hour=10, minute=0, second=0, microsecond=0) + timedelta(days=pickup_days)
+        workflow.auto_allocate(asset_request, self.it)
         return workflow.mark_ready(
             asset_request,
-            it,
+            self.it,
             pickup_at=pickup,
-            pickup_location_id=(location or service_desk).pk,
+            pickup_location_id=(location or self.service_desk).pk,
             notify=notify,
         )
 
-    def hand_out(asset_request: AssetRequest) -> AssetRequest:
-        confirm(asset_request)
+    def hand_out(self, asset_request: AssetRequest) -> AssetRequest:
+        self.confirm(asset_request)
         # Handed out right away, with the employee there: no ready message.
-        mark_ready(asset_request, pickup_days=0, notify=False)
-        return workflow.hand_out(asset_request, it, method=HandoverMethod.DIRECT)
+        self.mark_ready(asset_request, pickup_days=0, notify=False)
+        return workflow.hand_out(asset_request, self.it, method=HandoverMethod.DIRECT)
 
+
+def _seed_requests(
+    base: DemoBase, steps: _RequestSteps, by_name: dict[str, User], munich_desk: Location
+) -> None:
+    it, categories, models = base["it"], base["categories"], base["models"]
+    submit, confirm, hand_out = steps.submit, steps.confirm, steps.hand_out
     tablets, monitors = categories["tablets"], categories["monitors"]
     submit(
         by_name["mschmidt"],
@@ -954,10 +1076,10 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:  # noqa: C901 - a
         ],
         duration="permanent",
     )
-    new_colleague.assignee = jkoch
+    new_colleague.assignee = by_name["jkoch"]
     new_colleague.save(update_fields=["assignee"])
     confirm(new_colleague)
-    mark_ready(new_colleague, location=munich_desk)
+    steps.mark_ready(new_colleague, location=munich_desk)
 
     # Routed to the Ledgerline team by the model, waiting for someone to pick it up.
     submit(
@@ -1023,7 +1145,13 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:  # noqa: C901 - a
         by_name["dhoffmann"],
     )
 
+
+def _seed_approval_requests(
+    base: DemoBase, steps: _RequestSteps, departments: dict[str, Department], by_name: dict[str, User]
+) -> None:
     # Smartphones need the department's approval; the team lead approves for customer service.
+    categories, models = base["categories"], base["models"]
+    submit = steps.submit
     categories["phones"].requires_approval = True
     categories["phones"].save(update_fields=["requires_approval"])
     departments["Customer Service"].approvers.add(by_name["jwagner"])
@@ -1045,7 +1173,15 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:  # noqa: C901 - a
         "Agreed, David visits customers from next month on.",
     )
 
-    # --- Procurement -----------------------------------------------------------
+
+# --- Procurement -----------------------------------------------------------------
+
+
+def _seed_procurement(base: DemoBase, brueckner: Supplier, goods_in: Location) -> None:
+    admin, it, models = base["admin"], base["it"], base["models"]
+    supplier, storage = base["supplier"], base["storage"]
+    today = timezone.localdate()
+
     def order(supplier_: Supplier, lines: list[tuple[str, int]], notes: str = "") -> PurchaseOrder:
         return order_service.create_order(
             {"supplier": supplier_.pk, "delivery_location": goods_in.pk, "notes": notes},
@@ -1078,14 +1214,22 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:  # noqa: C901 - a
     order_service.receive(done, [{"line": done_line.pk, "quantity": 5, "location": storage.pk}], it)
     order_service.cancel(order(supplier, [("iPad 10.9 (10th gen)", 4)], notes="Project postponed."), admin)
 
-    # --- Problem reports -------------------------------------------------------
-    def report(user: User, kind: str, description: str) -> AssetIssue:
-        asset = Asset.objects.filter(assigned_to=user).first()
-        assert asset is not None  # everyone reporting here got devices above
-        return issue_service.report_issue(asset, user, kind, description)
 
-    report(by_name["dhoffmann"], AssetIssueKind.DEFECT, "Battery is empty after two hours.")
-    flicker = report(by_name["jwagner"], AssetIssueKind.DAMAGE, "Monitor flickers when the cable is touched.")
+# --- Problem reports -------------------------------------------------------------
+
+
+def _report(user: User, kind: str, description: str) -> AssetIssue:
+    asset = Asset.objects.filter(assigned_to=user).first()
+    assert asset is not None  # everyone reporting here got devices above
+    return issue_service.report_issue(asset, user, kind, description)
+
+
+def _seed_issues(base: DemoBase, by_name: dict[str, User]) -> None:
+    it = base["it"]
+    _report(by_name["dhoffmann"], AssetIssueKind.DEFECT, "Battery is empty after two hours.")
+    flicker = _report(
+        by_name["jwagner"], AssetIssueKind.DAMAGE, "Monitor flickers when the cable is touched."
+    )
     flicker.assignee = it
     flicker.save(update_fields=["assignee"])
     issue_service.update_issue(flicker, it, AssetIssueStatus.IN_PROGRESS, by_it=True)
@@ -1096,14 +1240,9 @@ def seed_extra(base: DemoBase, stdout: OutputWrapper) -> None:  # noqa: C901 - a
         flicker, by_name["jwagner"], "Yes, with that cable too, but less often.", by_it=False
     )
     issue_service.update_issue(
-        report(by_name["lkrueger"], AssetIssueKind.OTHER, "Laptop is very slow since the last update."),
+        _report(by_name["lkrueger"], AssetIssueKind.OTHER, "Laptop is very slow since the last update."),
         it,
         AssetIssueStatus.RESOLVED,
         "Disk was full; temporary files removed and storage doubled.",
         by_it=True,
-    )
-
-    stdout.write(
-        f"Extended demo data: {User.objects.count()} users, {Asset.objects.count()} devices, "
-        f"{Department.objects.count()} departments."
     )

@@ -86,14 +86,19 @@ def apply_input[M: models.Model](instance: M, data: dict[str, Any]) -> M:
     return instance
 
 
+def _write_auth(config: CrudConfig[Any]) -> object:
+    """The auth for creating, changing and deleting: explicit, by role right or IT staff."""
+    if config.write_auth:
+        return config.write_auth
+    return permission_auth(config.permission, PermissionLevel.WRITE) if config.permission else it_staff_auth
+
+
 def build_crud_router[M: models.Model](config: CrudConfig[M], *, tags: list[str]) -> Router:
     router = Router(tags=tags)
     # Every resource built here shares the endpoint functions; their default operation
     # IDs (module + function name) would collide in the OpenAPI schema.
     name = config.model._meta.model_name
-    write_auth = config.write_auth or (
-        permission_auth(config.permission, PermissionLevel.WRITE) if config.permission else it_staff_auth
-    )
+    write_auth = _write_auth(config)
     read_auth = config.read_auth or it_staff_auth
     if not TYPE_CHECKING:
         # For the annotations below, which Ninja evaluates (ruff takes them for the aliases above).

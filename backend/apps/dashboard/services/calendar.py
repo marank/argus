@@ -9,7 +9,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 
-from django.db.models import Count, Q
+from django.db.models import Count, Q, QuerySet
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 
@@ -48,7 +48,6 @@ def calendar_entries(
     e.g. to the user's own; deliveries and warranty or license ends stay.
     """
     kinds = kinds or set(KINDS)
-    today = timezone.localdate()
     entries: list[Entry] = []
 
     asset_requests = (
@@ -61,131 +60,158 @@ def calendar_entries(
     )
 
     if "loan" in kinds:
-        for r in temporary.filter(start_date__lte=end, end_date__gte=start):
-            assert r.end_date is not None
-            items = [f"{i.quantity_target}× {i.label}" for i in r.items.all()]
-            entries.append(
-                Entry(
-                    id=f"loan-{r.pk}",
-                    kind="loan",
-                    title=f"{_requester(r)} · {r.title}",
-                    start=r.start_date,
-                    end=r.end_date + timedelta(days=1),
-                    status=r.status,
-                    overdue=r.is_overdue,
-                    link={"name": "request", "id": str(r.pk)},
-                    details=[r.number, *items],
-                )
-            )
-
+        entries.extend(_loans(temporary, start, end))
     if "pickup" in kinds:
-        # The appointment IT made, or until there is one the day the employee asked
-        # for. Requests not confirmed yet count too: their day is as real for planning.
-        pickups = (
-            asset_requests.filter(status__in=AssetRequest.AWAITING_HANDOUT_STATUSES)
-            .annotate(planned_day=Coalesce("requested_pickup_date", "start_date"))
-            .filter(
-                Q(pickup_at__date__range=(start, end))
-                | Q(pickup_at__isnull=True, planned_day__range=(start, end))
+        entries.extend(_pickups(asset_requests, start, end))
+    if "return" in kinds:
+        entries.extend(_returns(temporary, start, end))
+    if "delivery" in kinds:
+        entries.extend(_deliveries(start, end))
+    if "warranty" in kinds:
+        entries.extend(_warranty_ends(start, end))
+    if "license" in kinds:
+        entries.extend(_license_ends(start, end))
+    return entries
+
+
+def _loans(temporary: QuerySet[AssetRequest], start: date, end: date) -> list[Entry]:
+    entries = []
+    for r in temporary.filter(start_date__lte=end, end_date__gte=start):
+        assert r.end_date is not None
+        items = [f"{i.quantity_target}× {i.label}" for i in r.items.all()]
+        entries.append(
+            Entry(
+                id=f"loan-{r.pk}",
+                kind="loan",
+                title=f"{_requester(r)} · {r.title}",
+                start=r.start_date,
+                end=r.end_date + timedelta(days=1),
+                status=r.status,
+                overdue=r.is_overdue,
+                link={"name": "request", "id": str(r.pk)},
+                details=[r.number, *items],
             )
         )
-        entries.extend(
+    return entries
+
+
+def _pickups(asset_requests: QuerySet[AssetRequest], start: date, end: date) -> list[Entry]:
+    # The appointment IT made, or until there is one the day the employee asked
+    # for. Requests not confirmed yet count too: their day is as real for planning.
+    pickups = (
+        asset_requests.filter(status__in=AssetRequest.AWAITING_HANDOUT_STATUSES)
+        .annotate(planned_day=Coalesce("requested_pickup_date", "start_date"))
+        .filter(
+            Q(pickup_at__date__range=(start, end))
+            | Q(pickup_at__isnull=True, planned_day__range=(start, end))
+        )
+    )
+    return [
+        Entry(
+            id=f"pickup-{r.pk}",
+            kind="pickup",
+            title=_requester(r),
+            start=timezone.localtime(r.pickup_at) if r.pickup_at else r.planned_day,
+            all_day=r.pickup_at is None,
+            status=r.status,
+            link={"name": "request", "id": str(r.pk)},
+            details=[r.number, r.title],
+        )
+        for r in pickups
+    ]
+
+
+def _returns(temporary: QuerySet[AssetRequest], start: date, end: date) -> list[Entry]:
+    # Overdue returns move along on today until the devices are back.
+    today = timezone.localdate()
+    entries = []
+    for r in temporary.filter(status=AssetRequestStatus.HANDED_OUT, end_date__lte=end):
+        assert r.end_date is not None  # the filter excludes NULL
+        overdue = r.end_date < today
+        day = today if overdue else r.end_date
+        if not start <= day <= end:
+            continue
+        entries.append(
             Entry(
-                id=f"pickup-{r.pk}",
-                kind="pickup",
+                id=f"return-{r.pk}",
+                kind="return",
                 title=_requester(r),
-                start=timezone.localtime(r.pickup_at) if r.pickup_at else r.planned_day,
-                all_day=r.pickup_at is None,
+                start=day,
+                due=r.end_date,
                 status=r.status,
+                overdue=overdue,
                 link={"name": "request", "id": str(r.pk)},
                 details=[r.number, r.title],
             )
-            for r in pickups
         )
+    return entries
 
-    if "return" in kinds:
-        # Overdue returns move along on today until the devices are back.
-        for r in temporary.filter(status=AssetRequestStatus.HANDED_OUT, end_date__lte=end):
-            assert r.end_date is not None  # the filter excludes NULL
-            overdue = r.end_date < today
-            day = today if overdue else r.end_date
-            if not start <= day <= end:
-                continue
-            entries.append(
-                Entry(
-                    id=f"return-{r.pk}",
-                    kind="return",
-                    title=_requester(r),
-                    start=day,
-                    due=r.end_date,
-                    status=r.status,
-                    overdue=overdue,
-                    link={"name": "request", "id": str(r.pk)},
-                    details=[r.number, r.title],
-                )
+
+def _deliveries(start: date, end: date) -> list[Entry]:
+    orders = PurchaseOrder.objects.select_related("supplier").filter(
+        status__in=(PurchaseOrderStatus.ORDERED, PurchaseOrderStatus.PARTIALLY_RECEIVED),
+        expected_date__gte=start,
+        expected_date__lte=end,
+    )
+    entries = []
+    for o in orders:
+        assert o.expected_date is not None  # the filter excludes NULL
+        entries.append(
+            Entry(
+                id=f"delivery-{o.pk}",
+                kind="delivery",
+                title=o.supplier.name if o.supplier else o.number,
+                start=o.expected_date,
+                status=o.status,
+                link={"name": "order", "id": str(o.pk)},
+                details=[o.number, *(f"{line.quantity_open}× {line.label}" for line in o.lines.all())],
             )
-
-    if "delivery" in kinds:
-        orders = PurchaseOrder.objects.select_related("supplier").filter(
-            status__in=(PurchaseOrderStatus.ORDERED, PurchaseOrderStatus.PARTIALLY_RECEIVED),
-            expected_date__gte=start,
-            expected_date__lte=end,
         )
-        for o in orders:
-            assert o.expected_date is not None  # the filter excludes NULL
-            entries.append(
-                Entry(
-                    id=f"delivery-{o.pk}",
-                    kind="delivery",
-                    title=o.supplier.name if o.supplier else o.number,
-                    start=o.expected_date,
-                    status=o.status,
-                    link={"name": "order", "id": str(o.pk)},
-                    details=[o.number, *(f"{line.quantity_open}× {line.label}" for line in o.lines.all())],
-                )
-            )
+    return entries
 
-    if "warranty" in kinds:
-        assets = (
-            Asset.objects.select_related("model__manufacturer")
-            .filter(warranty_until__gte=start, warranty_until__lte=end)
-            .exclude(status__in=(AssetStatus.RETIRED, AssetStatus.LOST))
+
+def _warranty_ends(start: date, end: date) -> list[Entry]:
+    assets = (
+        Asset.objects.select_related("model__manufacturer")
+        .filter(warranty_until__gte=start, warranty_until__lte=end)
+        .exclude(status__in=(AssetStatus.RETIRED, AssetStatus.LOST))
+    )
+    by_day: dict[date, list[Asset]] = defaultdict(list)
+    for asset in assets:
+        assert asset.warranty_until is not None  # the filter excludes NULL
+        by_day[asset.warranty_until].append(asset)
+    # One entry per day; many devices bought together would flood the view.
+    return [
+        Entry(
+            id=f"warranty-{day.isoformat()}",
+            kind="warranty",
+            title=str(len(due)),
+            start=day,
+            link={"name": "assets", "warranty_until": day.isoformat()},
+            details=[f"{a.inventory_number} · {a.model.full_name}" for a in due[:10]]
+            + ([f"+{len(due) - 10}"] if len(due) > 10 else []),
         )
-        by_day: dict[date, list[Asset]] = defaultdict(list)
-        for asset in assets:
-            assert asset.warranty_until is not None  # the filter excludes NULL
-            by_day[asset.warranty_until].append(asset)
-        # One entry per day; many devices bought together would flood the view.
-        for day, due in sorted(by_day.items()):
-            entries.append(
-                Entry(
-                    id=f"warranty-{day.isoformat()}",
-                    kind="warranty",
-                    title=str(len(due)),
-                    start=day,
-                    link={"name": "assets", "warranty_until": day.isoformat()},
-                    details=[f"{a.inventory_number} · {a.model.full_name}" for a in due[:10]]
-                    + ([f"+{len(due) - 10}"] if len(due) > 10 else []),
-                )
-            )
+        for day, due in sorted(by_day.items())
+    ]
 
-    if "license" in kinds:
-        licenses = (
-            License.objects.select_related("model__manufacturer")
-            .filter(valid_until__gte=start, valid_until__lte=end)
-            .annotate(used=Count("assignments"))
+
+def _license_ends(start: date, end: date) -> list[Entry]:
+    licenses = (
+        License.objects.select_related("model__manufacturer")
+        .filter(valid_until__gte=start, valid_until__lte=end)
+        .annotate(used=Count("assignments"))
+    )
+    entries = []
+    for lic in licenses:
+        assert lic.valid_until is not None  # the filter excludes NULL
+        entries.append(
+            Entry(
+                id=f"license-{lic.pk}",
+                kind="license",
+                title=lic.model.full_name,
+                start=lic.valid_until,
+                link={"name": "license", "id": str(lic.pk)},
+                details=[d for d in (lic.reference, f"{lic.used} / {lic.seats}") if d],
+            )
         )
-        for lic in licenses:
-            assert lic.valid_until is not None  # the filter excludes NULL
-            entries.append(
-                Entry(
-                    id=f"license-{lic.pk}",
-                    kind="license",
-                    title=lic.model.full_name,
-                    start=lic.valid_until,
-                    link={"name": "license", "id": str(lic.pk)},
-                    details=[d for d in (lic.reference, f"{lic.used} / {lic.seats}") if d],
-                )
-            )
-
     return entries

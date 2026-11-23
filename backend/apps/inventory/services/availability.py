@@ -5,12 +5,16 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from django.db.models import Count, F, Q, QuerySet, Sum
 from django.utils import timezone
 
 from apps.inventory.models import Asset, AssetStatus, Consumable, License
+
+if TYPE_CHECKING:
+    from apps.requests.models import AssetRequestItem
 
 
 def _model_filter(category_id: UUID | None, model_id: UUID | None) -> dict[str, UUID]:
@@ -82,29 +86,28 @@ class Counts:
         self.reserved += other.reserved
 
 
-def period_availability(start: date, end: date | None) -> tuple[dict[UUID, Counts], dict[UUID, Counts]]:
-    """Counts per model and per category (its own models only) for ``start``–``end``.
-
-    ``end=None`` means from ``start`` on without end (permanent request). A request
-    occupies its devices from the pickup day (wish or appointment) on. Reserved
-    are units of confirmed or ready requests whose period overlaps: devices
-    allocated to them plus what they still lack. Devices allocated to a request
-    in another period count as available. Software is never reserved; licenses
-    show their free seats.
-    """
+def _held_units() -> tuple[dict[UUID, int], dict[UUID, int]]:
+    """Units IT holds per model (devices in stock or set aside, consumable stock, free
+    license seats), and the consumable units reserved of them."""
     from apps.masterdata.models import AssetModel
-    from apps.requests.models import AssetRequestAllocation, AssetRequestItem, AssetRequestStatus
 
     stock: dict[UUID, int] = defaultdict(int)
     reserved: dict[UUID, int] = defaultdict(int)
-    any_reserved: dict[UUID, int] = defaultdict(int)
-
     held = Asset.objects.filter(is_loanable=True, status__in=[AssetStatus.IN_STOCK, AssetStatus.RESERVED])
     for row in held.values("model_id").annotate(n=Count("pk")):
         stock[row["model_id"]] += row["n"]
     for row in Consumable.objects.values("model_id").annotate(n=Sum("quantity"), r=Sum("reserved_quantity")):
         stock[row["model_id"]] += row["n"] or 0
         reserved[row["model_id"]] += row["r"] or 0
+    licensed = AssetModel.objects.filter(tracking=AssetModel.Tracking.LICENSE).values_list("pk", flat=True)
+    for model_id in licensed:
+        stock[model_id] += free_license_seats(model_id=model_id)
+    return stock, reserved
+
+
+def _overlapping(start: date, end: date | None) -> Q:
+    """Items of confirmed or ready requests whose period overlaps ``start``–``end``."""
+    from apps.requests.models import AssetRequestStatus
 
     overlapping = Q(asset_request__status__in=[AssetRequestStatus.CONFIRMED, AssetRequestStatus.READY]) & (
         Q(asset_request__end_date__isnull=True) | Q(asset_request__end_date__gte=start)
@@ -116,7 +119,15 @@ def period_availability(start: date, end: date | None) -> tuple[dict[UUID, Count
             | Q(asset_request__requested_pickup_date__lte=end)
             | Q(asset_request__pickup_at__date__lte=end)
         )
-    items = AssetRequestItem.objects.filter(overlapping).select_related("asset_model", "category")
+    return overlapping
+
+
+def _reserve_items(items: QuerySet[AssetRequestItem], reserved: dict[UUID, int]) -> dict[UUID, int]:
+    """Adds the devices allocated to ``items`` and what they still lack of a model to
+    ``reserved``; returns what they lack of any model, per category."""
+    from apps.requests.models import AssetRequestAllocation
+
+    any_reserved: dict[UUID, int] = defaultdict(int)
     allocated: dict[UUID, int] = defaultdict(int)
     for allocation in (
         AssetRequestAllocation.objects.filter(item__in=items, asset__isnull=False)
@@ -138,10 +149,27 @@ def period_availability(start: date, end: date | None) -> tuple[dict[UUID, Count
             reserved[item.asset_model_id] += lacking
         elif item.category_id:
             any_reserved[item.category_id] += lacking
+    return any_reserved
 
-    licensed = AssetModel.objects.filter(tracking=AssetModel.Tracking.LICENSE).values_list("pk", flat=True)
-    for model_id in licensed:
-        stock[model_id] += free_license_seats(model_id=model_id)
+
+def period_availability(start: date, end: date | None) -> tuple[dict[UUID, Counts], dict[UUID, Counts]]:
+    """Counts per model and per category (its own models only) for ``start``–``end``.
+
+    ``end=None`` means from ``start`` on without end (permanent request). A request
+    occupies its devices from the pickup day (wish or appointment) on. Reserved
+    are units of confirmed or ready requests whose period overlaps: devices
+    allocated to them plus what they still lack. Devices allocated to a request
+    in another period count as available. Software is never reserved; licenses
+    show their free seats.
+    """
+    from apps.masterdata.models import AssetModel
+    from apps.requests.models import AssetRequestItem
+
+    stock, reserved = _held_units()
+    items = AssetRequestItem.objects.filter(_overlapping(start, end)).select_related(
+        "asset_model", "category"
+    )
+    any_reserved = _reserve_items(items, reserved)
 
     models: dict[UUID, Counts] = {}
     categories: dict[UUID, Counts] = defaultdict(Counts)

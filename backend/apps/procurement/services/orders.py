@@ -3,6 +3,7 @@
 import calendar
 from datetime import date
 from typing import Any
+from uuid import UUID
 
 from django.db import transaction
 from django.http import Http404
@@ -16,8 +17,9 @@ from apps.core.exceptions import BusinessError
 from apps.inventory.models import AssetStatus, ConsumableMovement
 from apps.inventory.services import assets as asset_service
 from apps.inventory.services.consumables import get_consumable, move_consumable
+from apps.masterdata.models import AssetModel
 from apps.procurement.models import PurchaseOrder, PurchaseOrderLine, PurchaseOrderStatus
-from apps.requests.models import AssetRequestStatus
+from apps.requests.models import AssetRequestItem, AssetRequestStatus
 from apps.requests.services import workflow
 
 Status = PurchaseOrderStatus
@@ -161,70 +163,103 @@ def _book_receipts(
     user: User,
 ) -> int:
     """Books each delivered line; returns the number of units received."""
-    today = timezone.localdate()
     received = 0
-    received_note = _("from order %(number)s") % {"number": order.number}
     for receipt in receipts:
         line = order_lines.get(receipt["line"])
         if line is None:
             raise Http404
-        model = line.asset_model
-        if model is None:
-            raise BusinessError(_("Assign a model to “%(line)s” before receiving it.") % {"line": line.label})
-        location_id = receipt.get("location") or order.delivery_location_id
-        serials = [s.strip() for s in receipt.get("serial_numbers", []) if s.strip()]
-        quantity = len(serials) if not model.is_bulk and serials else receipt["quantity"]
-        if quantity < 1:
-            continue
-        if quantity > line.quantity_open:
-            raise BusinessError(
-                _("Only %(open)s units of “%(line)s” are still open.")
-                % {"open": line.quantity_open, "line": line.label}
-            )
-
-        item = line.asset_request_item
-        if item is not None and item.asset_request.status != AssetRequestStatus.CONFIRMED:
-            item = None  # only confirmed requests get the delivered units
-        received += quantity
-
-        if model.is_bulk:
-            if not location_id:
-                raise BusinessError(_("Choose a storage location for consumables."))
-            consumable = get_consumable(model.pk, location_id)
-            move_consumable(
-                consumable,
-                quantity,
-                ConsumableMovement.Reason.RECEIPT,
-                user,
-                purchase_order_line=line,
-                note=order.number,
-            )
-            if item is not None:
-                take = min(quantity, item.quantity_missing)
-                if take:
-                    workflow.allocate_consumable(item, consumable, take, user, note=received_note)
-        elif model.is_software:
-            pass  # Seats are recorded as a license under Licenses, not as devices.
-        else:
-            serials = serials or [""] * quantity
-            for serial in serials:
-                asset = asset_service.create_asset(
-                    {
-                        "model": model.pk,
-                        "serial_number": serial,
-                        "status": AssetStatus.IN_STOCK,
-                        "location": location_id,
-                        "supplier": order.supplier_id,
-                        "purchase_order_line": line.pk,
-                        "purchase_date": today,
-                        "purchase_price": line.unit_price,
-                        "warranty_until": _add_months(today, model.warranty_months),
-                    },
-                    user,
-                )
-                if item is not None and item.quantity_missing:
-                    workflow.allocate_asset(item, asset, user, note=received_note)
-
-        line.quantity_received += quantity
-        line.save(update_fields=["quantity_received"])
+        received += _book_receipt(order, line, receipt, user)
     return received
+
+
+def _book_receipt(order: PurchaseOrder, line: PurchaseOrderLine, receipt: dict[str, Any], user: User) -> int:
+    """Books one delivered line; returns the number of units received."""
+    model = line.asset_model
+    if model is None:
+        raise BusinessError(_("Assign a model to “%(line)s” before receiving it.") % {"line": line.label})
+    location_id = receipt.get("location") or order.delivery_location_id
+    serials = [s.strip() for s in receipt.get("serial_numbers", []) if s.strip()]
+    quantity = len(serials) if not model.is_bulk and serials else receipt["quantity"]
+    if quantity < 1:
+        return 0
+    if quantity > line.quantity_open:
+        raise BusinessError(
+            _("Only %(open)s units of “%(line)s” are still open.")
+            % {"open": line.quantity_open, "line": line.label}
+        )
+
+    item = line.asset_request_item
+    if item is not None and item.asset_request.status != AssetRequestStatus.CONFIRMED:
+        item = None  # only confirmed requests get the delivered units
+
+    if model.is_bulk:
+        _receive_consumables(order, line, model, item, quantity, location_id, user)
+    elif model.is_software:
+        pass  # Seats are recorded as a license under Licenses, not as devices.
+    else:
+        _receive_devices(order, line, model, item, serials or [""] * quantity, location_id, user)
+
+    line.quantity_received += quantity
+    line.save(update_fields=["quantity_received"])
+    return quantity
+
+
+def _received_note(order: PurchaseOrder) -> str:
+    return _("from order %(number)s") % {"number": order.number}
+
+
+def _receive_consumables(
+    order: PurchaseOrder,
+    line: PurchaseOrderLine,
+    model: AssetModel,
+    item: AssetRequestItem | None,
+    quantity: int,
+    location_id: UUID | None,
+    user: User,
+) -> None:
+    """Adds the units to the stock at ``location_id`` and allocates what ``item`` lacks."""
+    if not location_id:
+        raise BusinessError(_("Choose a storage location for consumables."))
+    consumable = get_consumable(model.pk, location_id)
+    move_consumable(
+        consumable,
+        quantity,
+        ConsumableMovement.Reason.RECEIPT,
+        user,
+        purchase_order_line=line,
+        note=order.number,
+    )
+    if item is not None:
+        take = min(quantity, item.quantity_missing)
+        if take:
+            workflow.allocate_consumable(item, consumable, take, user, note=_received_note(order))
+
+
+def _receive_devices(
+    order: PurchaseOrder,
+    line: PurchaseOrderLine,
+    model: AssetModel,
+    item: AssetRequestItem | None,
+    serials: list[str],
+    location_id: UUID | None,
+    user: User,
+) -> None:
+    """Creates a device per serial number and allocates what ``item`` lacks."""
+    today = timezone.localdate()
+    for serial in serials:
+        asset = asset_service.create_asset(
+            {
+                "model": model.pk,
+                "serial_number": serial,
+                "status": AssetStatus.IN_STOCK,
+                "location": location_id,
+                "supplier": order.supplier_id,
+                "purchase_order_line": line.pk,
+                "purchase_date": today,
+                "purchase_price": line.unit_price,
+                "warranty_until": _add_months(today, model.warranty_months),
+            },
+            user,
+        )
+        if item is not None and item.quantity_missing:
+            workflow.allocate_asset(item, asset, user, note=_received_note(order))

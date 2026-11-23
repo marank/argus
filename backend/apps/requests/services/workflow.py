@@ -7,7 +7,7 @@ from typing import Any, Final, Literal
 from uuid import UUID
 
 from django.db import transaction
-from django.db.models import F, Q
+from django.db.models import F, Q, QuerySet
 from django.utils import formats, timezone
 from django.utils.translation import gettext as _
 
@@ -111,6 +111,34 @@ def _require_requestable(line: AssetRequestItem) -> None:
         )
 
 
+def _create_item(
+    asset_request: AssetRequest, position: int, item: dict[str, Any], *, from_catalog: bool
+) -> None:
+    """Adds a line to a new request; see ``submit`` for ``from_catalog``."""
+    line = AssetRequestItem(
+        asset_request=asset_request,
+        position=position,
+        category_id=item.get("category"),
+        asset_model_id=item.get("asset_model"),
+        description=(item.get("description") or "").strip(),
+        quantity_requested=item["quantity"],
+        note=item.get("note", ""),
+    )
+    line.full_clean()
+    if from_catalog:
+        _require_requestable(line)
+    if (
+        line.category
+        and not line.asset_model_id
+        and not line.description
+        and not line.category.allows_any_model
+    ):
+        raise BusinessError(
+            _("Please choose a specific model for “%(category)s”.") % {"category": line.category}
+        )
+    line.save()
+
+
 @transaction.atomic
 def submit(
     requester: User,
@@ -139,28 +167,7 @@ def submit(
     )
     _record_created(asset_request, AssetRequestEventKind.CREATED, created_by)
     for position, item in enumerate(items):
-        line = AssetRequestItem(
-            asset_request=asset_request,
-            position=position,
-            category_id=item.get("category"),
-            asset_model_id=item.get("asset_model"),
-            description=(item.get("description") or "").strip(),
-            quantity_requested=item["quantity"],
-            note=item.get("note", ""),
-        )
-        line.full_clean()
-        if from_catalog:
-            _require_requestable(line)
-        if (
-            line.category
-            and not line.asset_model_id
-            and not line.description
-            and not line.category.allows_any_model
-        ):
-            raise BusinessError(
-                _("Please choose a specific model for “%(category)s”.") % {"category": line.category}
-            )
-        line.save()
+        _create_item(asset_request, position, item, from_catalog=from_catalog)
     asset_request.assigned_team = assignment.route(_item_team(item) for item in asset_request.items.all())
     if _needs_approval(asset_request, created_by):
         if asset_request.approvers().filter(pk=requester.pk).exists():
@@ -814,27 +821,42 @@ def auto_allocate(asset_request: AssetRequest, user: User, item_id: UUID | None 
     for item in items:
         if item.is_free_text:
             continue  # needs a decision by IT first
-        filters = {"model_id": item.asset_model_id, "category_id": item.category_id}
         if item.is_software:
-            # Seats for the person only; device licenses need IT to pick the device.
-            for license in pool_licenses(**filters).filter(assign_to=License.AssignTo.USER):
-                if item.quantity_missing < 1:
-                    break
-                if not license.assignments.filter(user=asset_request.requester).exists():
-                    allocate_license(item, license, user, note=automatic)
-                    allocated += 1
-            continue
-        for asset in pool_assets(**filters).order_by("condition", "inventory_number"):
-            if item.quantity_missing < 1:
-                break
-            allocate_asset(item, asset, user, note=automatic)
+            allocated += _auto_allocate_seats(asset_request, item, user, automatic)
+        else:
+            allocated += _auto_allocate_stock(item, user, automatic)
+    return allocated
+
+
+def _auto_allocate_seats(asset_request: AssetRequest, item: AssetRequestItem, user: User, note: str) -> int:
+    """Free license seats for a software line; returns the seats allocated."""
+    allocated = 0
+    filters = {"model_id": item.asset_model_id, "category_id": item.category_id}
+    # Seats for the person only; device licenses need IT to pick the device.
+    for license in pool_licenses(**filters).filter(assign_to=License.AssignTo.USER):
+        if item.quantity_missing < 1:
+            break
+        if not license.assignments.filter(user=asset_request.requester).exists():
+            allocate_license(item, license, user, note=note)
             allocated += 1
-        for consumable in pool_consumables(**filters):
-            missing = item.quantity_missing
-            take = min(missing, consumable.available_quantity)
-            if take > 0:
-                allocate_consumable(item, consumable, take, user, note=automatic)
-                allocated += take
+    return allocated
+
+
+def _auto_allocate_stock(item: AssetRequestItem, user: User, note: str) -> int:
+    """Devices in stock, then consumables, for a hardware line; returns the units allocated."""
+    allocated = 0
+    filters = {"model_id": item.asset_model_id, "category_id": item.category_id}
+    for asset in pool_assets(**filters).order_by("condition", "inventory_number"):
+        if item.quantity_missing < 1:
+            break
+        allocate_asset(item, asset, user, note=note)
+        allocated += 1
+    for consumable in pool_consumables(**filters):
+        missing = item.quantity_missing
+        take = min(missing, consumable.available_quantity)
+        if take > 0:
+            allocate_consumable(item, consumable, take, user, note=note)
+            allocated += take
     return allocated
 
 
@@ -1105,20 +1127,8 @@ def _lent_without_devices(asset_request: AssetRequest) -> bool:
     )
 
 
-def _record_hand_out(
-    asset_request: AssetRequest,
-    user: User,
-    *,
-    method: str,
-    received_by_id: UUID | None,
-    received_by_name: str,
-    signature: str,
-    notes: str,
-    location: str,
-    allocation_notes: dict[UUID, str],
-    handed_out_by_id: UUID | None,
-) -> AssetRequest:
-    requester = asset_request.requester
+def _receiver(requester: User, received_by_id: UUID | None, received_by_name: str) -> tuple[UUID | None, str]:
+    """Who collects the devices (id and name); by default the requester."""
     if received_by_id:
         # The requester always may; anyone else must be a current employee (not a terminal).
         received_by = (
@@ -1133,6 +1143,62 @@ def _record_hand_out(
     elif not received_by_name.strip():
         received_by_id = requester.pk
         received_by_name = requester.display_name
+    return received_by_id, received_by_name
+
+
+def _hand_out_allocation(
+    asset_request: AssetRequest, allocation: AssetRequestAllocation, user: User, note: str, now: datetime
+) -> None:
+    """Gives the device or consumable of ``allocation`` to the requester."""
+    requester = asset_request.requester
+    if allocation.license_id:
+        pass  # the seat was assigned when it was allocated
+    elif allocation.asset:
+        asset = allocation.asset
+        asset.status = AssetStatus.IN_USE
+        asset.assigned_to = requester
+        asset.assigned_since = now
+        asset.save(update_fields=["status", "assigned_to", "assigned_since", "updated_at"])
+        log_event(
+            asset,
+            AssetEventKind.ASSIGNED,
+            user,
+            related_user=requester,
+            asset_request=asset_request,
+            description=note,
+        )
+    else:
+        assert allocation.consumable is not None  # clean(): exactly one of asset, consumable, license
+        move_consumable(
+            allocation.consumable,
+            -allocation.quantity,
+            ConsumableMovement.Reason.ISSUE,
+            user,
+            release_reserved=allocation.quantity,
+            recipient=requester,
+            asset_request=asset_request,
+            note=f"{asset_request.number} {note}".strip(),
+        )
+    allocation.handed_out_at = now
+    allocation.handout_note = note
+    allocation.save(update_fields=["handed_out_at", "handout_note"])
+
+
+def _record_hand_out(
+    asset_request: AssetRequest,
+    user: User,
+    *,
+    method: str,
+    received_by_id: UUID | None,
+    received_by_name: str,
+    signature: str,
+    notes: str,
+    location: str,
+    allocation_notes: dict[UUID, str],
+    handed_out_by_id: UUID | None,
+) -> AssetRequest:
+    requester = asset_request.requester
+    received_by_id, received_by_name = _receiver(requester, received_by_id, received_by_name)
     _validate_handover(method, received_by_name, signature)
 
     now = timezone.now()
@@ -1142,37 +1208,7 @@ def _record_hand_out(
     )
     for allocation in allocations:
         note = allocation_notes.get(allocation.pk, "").strip()
-        if allocation.license_id:
-            pass  # the seat was assigned when it was allocated
-        elif allocation.asset:
-            asset = allocation.asset
-            asset.status = AssetStatus.IN_USE
-            asset.assigned_to = requester
-            asset.assigned_since = now
-            asset.save(update_fields=["status", "assigned_to", "assigned_since", "updated_at"])
-            log_event(
-                asset,
-                AssetEventKind.ASSIGNED,
-                user,
-                related_user=requester,
-                asset_request=asset_request,
-                description=note,
-            )
-        else:
-            assert allocation.consumable is not None  # clean(): exactly one of asset, consumable, license
-            move_consumable(
-                allocation.consumable,
-                -allocation.quantity,
-                ConsumableMovement.Reason.ISSUE,
-                user,
-                release_reserved=allocation.quantity,
-                recipient=requester,
-                asset_request=asset_request,
-                note=f"{asset_request.number} {note}".strip(),
-            )
-        allocation.handed_out_at = now
-        allocation.handout_note = note
-        allocation.save(update_fields=["handed_out_at", "handout_note"])
+        _hand_out_allocation(asset_request, allocation, user, note, now)
 
     Handover.objects.create(
         asset_request=asset_request,
@@ -1429,6 +1465,46 @@ def _quick_assign(
     return asset_request
 
 
+def _nothing_left_out(asset_request: AssetRequest, returnable: QuerySet[AssetRequestAllocation]) -> bool:
+    """A handed-out request with nothing out that comes back: it can complete."""
+    return (
+        asset_request.status == AssetRequestStatus.HANDED_OUT
+        and not returnable.exists()
+        and not asset_request.devices_unrecorded
+    )
+
+
+def _take_back_allocation(
+    asset_request: AssetRequest, allocation: AssetRequestAllocation, user: User, note: str, *, broken: bool
+) -> None:
+    """Puts the device back into stock (or repair, when ``broken``) or frees the license seat."""
+    if allocation.asset:
+        asset = allocation.asset
+        asset.status = AssetStatus.IN_REPAIR if broken else AssetStatus.IN_STOCK
+        asset.assigned_to = None
+        asset.assigned_since = None
+        asset.save(update_fields=["status", "assigned_to", "assigned_since", "updated_at"])
+        log_event(
+            asset,
+            AssetEventKind.RETURNED,
+            user,
+            related_user=asset_request.requester,
+            asset_request=asset_request,
+            description=note,
+        )
+        if broken:
+            log_event(
+                asset,
+                AssetEventKind.STATUS_CHANGED,
+                user,
+                asset_request=asset_request,
+                description=_("Returned damaged from %(number)s") % {"number": asset_request.number},
+            )
+    elif allocation.license_assignment:
+        allocation.license_assignment.delete()
+        allocation.license_assignment = None
+
+
 @transaction.atomic
 def return_devices(
     asset_request: AssetRequest,
@@ -1455,11 +1531,7 @@ def return_devices(
     returnable = open_allocations.filter(Q(asset__isnull=False) | Q(license__isnull=False))
     selected = list(returnable.filter(pk__in=allocation_ids) if allocation_ids else returnable.all())
     if not selected:
-        if (
-            asset_request.status == AssetRequestStatus.HANDED_OUT
-            and not returnable.exists()
-            and not asset_request.devices_unrecorded
-        ):
+        if _nothing_left_out(asset_request, returnable):
             # Only consumables were handed out: nothing comes back, the request is done.
             open_allocations.update(returned_at=now)
             asset_request.status = AssetRequestStatus.COMPLETED
@@ -1474,32 +1546,7 @@ def return_devices(
     )
     for allocation in selected:
         note = allocation_notes.get(allocation.pk, "").strip()
-        if allocation.asset:
-            asset = allocation.asset
-            broken = allocation.pk in damaged
-            asset.status = AssetStatus.IN_REPAIR if broken else AssetStatus.IN_STOCK
-            asset.assigned_to = None
-            asset.assigned_since = None
-            asset.save(update_fields=["status", "assigned_to", "assigned_since", "updated_at"])
-            log_event(
-                asset,
-                AssetEventKind.RETURNED,
-                user,
-                related_user=asset_request.requester,
-                asset_request=asset_request,
-                description=note,
-            )
-            if broken:
-                log_event(
-                    asset,
-                    AssetEventKind.STATUS_CHANGED,
-                    user,
-                    asset_request=asset_request,
-                    description=_("Returned damaged from %(number)s") % {"number": asset_request.number},
-                )
-        elif allocation.license_assignment:
-            allocation.license_assignment.delete()
-            allocation.license_assignment = None
+        _take_back_allocation(asset_request, allocation, user, note, broken=allocation.pk in damaged)
         allocation.returned_at = now
         allocation.device_return = taken_back
         allocation.return_note = note
@@ -1528,11 +1575,7 @@ def return_devices(
         asset_request, taken, damaged_labels, [allocation_label(a) for a in returnable]
     )
     # Devices handed out without being recorded are still out until IT marks them returned.
-    if (
-        asset_request.status == AssetRequestStatus.HANDED_OUT
-        and not returnable.exists()
-        and not asset_request.devices_unrecorded
-    ):
+    if _nothing_left_out(asset_request, returnable):
         open_allocations.update(returned_at=now)
         asset_request.status = AssetRequestStatus.COMPLETED
         asset_request.completed_at = now

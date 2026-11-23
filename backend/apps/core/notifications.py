@@ -265,6 +265,80 @@ def muted() -> Iterator[None]:
         _muted.reset(token)
 
 
+def _site_channels(
+    event: NotificationEvent | DirectNotification, settings: MailSettings
+) -> tuple[bool, bool]:
+    """Whether ``event`` goes out by email and in the app at all (site-wide switches)."""
+    if isinstance(event, DirectNotification):
+        return mail_ready(settings), True
+    by_mail = mail_ready(settings) and site_events(settings.events)[event]
+    in_app = site_events(settings.app_events)[event]
+    return by_mail, in_app
+
+
+def _user_channels(
+    event: NotificationEvent | DirectNotification,
+    user: User,
+    channels: tuple[bool, bool],
+    key: str,
+) -> tuple[bool, bool]:
+    """The channels of ``channels`` (email, app) by which ``user`` gets ``event``."""
+    from apps.core.models import Notification, NotificationLog
+
+    by_mail, in_app = channels
+    mail = by_mail and bool(user.email) and (isinstance(event, DirectNotification) or user_wants(user, event))
+    app = in_app and (isinstance(event, DirectNotification) or user_wants_app(user, event))
+    if key:
+        mail = mail and not NotificationLog.objects.filter(event=event, key=key, recipient=user).exists()
+        app = app and not Notification.objects.filter(event=event, key=key, recipient=user).exists()
+    return mail, app
+
+
+def _create_in_app(
+    event: NotificationEvent | DirectNotification, user: User, subject: str, body: str, key: str, path: str
+) -> None:
+    from apps.core.live import publish
+    from apps.core.models import Notification
+
+    notification = Notification.objects.create(
+        recipient=user,
+        event=event,
+        key=key,
+        title=subject[:255],
+        # The first paragraph says what happened; the rest (items, link) is for the email.
+        text=body.split("\n\n", 1)[0],
+        path=path,
+    )
+    publish("notification", notification.pk, users=[user.pk], staff=False)
+
+
+def _queue_mail(
+    event: NotificationEvent | DirectNotification,
+    user: User,
+    subject: str,
+    body: str,
+    *,
+    settings: MailSettings,
+    key: str,
+    path: str,
+) -> None:
+    from apps.core import tasks
+    from apps.core.jobs import defer
+
+    defer(
+        tasks.send_notification,
+        queueing_lock=f"{event}:{key}:{user.pk}" if key else None,
+        event=event,
+        to=user.email,
+        subject=subject,
+        body=body,
+        url=link(settings, path),
+        language=user.language or "de",
+        key=key,
+        recipient=str(user.pk),
+    )
+
+
 def notify(
     event: NotificationEvent | DirectNotification,
     recipients: Iterable[User],
@@ -282,60 +356,24 @@ def notify(
     app opens it. A ``DirectNotification`` is sent on purpose by IT, so the site-wide
     and personal switches do not apply.
     """
-    from apps.core import tasks
-    from apps.core.jobs import defer
-    from apps.core.live import publish
-    from apps.core.models import MailSettings, Notification, NotificationLog
+    from apps.core.models import MailSettings
 
     if _muted.get():
         return
     settings = MailSettings.load()
-    if isinstance(event, DirectNotification):
-        by_mail, in_app = mail_ready(settings), True
-    else:
-        by_mail = mail_ready(settings) and site_events(settings.events)[event]
-        in_app = site_events(settings.app_events)[event]
-    if not (by_mail or in_app):
+    channels = _site_channels(event, settings)
+    if not any(channels):
         return
 
     for user in recipients:
         if not user.is_active or user.is_terminal:
             continue
-        mail = (
-            by_mail
-            and bool(user.email)
-            and (isinstance(event, DirectNotification) or user_wants(user, event))
-        )
-        app = in_app and (isinstance(event, DirectNotification) or user_wants_app(user, event))
-        if key:
-            mail = mail and not NotificationLog.objects.filter(event=event, key=key, recipient=user).exists()
-            app = app and not Notification.objects.filter(event=event, key=key, recipient=user).exists()
+        mail, app = _user_channels(event, user, channels, key)
         if not (mail or app):
             continue
         with translation.override(user.language or "de"):
             subject, body = render(user)
         if app:
-            notification = Notification.objects.create(
-                recipient=user,
-                event=event,
-                key=key,
-                title=subject[:255],
-                # The first paragraph says what happened; the rest (items, link) is for the email.
-                text=body.split("\n\n", 1)[0],
-                path=path,
-            )
-            publish("notification", notification.pk, users=[user.pk], staff=False)
-        if not mail:
-            continue
-        defer(
-            tasks.send_notification,
-            queueing_lock=f"{event}:{key}:{user.pk}" if key else None,
-            event=event,
-            to=user.email,
-            subject=subject,
-            body=body,
-            url=link(settings, path),
-            language=user.language or "de",
-            key=key,
-            recipient=str(user.pk),
-        )
+            _create_in_app(event, user, subject, body, key, path)
+        if mail:
+            _queue_mail(event, user, subject, body, settings=settings, key=key, path=path)

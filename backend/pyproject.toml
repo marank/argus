@@ -19,6 +19,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "complexipy>=9.0.0",
     "deptry>=0.25.1",
     "django-stubs>=6.1.2",
     "import-linter>=2.17",
@@ -87,6 +88,12 @@ extend-immutable-calls = ["ninja.Query", "ninja.Path", "ninja.Body", "ninja.Form
 "**/tests/**" = ["S105", "S106"]          # passwords in fixtures
 "conftest.py" = ["S106"]                 # passwords in fixtures
 "scripts/**" = ["T201"]                   # command-line tools print their result
+
+[tool.complexipy]
+# Cognitive complexity: nesting costs more than a flat list of cases (C90 counts branches).
+paths = ["apps", "config", "scripts"]
+exclude = ["**/migrations/**"]
+max-complexity-allowed = 15
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings_test"

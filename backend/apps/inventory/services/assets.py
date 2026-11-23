@@ -171,6 +171,20 @@ def _guard_reserved_status(asset: Asset, status: str) -> None:
         )
 
 
+def _change_holder(asset: Asset, previous_user: UUID | None, user: User) -> None:
+    """Logs the return to ``previous_user`` and the hand-out to the new holder; sets the status."""
+    if previous_user:
+        log_event(asset, AssetEventKind.RETURNED, user, related_user_id=previous_user)
+    if asset.assigned_to_id:
+        asset.status = AssetStatus.IN_USE
+        asset.assigned_since = timezone.now()
+        log_event(asset, AssetEventKind.ASSIGNED, user, related_user_id=asset.assigned_to_id)
+    else:
+        asset.assigned_since = None
+        if asset.status == AssetStatus.IN_USE:
+            asset.status = AssetStatus.IN_STOCK
+
+
 @transaction.atomic
 def update_asset(asset: Asset, data: dict[str, Any], user: User) -> Asset:
     data = dict(data)
@@ -184,16 +198,7 @@ def update_asset(asset: Asset, data: dict[str, Any], user: User) -> Asset:
     _apply(asset, data)
 
     if asset.assigned_to_id != previous_user:
-        if previous_user:
-            log_event(asset, AssetEventKind.RETURNED, user, related_user_id=previous_user)
-        if asset.assigned_to_id:
-            asset.status = AssetStatus.IN_USE
-            asset.assigned_since = timezone.now()
-            log_event(asset, AssetEventKind.ASSIGNED, user, related_user_id=asset.assigned_to_id)
-        else:
-            asset.assigned_since = None
-            if asset.status == AssetStatus.IN_USE:
-                asset.status = AssetStatus.IN_STOCK
+        _change_holder(asset, previous_user, user)
 
     if asset.status != previous_status:
         # A new holder brings the status along; the activity log shows the hand-out alone.
