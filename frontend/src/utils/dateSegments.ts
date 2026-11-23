@@ -35,8 +35,8 @@ export function parseFormat(format: string): Segment[] {
   for (const match of format.matchAll(/yyyy|MM|dd|HH|mm/g)) {
     segments.push({
       kind: TOKENS[match[0]]!,
-      start: match.index!,
-      end: match.index! + match[0].length,
+      start: match.index,
+      end: match.index + match[0].length,
     })
   }
   return segments

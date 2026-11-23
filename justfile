@@ -151,7 +151,7 @@ check-backend:
 check-deploy $DEBUG="false":
     uv run --env-file deploy-check.env python manage.py check --deploy --fail-level WARNING
 
-# prettier, oxlint, eslint, knip, types, tests, API types, licenses, build, bundle size, audit
+# prettier, oxlint, eslint, knip, types, tests, copied code, API types, licenses, build, bundle size, audit
 [working-directory: 'frontend']
 check-frontend:
     pnpm install --frozen-lockfile

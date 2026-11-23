@@ -91,7 +91,7 @@ const stale = computed(
 function previewOnShortcut(event: KeyboardEvent) {
   if (event.key !== 'Enter' || !(event.ctrlKey || event.metaKey)) return
   event.preventDefault()
-  runPreview()
+  void runPreview()
 }
 
 async function runPreview() {

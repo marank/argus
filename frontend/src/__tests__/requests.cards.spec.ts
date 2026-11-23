@@ -48,7 +48,7 @@ vi.mock('@/api/accounts', async (importOriginal) => {
 const details = () =>
   Object.fromEntries(
     [...document.body.querySelectorAll('.n-card dt')].map((label) => [
-      label.textContent!.trim(),
+      label.textContent.trim(),
       label.nextElementSibling?.textContent?.replace(/\s+/g, ' ').trim(),
     ]),
   )
@@ -235,7 +235,7 @@ describe('request detail cards', () => {
   describe('the steps', () => {
     const steps = () =>
       [...document.body.querySelectorAll('.n-step')].map((s) => ({
-        title: s.querySelector('.n-step-content-header__title')!.textContent!.trim(),
+        title: s.querySelector('.n-step-content-header__title')!.textContent.trim(),
         current: s.classList.contains('n-step--process-status'),
       }))
 

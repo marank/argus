@@ -28,7 +28,7 @@ const form = reactive({
   designation: '',
   manufacturer: null as Id | null,
   category: null as Id | null,
-  tracking: 'serialized' as Schemas['Tracking'],
+  tracking: 'serialized',
   part_number: '',
 })
 

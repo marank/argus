@@ -66,7 +66,7 @@ const banner = computed(() => {
     const ends = running.value.map((d) => d.ends_on).filter((d): d is string => !!d)
     const until =
       ends.length === running.value.length
-        ? t('requests.delegations.bannerUntil', { date: date(ends.sort().at(-1)!) })
+        ? t('requests.delegations.bannerUntil', { date: date(ends.sort().at(-1)) })
         : t('requests.delegations.bannerOpen')
     return {
       tone: 'running',

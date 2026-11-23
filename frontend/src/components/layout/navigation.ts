@@ -372,8 +372,10 @@ export function activeKey(name: string | undefined, params: Record<string, unkno
     case 'settings-ldap':
       return 'settings'
     case 'masterdata':
-      return `md-${params.resource}`
+      return `md-${String(params.resource)}`
+    case undefined:
+      return ''
     default:
-      return name ?? ''
+      return name
   }
 }

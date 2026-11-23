@@ -27,10 +27,10 @@ import { helpKey, isFieldVisible, sectionFields, type FieldDef, type ResourceDef
 
 const props = defineProps<{
   resource: ResourceDef<any>
-  row: any | null
+  row: any
   readonly?: boolean
   /** For a new record: the record it builds on (see `derive` of the resource). */
-  source?: any | null
+  source?: any
 }>()
 const show = defineModel<boolean>('show', { required: true })
 const emit = defineEmits<{ saved: [] }>()
@@ -59,16 +59,20 @@ function takeOver(source: any) {
   for (const key of derive.copy) {
     const field = fieldsByKey.value.get(key)
     const label = field?.type === 'entity' && field.initial ? field.initial(source) : undefined
-    if (Array.isArray(values[key])) {
-      const own: any[] = Array.isArray(form[key]) ? form[key] : []
-      const ownLabels = field?.type === 'entity' ? (initialOf(field) ?? []) : []
-      form[key] = [...new Set([...own, ...(values[key] as any[])])]
-      if (label) labels[key] = [...ownLabels, ...label]
-    } else {
+    if (Array.isArray(values[key])) mergeList(key, field, values[key], label)
+    else {
       form[key] = values[key]
       if (label) labels[key] = label
     }
   }
+}
+
+/** A list keeps what the form has and gains the source's entries (and their labels). */
+function mergeList(key: string, field: FieldDef | undefined, values: any[], label: any) {
+  const own: any[] = Array.isArray(form[key]) ? form[key] : []
+  const ownLabels = field?.type === 'entity' ? (initialOf(field) ?? []) : []
+  form[key] = [...new Set([...own, ...values])]
+  if (label) labels[key] = [...ownLabels, ...label]
 }
 
 function resetForm() {

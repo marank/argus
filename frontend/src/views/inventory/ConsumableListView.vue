@@ -131,7 +131,7 @@ async function openMovements(item: Schemas['ConsumableOut']) {
 
 function onRowAction(item: Schemas['ConsumableOut'], key: string) {
   if (key === 'in' || key === 'out' || key === 'adjust') openMove(item, key)
-  else if (key === 'movements') openMovements(item)
+  else if (key === 'movements') void openMovements(item)
   else if (key === 'edit') openItem(item)
 }
 
@@ -264,7 +264,7 @@ const movementColumns = computed<DataTableColumns<Schemas['ConsumableMovementOut
   {
     key: 'who',
     title: t('inventory.consumables.recipient'),
-    render: (m) => m.recipient?.display_name ?? m.note ?? '—',
+    render: (m) => m.recipient?.display_name ?? (m.note || '—'),
   },
 ])
 </script>

@@ -101,7 +101,7 @@ async function fetchEvents(info: EventSourceFuncInfo): Promise<EventInput[]> {
 
 function open(entry: CalendarEntry) {
   const to = entryRoute(entry)
-  if (to) router.push(to)
+  if (to) void router.push(to)
 }
 
 const options = computed<CalendarOptions>(() => ({

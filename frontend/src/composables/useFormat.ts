@@ -6,6 +6,7 @@ const startOfDay = (date: Date) =>
   new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
 
 export function useFormat() {
+  // eslint-disable-next-line @typescript-eslint/unbound-method -- vue-i18n binds its composer functions
   const { d, n, t, te } = useI18n()
 
   const isDateOnly = (value: string) => value.length === 10

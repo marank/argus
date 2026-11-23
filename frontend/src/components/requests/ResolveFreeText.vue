@@ -65,7 +65,7 @@ async function assign() {
     </div>
     <CreateModelModal
       v-model:show="showCreate"
-      :assetRequest="assetRequest"
+      :asset-request="assetRequest"
       :item="item"
       @saved="(r) => emit('updated', r)"
     />

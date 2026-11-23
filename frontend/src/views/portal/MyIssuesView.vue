@@ -44,7 +44,7 @@ const grouping = useGroupedRows<Schemas['OwnIssueWithDeviceOut']>({
 })
 
 function openIssue(issue: Schemas['OwnIssueWithDeviceOut']) {
-  router.push({ name: 'portal-issue', params: { id: issue.id } })
+  void router.push({ name: 'portal-issue', params: { id: issue.id } })
 }
 
 const columns = computed(() =>

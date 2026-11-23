@@ -56,7 +56,7 @@ export function entryLabel(entry: Schemas['CalendarEntryOut'], t: Translate): st
       return t('calendar.titles.warranty', { count: Number(entry.title) }, Number(entry.title))
     case 'license':
       return t('calendar.titles.license', { name: entry.title })
-    default:
+    case 'loan':
       return entry.title
   }
 }

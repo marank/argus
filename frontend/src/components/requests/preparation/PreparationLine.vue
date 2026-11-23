@@ -68,6 +68,11 @@ const canAuto = computed(
 
 /** Finished lines fold to their header while preparing, so the open ones stand out. */
 const expanded = ref(false)
+/** A complete line folds its devices away; a click or Enter/Space on the header opens it. */
+const foldable = computed(() => props.editable && complete.value)
+const toggle = () => {
+  if (foldable.value) expanded.value = !expanded.value
+}
 const folded = computed(
   () =>
     props.editable &&
@@ -155,7 +160,7 @@ const licenseOptions = computed(() =>
   })),
 )
 const chosenLicense = computed(() =>
-  candidates.value?.licenses?.find((l) => l.id === licenseId.value),
+  candidates.value?.licenses.find((l) => l.id === licenseId.value),
 )
 const deviceOptions = computed(() =>
   (candidates.value?.devices ?? []).map((d) => ({
@@ -165,8 +170,7 @@ const deviceOptions = computed(() =>
 )
 
 async function loadLicenses() {
-  if (!candidates.value)
-    candidates.value = (await run(() => requestsApi.candidates(props.item.id))) ?? null
+  candidates.value ??= (await run(() => requestsApi.candidates(props.item.id))) ?? null
 }
 
 async function chooseLicense(id: Id) {
@@ -187,10 +191,15 @@ async function assignSeat(data: Partial<Omit<Schemas['AllocateIn'], 'item'>>) {
 
 <template>
   <section class="line">
+    <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- a button (role, tabindex, Enter/Space) while the line can fold, plain text otherwise -->
     <header
       class="head"
-      :class="{ foldable: editable && complete }"
-      @click="editable && complete && (expanded = !expanded)"
+      :class="{ foldable }"
+      :role="foldable ? 'button' : undefined"
+      :tabindex="foldable ? 0 : undefined"
+      :aria-expanded="foldable ? expanded : undefined"
+      @click="toggle"
+      @keydown.enter.space.prevent="toggle"
     >
       <strong>{{ itemLabel(item) }}</strong>
       <span v-if="item.is_free_text" class="free-tag">{{ t('requests.freeText') }}</span>
@@ -232,7 +241,7 @@ async function assignSeat(data: Partial<Omit<Schemas['AllocateIn'], 'item'>>) {
 
     <ResolveFreeText
       v-if="item.is_free_text && ['submitted', 'confirmed'].includes(assetRequest.status)"
-      :assetRequest="assetRequest"
+      :asset-request="assetRequest"
       :item="item"
       @updated="(r) => emit('updated', r)"
     />

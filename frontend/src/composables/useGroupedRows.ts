@@ -36,6 +36,21 @@ export function useGroupedRows<T extends object>(options: {
     : ref<string[]>([])
   let lastInGroup = new WeakSet<object>()
 
+  // A group can show twice while rows sorted for another grouping are still there;
+  // the row keys must stay unique all the same (`seen` counts each key's headers).
+  function startGroup(row: T, key: string, seen: Map<string, number>): GroupRow {
+    const n = seen.get(key) ?? 0
+    seen.set(key, n + 1)
+    return {
+      __group: true,
+      id: n ? `group:${key}:${n}` : `group:${key}`,
+      key,
+      label: options.label(row),
+      count: 0,
+      collapsed: collapsed.value.includes(key),
+    }
+  }
+
   const rows = computed<(T | GroupRow)[]>(() => {
     const source = options.rows()
     if (options.enabled && !options.enabled())
@@ -44,23 +59,12 @@ export function useGroupedRows<T extends object>(options: {
     const last = new WeakSet<object>()
     let header = null as GroupRow | null
     let previous = null as T | null
-    // A group can show twice while rows sorted for another grouping are still there;
-    // the row keys must stay unique all the same.
     const seen = new Map<string, number>()
     for (const row of source) {
       const key = options.key(row)
       if (key !== header?.key) {
         if (previous) last.add(previous)
-        const n = seen.get(key) ?? 0
-        seen.set(key, n + 1)
-        header = {
-          __group: true,
-          id: n ? `group:${key}:${n}` : `group:${key}`,
-          key,
-          label: options.label(row),
-          count: 0,
-          collapsed: collapsed.value.includes(key),
-        }
+        header = startGroup(row, key, seen)
         result.push(header)
       }
       header.count += 1
@@ -116,7 +120,7 @@ export function useGroupedRows<T extends object>(options: {
     if (options.enabled && !options.enabled()) return ''
     const classes = ['group-child']
     if (lastInGroup.has(row)) classes.push('group-child-last')
-    const key = options.key(row as T)
+    const key = options.key(row)
     if (key === entering.value) classes.push('group-child-enter')
     if (key === leaving.value) classes.push('group-child-leave')
     return classes.join(' ')
@@ -146,7 +150,7 @@ export function withGroupHeaders<T>(columns: DataTableColumns<T>): DataTableColu
             }),
           ])
         }
-        if (original) return (original as (r: T, i: number) => VNodeChild)(row, rowIndex)
+        if (original) return original(row, rowIndex)
         const key = 'key' in column ? String(column.key) : ''
         return (row as Record<string, unknown>)[key] as VNodeChild
       },

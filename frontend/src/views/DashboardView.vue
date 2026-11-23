@@ -28,7 +28,7 @@ const clock = computed(() => {
 })
 const auth = useAuthStore()
 const editing = ref(false)
-const dashboard = ref<InstanceType<typeof ItDashboard> | null>(null)
+const dashboard = ref<InstanceType<typeof ItDashboard>>()
 </script>
 
 <template>

@@ -73,7 +73,7 @@ const all = (
 function stringText(item: Element): string {
   return all(item, 't')
     .filter((t) => t.parentElement?.localName !== 'rPh')
-    .map((t) => t.textContent ?? '')
+    .map((t) => t.textContent)
     .join('')
 }
 
@@ -120,7 +120,26 @@ function columnIndex(reference: string): number {
   return index - 1
 }
 
-// eslint-disable-next-line complexity -- one branch per SpreadsheetML cell type
+/** The text of one cell, by its SpreadsheetML type. */
+function cellText(
+  cell: Element,
+  strings: string[],
+  formats: CellFormat[],
+  date1904: boolean,
+): string {
+  const value = all(cell, 'v')[0]?.textContent ?? ''
+  const type = cell.getAttribute('t')
+  if (type === 's') return strings[Number(value)] ?? ''
+  if (type === 'inlineStr') return stringText(all(cell, 'is')[0] ?? cell)
+  if (type === 'b') return value === '1' ? 'TRUE' : 'FALSE'
+  if (type === 'e') return ''
+  if (type === 'str' || value === '') return value
+  const format = formats[Number(cell.getAttribute('s') ?? 0)]
+  // String() gives the shortest form: 1234.5699999999999 → 1234.57, 9.9E+14 → 990000000000000.
+  const number = Number(value)
+  return format ? excelDate(number, format, date1904) : String(number)
+}
+
 function readSheet(
   document: Document,
   strings: string[],
@@ -134,24 +153,12 @@ function readSheet(
     for (const cell of all(row, 'c')) {
       const reference = cell.getAttribute('r')
       const column = reference ? columnIndex(reference) : cells.length
-      const value = all(cell, 'v')[0]?.textContent ?? ''
-      const type = cell.getAttribute('t')
-      let text: string
-      if (type === 's') text = strings[Number(value)] ?? ''
-      else if (type === 'inlineStr') text = stringText(all(cell, 'is')[0] ?? cell)
-      else if (type === 'b') text = value === '1' ? 'TRUE' : 'FALSE'
-      else if (type === 'e') text = ''
-      else if (type === 'str' || value === '') text = value
-      else {
-        const format = formats[Number(cell.getAttribute('s') ?? 0)]
-        // String() gives the shortest form: 1234.5699999999999 → 1234.57, 9.9E+14 → 990000000000000.
-        const number = Number(value)
-        text = format ? excelDate(number, format, date1904) : String(number)
-      }
-      cells[column] = text
+      cells[column] = cellText(cell, strings, formats, date1904)
     }
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- skipped cells leave holes, undefined at runtime
     rows[index] = Array.from(cells, (c) => c ?? '')
   }
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- skipped rows leave holes, undefined at runtime
   return Array.from(rows, (r) => r ?? [])
 }
 

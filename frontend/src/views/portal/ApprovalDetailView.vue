@@ -66,7 +66,7 @@ async function decide() {
   if (updated) {
     // Decided: done for the approver, back to what still waits.
     deciding.value = false
-    router.push({ name: 'portal-approvals' })
+    void router.push({ name: 'portal-approvals' })
   }
 }
 </script>
@@ -107,12 +107,12 @@ async function decide() {
         </NAlert>
         <div class="layout">
           <div class="stack">
-            <RequestedItems :assetRequest="assetRequest" />
-            <RequestInfoCard :assetRequest="assetRequest" />
+            <RequestedItems :asset-request="assetRequest" />
+            <RequestInfoCard :asset-request="assetRequest" />
           </div>
           <div class="stack">
-            <ApprovalCard :assetRequest="assetRequest" />
-            <RequestHistory :assetRequest="assetRequest" />
+            <ApprovalCard :asset-request="assetRequest" />
+            <RequestHistory :asset-request="assetRequest" />
           </div>
         </div>
       </div>

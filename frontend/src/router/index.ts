@@ -29,19 +29,21 @@ function mayOpen(
   return !to.meta.module || features.isOn(to.meta.module)
 }
 
+/** The login page, coming back to `to` afterwards. */
+const loginFor = (to: RouteLocationNormalized) => ({
+  name: 'login',
+  query: to.fullPath !== '/' ? { next: to.fullPath } : {},
+})
+
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
   if (!auth.checked) await auth.fetchCurrentUser()
 
   if (to.meta.public) {
-    if (auth.isAuthenticated && to.name === 'login') {
-      return { name: auth.isTerminal ? 'terminal' : 'dashboard' }
-    }
-    return true
+    const signedIn = auth.isAuthenticated && to.name === 'login'
+    return signedIn ? { name: auth.isTerminal ? 'terminal' : 'dashboard' } : true
   }
-  if (!auth.isAuthenticated) {
-    return { name: 'login', query: to.fullPath !== '/' ? { next: to.fullPath } : {} }
-  }
+  if (!auth.isAuthenticated) return loginFor(to)
   const features = useFeaturesStore()
   if (!features.settings) await features.load().catch(() => undefined)
   // The shared terminal account only ever sees the pickup terminal.
@@ -65,12 +67,7 @@ onUnauthorized(() => {
   if (!auth.isAuthenticated) return
   auth.expire()
   const current = router.currentRoute.value
-  if (!current.meta.public) {
-    router.push({
-      name: 'login',
-      query: current.fullPath !== '/' ? { next: current.fullPath } : {},
-    })
-  }
+  if (!current.meta.public) void router.push(loginFor(current))
 })
 
 export default router

@@ -6,9 +6,9 @@ eines pro Job:
 
 | Rezept | Prüft |
 | --- | --- |
-| `just check-backend` | ruff, mypy, deptry, Schichten, Lizenzen, Migrationen, Django-Checks, Übersetzungen, OpenAPI-Schema, Tests |
+| `just check-backend` | ruff, mypy, kognitive Komplexität (complexipy), deptry, Schichten, Lizenzen, Migrationen, Django-Checks, Übersetzungen, OpenAPI-Schema, Tests |
 | `just check-deploy` | `manage.py check --deploy` mit Produktionseinstellungen (`backend/deploy-check.env`) |
-| `just check-frontend` | prettier, oxlint, ESLint, knip, Typen, Tests, API-Typen, Lizenzen, Build, Bundle-Größe |
+| `just check-frontend` | prettier, oxlint, ESLint, knip, Typen, Tests, kopierter Code (jscpd), API-Typen, Lizenzen, Build, Bundle-Größe |
 | `just check-docs` | den Build der Dokumentation |
 | `just check-workflows` | die GitHub-Workflows (actionlint, zizmor) |
 
@@ -21,6 +21,10 @@ Sicherheitsupdates mehr bekommen, und schlägt 180 Tage vorher fehl
 
 ## Was sie sicherstellen
 
+- **Lesbarkeit:** höchstens 15 kognitive Komplexität pro Funktion (complexipy, sonarjs) und
+  höchstens 3 % kopierter Code (jscpd, `frontend/.jscpd.json`).
+- **Coding-Agenten:** Claude Code formatiert und lintet jede Datei direkt nach der Bearbeitung
+  (`.claude/settings.json`, `scripts/lint_file.py`).
 - **Keine stummgeschalteten Prüfungen:** Jedes `# noqa`, `# type: ignore[…]` und
   `eslint-disable` nennt seine Regeln und eine Begründung; ungenutzte schlagen fehl.
 - **Testreihenfolge:** pytest-randomly mischt die Backend-Tests bei jedem Lauf, sodass ein

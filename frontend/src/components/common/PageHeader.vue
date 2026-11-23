@@ -18,7 +18,7 @@ function goBack() {
   const target = router.resolve(props.back!.to).path
   const previous = (window.history.state as { back?: string } | null)?.back
   if (previous && previous.split('?')[0] === target) router.back()
-  else router.push(props.back!.to)
+  else void router.push(props.back!.to)
 }
 </script>
 

@@ -28,8 +28,8 @@ function menu() {
   const result: Record<string, string[]> = {}
   let section = ''
   for (const node of document.body.querySelectorAll('.n-menu-item-group-title, .menu-text')) {
-    if (node.classList.contains('menu-text')) (result[section] ??= []).push(node.textContent!)
-    else section = node.textContent!.trim()
+    if (node.classList.contains('menu-text')) (result[section] ??= []).push(node.textContent)
+    else section = node.textContent.trim()
   }
   return result
 }

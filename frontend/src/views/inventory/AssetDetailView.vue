@@ -183,7 +183,7 @@ async function assign(user: Id | null) {
 async function remove() {
   if (!(await confirm(t('common.confirmDelete'), { danger: true }))) return
   if (await run(() => assetsApi.remove(props.id))) {
-    router.push({ name: 'assets' })
+    void router.push({ name: 'assets' })
   }
 }
 

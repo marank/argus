@@ -80,85 +80,104 @@ const joined = (parts: (string | null | false)[]) => parts.filter(Boolean).join(
 const byOthers = (entry: Entry, groups: { name?: string }[]) =>
   groups.some((group) => (group.name || undefined) !== entry.by)
 
-/** The details worth a line: who for, which devices, which dates, what was said. */
-// eslint-disable-next-line complexity -- one case per event kind, each a few optional parts
-function details(entry: Entry): string[] {
-  const event = entry.event
-  const lines: (string | null)[] = []
+type Schedule = Schemas['ScheduleEventOut']['data']
+
+const compact = (lines: (string | null | undefined)[]) =>
+  lines.filter((line): line is string => !!line)
+
+/** "Label: a, b" for a non-empty list, else nothing. */
+const listLine = (key: string, values: string[]) =>
+  values.length ? `${t(key)}: ${values.join(', ')}` : null
+
+/** How and where the devices are handed over, for a ready or rescheduled step. */
+const scheduleLine = (d: Schedule) =>
+  joined([
+    d.handover_mode && t(`handover.mode.${d.handover_mode}`),
+    d.pickup_at && weekday(d.pickup_at),
+    d.pickup_location,
+    d.notified === false && t('handover.notNotified'),
+  ])
+
+/** Prepared by more than the person who finished it: who allocated what. */
+function allocationLines(d: Schedule): (string | null)[] {
+  const key = d.items.length ? 'allocatedBy' : 'addedBy'
+  return [
+    ...d.allocated_by.map(
+      (group) =>
+        `${t(`requests.detail.event.${key}`, { name: group.name || '?' })}: ${group.items.join(', ')}`,
+    ),
+    listLine('requests.detail.event.removed', d.removed),
+  ]
+}
+
+/** What the step itself says, by kind. */
+function kindLines(event: Event): (string | null)[] {
   switch (event.kind) {
     case 'created':
     case 'direct':
     case 'quick':
-      if (event.data.requester)
-        lines.push(t('requests.detail.event.for', { name: event.data.requester }))
-      if (event.data.follows) lines.push(t('requests.again.follows') + ' ' + event.data.follows)
-      break
+      return [
+        event.data.requester && t('requests.detail.event.for', { name: event.data.requester }),
+        event.data.follows && t('requests.again.follows') + ' ' + event.data.follows,
+      ]
     case 'approved':
     case 'declined':
     case 'confirmed':
     case 'rejected':
-      lines.push(event.data.comment)
-      break
+      return [event.data.comment]
     case 'assigned':
-      lines.push(
-        joined([event.data.team, event.data.assignee]) || t('requests.detail.event.nobody'),
-      )
-      break
+      return [joined([event.data.team, event.data.assignee]) || t('requests.detail.event.nobody')]
     case 'ready':
-    case 'rescheduled': {
-      const d = event.data
-      lines.push(
-        joined([
-          d.handover_mode && t(`handover.mode.${d.handover_mode}`),
-          d.pickup_at && weekday(d.pickup_at),
-          d.pickup_location,
-          d.notified === false && t('handover.notNotified'),
-        ]),
-      )
-      if (byOthers(entry, d.allocated_by)) {
-        // Prepared by more than the person who finished it: who allocated what.
-        const key = d.items.length ? 'allocatedBy' : 'addedBy'
-        for (const group of d.allocated_by)
-          lines.push(
-            `${t(`requests.detail.event.${key}`, { name: group.name || '?' })}: ${group.items.join(', ')}`,
-          )
-        if (d.removed.length)
-          lines.push(`${t('requests.detail.event.removed')}: ${d.removed.join(', ')}`)
-        return lines.filter((line): line is string => !!line)
-      }
+    case 'rescheduled':
       // Ready again after a change: only what changed (the first time lists everything).
-      if (d.added.length) lines.push(`${t('requests.detail.event.added')}: ${d.added.join(', ')}`)
-      if (d.removed.length)
-        lines.push(`${t('requests.detail.event.removed')}: ${d.removed.join(', ')}`)
-      break
-    }
+      return [
+        scheduleLine(event.data),
+        listLine('requests.detail.event.added', event.data.added),
+        listLine('requests.detail.event.removed', event.data.removed),
+      ]
     case 'handed_out':
-      lines.push(
+      return [
         joined([
           event.data.method && enumLabel('handoverMethod', event.data.method),
           event.data.received_by && `${t('handover.receivedBy')}: ${event.data.received_by}`,
           event.data.location,
         ]),
-      )
-      break
+      ]
     case 'extended':
-      if (event.data.previous && event.data.end_date)
-        lines.push(`${date(event.data.previous)} → ${date(event.data.end_date)}`)
-      break
+      return [
+        event.data.previous && event.data.end_date
+          ? `${date(event.data.previous)} → ${date(event.data.end_date)}`
+          : null,
+      ]
     case 'replaced':
-      if (event.data.by) lines.push(t('requests.replace.by', { number: event.data.by }))
-      break
+      return [event.data.by && t('requests.replace.by', { number: event.data.by })]
+    case 'allocated':
+    case 'released':
+    case 'reopened':
+    case 'reminded':
+    case 'returned':
+    case 'cancelled':
+    case 'completed':
+      return []
   }
+}
+
+/** The details worth a line: who for, which devices, which dates, what was said. */
+function details(entry: Entry): string[] {
+  const event = entry.event
+  if (
+    (event.kind === 'ready' || event.kind === 'rescheduled') &&
+    byOthers(entry, event.data.allocated_by)
+  )
+    return compact([scheduleLine(event.data), ...allocationLines(event.data)])
+  const lines = kindLines(event)
   if (entry.items.length) lines.push(entry.items.join(', '))
   // Handed out or taken back outside the system: the lines without a recorded device.
-  if ((event.kind === 'handed_out' || event.kind === 'returned') && event.data.missing.length)
-    lines.push(`${t('requests.detail.event.withoutDevices')}: ${event.data.missing.join(', ')}`)
-  if (event.kind === 'returned') {
-    if (event.data.damaged.length)
-      lines.push(`${t('requests.returning.damaged')}: ${event.data.damaged.join(', ')}`)
-    lines.push(event.data.notes)
-  }
-  return lines.filter((line): line is string => !!line)
+  if (event.kind === 'handed_out' || event.kind === 'returned')
+    lines.push(listLine('requests.detail.event.withoutDevices', event.data.missing))
+  if (event.kind === 'returned')
+    lines.push(listLine('requests.returning.damaged', event.data.damaged), event.data.notes)
+  return compact(lines)
 }
 </script>
 

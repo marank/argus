@@ -63,7 +63,7 @@ describe('useList', () => {
   it('keeps the rows without a loading state on live updates', async () => {
     const { fetcher, answer } = controlledFetcher()
     const list = mountList(fetcher)
-    list.load()
+    void list.load()
     answer(0, ['a'])
     await flushPromises()
 
@@ -82,8 +82,8 @@ describe('useList', () => {
   it('drops an older answer that arrives after a newer one', async () => {
     const { fetcher, answer } = controlledFetcher()
     const list = mountList(fetcher)
-    list.load()
-    list.load()
+    void list.load()
+    void list.load()
     answer(1, ['new'])
     await flushPromises()
     answer(0, ['old'])
@@ -164,7 +164,7 @@ describe('useList', () => {
     it('keeps rows grouped before the user sort', () => {
       const fetcher = answering()
       const list = mountList(fetcher, { groupOrdering: () => 'category__name' })
-      list.load()
+      void list.load()
       expect(lastParams(fetcher).ordering).toBe('category__name')
       list.onSort({ columnKey: 'name', order: 'ascend', sorter: true })
       expect(lastParams(fetcher).ordering).toBe('category__name,name')

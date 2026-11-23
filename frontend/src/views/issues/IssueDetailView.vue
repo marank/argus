@@ -41,14 +41,14 @@ const conversation = useTemplateRef('conversation')
 async function refresh() {
   issue.value = forIt.value ? await issuesApi.get(props.id) : await portalApi.myIssue(props.id)
   // Opening the report marks IT's updates seen: the menu stops pulsing.
-  if (!forIt.value) menuCounts.refresh()
+  if (!forIt.value) void menuCounts.refresh()
 }
 // Other reports on the device open on the same page.
 watch(
   () => props.id,
   () => {
     issue.value = null
-    refresh()
+    void refresh()
   },
   { immediate: true },
 )
@@ -77,7 +77,7 @@ async function changeStatus(status: Schemas['AssetIssueStatus'], text: string) {
     issue.value = updated
     conversation.value?.clear()
     // A resolved or reopened report changes the open count in the menu.
-    menuCounts.refresh()
+    void menuCounts.refresh()
   }
 }
 

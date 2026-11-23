@@ -5,9 +5,9 @@ before a push. The commands live in the `justfile`; CI calls the same recipes, o
 
 | Recipe | Checks |
 | --- | --- |
-| `just check-backend` | ruff, mypy, deptry, import layers, licenses, migrations, Django checks, translations, OpenAPI schema, tests |
+| `just check-backend` | ruff, mypy, cognitive complexity (complexipy), deptry, import layers, licenses, migrations, Django checks, translations, OpenAPI schema, tests |
 | `just check-deploy` | `manage.py check --deploy` with production settings (`backend/deploy-check.env`) |
-| `just check-frontend` | prettier, oxlint, ESLint, knip, types, tests, API types, licenses, build, bundle size |
+| `just check-frontend` | prettier, oxlint, ESLint, knip, types, tests, copied code (jscpd), API types, licenses, build, bundle size |
 | `just check-docs` | the documentation build |
 | `just check-workflows` | the GitHub workflows (actionlint, zizmor) |
 
@@ -19,6 +19,10 @@ fails 180 days before (`backend/scripts/check_eol.py`). CI runs it in the weekly
 
 ## What they enforce
 
+- **Readability:** at most 15 cognitive complexity per function (complexipy, sonarjs) and at
+  most 3 % copied code (jscpd, `frontend/.jscpd.json`).
+- **Coding agents:** Claude Code formats and lints every file it edits right after the edit
+  (`.claude/settings.json`, `scripts/lint_file.py`).
 - **No silenced checks:** every `# noqa`, `# type: ignore[…]` and `eslint-disable` names its
   rules and says why; unused ones fail.
 - **Test order:** pytest-randomly shuffles the backend tests on every run, so a test that

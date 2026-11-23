@@ -110,6 +110,7 @@ const describe = (w: Schemas['TrendWeekOut']) =>
         <div class="axis mono muted">
           <span v-for="tick in [...ticks].reverse()" :key="tick">{{ tick }}</span>
         </div>
+        <!-- eslint-disable-next-line vuejs-accessibility/mouse-events-have-key-events, vuejs-accessibility/no-static-element-interactions -- each week band below is focusable and shows the same details on focus -->
         <div class="plot" @mouseleave="active = null">
           <span
             v-for="tick in ticks"
@@ -117,6 +118,7 @@ const describe = (w: Schemas['TrendWeekOut']) =>
             class="grid"
             :style="{ bottom: `${(tick / top) * 100}%` }"
           />
+          <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- focusable with tabindex; hover and focus show the same details -->
           <div
             v-for="(w, index) in weeks"
             :key="w.week_start"

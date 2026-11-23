@@ -38,9 +38,11 @@ async function mountPage() {
     items: [OLD],
     count: 1,
   }))
-  const create = vi.fn<(data: object) => Promise<Product>>(
-    async (data) => ({ ...OLD, id: 'p2', ...data }) as Product,
-  )
+  const create = vi.fn<(data: object) => Promise<Product>>(async (data) => ({
+    ...OLD,
+    id: 'p2',
+    ...data,
+  }))
   const resource = defineResource<Product>({
     key: 'models',
     permission: 'models',

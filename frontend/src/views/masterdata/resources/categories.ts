@@ -167,7 +167,9 @@ export default defineResource<Schemas['CategoryOut']>({
           type: 'entity',
           fetcher: categoriesApi.list,
           // The edited row's parent comes as a bare reference, without the path.
-          display: (c: Schemas['CategoryOut']) => c.path?.join(' / ') ?? c.name,
+          display: (
+            c: Pick<Schemas['CategoryOut'], 'name'> & Partial<Pick<Schemas['CategoryOut'], 'path'>>,
+          ) => c.path?.join(' / ') ?? c.name,
           initial: (c: Schemas['CategoryOut']) => c.parent,
         },
         { key: 'icon', label: 'masterdata.fields.icon', type: 'icon' },

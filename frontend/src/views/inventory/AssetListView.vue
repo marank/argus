@@ -387,7 +387,7 @@ const showImport = ref(false)
 const openAsset = (a: Asset) => router.push({ name: 'asset', params: { id: a.id } })
 
 function onSaved(asset: { id: Id }) {
-  router.push({ name: 'asset', params: { id: asset.id } })
+  void router.push({ name: 'asset', params: { id: asset.id } })
 }
 </script>
 

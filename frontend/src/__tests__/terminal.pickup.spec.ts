@@ -272,7 +272,7 @@ describe('TerminalPickupView', () => {
     await open()
     const laptop = deviceRows()[0]!
     await click(laptop.querySelector('button')!)
-    await typeInto(laptop.querySelector('textarea')!, 'Dent on the corner')
+    await typeInto(laptop.querySelector('textarea'), 'Dent on the corner')
     // Closing the note keeps it and marks the device.
     await click(laptop.querySelector('button')!)
     expect(laptop.querySelector('.own-note')?.textContent).toContain('Dent on the corner')
@@ -280,7 +280,7 @@ describe('TerminalPickupView', () => {
     // A note left blank is not sent.
     const mice = deviceRows()[1]!
     await click(mice.querySelector('button')!)
-    await typeInto(mice.querySelector('textarea')!, '   ')
+    await typeInto(mice.querySelector('textarea'), '   ')
     await typeInto(field('Further remarks (optional)'), 'Bag missing')
 
     await click(button('Everything checked'))

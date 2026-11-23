@@ -94,6 +94,7 @@ function onDrop(target: string) {
     <div class="column-settings">
       <div class="section-title">{{ t('table.columns') }}</div>
       <ul class="column-list">
+        <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- reordering columns works by dragging only for now; a keyboard way is still missing -->
         <li
           v-for="column in columns"
           :key="column.key"

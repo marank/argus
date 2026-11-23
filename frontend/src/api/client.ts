@@ -75,7 +75,7 @@ function buildUrl(path: string, query?: Query): string {
 
 function errorMessage(body: unknown, status: number): string {
   if (body && typeof body === 'object' && 'detail' in body) {
-    const detail = (body as { detail: unknown }).detail
+    const detail = body.detail
     if (typeof detail === 'string') return detail
     // Pydantic validation errors: [{loc: [...], msg: '...'}]
     if (Array.isArray(detail)) {

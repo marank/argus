@@ -126,11 +126,11 @@ async function allocateAll() {
       </div>
     </template>
     <p v-if="recording" class="muted hint">{{ t('requests.unrecorded.hint') }}</p>
-    <PreparationScan v-if="scannable" :assetRequest="assetRequest" @updated="updated" />
+    <PreparationScan v-if="scannable" :asset-request="assetRequest" @updated="updated" />
     <PreparationLine
       v-for="item in items"
       :key="item.id"
-      :assetRequest="assetRequest"
+      :asset-request="assetRequest"
       :item="item"
       :editable="editable"
       :pool="pool[item.id]"

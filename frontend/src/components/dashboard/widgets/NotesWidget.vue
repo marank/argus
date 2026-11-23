@@ -30,7 +30,7 @@ const save = useDebounceFn(() => {
 function onInput(value: string) {
   text.value = value
   saved.value = false
-  save()
+  void save()
 }
 </script>
 

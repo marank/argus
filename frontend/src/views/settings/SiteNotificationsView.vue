@@ -52,7 +52,7 @@ async function save() {
   const saved = await run(() => notificationSettingsApi.update(form))
   if (saved) {
     apply(saved)
-    features.load()
+    void features.load()
   }
 }
 </script>

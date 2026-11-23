@@ -467,7 +467,7 @@ describe('NewRequestView', () => {
       expect(bodyText()).toContain('Scanner · any model')
       expect(bodyText()).not.toContain('Handtec HT60')
       // Searching for the model finds the group instead.
-      await typeInto(document.body.querySelector<HTMLInputElement>('.search input')!, 'HT60')
+      await typeInto(document.body.querySelector<HTMLInputElement>('.search input'), 'HT60')
       expect(bodyText()).toContain('Scanner · any model')
       expect(bodyText()).not.toContain('Handtec HT60')
     })
@@ -626,7 +626,7 @@ describe('NewRequestView', () => {
       // A note for the first line.
       await click(document.body.querySelector('.cart .note-link')!)
       await typeInto(field('Note (optional)'), 'With US keyboard')
-      await typeInto(document.body.querySelector('.cart textarea')!, 'Room 4.12')
+      await typeInto(document.body.querySelector('.cart textarea'), 'Room 4.12')
       await click(button('Submit request'))
 
       expect(api.create).toHaveBeenCalledWith({

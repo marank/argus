@@ -38,7 +38,7 @@ const time = computed<string | null>({
 
 function at(dayStart: number, hhmm: string): number {
   const [hours, minutes] = hhmm.split(':').map(Number)
-  return new Date(dayStart).setHours(hours!, minutes!, 0, 0)
+  return new Date(dayStart).setHours(hours!, minutes, 0, 0)
 }
 
 const options = computed(() => {

@@ -21,11 +21,20 @@ const props = withDefaults(
     prefer?: (item: T) => boolean
     multiple?: boolean
     placeholder?: string
+    maxTagCount?: number | 'responsive'
     clearable?: boolean
     disabled?: boolean
     size?: 'small' | 'medium' | 'large'
   }>(),
-  { clearable: true, size: undefined },
+  {
+    params: undefined,
+    initial: undefined,
+    prefer: undefined,
+    placeholder: undefined,
+    maxTagCount: undefined,
+    clearable: true,
+    size: undefined,
+  },
 )
 
 const model = defineModel<Id | Id[] | null>({ default: null })
@@ -143,6 +152,7 @@ function onUpdate(value: Id | Id[] | null) {
     :loading="loading && open"
     :multiple="multiple"
     :placeholder="placeholder"
+    :max-tag-count="maxTagCount"
     :clearable="clearable"
     :disabled="disabled"
     :size="size"

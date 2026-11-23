@@ -99,8 +99,8 @@ function toggleSidebar() {
       </NLayoutHeader>
       <NLayoutContent class="content" :native-scrollbar="false">
         <div class="grid-bg" />
-        <RouterView v-slot="{ Component, route }">
-          <component :is="Component" :key="viewKey(route)" />
+        <RouterView v-slot="{ Component, route: shown }">
+          <component :is="Component" :key="viewKey(shown)" />
         </RouterView>
       </NLayoutContent>
     </NLayout>

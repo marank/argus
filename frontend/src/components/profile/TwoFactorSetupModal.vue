@@ -44,7 +44,7 @@ const codes = ref<string[]>([])
 const stored = ref(false)
 const error = ref('')
 const busy = ref(false)
-const codeInput = ref<InstanceType<typeof CodeInput> | null>(null)
+const codeInput = ref<InstanceType<typeof CodeInput>>()
 
 const RESEND_AFTER = 30
 const resendIn = ref(0)
@@ -119,7 +119,7 @@ const resend = () =>
   })
 
 function onComplete() {
-  if (!busy.value) confirm()
+  if (!busy.value) void confirm()
 }
 
 async function copySecret() {

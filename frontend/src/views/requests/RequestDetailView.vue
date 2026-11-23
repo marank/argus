@@ -220,7 +220,7 @@ const showReturns = computed(
     (assetRequest.value?.returns.length ?? 0) > 0 ||
     (assetRequest.value?.duration === 'temporary' &&
       ['handed_out', 'completed'].includes(status.value ?? '') &&
-      Boolean(assetRequest.value?.handover)),
+      Boolean(assetRequest.value.handover)),
 )
 
 /** What is up next, shown above the cards. Overdue loans have their own alert. */
@@ -249,6 +249,8 @@ const nextStep = computed(() => {
       return t('requests.nextStep.lent', { date: date(r.end_date) })
     case 'completed':
       return r.devices_unrecorded ? t('requests.nextStep.unrecordedPermanent') : null
+    case 'cancelled':
+    case 'rejected':
     default:
       return null
   }
@@ -297,11 +299,11 @@ const menuOptions = computed<DropdownOption[]>(() => {
 function onMenu(key: string) {
   if (key === 'order') showOrder.value = true
   else if (key === 'schedule') openConfirm('schedule')
-  else if (key === 'reopen') reopen()
-  else if (key === 'cancel') cancel()
-  else if (key === 'remind') remind()
+  else if (key === 'reopen') void reopen()
+  else if (key === 'cancel') void cancel()
+  else if (key === 'remind') void remind()
   else if (key === 'replace')
-    router.push({
+    void router.push({
       name: assetRequest.value?.origin === 'direct' ? 'direct-handout' : 'portal-new',
       query: { replace: props.id },
     })
@@ -400,7 +402,7 @@ async function cancel() {
       </PageHeader>
 
       <div class="stack">
-        <NCard size="small"><RequestSteps :assetRequest="assetRequest" /></NCard>
+        <NCard size="small"><RequestSteps :asset-request="assetRequest" /></NCard>
         <NAlert v-if="nextStep" type="info" :bordered="false" :title="t('requests.nextStep.title')">
           {{ nextStep }}
         </NAlert>
@@ -430,56 +432,56 @@ async function cancel() {
         <div class="layout">
           <div class="stack">
             <PreparationPanel
-              :assetRequest="assetRequest"
+              :asset-request="assetRequest"
               :editable="preparing || recording"
               :recording="recording"
               :availability="itemAvailability"
               @updated="(r) => (assetRequest = r)"
             />
-            <RequestHistory :assetRequest="assetRequest" activity-link />
+            <RequestHistory :asset-request="assetRequest" activity-link />
           </div>
           <div class="stack">
-            <AssignmentCard :assetRequest="assetRequest" @updated="(r) => (assetRequest = r)" />
-            <RequestInfoCard :assetRequest="assetRequest" />
-            <ApprovalCard v-if="assetRequest.approval" :assetRequest="assetRequest" />
-            <HandoverCard v-if="assetRequest.handover" :assetRequest="assetRequest" />
+            <AssignmentCard :asset-request="assetRequest" @updated="(r) => (assetRequest = r)" />
+            <RequestInfoCard :asset-request="assetRequest" />
+            <ApprovalCard v-if="assetRequest.approval" :asset-request="assetRequest" />
+            <HandoverCard v-if="assetRequest.handover" :asset-request="assetRequest" />
             <HandoverPlanCard
               v-else-if="
                 ['confirmed', 'ready'].includes(assetRequest.status) &&
                 handoverPlanned(assetRequest)
               "
-              :assetRequest="assetRequest"
+              :asset-request="assetRequest"
             />
-            <ReturnsCard v-if="showReturns" :assetRequest="assetRequest" with-due />
+            <ReturnsCard v-if="showReturns" :asset-request="assetRequest" with-due />
           </div>
         </div>
       </div>
 
       <ConfirmModal
         v-model:show="showConfirm"
-        :assetRequest="assetRequest"
+        :asset-request="assetRequest"
         :mode="confirmMode"
         @saved="(r) => (assetRequest = r)"
       />
       <CreateOrderModal v-model:show="showOrder" :lines="orderLines" />
       <ReadyModal
         v-model:show="showReady"
-        :assetRequest="assetRequest"
+        :asset-request="assetRequest"
         @saved="(r) => (assetRequest = r)"
       />
       <HandOutModal
         v-model:show="showHandOut"
-        :assetRequest="assetRequest"
+        :asset-request="assetRequest"
         @saved="(r) => (assetRequest = r)"
       />
       <ExtendModal
         v-model:show="showExtend"
-        :assetRequest="assetRequest"
+        :asset-request="assetRequest"
         @saved="(r) => (assetRequest = r)"
       />
       <ReturnModal
         v-model:show="showReturn"
-        :assetRequest="assetRequest"
+        :asset-request="assetRequest"
         @saved="(r) => (assetRequest = r)"
       />
       <NModal

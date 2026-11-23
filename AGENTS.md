@@ -99,7 +99,7 @@ tasks (`.vscode/tasks.json`) and CI only call its recipes, so a check is changed
 
 ## House defaults
 
-Checked against django-spa-defaults 1.8.0 (2026-11-23). Accepted deviations and settled judgements,
+Checked against django-spa-defaults 1.8.1 (2026-11-23). Accepted deviations and settled judgements,
 one line each as `- ID: decision and reason` (IDs from the project-defaults checklist); the review
 does not report these again:
 
@@ -115,21 +115,8 @@ does not report these again:
 - BE-14: settled, passes: the remaining saves in API modules write only the endpoint's own object
   (settings singletons, preferences, the generic CRUD layer, a consumable's minimum) or only read
   (`requests/api/queries.py`); nothing else has to happen with them.
-- FE-08: accepted for now: ESLint runs without type information; comes with typed linting
-  (`recommendedTypeChecked`), the next step on the frontend lint.
-- FE-10: accepted for now: comes with typed linting (see FE-08).
-- FE-11: accepted for now: comes with typed linting (see FE-08).
-- FE-12: accepted for now: comes with typed linting (see FE-08).
-- FE-16: accepted for now: `strictTemplates` reports about 300 errors, mostly Naive UI typings
-  (native attributes like `title` on components, union-typed `v-model`); fix them view by view.
-- FE-14: accepted for now: eslint-plugin-vue at `essential`; raise to `strongly-recommended`
-  together with FE-15.
-- FE-15: accepted for now: `vue/no-unused-properties` comes with FE-14.
-- FE-17: accepted for now: no accessibility linting yet; add eslint-plugin-vuejs-accessibility
-  and fix its findings in the forms.
-- BE-17: accepted for now: cognitive complexity is not limited yet (cyclomatic is, at 15); add
-  complexipy and split what it reports.
-- FE-09: accepted for now: as BE-17, with sonarjs `cognitive-complexity`.
-- REPO-22: accepted for now: no duplicate-code check yet; add jscpd with a floor at today's share
-  and lower it to 3 %.
-- REPO-23: accepted for now: no lint hook for coding agents yet.
+- FE-16: accepted for now: the template check's unknown-prop errors (`checkUnknownProps`, part of
+  `strictTemplates`) hit about 60 native attributes we put on Naive UI components (`title`, `role`,
+  `data-test`) that reach the root element by attribute fallthrough; declaring them through
+  `AllowedComponentProps` does not take effect with Naive UI's types. Revisit with the next Naive UI
+  or vue-tsc release; `strictVModel` stays off (Naive UI types every v-model value as its widest union).

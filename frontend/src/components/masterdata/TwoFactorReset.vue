@@ -12,6 +12,7 @@ import { useAuthStore } from '@/stores/auth'
 
 /** Two-factor state of an employee in the edit drawer; IT resets it when the phone is lost. */
 const props = defineProps<{
+  // eslint-disable-next-line vue/no-unused-properties -- every extra section of CrudFormDrawer gets form, row and readonly
   form: Record<string, unknown>
   row?: Schemas['UserOut'] | null
   readonly?: boolean

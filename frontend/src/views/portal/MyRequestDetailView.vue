@@ -164,7 +164,7 @@ const columns: DataTableColumns<Schemas['AssetRequestItemOut']> = [
         <NAlert v-if="replacedBy" type="info" :bordered="false">
           {{ t('requests.replace.replacedHint', { number: replacedBy }) }}
         </NAlert>
-        <NCard size="small"><RequestSteps :assetRequest="assetRequest" /></NCard>
+        <NCard size="small"><RequestSteps :asset-request="assetRequest" /></NCard>
         <div class="layout">
           <div class="stack">
             <NCard :title="t('requests.items')" size="small">
@@ -207,13 +207,13 @@ const columns: DataTableColumns<Schemas['AssetRequestItemOut']> = [
                 :bordered="false"
               />
             </NCard>
-            <RequestHistory :assetRequest="assetRequest" />
+            <RequestHistory :asset-request="assetRequest" />
           </div>
           <!-- First on narrow screens: how and when the devices come matters most. -->
           <div class="stack side">
             <HandoverCard
               v-if="assetRequest.handover"
-              :assetRequest="assetRequest"
+              :asset-request="assetRequest"
               :printable="false"
             />
             <HandoverPlanCard
@@ -221,17 +221,17 @@ const columns: DataTableColumns<Schemas['AssetRequestItemOut']> = [
                 ['confirmed', 'ready'].includes(assetRequest.status) &&
                 handoverPlanned(assetRequest)
               "
-              :assetRequest="assetRequest"
+              :asset-request="assetRequest"
               for-employee
             />
             <ReturnsCard
               v-if="showReturns"
-              :assetRequest="assetRequest"
+              :asset-request="assetRequest"
               with-due
               :printable="false"
             />
-            <RequestInfoCard :assetRequest="assetRequest" />
-            <ApprovalCard v-if="assetRequest.approval" :assetRequest="assetRequest" />
+            <RequestInfoCard :asset-request="assetRequest" />
+            <ApprovalCard v-if="assetRequest.approval" :asset-request="assetRequest" />
           </div>
         </div>
         <!-- Withdrawing is rare and final: a quiet button at the end, asking first. -->

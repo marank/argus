@@ -22,7 +22,7 @@ async function load() {
 onMounted(load)
 watch(search, useDebounceFn(load, 250))
 // New pickups prepared by IT appear without touching the screen.
-useIntervalFn(load, 30000)
+useIntervalFn(() => void load(), 30000)
 </script>
 
 <template>

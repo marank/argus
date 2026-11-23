@@ -70,12 +70,12 @@ async function onSelect(key: string) {
     const lang = locale.value === 'de' ? 'de' : 'en'
     window.open(`/docs/${lang}/${auth.isItStaff ? 'it' : 'employees'}/`, '_blank')
   } else if (kind === 'admin') window.open('/admin/', '_blank')
-  else if (kind === 'appearance') router.push({ name: 'profile-appearance' })
-  else if (kind === 'notifications') router.push({ name: 'profile-notifications' })
-  else if (kind === 'security') router.push({ name: 'profile-security' })
+  else if (kind === 'appearance') void router.push({ name: 'profile-appearance' })
+  else if (kind === 'notifications') void router.push({ name: 'profile-notifications' })
+  else if (kind === 'security') void router.push({ name: 'profile-security' })
   else if (kind === 'logout') {
     await auth.logout()
-    router.push({ name: 'login' })
+    void router.push({ name: 'login' })
   }
 }
 

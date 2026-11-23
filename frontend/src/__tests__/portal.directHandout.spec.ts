@@ -291,7 +291,7 @@ describe('NewRequestView: direct hand-out', () => {
             quantity_missing: 0,
             allocations: [
               allocation({
-                asset: { id, inventory_number, model, name, serial_number, status } as never,
+                asset: { id, inventory_number, model, name, serial_number, status },
               }),
               allocation({
                 id: 'al2',

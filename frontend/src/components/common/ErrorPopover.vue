@@ -92,7 +92,7 @@ function onKeyDown() {
 }
 /** Hovering or focusing a refused field shows its error. */
 function onEnter(event: Event) {
-  const field = (event.target as Element | null)?.closest?.<HTMLElement>('[data-field-error]')
+  const field = (event.target as Element | null)?.closest<HTMLElement>('[data-field-error]')
   if (field && field !== errorPopover.anchor) showError(field.dataset.fieldError ?? '', field)
 }
 

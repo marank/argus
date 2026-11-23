@@ -210,9 +210,7 @@ describe('auth store', () => {
   it('does not save preferences when signed out', async () => {
     const auth = useAuthStore()
     await auth.changeNotifications({ notification_settings: {}, app_notification_settings: {} })
-    await auth.changeDashboard({ widgets: [] } as unknown as Parameters<
-      typeof auth.changeDashboard
-    >[0])
+    await auth.changeDashboard({ widgets: [] })
     expect(api.updatePreferences).not.toHaveBeenCalled()
   })
 })

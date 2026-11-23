@@ -55,5 +55,5 @@ export const withIcon = (
 
 function titleWhenCut(event: MouseEvent) {
   const element = event.currentTarget as HTMLElement
-  element.title = element.scrollWidth > element.clientWidth ? (element.textContent ?? '') : ''
+  element.title = element.scrollWidth > element.clientWidth ? element.textContent : ''
 }

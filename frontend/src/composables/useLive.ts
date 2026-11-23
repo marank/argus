@@ -36,7 +36,7 @@ export function useLive(
   }
 
   const unsubscribe = live.subscribe((event) => {
-    if (matches(event)) run()
+    if (matches(event)) void run()
   })
   watch(waiting, (now) => {
     if (!now && pending) {

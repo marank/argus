@@ -53,7 +53,7 @@ const header = reactive({
 })
 const lines = ref<(Schemas['PurchaseOrderLineIn'] & { price: number | null })[]>([])
 const ordered = reactive({
-  order_date: Date.now() as number | null,
+  order_date: Date.now(),
   expected_date: null as number | null,
   supplier_reference: '',
 })
@@ -129,7 +129,8 @@ async function cancelOrder() {
 
 async function remove() {
   if (!(await confirm(t('common.confirmDelete'), { danger: true }))) return
-  if ((await run(() => ordersApi.remove(props.id))) !== undefined) router.push({ name: 'orders' })
+  if ((await run(() => ordersApi.remove(props.id))) !== undefined)
+    void router.push({ name: 'orders' })
 }
 
 function openOrdered() {

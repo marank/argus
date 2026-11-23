@@ -35,33 +35,33 @@ async function load() {
 onMounted(store.refresh)
 // New ones and those read in another tab; an open list follows along.
 useLive(['notification'], () => {
-  store.refresh()
-  if (open.value) load()
+  void store.refresh()
+  if (open.value) void load()
 })
 // Without live updates the count follows on every page change and when the tab comes back.
 const live = useLiveStore()
 const route = useRoute()
 const visibility = useDocumentVisibility()
 watch([() => route.fullPath, visibility], ([, visible]) => {
-  if (!live.connected && visible === 'visible') store.refresh()
+  if (!live.connected && visible === 'visible') void store.refresh()
 })
 
 function toggle(show: boolean) {
   open.value = show
   if (show) {
-    load()
-    store.refresh()
+    void load()
+    void store.refresh()
   }
 }
 
-async function choose(item: Schemas['NotificationOut']) {
+function choose(item: Schemas['NotificationOut']) {
   open.value = false
   if (!item.read_at) {
     item.read_at = new Date().toISOString()
     store.unread = Math.max(store.unread - 1, 0)
     notificationsApi.read(item.id).catch(() => store.refresh())
   }
-  if (item.path) router.push(item.path)
+  if (item.path) void router.push(item.path)
 }
 
 async function readAll() {
@@ -72,7 +72,7 @@ async function readAll() {
 
 function settings() {
   open.value = false
-  router.push({ name: 'profile-notifications' })
+  void router.push({ name: 'profile-notifications' })
 }
 </script>
 

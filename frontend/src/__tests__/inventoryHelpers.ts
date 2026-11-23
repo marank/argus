@@ -378,7 +378,8 @@ export async function addFilter(wrapper: VueWrapper, label: string) {
   }
   const options = (field!.props('options') ?? []) as { value: string; label: string }[]
   const option = options.find((o) => o.label === label)
-  if (!option) throw new Error(`no filter field "${label}" in ${options.map((o) => o.label)}`)
+  if (!option)
+    throw new Error(`no filter field "${label}" in ${options.map((o) => o.label).join(', ')}`)
   field!.vm.$emit('update:value', option.value)
   await flushPromises()
 }

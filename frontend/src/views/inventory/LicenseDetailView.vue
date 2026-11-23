@@ -95,7 +95,7 @@ async function remove() {
   )
     return
   if ((await run(() => licensesApi.remove(license.value!.id))) !== undefined)
-    router.push({ name: 'licenses' })
+    void router.push({ name: 'licenses' })
 }
 </script>
 

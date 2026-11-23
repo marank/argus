@@ -37,9 +37,9 @@ async function lookup(value: string) {
   }
   code.value = ''
   if (found.kind === 'asset') {
-    router.push({ name: 'asset', params: { id: found.assets[0]!.id } })
+    void router.push({ name: 'asset', params: { id: found.assets[0]!.id } })
   } else if (found.kind === 'model') {
-    router.push({ name: 'assets', query: { model: found.models[0]!.id } })
+    void router.push({ name: 'assets', query: { model: found.models[0]!.id } })
   } else if (found.kind === 'multiple') {
     result.value = found
     showResults.value = true
@@ -53,10 +53,10 @@ async function lookup(value: string) {
 
 function open(to: Parameters<typeof router.push>[0]) {
   showResults.value = false
-  router.push(to)
+  void router.push(to)
 }
 
-useScanner(lookup)
+useScanner((code) => void lookup(code))
 </script>
 
 <template>

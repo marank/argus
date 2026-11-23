@@ -15,8 +15,23 @@ type Value = number | [number, number] | null
  */
 defineOptions({ inheritAttrs: false })
 const props = withDefaults(
-  defineProps<{ type?: 'date' | 'datetime' | 'daterange'; clearable?: boolean }>(),
-  { type: 'date', clearable: false },
+  defineProps<{
+    type?: 'date' | 'datetime' | 'daterange'
+    clearable?: boolean
+    // Handed on to NDatePicker.
+    isDateDisabled?: (date: number) => boolean
+    placeholder?: string
+    disabled?: boolean
+    size?: 'small' | 'medium' | 'large'
+  }>(),
+  {
+    type: 'date',
+    clearable: false,
+    isDateDisabled: undefined,
+    placeholder: undefined,
+    disabled: false,
+    size: undefined,
+  },
 )
 const model = defineModel<Value>('value', { default: null })
 const { t, locale } = useI18n()
@@ -88,6 +103,10 @@ function iconButton(icon: Component, label: string, onClick: () => void, disable
       v-model:show="open"
       :type="type"
       :clearable="clearable"
+      :is-date-disabled="isDateDisabled"
+      :placeholder="placeholder"
+      :disabled="disabled"
+      :size="size"
       :actions="actions"
       :bind-calendar-months="type === 'daterange'"
     >

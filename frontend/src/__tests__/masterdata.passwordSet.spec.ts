@@ -47,8 +47,8 @@ describe('setting the password of an employee', () => {
       ...document.body.querySelectorAll<HTMLInputElement>('.n-modal input[type="password"]'),
     ]
     expect(fields).toHaveLength(2)
-    await typeInto(fields[0]!, 'Terminal-2026!')
-    await typeInto(fields[1]!, 'Terminal-2026!')
+    await typeInto(fields[0], 'Terminal-2026!')
+    await typeInto(fields[1], 'Terminal-2026!')
     await click([...document.body.querySelectorAll('.n-modal button')].at(-1) as HTMLElement)
     expect(setPassword).toHaveBeenCalledWith('u2', 'Terminal-2026!')
     expect(pageText()).toContain('Password: set')

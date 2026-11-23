@@ -10,6 +10,7 @@ import { ApiError } from '@/api/client'
 /** Live preview of the next numbers while the pattern is being edited. */
 const props = defineProps<{
   form: Partial<Schemas['NumberSequenceOut']>
+  // eslint-disable-next-line vue/no-unused-properties -- every extra section of CrudFormDrawer gets form, row and readonly
   row?: Schemas['NumberSequenceOut'] | null
 }>()
 const { t } = useI18n()

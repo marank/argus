@@ -58,7 +58,7 @@ const live = useLiveStore()
 watch(() => route.path, menuCounts.refresh, { immediate: true })
 useLive(['request', 'issue'], menuCounts.refresh)
 useIntervalFn(() => {
-  if (!live.connected) menuCounts.refresh()
+  if (!live.connected) void menuCounts.refresh()
 }, 60_000)
 
 /**

@@ -38,12 +38,12 @@ const { run } = useAction()
 const treeView = useStorage(`argus.tree.${props.resource.key}`, true)
 const treeActive = computed(() => !!props.resource.tree && treeView.value)
 
-const editing = ref<any | null>(null)
+const editing = ref<any>(null)
 /** A new record builds on this one (see `derive` of the resource). */
-const source = ref<any | null>(null)
+const source = ref<any>(null)
 const showForm = ref(false)
 
-function edit(row: any | null) {
+function edit(row: any) {
   editing.value = row
   source.value = null
   showForm.value = true
@@ -60,7 +60,7 @@ async function remove(row: any) {
     !(await confirm(`${props.resource.title(row)}: ${t('common.confirmDelete')}`, { danger: true }))
   )
     return
-  if ((await run(() => props.resource.api.remove(row.id))) !== undefined) list.load()
+  if ((await run(() => props.resource.api.remove(row.id))) !== undefined) void list.load()
 }
 
 const filters = computed<TableFilter[]>(() =>
@@ -146,7 +146,10 @@ const columns = computed<TableColumn<any>[]>(() => [
                     size: 'tiny',
                     type: 'error',
                     title: t('common.delete'),
-                    onClick: (e: Event) => (e.stopPropagation(), remove(row)),
+                    onClick: (e: Event) => {
+                      e.stopPropagation()
+                      void remove(row)
+                    },
                   },
                   { icon: () => h(Trash2, { size: 13 }) },
                 )

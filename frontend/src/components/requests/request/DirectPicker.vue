@@ -95,7 +95,7 @@ async function scan(code = query.value) {
   emit('addAsset', asset)
   query.value = ''
 }
-useScanner(scan)
+useScanner((code) => void scan(code))
 
 const heading = computed(() =>
   query.value.trim()

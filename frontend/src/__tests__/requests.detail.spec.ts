@@ -162,8 +162,8 @@ describe('RequestDetailView', () => {
 
       await click('Confirm')
       expect(openModal().textContent).toContain('Confirm request')
-      typeInto(openModal().querySelector('.qty input'), '2')
-      typeInto(openModal().querySelector('textarea'), 'Only two left.')
+      await typeInto(openModal().querySelector('.qty input'), '2')
+      await typeInto(openModal().querySelector('textarea'), 'Only two left.')
       await flushPromises()
       await click('Confirm')
 
@@ -183,7 +183,7 @@ describe('RequestDetailView', () => {
       await click('Reject')
       expect(button('Reject').disabled).toBe(true)
 
-      typeInto(openModal().querySelector('textarea'), 'No budget this year.')
+      await typeInto(openModal().querySelector('textarea'), 'No budget this year.')
       await flushPromises()
       await click('Reject')
 
@@ -195,7 +195,7 @@ describe('RequestDetailView', () => {
       api.requests.reject.mockRejectedValue(new ApiError(409, 'The request is already confirmed.'))
       await open(makeRequest())
       await click('Reject')
-      typeInto(openModal().querySelector('textarea'), 'No budget this year.')
+      await typeInto(openModal().querySelector('textarea'), 'No budget this year.')
       await flushPromises()
       await click('Reject')
 
@@ -439,7 +439,10 @@ describe('RequestDetailView', () => {
       await click('Hand out')
 
       expect(openModal().querySelectorAll('.device input')).toHaveLength(2)
-      typeInto(rowWith('INV-002', openModal(), '.device').querySelector('input'), 'Charger missing')
+      await typeInto(
+        rowWith('INV-002', openModal(), '.device').querySelector('input'),
+        'Charger missing',
+      )
       await flushPromises()
       await click('Hand out')
 
@@ -459,7 +462,10 @@ describe('RequestDetailView', () => {
       api.requests.handOut.mockResolvedValue(lentRequest())
       await open(readyRequest({ handover_mode: 'delivery' }))
       await click('Hand out')
-      typeInto(openModal().querySelector('input[placeholder="e.g. office 2.14"]'), 'Office 2.14')
+      await typeInto(
+        openModal().querySelector('input[placeholder="e.g. office 2.14"]'),
+        'Office 2.14',
+      )
       await flushPromises()
       await click('Hand out')
 
@@ -594,8 +600,8 @@ describe('RequestDetailView', () => {
       expect(openModal().querySelectorAll('.device')).toHaveLength(2)
       const broken = rowWith('INV-002', openModal(), '.device')
       control('checkbox', 'Damaged', broken).click()
-      typeInto(broken.querySelector('input'), 'Cracked display')
-      typeInto(openModal().querySelector('textarea'), 'Returned at the desk.')
+      await typeInto(broken.querySelector('input'), 'Cracked display')
+      await typeInto(openModal().querySelector('textarea'), 'Returned at the desk.')
       await flushPromises()
       await click('Take back')
 

@@ -25,7 +25,7 @@ export const useAuthStore = defineStore('auth', () => {
     resource: Schemas['ResourceKey'],
     level: Schemas['PermissionLevel'] = 'read',
   ): boolean {
-    const granted = user.value?.permissions?.[resource]
+    const granted = user.value?.permissions[resource]
     return level === 'read' ? !!granted : granted === 'write'
   }
 

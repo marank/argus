@@ -98,7 +98,7 @@ function extend(row: Schemas['DueReturnOut']) {
     <ExtendModal
       v-if="extending"
       v-model:show="showExtend"
-      :assetRequest="extending"
+      :asset-request="extending"
       @saved="load"
     />
   </NCard>

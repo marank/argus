@@ -90,7 +90,7 @@ function choose(wrapper: VueWrapper, index: number, value: string) {
 /** Types (or scans) a code into the scan field and presses Enter. */
 async function scan(code: string) {
   const input = document.body.querySelector<HTMLInputElement>('.scan-combobox input')!
-  typeInto(input, code)
+  await typeInto(input, code)
   await flushPromises()
   input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
   await flushPromises()
@@ -102,7 +102,7 @@ const rowTexts = () =>
   rows().map((r) => {
     const row = r.cloneNode(true) as HTMLElement
     row.querySelectorAll('.by').forEach((by) => by.remove())
-    return row.textContent!.replace(/\s+/g, ' ').trim()
+    return row.textContent.replace(/\s+/g, ' ').trim()
   })
 
 describe('PreparationPanel', () => {
@@ -151,7 +151,7 @@ describe('PreparationPanel', () => {
         allocations: [device('INV-001', 'Laptop 14')],
       }),
     ])
-    const counts = document.body.querySelector('.count')!.textContent!.replace(/\s+/g, ' ')
+    const counts = document.body.querySelector('.count')!.textContent.replace(/\s+/g, ' ')
     expect(counts).toMatch(/1\s*\/\s*2/)
     expect(counts).toContain('(3)')
     expect(rowTexts()).toEqual([
@@ -404,11 +404,11 @@ describe('PreparationPanel', () => {
       api.requests.removeAllocation.mockResolvedValue(after)
       const item = cables({
         allocations: [
-          makeAllocation({ id: 'a1', quantity: 3, consumable: stock('c1', 'Store', 7) as never }),
+          makeAllocation({ id: 'a1', quantity: 3, consumable: stock('c1', 'Store', 7) }),
           makeAllocation({
             id: 'a2',
             quantity: 2,
-            consumable: stock('c2', 'Basement', 6) as never,
+            consumable: stock('c2', 'Basement', 6),
           }),
         ],
       })
@@ -586,7 +586,7 @@ describe('PreparationPanel', () => {
       expect(buttons('Create and assign')[0]!.disabled).toBe(true)
 
       chooseManufacturer(wrapper, 'man-1')
-      typeInto(inputs[0], 'USB-C Dock')
+      await typeInto(inputs[0], 'USB-C Dock')
       await flushPromises()
       await click('Create and assign')
 

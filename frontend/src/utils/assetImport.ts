@@ -142,6 +142,7 @@ export function loadSettings(headers: string[]): ImportSettings | null {
     // Keep only fields this version knows, with columns the file has.
     const mapping = emptyMapping()
     for (const field of IMPORT_FIELDS) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- stored by an older version, maybe without it
       const column = settings.mapping?.[field]
       if (typeof column === 'number' && column < headers.length) mapping[field] = column
     }

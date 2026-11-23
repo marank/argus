@@ -103,7 +103,7 @@ watch(opened, (isOpen) => {
   if (!narrow.value) return
   const scroller = scrollerOf(root.value)
   if (isOpen) overviewScroll = scroller?.scrollTop ?? 0
-  nextTick(() => scroller?.scrollTo?.({ top: isOpen ? 0 : overviewScroll }))
+  void nextTick(() => scroller?.scrollTo({ top: isOpen ? 0 : overviewScroll }))
 })
 
 function choose(id: Id) {

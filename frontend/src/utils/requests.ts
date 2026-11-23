@@ -38,7 +38,7 @@ export function allocationCode(
 
 /** Devices and license seats come back; consumables are used up. */
 export function isReturnable(allocation: Schemas['AllocationOut']): boolean {
-  return Boolean(allocation.asset || allocation.license)
+  return Boolean(allocation.asset ?? allocation.license)
 }
 
 /**

@@ -36,7 +36,7 @@ function onInput(value: string | null) {
   code.value = value ?? ''
   arrowed.value = false
   typing.value = Boolean(code.value.trim())
-  search(code.value.trim())
+  void search(code.value.trim())
 }
 
 /**
@@ -57,6 +57,7 @@ function onKeydown(event: KeyboardEvent) {
 
 <template>
   <!-- Capture phase: decide about Enter before Naive's own handler sees it. -->
+  <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- listens to the input inside, which has the focus -->
   <div class="scan-combobox" @keydown.capture="onKeydown">
     <NAutoComplete
       :value="code"

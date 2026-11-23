@@ -352,9 +352,9 @@ async function submit() {
   // IT continues on the request itself; employees follow it in the portal.
   if (auth.can('requests')) {
     message.success(t('requests.new.submitted', { number: assetRequest.number }))
-    router.push({ name: 'request', params: { id: assetRequest.id } })
+    void router.push({ name: 'request', params: { id: assetRequest.id } })
   } else {
-    router.push({
+    void router.push({
       name: 'portal-request',
       params: { id: assetRequest.id },
       query: { created: '1' },
@@ -379,7 +379,7 @@ const step = ref<Step>('period')
  * gesture too) leads to the details instead of out of the request. Reloaded on it, the
  * details are gone, so the page starts on them again.
  */
-if (route.query.step) router.replace({ query: { ...route.query, step: undefined } })
+if (route.query.step) void router.replace({ query: { ...route.query, step: undefined } })
 watch(
   () => route.query.step,
   (value) => go(value === 'catalog' ? 'catalog' : 'period'),
@@ -401,7 +401,7 @@ function go(next: Step) {
   if (next === step.value) return
   motion.value = STEPS.indexOf(next) > STEPS.indexOf(step.value) ? 'ar-forward' : 'ar-back'
   step.value = next
-  nextTick(() => scrollerOf(head.value)?.scrollTo?.({ top: 0 }))
+  void nextTick(() => scrollerOf(head.value)?.scrollTo({ top: 0 }))
 }
 
 /** On a phone an open group sits between: back leads to all groups first. */
@@ -427,14 +427,15 @@ function needsPurpose(): boolean {
   purposeMissing.value = true
   cartOpen.value = false
   toDetails()
-  nextTick(() => purposeCard.value?.focus())
+  void nextTick(() => purposeCard.value?.focus())
   return true
 }
 
 function toCatalog() {
   if (needsPurpose()) return
   catalogOpened.value = false
-  if (route.query.step !== 'catalog') router.push({ query: { ...route.query, step: 'catalog' } })
+  if (route.query.step !== 'catalog')
+    void router.push({ query: { ...route.query, step: 'catalog' } })
 }
 
 /** Back to the details from the cart panel. */
@@ -500,7 +501,7 @@ async function cancel() {
   }
   // On the selection its own history entry lies in between.
   if (cameFrom) router.go(route.query.step === 'catalog' ? -2 : -1)
-  else router.push({ name: 'dashboard' })
+  else void router.push({ name: 'dashboard' })
 }
 
 useEventListener(window, 'beforeunload', (event: BeforeUnloadEvent) => {

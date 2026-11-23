@@ -126,54 +126,61 @@ export function useSegmentedDateInput(root: Ref<HTMLElement | null>, format: () 
     }
   }
 
-  // eslint-disable-next-line complexity -- one branch per key
   function onKeydown(event: KeyboardEvent) {
     const input = event.target as HTMLInputElement
     if (!(input instanceof HTMLInputElement) || !inputs().includes(input)) return
     if (event.ctrlKey || event.metaKey || event.altKey) return
     if (['Tab', 'Enter', 'Escape'].includes(event.key)) return
-
-    const all = segments()
-    const s = stateOf(input)
-    const index = Math.min(s.segment, all.length - 1)
-    const kind = all[index]!.kind
-    const handled = () => {
+    if (handleKey(event, input)) {
       event.preventDefault()
       event.stopPropagation()
     }
+  }
 
-    if (/^\d$/.test(event.key)) {
-      handled()
-      typeInto(input, event.key)
-    } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-      handled()
-      const delta = (event.key === 'ArrowUp' ? 1 : -1) * (event.shiftKey ? 10 : 1)
-      s.buffer = ''
-      write(input, step(currentParts(input), kind, delta))
-      select(input, index)
-    } else if (event.key === 'ArrowRight' || SEPARATORS.has(event.key)) {
-      handled()
-      s.buffer = ''
-      move(input, index + 1)
-    } else if (event.key === 'ArrowLeft') {
-      handled()
-      s.buffer = ''
-      move(input, index - 1)
-    } else if (event.key === 'Home' || event.key === 'End') {
-      handled()
-      select(input, event.key === 'Home' ? 0 : all.length - 1)
-    } else if (event.key === 'Backspace' || event.key === 'Delete') {
+  /** Acts on the key; true when the browser must not act on it as well. */
+  function handleKey(event: KeyboardEvent, input: HTMLInputElement): boolean {
+    const key = event.key
+    if (/^\d$/.test(key)) {
+      typeInto(input, key)
+      return true
+    }
+    if (key === 'Backspace' || key === 'Delete') {
       // Clearing the whole field (everything selected) stays possible.
       const everything = input.selectionStart === 0 && input.selectionEnd === input.value.length
-      if (!everything || !input.value) {
-        handled()
-        s.buffer = ''
-        select(input, index)
-      }
-    } else if (event.key.length === 1) {
-      handled() // letters and other characters have no place in a date
+      if (everything && input.value) return false
+      stateOf(input).buffer = ''
+      select(input, currentSegment(input))
+      return true
     }
+    // Letters and other characters have no place in a date.
+    return navigate(event, input) || key.length === 1
   }
+
+  /** Arrow, Home, End and separator keys: step the value or move between segments. */
+  function navigate(event: KeyboardEvent, input: HTMLInputElement): boolean {
+    const key = event.key
+    const index = currentSegment(input)
+    if (key === 'ArrowUp' || key === 'ArrowDown') {
+      const delta = (key === 'ArrowUp' ? 1 : -1) * (event.shiftKey ? 10 : 1)
+      stateOf(input).buffer = ''
+      write(input, step(currentParts(input), segments()[index]!.kind, delta))
+      select(input, index)
+      return true
+    }
+    if (key === 'ArrowRight' || key === 'ArrowLeft' || SEPARATORS.has(key)) {
+      stateOf(input).buffer = ''
+      move(input, key === 'ArrowLeft' ? index - 1 : index + 1)
+      return true
+    }
+    if (key === 'Home' || key === 'End') {
+      select(input, key === 'Home' ? 0 : segments().length - 1)
+      return true
+    }
+    return false
+  }
+
+  const currentSegment = (input: HTMLInputElement) =>
+    Math.min(stateOf(input).segment, segments().length - 1)
 
   let pointerDown = false
   const onMouseDown = () => (pointerDown = true)

@@ -81,11 +81,11 @@ export function useList<T>(
     prefix: () => t('common.records', { count: count.value }),
     onUpdatePage: (value: number) => {
       page.value = value
-      load()
+      void load()
     },
     onUpdatePageSize: (value: number) => {
       pageSize.value = value
-      reload()
+      void reload()
     },
   }))
 
@@ -98,7 +98,7 @@ export function useList<T>(
     const sorter = Array.isArray(state) ? state[0] : state
     if (!sorter || !sorter.order) ordering.value = options.ordering ?? ''
     else ordering.value = `${sorter.order === 'descend' ? '-' : ''}${String(sorter.columnKey)}`
-    reload()
+    void reload()
   }
 
   return {

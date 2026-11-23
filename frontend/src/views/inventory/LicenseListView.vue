@@ -265,7 +265,7 @@ const columns = computed<TableColumn<License>[]>(() => [
 ])
 
 function open(id: Id) {
-  router.push({ name: 'license', params: { id } })
+  void router.push({ name: 'license', params: { id } })
 }
 </script>
 

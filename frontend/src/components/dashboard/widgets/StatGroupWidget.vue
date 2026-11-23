@@ -86,6 +86,7 @@ function onDragEnd(event: DragEvent) {
 <template>
   <StatGroup :title="t(def.title)" :icon="def.icon" :count="cards.length">
     <template v-for="(card, index) in cards" :key="card.key">
+      <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- dragging is the mouse shortcut; the move buttons below do the same by keyboard -->
       <div
         v-if="editing"
         class="card-edit"

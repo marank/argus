@@ -27,32 +27,45 @@ export function parseCsv(input: string, delimiter = detectDelimiter(input)): str
   const records: string[][] = []
   let record: string[] = []
   let cell = ''
-  let quoted = false
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i]!
-    if (quoted) {
-      if (char !== '"') cell += char
-      else if (text[i + 1] === '"') {
-        cell += '"'
-        i++
-      } else quoted = false
-    } else if (char === '"' && cell === '') quoted = true
-    else if (char === delimiter) {
-      record.push(cell)
-      cell = ''
-    } else if (char === '\n' || char === '\r') {
-      if (char === '\r' && text[i + 1] === '\n') i++
-      record.push(cell)
-      records.push(record)
-      record = []
-      cell = ''
-    } else cell += char
-  }
-  if (cell !== '' || record.length) {
+  const endCell = () => {
     record.push(cell)
-    records.push(record)
+    cell = ''
   }
+  const endRecord = () => {
+    endCell()
+    records.push(record)
+    record = []
+  }
+  let i = 0
+  while (i < text.length) {
+    const char = text[i]!
+    if (char === '"' && cell === '') {
+      ;[cell, i] = readQuoted(text, i + 1)
+      continue
+    }
+    if (char === delimiter) endCell()
+    else if (char === '\n' || char === '\r') {
+      if (char === '\r' && text[i + 1] === '\n') i++
+      endRecord()
+    } else cell += char
+    i++
+  }
+  if (cell !== '' || record.length) endRecord()
   return records.filter((r) => r.some((c) => c.trim() !== ''))
+}
+
+/** A quoted cell from `start` (after the opening quote): its text and the index after the closing quote. */
+function readQuoted(text: string, start: number): [string, number] {
+  let value = ''
+  for (let i = start; i < text.length; i++) {
+    const char = text[i]!
+    if (char !== '"') value += char
+    else if (text[i + 1] === '"') {
+      value += '"'
+      i++
+    } else return [value, i + 1]
+  }
+  return [value, text.length]
 }
 
 /** UTF-8, or Windows-1252 for files that are not (older Excel "CSV" saves). */

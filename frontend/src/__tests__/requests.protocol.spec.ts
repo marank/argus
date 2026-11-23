@@ -27,14 +27,14 @@ vi.mock('@/api/requests', async (importOriginal) => ({
 const facts = (root: ParentNode = document.body) =>
   Object.fromEntries(
     [...root.querySelectorAll('.facts > div')].map((f) => [
-      f.querySelector('dt')!.textContent!.trim(),
-      f.querySelector('dd')!.textContent!.replace(/\s+/g, ' ').trim(),
+      f.querySelector('dt')!.textContent.trim(),
+      f.querySelector('dd')!.textContent.replace(/\s+/g, ' ').trim(),
     ]),
   )
 
 const tableRows = (root: ParentNode) =>
   [...root.querySelectorAll('tbody tr')].map((r) =>
-    [...r.querySelectorAll('td')].map((c) => c.textContent!.replace(/\s+/g, ' ').trim()),
+    [...r.querySelectorAll('td')].map((c) => c.textContent.replace(/\s+/g, ' ').trim()),
   )
 
 describe('HandoverProtocolView', () => {
@@ -136,7 +136,7 @@ describe('HandoverProtocolView', () => {
 
     const sections = document.body.querySelectorAll('section.return')
     expect(sections).toHaveLength(1)
-    expect(facts(sections[0]!)).toMatchObject({ 'Taken back by': 'Max IT' })
+    expect(facts(sections[0])).toMatchObject({ 'Taken back by': 'Max IT' })
     expect(sections[0]!.textContent).toContain('All in the bag.')
     expect(tableRows(sections[0]!)).toEqual([
       ['INV-001', 'Acme Laptop 14', 'SN-INV-001', 'Damaged Cracked display'],

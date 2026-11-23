@@ -88,7 +88,7 @@ describe('RequestPeriodCard', () => {
   it('offers pickup days from today up to the first day only', () => {
     const { wrapper } = mountCard()
     const pickupField = wrapper.findAllComponents(DateField).at(-1)!
-    const isDisabled = pickupField.vm.$attrs['is-date-disabled'] as (ts: number) => boolean
+    const isDisabled = pickupField.props('isDateDisabled')!
     expect(isDisabled(day('2026-10-11'))).toBe(true)
     expect(isDisabled(day('2026-10-12'))).toBe(false)
     expect(isDisabled(day('2026-10-13'))).toBe(true)

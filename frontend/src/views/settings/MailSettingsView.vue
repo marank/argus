@@ -70,7 +70,7 @@ async function save() {
   )
   if (saved) {
     apply(saved)
-    features.load()
+    void features.load()
   }
 }
 

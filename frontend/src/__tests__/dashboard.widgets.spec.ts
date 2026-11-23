@@ -104,7 +104,7 @@ describe('dashboard widgets', () => {
     it('sums up new and completed requests', async () => {
       api.requestTrend.mockResolvedValue(weeks)
       await show(RequestTrendWidget)
-      const legend = document.body.querySelector('.legend')!.textContent!
+      const legend = document.body.querySelector('.legend')!.textContent
       expect(legend).toMatch(/New\s*7/)
       expect(legend).toMatch(/Completed\s*5/)
     })

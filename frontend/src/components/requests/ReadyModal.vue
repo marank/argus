@@ -57,7 +57,7 @@ watch(show, async (visible) => {
 
 /** Only devices and consumables are collected; a request of licenses alone is handed out at once. */
 const hasPhysical = computed(() =>
-  props.assetRequest.items.some((i) => i.allocations.some((a) => a.asset || a.consumable)),
+  props.assetRequest.items.some((i) => i.allocations.some((a) => Boolean(a.asset ?? a.consumable))),
 )
 /** The ready message tells when and, unless IT delivers, where. */
 const needsWhen = computed(() => notify.value && hasPhysical.value)

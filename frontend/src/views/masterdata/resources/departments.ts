@@ -81,7 +81,10 @@ export default defineResource<Schemas['DepartmentOut']>({
           type: 'entity',
           fetcher: departmentsApi.list,
           // The edited row's parent comes as a bare reference, without the path.
-          display: (d: Schemas['DepartmentOut']) => d.path?.join(' / ') ?? d.name,
+          display: (
+            d: Pick<Schemas['DepartmentOut'], 'name'> &
+              Partial<Pick<Schemas['DepartmentOut'], 'path'>>,
+          ) => d.path?.join(' / ') ?? d.name,
           initial: (d: Schemas['DepartmentOut']) => d.parent,
         },
         {

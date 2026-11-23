@@ -58,7 +58,7 @@ const people = ref<Schemas['TerminalPersonOut'][]>([])
 /** Picked from the search; without a pick the typed name is recorded as is. */
 const person = ref<Schemas['TerminalPersonOut'] | null>(null)
 
-const pad = ref<InstanceType<typeof SignaturePad> | null>(null)
+const pad = ref<InstanceType<typeof SignaturePad>>()
 const signed = ref(false)
 
 /** IT member named on the record: who prepared the pickup, unless changed here. */
@@ -87,7 +87,7 @@ onMounted(async () => {
     // IT can skip the check, e.g. for sealed devices: start with who collects.
     if (assetRequest.value.skip_device_check) step.value = 'person'
   } catch {
-    router.replace({ name: 'terminal' })
+    void router.replace({ name: 'terminal' })
   }
 })
 
@@ -108,7 +108,7 @@ const searchPeople = useDebounceFn(async (q: string) => {
 }, 200)
 watch(personQuery, (q) => {
   if (person.value && q !== person.value.display_name) person.value = null
-  searchPeople(q)
+  void searchPeople(q)
 })
 
 function pick(p: Schemas['TerminalPersonOut']) {
@@ -167,7 +167,7 @@ async function cancelPickup() {
     positiveText: t('terminal.cancelConfirm'),
     negativeText: t('terminal.cancelKeep'),
   })
-  if (leave) router.push({ name: 'terminal' })
+  if (leave) void router.push({ name: 'terminal' })
 }
 </script>
 
@@ -343,6 +343,7 @@ async function cancelPickup() {
             :key="p.id"
             type="button"
             role="option"
+            :aria-selected="false"
             class="person"
             @click="pick(p)"
           >

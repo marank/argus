@@ -162,7 +162,7 @@ const SubjectLabel = () => (subjectRow.value ? subject(subjectRow.value) : '')
 
 function showAll() {
   list.setFilter('subject', null)
-  router.replace({ query: { ...route.query, subject: undefined } })
+  void router.replace({ query: { ...route.query, subject: undefined } })
 }
 </script>
 

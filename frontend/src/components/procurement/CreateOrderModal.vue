@@ -58,7 +58,7 @@ async function create() {
   if (order) {
     message.success(t('procurement.orders.created', { number: order.number }))
     show.value = false
-    router.push({ name: 'order', params: { id: order.id } })
+    void router.push({ name: 'order', params: { id: order.id } })
   }
 }
 </script>

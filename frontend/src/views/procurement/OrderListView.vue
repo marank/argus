@@ -169,7 +169,7 @@ async function createEmpty() {
       lines: [{ asset_model: null, description: '—', quantity: 1, unit_price: null }],
     }),
   )
-  if (order) router.push({ name: 'order', params: { id: order.id } })
+  if (order) void router.push({ name: 'order', params: { id: order.id } })
 }
 
 const view = useTableView<Order>({

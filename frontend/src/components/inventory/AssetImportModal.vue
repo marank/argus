@@ -329,6 +329,7 @@ const columns = computed<DataTableColumns<ResultRow>>(() => [
         type="file"
         accept=".csv,.txt,.xlsx,.xlsm,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         class="file-input"
+        :aria-label="t('inventory.import.pickFile')"
         data-test="import-file"
         @change="onFile"
       />

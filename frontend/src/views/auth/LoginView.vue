@@ -73,7 +73,7 @@ function proceed() {
   const next = typeof route.query.next === 'string' ? route.query.next : '/'
   // The Django admin signs in here too (see admin_login in the backend).
   if (next.startsWith('/admin/') && auth.isItStaff) window.location.assign(next)
-  else router.replace(next)
+  else void router.replace(next)
 }
 
 async function attempt(action: () => Promise<void>) {
@@ -133,7 +133,7 @@ const resend = () =>
 
 /** App and email codes go out as soon as all boxes are filled. */
 function onComplete() {
-  if (!busy.value) verify()
+  if (!busy.value) void verify()
 }
 
 async function toggleBackup() {

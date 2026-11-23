@@ -21,11 +21,11 @@ useIntervalFn(() => (now.value = new Date()), 15000)
 
 async function logout() {
   await auth.logout()
-  router.push({ name: 'login' })
+  void router.push({ name: 'login' })
 }
 
 function toggleLanguage() {
-  auth.changeLanguage(locale.value === 'de' ? 'en' : 'de')
+  void auth.changeLanguage(locale.value === 'de' ? 'en' : 'de')
 }
 </script>
 
