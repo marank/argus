@@ -107,14 +107,14 @@ async function sendTest() {
         </div>
       </SettingRow>
       <SettingRow :label="t('settings.mail.username')">
-        <NInput v-model:value="form.username" autocomplete="off" />
+        <NInput v-model:value="form.username" :input-props="{ autocomplete: 'off' }" />
       </SettingRow>
       <SettingRow :label="t('settings.mail.password')" :help="t('settings.mail.passwordHelp')">
         <NInput
           v-model:value="newPassword"
           type="password"
           show-password-on="click"
-          autocomplete="new-password"
+          :input-props="{ autocomplete: 'new-password' }"
           :placeholder="loaded?.password_set ? t('settings.mail.passwordSet') : ''"
         />
       </SettingRow>
