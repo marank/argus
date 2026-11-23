@@ -93,7 +93,8 @@ def test_taking_back_on_the_device_page_returns_it_on_the_request(employee_clien
     asset_request = AssetRequest.objects.get(pk=rid)
     assert asset_request.status == AssetRequestStatus.COMPLETED
     asset.refresh_from_db()
-    assert asset.status == AssetStatus.IN_STOCK and asset.assigned_to is None
+    assert asset.status == AssetStatus.IN_STOCK
+    assert asset.assigned_to is None
 
 
 def test_device_set_aside_for_a_request_cannot_be_assigned_elsewhere(employee_client, it_client):

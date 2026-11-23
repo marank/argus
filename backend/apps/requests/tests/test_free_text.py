@@ -35,7 +35,8 @@ def test_free_text_lines_need_resolution(employee_client, it_client):
         ],
     )
     in_group, general = asset_request["items"]
-    assert in_group["is_free_text"] and in_group["label"] == "Laptops: Laptop with 64 GB RAM"
+    assert in_group["is_free_text"]
+    assert in_group["label"] == "Laptops: Laptop with 64 GB RAM"
     assert general["label"] == "Label printer"
 
     rid = asset_request["id"]
@@ -48,7 +49,8 @@ def test_free_text_lines_need_resolution(employee_client, it_client):
 
     needs = it_client.get("/api/procurement/needs").json()["requests"]
     need = next(n for n in needs if n["asset_request_item"]["id"] == general["id"])
-    assert need["available"] == 0 and need["to_order"] == 1
+    assert need["available"] == 0
+    assert need["to_order"] == 1
 
     # IT creates a model for the laptop line and maps it.
     model = it_client.post(

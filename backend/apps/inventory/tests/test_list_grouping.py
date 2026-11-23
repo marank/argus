@@ -53,13 +53,16 @@ def test_devices_filter_by_purchase_date_and_supplier(it_client):
     middle = dated[len(dated) // 2]
     later = it_client.get(f"/api/inventory/assets?page_size=200&purchase_from={middle}").json()["items"]
     earlier = it_client.get(f"/api/inventory/assets?page_size=200&purchase_until={middle}").json()["items"]
-    assert later and all(item["purchase_date"] >= middle for item in later)
-    assert earlier and all(item["purchase_date"] <= middle for item in earlier)
+    assert later
+    assert all(item["purchase_date"] >= middle for item in later)
+    assert earlier
+    assert all(item["purchase_date"] <= middle for item in earlier)
 
     supplied = next(item for item in items if item.get("supplier"))
     supplier = supplied["supplier"]["id"]
     same = it_client.get(f"/api/inventory/assets?page_size=200&supplier={supplier}").json()["items"]
-    assert same and all(item["supplier"]["id"] == supplier for item in same)
+    assert same
+    assert all(item["supplier"]["id"] == supplier for item in same)
 
 
 def test_list_filters_take_several_values(it_client):
@@ -81,4 +84,5 @@ def test_warranty_filter_takes_a_range(it_client):
     found = it_client.get(
         f"/api/inventory/assets?page_size=200&warranty_from={day}&warranty_until={day}"
     ).json()["items"]
-    assert found and all(item["warranty_until"] == day for item in found)
+    assert found
+    assert all(item["warranty_until"] == day for item in found)

@@ -386,6 +386,8 @@ def test_read_all(demo, employee_client, it_client, django_capture_on_commit_cal
 def test_site_wide_switches_per_channel(admin_client):
     data = {"mail": {"request_ready": False, "unknown": False}, "app": {"license_expiring": False}}
     body = admin_client.put("/api/settings/notifications", data, content_type=JSON).json()
-    assert body["mail"]["request_ready"] is False and body["app"]["request_ready"] is True
-    assert body["app"]["license_expiring"] is False and "unknown" not in body["mail"]
+    assert body["mail"]["request_ready"] is False
+    assert body["app"]["request_ready"] is True
+    assert body["app"]["license_expiring"] is False
+    assert "unknown" not in body["mail"]
     assert Client().get("/api/settings/notifications").status_code in (401, 403)

@@ -156,7 +156,8 @@ def test_software_request_is_filled_with_a_license_seat(employee_client, it_clie
     assert it_client.post(f"/api/requests/{rid}/ready", handover_plan(), content_type=JSON).status_code == 409
 
     candidates = it_client.get(f"/api/requests/items/{item['id']}/candidates").json()
-    assert candidates["licenses"] and candidates["licenses"][0]["free_seats"] > 0
+    assert candidates["licenses"]
+    assert candidates["licenses"][0]["free_seats"] > 0
     assert it_client.post(f"/api/requests/{rid}/auto-allocate").json()["allocated"] == 1
     employee = User.objects.get(username="employee")
     assert LicenseAssignment.objects.filter(license__model=acrobat, user=employee).exists()

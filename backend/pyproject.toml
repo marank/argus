@@ -26,6 +26,7 @@ dev = [
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
     "pytest-django>=4.14.0",
+    "pytest-randomly>=5.1.0",
     "pytest-xdist>=3.8.0",
     "ruff>=0.17.1",
 ]
@@ -52,6 +53,11 @@ select = [
     "N",    # naming conventions
     "S",    # security patterns (bandit)
     "BLE",  # no blind `except Exception` without a reason
+    "TRY",  # no swallowed or vaguely re-raised errors
+    "PERF", # slow patterns in loops
+    "FURB", # longer spellings of what the standard library does directly
+    "PT",   # pytest usage
+    "PGH",  # no blanket `# noqa` / `# type: ignore` (unused ones fail through RUF100)
 ]
 ignore = [
     "S603", "S607",  # subprocess with fixed argument lists (pg_dump, makemessages) is intended
@@ -60,6 +66,9 @@ ignore = [
     # assert narrows types for mypy where an invariant guarantees the value (each one
     # says which); no check that matters at runtime relies on it.
     "S101",
+    # Messages are written where the error is raised, wrapped in gettext for the user;
+    # an exception class per message would only move the text.
+    "TRY003",
 ]
 # Typography in user-facing texts and docstrings.
 allowed-confusables = ["×", "–"]
@@ -108,6 +117,12 @@ DEP002 = ["gunicorn", "uvicorn"]
 plugins = ["mypy_django_plugin.main"]
 exclude = ["/migrations/"]
 strict = true
+# Checks against cases the types rule out, and no ignore without its error code.
+warn_unreachable = true
+strict_equality_for_none = true
+enable_error_code = [
+    "redundant-expr", "truthy-bool", "possibly-undefined", "exhaustive-match", "ignore-without-code",
+]
 
 [[tool.mypy.overrides]]
 module = ["*.migrations.*"]

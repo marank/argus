@@ -21,7 +21,6 @@ import { useAuthStore } from '@/stores/auth'
 import CrudFormDrawer from './CrudFormDrawer.vue'
 import { isVisible, type ResourceDef } from './types'
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 const props = defineProps<{ resource: ResourceDef<any> }>()
 const auth = useAuthStore()
 /** Without the right to write, records open for viewing only. */

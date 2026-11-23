@@ -50,7 +50,8 @@ def test_switched_off_module_is_gone_from_the_api(it_client, employee_client, ad
 
 def test_calendar_hides_switched_off_kinds(it_client, admin_client):
     license = License.objects.exclude(valid_until=None).order_by("valid_until").first()
-    assert license is not None and license.valid_until is not None
+    assert license is not None
+    assert license.valid_until is not None
     day = license.valid_until.isoformat()
 
     def kinds() -> set[str]:

@@ -58,4 +58,4 @@ class PurchaseOrderLine(UUIDModel):
 
     @property
     def total(self) -> Decimal:
-        return (self.unit_price or Decimal("0")) * self.quantity
+        return (self.unit_price or Decimal(0)) * self.quantity

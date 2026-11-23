@@ -22,7 +22,8 @@ def test_hand_out_and_return_are_one_row_each(employee_client, it_client, fresh)
     request = AssetRequest.objects.get(pk=rid)
     assert (hand_out.area, hand_out.subject_id, hand_out.quantity) == ("requests", request.pk, 2)
     assert hand_out.subject_label == f"{request.number} – {request.title}"
-    assert hand_out.actor is not None and hand_out.actor.username == "it"
+    assert hand_out.actor is not None
+    assert hand_out.actor.username == "it"
     assert hand_out.related_user_id == request.requester_id
     # The devices' own entries are part of that row.
     assert not Activity.objects.filter(area="assets").exists()
@@ -103,4 +104,5 @@ def test_automatic_allocation_says_so(employee_client, it_client, fresh):
     rid = prepare(employee_client, it_client, laptops())
     allocated = Activity.objects.get(kind="request_allocated", subject_id=rid)
     assert allocated.detail.endswith("(automatically)")
-    assert allocated.actor is not None and allocated.actor.username == "it"
+    assert allocated.actor is not None
+    assert allocated.actor.username == "it"

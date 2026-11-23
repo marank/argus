@@ -21,15 +21,13 @@ def save_license(license: License, data: dict[str, Any], user: User) -> License:
         license = apply_input(license, data)
         activity.log(ActivityKind.LICENSE_CREATED, license.pk, activity.license_label(license), user)
         return license
-    if license.pk:
-        used = license.assignments.count()
-        if data.get("seats", license.seats) < used:
-            raise BusinessError(
-                _("%(used)s seats are assigned; remove assignments before reducing the seats.")
-                % {"used": used}
-            )
-        if used and data.get("assign_to", license.assign_to) != license.assign_to:
-            raise BusinessError(_("Remove all assignments before changing whom the license is assigned to."))
+    used = license.assignments.count()
+    if data.get("seats", license.seats) < used:
+        raise BusinessError(
+            _("%(used)s seats are assigned; remove assignments before reducing the seats.") % {"used": used}
+        )
+    if used and data.get("assign_to", license.assign_to) != license.assign_to:
+        raise BusinessError(_("Remove all assignments before changing whom the license is assigned to."))
     return apply_input(license, data)
 
 

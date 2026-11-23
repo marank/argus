@@ -19,6 +19,10 @@ fails 180 days before (`backend/scripts/check_eol.py`). CI runs it in the weekly
 
 ## What they enforce
 
+- **No silenced checks:** every `# noqa`, `# type: ignore[…]` and `eslint-disable` names its
+  rules and says why; unused ones fail.
+- **Test order:** pytest-randomly shuffles the backend tests on every run, so a test that
+  depends on another one fails. `uv run pytest --randomly-seed=last` repeats the last order.
 - **Coverage:** at least 90 % in the backend (`fail_under` in `pyproject.toml`); a floor at
   today's level in the frontend (`vitest.config.ts`, about 88 % of lines; raise it as
   tests are added).

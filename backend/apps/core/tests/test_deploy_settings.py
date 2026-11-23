@@ -99,7 +99,8 @@ def test_initial_administrator_takes_any_password(db, monkeypatch):
     monkeypatch.setenv("ADMIN_PASSWORD", "123")
     call_command("ensure_superuser", stdout=StringIO())
     root = User.objects.get(username="root")
-    assert root.is_superuser and root.check_password("123")
+    assert root.is_superuser
+    assert root.check_password("123")
 
 
 def test_initial_administrator_stays_an_administrator_but_not_active(db, monkeypatch):
@@ -112,7 +113,8 @@ def test_initial_administrator_stays_an_administrator_but_not_active(db, monkeyp
     out = StringIO()
     call_command("ensure_superuser", stdout=out)
     root = User.objects.get(username="root")
-    assert root.is_superuser and root.is_staff
+    assert root.is_superuser
+    assert root.is_staff
     assert not root.is_active
     assert root.check_password("first")
     assert "deactivated" in out.getvalue()

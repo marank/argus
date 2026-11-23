@@ -3,8 +3,6 @@ import type { Schemas } from '@/api/types'
 
 import type { Id, ListParams, Page } from '@/types/common'
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 interface BaseField {
   key: string
   /** i18n key of the label. */

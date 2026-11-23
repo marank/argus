@@ -62,7 +62,7 @@ def calendar_entries(
 
     if "loan" in kinds:
         for r in temporary.filter(start_date__lte=end, end_date__gte=start):
-            assert r.start_date is not None and r.end_date is not None  # the filter excludes NULL
+            assert r.end_date is not None
             items = [f"{i.quantity_target}× {i.label}" for i in r.items.all()]
             entries.append(
                 Entry(
@@ -89,19 +89,19 @@ def calendar_entries(
                 | Q(pickup_at__isnull=True, planned_day__range=(start, end))
             )
         )
-        for r in pickups:
-            entries.append(
-                Entry(
-                    id=f"pickup-{r.pk}",
-                    kind="pickup",
-                    title=_requester(r),
-                    start=timezone.localtime(r.pickup_at) if r.pickup_at else r.planned_day,
-                    all_day=r.pickup_at is None,
-                    status=r.status,
-                    link={"name": "request", "id": str(r.pk)},
-                    details=[r.number, r.title],
-                )
+        entries.extend(
+            Entry(
+                id=f"pickup-{r.pk}",
+                kind="pickup",
+                title=_requester(r),
+                start=timezone.localtime(r.pickup_at) if r.pickup_at else r.planned_day,
+                all_day=r.pickup_at is None,
+                status=r.status,
+                link={"name": "request", "id": str(r.pk)},
+                details=[r.number, r.title],
             )
+            for r in pickups
+        )
 
     if "return" in kinds:
         # Overdue returns move along on today until the devices are back.

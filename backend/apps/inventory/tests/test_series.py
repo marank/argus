@@ -44,7 +44,8 @@ def test_subcategory_does_not_inherit_the_sequence(it_client):
 
     numbered = it_client.get("/api/masterdata/models?numbered=true&page_size=100").json()["items"]
     names = {m["name"] for m in numbered}
-    assert "SX58" in names and "SX5x Trigger Handle" not in names
+    assert "SX58" in names
+    assert "SX5x Trigger Handle" not in names
     assert all(m["category"]["code"] != "consumables" for m in numbered)
 
 

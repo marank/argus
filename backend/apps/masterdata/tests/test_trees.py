@@ -116,10 +116,13 @@ def test_categories_show_the_team_and_approval_that_apply(admin_client):
     cradles = Category.objects.create(name="Cradles", code="t-cradles", parent=docks)
 
     body = admin_client.get(f"/api/masterdata/categories/{cradles.pk}").json()
-    assert body["team"] is None and body["effective_team"]["id"] == str(team.pk)
-    assert body["requires_approval"] is False and body["needs_approval"] is True
+    assert body["team"] is None
+    assert body["effective_team"]["id"] == str(team.pk)
+    assert body["requires_approval"] is False
+    assert body["needs_approval"] is True
     body = admin_client.get(f"/api/masterdata/categories/{mde.pk}").json()
-    assert body["effective_team"]["id"] == str(team.pk) and body["needs_approval"] is True
+    assert body["effective_team"]["id"] == str(team.pk)
+    assert body["needs_approval"] is True
 
 
 def test_the_default_team_applies_where_nothing_else_does(admin_client):
@@ -142,7 +145,8 @@ def test_the_default_team_applies_where_nothing_else_does(admin_client):
     mde.team = hardware
     mde.save()
     body = admin_client.get(f"/api/masterdata/models/{model.pk}").json()
-    assert body["team"] is None and body["effective_team"]["id"] == str(hardware.pk)
+    assert body["team"] is None
+    assert body["effective_team"]["id"] == str(hardware.pk)
 
 
 def test_departments_get_an_icon_from_the_choices(admin_client):

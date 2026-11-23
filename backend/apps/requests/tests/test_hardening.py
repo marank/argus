@@ -44,7 +44,8 @@ def test_terminal_pickup_shows_no_internal_details(terminal_client, it_client):
     for client in (terminal_client, it_client):
         detail = client.get(f"/api/terminal/pickups/{asset_request.pk}").json()
         assert not INTERNAL & detail.keys()
-        assert "Private note" not in str(detail) and "Internal comment" not in str(detail)
+        assert "Private note" not in str(detail)
+        assert "Internal comment" not in str(detail)
         allocation = detail["items"][0]["allocations"][0]
         assert "allocated_by" not in allocation
         # What the terminal needs to show the pickup is still there.

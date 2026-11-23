@@ -72,10 +72,15 @@ def test_a_notification_is_queued_and_delivered_by_the_job(mail_on, job_queue):
 @postgres_only
 def test_a_rolled_back_change_queues_no_mail(mail_on, job_queue):
     asset_request = overdue_asset_request()
-    with pytest.raises(RuntimeError), transaction.atomic():
-        asset_request_notifications.return_requested(asset_request, User.objects.get(username="it"))
-        assert len(queued()) == 1
-        raise RuntimeError
+
+    def change_then_fail() -> None:
+        with transaction.atomic():
+            asset_request_notifications.return_requested(asset_request, User.objects.get(username="it"))
+            assert len(queued()) == 1
+            raise RuntimeError
+
+    with pytest.raises(RuntimeError):
+        change_then_fail()
     assert queued() == []
 
 

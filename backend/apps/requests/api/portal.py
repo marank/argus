@@ -103,7 +103,8 @@ def _accessory_category_ids() -> set[UUID]:
     rows = list(Category.objects.values_list("pk", "parent_id", "is_accessory"))
     children: dict[UUID, list[UUID]] = {}
     for pk, parent_id, _ in rows:
-        if parent_id:
+        # Top-level categories have no parent; the stubs type values_list() columns as set.
+        if parent_id is not None:  # type: ignore[comparison-overlap]
             children.setdefault(parent_id, []).append(pk)
     ids: set[UUID] = set()
     frontier = [pk for pk, _, is_accessory in rows if is_accessory]

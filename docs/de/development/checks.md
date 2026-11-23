@@ -21,6 +21,11 @@ Sicherheitsupdates mehr bekommen, und schlägt 180 Tage vorher fehl
 
 ## Was sie sicherstellen
 
+- **Keine stummgeschalteten Prüfungen:** Jedes `# noqa`, `# type: ignore[…]` und
+  `eslint-disable` nennt seine Regeln und eine Begründung; ungenutzte schlagen fehl.
+- **Testreihenfolge:** pytest-randomly mischt die Backend-Tests bei jedem Lauf, sodass ein
+  Test auffällt, der von einem anderen abhängt. `uv run pytest --randomly-seed=last`
+  wiederholt die letzte Reihenfolge.
 - **Coverage:** mindestens 90 % im Backend (`fail_under` in `pyproject.toml`); im Frontend
   eine Untergrenze auf dem heutigen Stand (`vitest.config.ts`, etwa 88 % der Zeilen;
   heben Sie sie an, wenn Tests hinzukommen).

@@ -46,4 +46,5 @@ def test_cancel_and_delete_are_recorded(it_client, fresh):
 
     assert Activity.objects.filter(kind="order_cancelled", subject_id=cancelled).exists()
     gone = Activity.objects.get(kind="order_deleted")
-    assert gone.subject_id is None and gone.subject_label.startswith(number)
+    assert gone.subject_id is None
+    assert gone.subject_label.startswith(number)

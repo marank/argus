@@ -176,7 +176,8 @@ class Asset(TimeStampedModel):
     def clean(self) -> None:
         from apps.masterdata.models import AssetModel
 
-        if self.model_id and self.model.tracking != AssetModel.Tracking.SERIALIZED:
+        # A new, unsaved form has no model yet; django-stubs types the column as always set.
+        if self.model_id is not None and self.model.tracking != AssetModel.Tracking.SERIALIZED:  # type: ignore[comparison-overlap, redundant-expr]
             raise ValidationError(
                 {"model": _("Only models tracked as individual devices can be added as devices.")}
             )

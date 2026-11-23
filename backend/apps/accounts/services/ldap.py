@@ -374,15 +374,15 @@ def authenticate(username: str, password: str) -> User | None:
         if entry is None or not _check_password(config, entry.dn, password):
             return None
         user = sync_user(config, entry)
-    except (LdapError, LDAPException) as exc:
-        logger.error("LDAP login failed: %s", exc)
+    except LdapError, LDAPException:
+        logger.exception("LDAP login failed")
         return None
     if user is not None:
         # Team membership is a convenience; a directory hiccup must not block the login.
         try:
             sync_teams(config, user)
-        except (LdapError, LDAPException) as exc:
-            logger.error("LDAP team sync for %s failed: %s", user.username, exc)
+        except LdapError, LDAPException:
+            logger.exception("LDAP team sync for %s failed", user.username)
     return user
 
 
@@ -391,7 +391,8 @@ class ConnectionTest(TypedDict):
     user: dict[str, str] | None  # dn, username and the mapped fields
 
 
-def test_connection(config: LdapConfig, username: str = "") -> ConnectionTest:
+# PT028: a service, not a pytest test; the name is what the settings page calls the action.
+def test_connection(config: LdapConfig, username: str = "") -> ConnectionTest:  # noqa: PT028
     """Bind with the service account and optionally look up a user (no password check)."""
     if not config.server_uri:
         raise LdapError(_("No LDAP server configured."))
@@ -492,8 +493,8 @@ def apply_sync(config: LdapConfig, search_filter: str, search_base: str, dns: li
             # Team membership is a convenience, as at login.
             try:
                 sync_teams(config, user, connection)
-            except LDAPException as exc:
-                logger.error("LDAP team sync for %s failed: %s", user.username, exc)
+            except LDAPException:
+                logger.exception("LDAP team sync for %s failed", user.username)
     finally:
         connection.unbind()
     return counts

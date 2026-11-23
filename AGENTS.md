@@ -99,7 +99,7 @@ tasks (`.vscode/tasks.json`) and CI only call its recipes, so a check is changed
 
 ## House defaults
 
-Checked against checklist 1.7 (2026-11-20). Accepted deviations and settled judgements,
+Checked against django-spa-defaults 1.8.0 (2026-11-23). Accepted deviations and settled judgements,
 one line each as `- ID: decision and reason` (IDs from the project-defaults checklist); the review
 does not report these again:
 
@@ -112,3 +112,24 @@ does not report these again:
 - BE-13: settled, passes: the sign-in code and the test mail are sent within the request on purpose,
   the user waits for them and must learn at once when they fail; the code must not end up in the
   job table (`accounts/services/two_factor.py`, `core/api/mail_settings.py`).
+- BE-14: settled, passes: the remaining saves in API modules write only the endpoint's own object
+  (settings singletons, preferences, the generic CRUD layer, a consumable's minimum) or only read
+  (`requests/api/queries.py`); nothing else has to happen with them.
+- FE-08: accepted for now: ESLint runs without type information; comes with typed linting
+  (`recommendedTypeChecked`), the next step on the frontend lint.
+- FE-10: accepted for now: comes with typed linting (see FE-08).
+- FE-11: accepted for now: comes with typed linting (see FE-08).
+- FE-12: accepted for now: comes with typed linting (see FE-08).
+- FE-16: accepted for now: `strictTemplates` reports about 300 errors, mostly Naive UI typings
+  (native attributes like `title` on components, union-typed `v-model`); fix them view by view.
+- FE-14: accepted for now: eslint-plugin-vue at `essential`; raise to `strongly-recommended`
+  together with FE-15.
+- FE-15: accepted for now: `vue/no-unused-properties` comes with FE-14.
+- FE-17: accepted for now: no accessibility linting yet; add eslint-plugin-vuejs-accessibility
+  and fix its findings in the forms.
+- BE-17: accepted for now: cognitive complexity is not limited yet (cyclomatic is, at 15); add
+  complexipy and split what it reports.
+- FE-09: accepted for now: as BE-17, with sonarjs `cognitive-complexity`.
+- REPO-22: accepted for now: no duplicate-code check yet; add jscpd with a floor at today's share
+  and lower it to 3 %.
+- REPO-23: accepted for now: no lint hook for coding agents yet.

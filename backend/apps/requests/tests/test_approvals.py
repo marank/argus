@@ -278,7 +278,8 @@ def test_menu_counts_show_open_requests_approvals_and_reports(
     # Resolved: no longer counted as open, but still news.
     update_issue(issue, User.objects.get(username="it"), AssetIssueStatus.RESOLVED, "New cable", by_it=True)
     after = counts(employee_client)
-    assert after["issues"] == before["issues"] and after["issues_updated"] is True
+    assert after["issues"] == before["issues"]
+    assert after["issues_updated"] is True
 
 
 def test_subdepartments_take_over_the_approvers_of_the_department_above(

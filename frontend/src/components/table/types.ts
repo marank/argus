@@ -3,8 +3,6 @@ import type { VNodeChild } from 'vue'
 
 import type { ListParams, Page } from '@/types/common'
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 /**
  * A column of a list table. The `key` names the column in the saved view settings
  * (visibility, width, order) and, with `sorter`, is the backend ordering field.

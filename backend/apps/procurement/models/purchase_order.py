@@ -80,4 +80,4 @@ class PurchaseOrder(TimeStampedModel):
 
     @property
     def total(self) -> Decimal:
-        return sum((line.total for line in self.lines.all()), Decimal("0"))
+        return sum((line.total for line in self.lines.all()), Decimal(0))

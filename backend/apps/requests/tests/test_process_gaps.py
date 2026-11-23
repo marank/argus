@@ -73,13 +73,16 @@ def test_return_with_notes_damage_and_record(employee_client, it_client):
     )
     data = response.json()
     assert data["status"] == "handed_out"
-    assert len(data["returns"]) == 1 and data["returns"][0]["notes"] == "Came back early"
+    assert len(data["returns"]) == 1
+    assert data["returns"][0]["notes"] == "Came back early"
     first.refresh_from_db()
     assert first.asset is not None
-    assert first.return_note == "Display cracked" and first.asset.status == AssetStatus.IN_REPAIR
+    assert first.return_note == "Display cracked"
+    assert first.asset.status == AssetStatus.IN_REPAIR
 
     data = it_client.post(f"/api/requests/{rid}/return", {}, content_type=JSON).json()
-    assert data["status"] == "completed" and len(data["returns"]) == 2
+    assert data["status"] == "completed"
+    assert len(data["returns"]) == 2
     second.refresh_from_db()
     assert second.asset is not None
     assert second.asset.status == AssetStatus.IN_STOCK
@@ -92,7 +95,8 @@ def test_permanent_devices_can_be_taken_back_on_the_request(employee_client, it_
     data = it_client.post(f"/api/requests/{rid}/return", {}, content_type=JSON).json()
     assert data["status"] == "completed"
     allocation = lent_allocation(rid)
-    assert allocation.returned_at is not None and allocation.asset.assigned_to is None
+    assert allocation.returned_at is not None
+    assert allocation.asset.assigned_to is None
     # Nothing is left to take back.
     assert it_client.post(f"/api/requests/{rid}/return", {}, content_type=JSON).status_code == 409
 
@@ -108,7 +112,8 @@ def test_terminal_names_who_prepared_the_pickup(employee_client, it_client, term
     assert data["prepared_by"]["id"] == str(it_user.pk)
     assert data["handover"]["handed_out_by"]["id"] == str(it_user.pk)
     recorded_by = Handover.objects.get(asset_request_id=rid).recorded_by
-    assert recorded_by is not None and recorded_by.username == "terminal"
+    assert recorded_by is not None
+    assert recorded_by.username == "terminal"
 
 
 def test_terminal_can_name_someone_else_from_it(employee_client, it_client, terminal_client):
@@ -139,7 +144,8 @@ def test_terminal_with_a_site_lists_only_its_pickups(employee_client, it_client,
     terminal.terminal_location = north
     terminal.save()
     ids = {p["id"] for p in terminal_client.get("/api/terminal/pickups").json()}
-    assert here in ids and there not in ids
+    assert here in ids
+    assert there not in ids
     assert terminal_client.get(f"/api/terminal/pickups/{there}").status_code == 404
 
     # IT staff testing the terminal still see everything.
@@ -159,7 +165,7 @@ def test_device_license_goes_onto_one_of_the_requesters_devices(employee_client,
     assert license["assign_to"] == "device"
     mine = Asset.objects.filter(assigned_to__username="employee").first()
     assert mine is not None
-    assert mine and str(mine.pk) in [d["id"] for d in candidates["devices"]]
+    assert str(mine.pk) in [d["id"] for d in candidates["devices"]]
 
     foreign = Asset.objects.exclude(assigned_to__username="employee").first()
     assert foreign is not None

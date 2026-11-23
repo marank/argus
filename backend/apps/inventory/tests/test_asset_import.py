@@ -63,7 +63,8 @@ def test_update_existing_and_skip(it_client):
     row = {"serial_number": asset.serial_number, "name": "NEW-HOST", "status": "Defekt"}
     response = it_client.post(PREVIEW, {"rows": [row]}, content_type=JSON).json()
     # "Defekt" is a condition, not a status.
-    assert response["failed"] == 1 and "Defekt" in response["rows"][0]["errors"][0]
+    assert response["failed"] == 1
+    assert "Defekt" in response["rows"][0]["errors"][0]
 
     row["status"] = "In Reparatur"
     response = it_client.post(IMPORT, {"rows": [row]}, content_type=JSON).json()

@@ -13,8 +13,6 @@ import ColumnSettings from './ColumnSettings.vue'
 import DateRangeInput from './DateRangeInput.vue'
 import type { TableFilter } from './types'
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 type SelectValue = string | string[] | null
 type EntityValue = Id | Id[] | null
 

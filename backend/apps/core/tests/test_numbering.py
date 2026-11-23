@@ -19,7 +19,8 @@ def test_sequence_formats_and_increments(db):
         reset_period=NumberSequence.ResetPeriod.YEARLY,
     )
     first, second = next_number(sequence), next_number(sequence)
-    assert first.startswith("LT-") and first.endswith("-001")
+    assert first.startswith("LT-")
+    assert first.endswith("-001")
     assert second.endswith("-002")
 
 
@@ -31,7 +32,7 @@ def test_ids_are_uuids(it_client):
     import uuid
 
     asset = it_client.get("/api/inventory/assets").json()["items"][0]
-    assert uuid.UUID(asset["id"])
+    uuid.UUID(asset["id"])  # raises unless it is a UUID
     assert it_client.get(f"/api/inventory/assets/{asset['id']}").status_code == 200
     assert it_client.get("/api/inventory/assets/1").status_code == 404
 
@@ -64,7 +65,7 @@ def test_pattern_allows_only_plain_placeholders(db, pattern):
     sequence = NumberSequence(code="x", name="X", pattern=pattern)
     with pytest.raises(ValidationError):
         sequence.full_clean()
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"\{"):
         sequence.format(1)
 
 

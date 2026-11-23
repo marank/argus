@@ -206,8 +206,10 @@ def test_reporter_does_not_see_who_has_the_device_now(employee_client, it_client
     )
 
     body = employee_client.get(own_url).json()
-    assert body["asset"]["assigned_to"] is None and body["asset"]["assigned_since"] is None
-    assert body["assigned_team"] is None and body["assignee"] is None
+    assert body["asset"]["assigned_to"] is None
+    assert body["asset"]["assigned_since"] is None
+    assert body["assigned_team"] is None
+    assert body["assignee"] is None
     assert "Seller" not in str(body)
 
     body = it_client.get(f"/api/inventory/issues/{issue_id}").json()

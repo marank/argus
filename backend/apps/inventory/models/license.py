@@ -68,7 +68,8 @@ class License(TimeStampedModel):
         return f"{self.model} ({self.reference})" if self.reference else str(self.model)
 
     def clean(self) -> None:
-        if self.model_id and not self.model.is_software:
+        # A new, unsaved form has no model yet; django-stubs types the column as always set.
+        if self.model_id is not None and not self.model.is_software:  # type: ignore[comparison-overlap, redundant-expr]
             raise ValidationError({"model": _("Choose a software model.")})
         if self.valid_from and self.valid_until and self.valid_until < self.valid_from:
             raise ValidationError({"valid_until": _("The end date is before the start date.")})

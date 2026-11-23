@@ -136,7 +136,8 @@ class AssetModel(TimeStampedModel):
         return self.tracking == self.Tracking.LICENSE
 
     def clean(self) -> None:
-        if self.category_id and self.category.is_software != self.is_software:
+        # A new, unsaved form has no category yet; django-stubs types the column as always set.
+        if self.category_id is not None and self.category.is_software != self.is_software:  # type: ignore[comparison-overlap, redundant-expr]
             raise ValidationError(
                 {
                     "tracking": _(

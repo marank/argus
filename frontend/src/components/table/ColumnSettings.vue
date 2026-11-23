@@ -13,8 +13,6 @@ import { useI18n } from 'vue-i18n'
 
 import type { TableView } from '@/composables/useTableView'
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 /** Popover to show, hide and reorder the columns of a table and set its row density. */
 const props = defineProps<{ view: TableView<any> }>()
 const { t, locale } = useI18n()

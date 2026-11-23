@@ -140,7 +140,8 @@ def test_own_category_leaves_out_subcategories(it_client):
         a["inventory_number"]
         for a in it_client.get(f"/api/inventory/assets?own_category={mde.pk}&page_size=200").json()["items"]
     }
-    assert numbers and all(n.startswith("MDE-") for n in numbers)
+    assert numbers
+    assert all(n.startswith("MDE-") for n in numbers)
 
 
 def test_category_api_carries_the_naming(it_client, sx58):

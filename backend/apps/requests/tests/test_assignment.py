@@ -34,7 +34,8 @@ def test_team_and_assignee_are_independent(it_client, support):
     assert response.json()["assignee"]["username"] == "it"
 
     response = _assign(it_client, asset_request)
-    assert response.json()["assigned_team"] is None and response.json()["assignee"] is None
+    assert response.json()["assigned_team"] is None
+    assert response.json()["assignee"] is None
 
 
 def test_only_it_staff_can_be_assigned(it_client, demo):
@@ -56,7 +57,8 @@ def test_employees_can_neither_assign_nor_see_it(employee_client, support):
     asset_request.assignee = User.objects.get(username="it")
     asset_request.save()
     detail = employee_client.get(f"/api/requests/{asset_request.pk}").json()
-    assert detail["assigned_team"] is None and detail["assignee"] is None
+    assert detail["assigned_team"] is None
+    assert detail["assignee"] is None
     listed = employee_client.get("/api/requests").json()["items"]
     assert all(r["assigned_team"] is None and r["assignee"] is None for r in listed)
     assert employee_client.get("/api/accounts/teams").status_code == 403

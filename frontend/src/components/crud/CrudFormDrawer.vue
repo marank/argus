@@ -25,7 +25,6 @@ import { CATEGORY_ICONS } from '@/utils/icons'
 
 import { helpKey, isFieldVisible, sectionFields, type FieldDef, type ResourceDef } from './types'
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 const props = defineProps<{
   resource: ResourceDef<any>
   row: any | null

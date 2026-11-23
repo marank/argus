@@ -12,7 +12,6 @@ import suppliers from './suppliers'
 import teams from './teams'
 import users from './users'
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export const RESOURCES: Record<string, ResourceDef<any>> = {
   models,
   categories,

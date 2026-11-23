@@ -16,12 +16,12 @@ import sys
 import tempfile
 from pathlib import Path
 
-SSPL = re.compile(r"SSPL|Server Side Public", re.I)
-LESSER = re.compile(r"LGPL|Lesser General Public|Library General Public", re.I)
+SSPL = re.compile(r"SSPL|Server Side Public", re.IGNORECASE)
+LESSER = re.compile(r"LGPL|Lesser General Public|Library General Public", re.IGNORECASE)
 # Whole tokens only, so "LGPL" doesn't count as "GPL".
-GPL = re.compile(r"(?<![A-Za-z])A?GPL|General Public License", re.I)
-V3_OR_LATER = re.compile(r"v3|(?<![\d.])3(\.0)?(?![\d.])|or[- ]later|\+", re.I)
-ALTERNATIVES = re.compile(r"\s+OR\s+|;\s*", re.I)
+GPL = re.compile(r"(?<![A-Za-z])A?GPL|General Public License", re.IGNORECASE)
+V3_OR_LATER = re.compile(r"v3|(?<![\d.])3(\.0)?(?![\d.])|or[- ]later|\+", re.IGNORECASE)
+ALTERNATIVES = re.compile(r"\s+OR\s+|;\s*", re.IGNORECASE)
 
 # Packages whose metadata is wrong or ambiguous, after checking them by hand: the package
 # name as key, the reason as value.
@@ -68,7 +68,7 @@ def production_licenses() -> list[dict[str, str]]:
 
 def compatible(license_: str) -> bool:
     for alternative in ALTERNATIVES.split(license_.strip("() ")):
-        parts = re.split(r"\s+AND\s+", alternative.strip("() "), flags=re.I)
+        parts = re.split(r"\s+AND\s+", alternative.strip("() "), flags=re.IGNORECASE)
         if all(compatible_part(part) for part in parts):
             return True
     return False

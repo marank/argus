@@ -33,7 +33,8 @@ def test_calendar_shows_loans_and_pickups(it_client):
 def test_unconfirmed_requests_are_shown_as_pickups_on_their_day(it_client):
     """Without an appointment the planned day counts, confirmed or not."""
     headset = AssetRequest.objects.get(title="New headset")
-    assert headset.status == AssetRequestStatus.SUBMITTED and headset.pickup_at is None
+    assert headset.status == AssetRequestStatus.SUBMITTED
+    assert headset.pickup_at is None
     entry = next(e for e in fetch(it_client, kinds=["pickup"]) if e["id"] == f"pickup-{headset.pk}")
     assert entry["start"] == headset.start_date.isoformat()
     assert entry["all_day"] is True
@@ -72,7 +73,8 @@ def test_warranty_ends_are_grouped_per_day(it_client):
     Asset.objects.filter(pk__in=ids).update(warranty_until=day)
     entries = [e for e in fetch(it_client, kinds=["warranty"]) if e["start"] == day.isoformat()]
     assert len(entries) == 1
-    assert entries[0]["title"] == "2" and len(entries[0]["details"]) == 2
+    assert entries[0]["title"] == "2"
+    assert len(entries[0]["details"]) == 2
 
 
 def test_calendar_shows_license_expiry(it_client):

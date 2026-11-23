@@ -125,7 +125,8 @@ def test_lookup_by_ean_and_serial(it_client):
 
 def test_catalog_hides_availability_from_employees(employee_client, it_client):
     employee_view = employee_client.get("/api/portal/catalog").json()
-    assert employee_view and all(c["available"] is None for c in employee_view)
+    assert employee_view
+    assert all(c["available"] is None for c in employee_view)
     assert all(m["available"] is None for c in employee_view for m in c["models"])
 
     it_view = it_client.get("/api/portal/catalog").json()

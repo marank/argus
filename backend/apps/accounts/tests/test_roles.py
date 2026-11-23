@@ -137,10 +137,12 @@ def test_only_administrators_manage_roles(staff, staff_client, it_client, admin_
 
 def test_dashboard_shows_only_readable_areas(staff, staff_client, it_client):
     full = it_client.get("/api/dashboard/it").json()
-    assert full["asset_status"] and full["recent_events"]
+    assert full["asset_status"]
+    assert full["recent_events"]
 
     overview = staff_client.get("/api/dashboard/it").json()
-    assert overview["asset_status"] == {} and overview["recent_events"] == []
+    assert overview["asset_status"] == {}
+    assert overview["recent_events"] == []
     assert overview["requests_submitted"] == 0
     assert staff_client.get("/api/dashboard/widgets/open-orders").status_code == 403
     assert staff_client.get("/api/dashboard/widgets/expiring").json() == []
