@@ -3524,10 +3524,6 @@ msgstr "Geräteimport"
 msgid "%(created)d new, %(updated)d changed"
 msgstr "%(created)d neu, %(updated)d geändert"
 
-#: apps/activity/models/activity.py:32
-msgid "Allocation removed"
-msgstr "Zuweisung entfernt"
-
 #: apps/requests/services/workflow.py
 msgid "automatically"
 msgstr "automatisch"
